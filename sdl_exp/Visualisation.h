@@ -1,7 +1,9 @@
 #pragma once
 
 #include <stdio.h>
+#include "gl\glew.h"
 #include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
 #undef main
 
 
@@ -31,6 +33,7 @@ public:
 private:
 	SDL_Window* window;
 	SDL_Renderer* renderer;
+	SDL_GLContext context;
 
 	bool quit = false;
 

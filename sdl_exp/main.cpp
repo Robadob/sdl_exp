@@ -1,8 +1,6 @@
 
 #include "Visualisation.h";
 #include <stdio.h>
-#include "SDL/SDL.h"
-#undef main
 
 int main()
 {

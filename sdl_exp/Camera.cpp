@@ -44,13 +44,7 @@ void Camera::calcEyePosition(){
 	// Limit theta to between -90 and 90 degrees
 
 	double phiLimit = math_helper::PI / 2;
-	if (this->phi > phiLimit){
-		this->phi = phiLimit;
-	}
-	else if (this->phi < -phiLimit){
-		this->phi = -phiLimit;
-	}
-
+	this->phi = math_helper::clamp(this->phi, -phiLimit, phiLimit);
 
 	double cy = cos(this->theta);
 	double sy = sin(this->theta);

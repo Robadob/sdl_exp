@@ -16,3 +16,12 @@ double math_helper::toRadians(double degrees){
 	return degrees * (math_helper::PI / 180);
 }
 
+double math_helper::clamp(double value, double min, double max){
+	if (value >= min && value <= max){
+		return value;
+	} else if (value < min){
+		return min;
+	} else {
+		return max;
+	}
+}

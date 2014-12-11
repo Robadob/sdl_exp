@@ -122,7 +122,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_helper.cpp" />
     <ClCompile Include="Quaternion.cpp" />
@@ -131,7 +130,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="math_helper.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Visualisation.h" />

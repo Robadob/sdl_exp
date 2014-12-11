@@ -6,8 +6,8 @@
 #define FOV 60.0
 #define NEAR_CLIP 0.1
 #define FAR_CLIP 500.0
-#define DELTA_THETA_PHI 0.05
-#define MOUSE_SPEED 0.005
+#define DELTA_THETA_PHI 0.01
+#define MOUSE_SPEED 0.001
 
 #define MOUSE_SPEED_FPS 0.05
 #define DELTA_MOVE 0.1
@@ -18,11 +18,9 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 	this->windowWidth = windowWidth;
 	this->windowHeight = windowHeight;
 
-	double radius = 0.001; // v. small number.
-	double theta = math_helper::toRadians(-45);
-	double phi = math_helper::toRadians(45);
-	this->camera = Camera(theta, phi, radius, 10, 10, 10);
-	//this->camera = FirstPersonCamera();
+	double theta = math_helper::toRadians(135);
+	double phi = math_helper::toRadians(-35);
+	this->camera = Camera(theta, phi, 10, 10, 10);
 	this->scene = VisualisationScene(&this->camera);
 }
 
@@ -115,23 +113,19 @@ void Visualisation::run(){
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			if (state[SDL_SCANCODE_W]) {
 				//this->camera.updateThetaPhi(0, -DELTA_THETA_PHI);
-				this->camera.move(DELTA_MOVE);
-				//this->camera.move(DELTA_MOVE_STRAFE);
+				this->camera.move(-DELTA_MOVE);
 			}
 			if (state[SDL_SCANCODE_A]) {
 				//this->camera.updateThetaPhi(-DELTA_THETA_PHI, 0);
-				this->camera.strafe(DELTA_STRAFE);
-				//this->camera.strafe(-DELTA_MOVE_STRAFE);
+				this->camera.strafe(-DELTA_STRAFE);
 			}
 			if (state[SDL_SCANCODE_S]) {
 				//this->camera.updateThetaPhi(0, DELTA_THETA_PHI);
-				this->camera.move(-DELTA_MOVE);
-				//this->camera.move(-DELTA_MOVE_STRAFE);
+				this->camera.move(DELTA_MOVE);
 			}
 			if (state[SDL_SCANCODE_D]) {
 				//this->camera.updateThetaPhi(DELTA_THETA_PHI, 0);
-				this->camera.strafe(-DELTA_STRAFE);
-				//this->camera.strafe(DELTA_MOVE_STRAFE);
+				this->camera.strafe(DELTA_STRAFE);
 			}
 			
 
@@ -149,9 +143,9 @@ void Visualisation::run(){
 							this->handleKeypress(e.key.keysym.sym, x, y);
 						}
 						break;
-					case SDL_MOUSEWHEEL:
-						this->camera.updateRadius(-e.wheel.y);
-						break;
+					//case SDL_MOUSEWHEEL:
+						
+						//break;
 
 					case SDL_MOUSEMOTION:
 						this->handleMouseMove(e.motion.xrel, e.motion.yrel);
@@ -247,10 +241,7 @@ void Visualisation::resizeWindow(){
 
 void Visualisation::handleMouseMove(int x, int y){
 	if (SDL_GetRelativeMouseMode()){
-//		this->camera.updateThetaPhi(x * MOUSE_SPEED, y * MOUSE_SPEED);
-		this->camera.updateThetaPhi(-x * MOUSE_SPEED, y * MOUSE_SPEED);
-
-		//this->camera.updatePitchYawRoll(y * MOUSE_SPEED_FPS, -x * MOUSE_SPEED_FPS, 0);
+		this->camera.updateThetaPhi(-x * MOUSE_SPEED, -y * MOUSE_SPEED);
 	}
 }
 

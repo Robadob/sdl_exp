@@ -121,7 +121,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Axis.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_helper.cpp" />
     <ClCompile Include="Quaternion.cpp" />
@@ -130,7 +132,9 @@
     <ClCompile Include="VisualisationScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Axis.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Cube.h" />
     <ClInclude Include="math_helper.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Vec3D.h" />

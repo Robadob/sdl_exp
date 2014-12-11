@@ -3,10 +3,7 @@
 #include "gl\glew.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
-
-#define xIndex 0
-#define yIndex 1
-#define zIndex 2
+#include "Vec3D.h"
 
 class Camera
 {
@@ -17,16 +14,16 @@ public:
 	void updateThetaPhi(double thetaInc, double phiInc);
 	void move(double distance);
 	void strafe(double distance);
-	void updateWorldPosition(double xInc, double yInc, double zInc);
-	void calctargetPosition();
+	void ascend(double distance);
+	void updateWorldPosition(Vec3D inc);
+	void calcTargetUp();
 	void view(); // Calls glu look at
 
 private:
-	double target[3];
-	double eye[3];
-	double up[3];
-
-	double worldPosition[3];
+	Vec3D target;
+	Vec3D eye;
+	Vec3D up;
+	Vec3D worldPosition;
 	
 	double theta;
 	double phi;

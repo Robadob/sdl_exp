@@ -8,7 +8,7 @@ public:
 	// Destructor
 	~Quaternion();
 
-	// Public member variables for simple acces, Could have used a struct tbh
+	// Public member variables for simple acces
 	double x;
 	double y;
 	double z;
@@ -18,12 +18,7 @@ public:
 	void normalize();
 	Quaternion conjugate();
 	
-	// Overloaded operators?
+	// Operators
 	friend Quaternion operator*(const Quaternion &a, const Quaternion &b);
-
-
-	// Public methods
-private:
-	// Private methods
 };
 

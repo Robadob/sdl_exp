@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define FOV 60.0
+#define FOVY 60.0
 #define NEAR_CLIP 0.1
 #define FAR_CLIP 500.0
 #define DELTA_THETA_PHI 0.01
@@ -12,6 +12,7 @@
 #define MOUSE_SPEED_FPS 0.05
 #define DELTA_MOVE 0.1
 #define DELTA_STRAFE 0.1
+#define DELTA_ASCEND 0.1
 
 Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight) : quit(false){
 	this->windowTitle = windowTitle;
@@ -112,20 +113,22 @@ void Visualisation::run(){
 			// Handle continues press keys (movement)
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			if (state[SDL_SCANCODE_W]) {
-				//this->camera.updateThetaPhi(0, -DELTA_THETA_PHI);
 				this->camera.move(-DELTA_MOVE);
 			}
 			if (state[SDL_SCANCODE_A]) {
-				//this->camera.updateThetaPhi(-DELTA_THETA_PHI, 0);
 				this->camera.strafe(-DELTA_STRAFE);
 			}
 			if (state[SDL_SCANCODE_S]) {
-				//this->camera.updateThetaPhi(0, DELTA_THETA_PHI);
 				this->camera.move(DELTA_MOVE);
 			}
 			if (state[SDL_SCANCODE_D]) {
-				//this->camera.updateThetaPhi(DELTA_THETA_PHI, 0);
 				this->camera.strafe(DELTA_STRAFE);
+			}
+			if (state[SDL_SCANCODE_SPACE]) {
+				this->camera.ascend(DELTA_ASCEND);
+			}
+			if (state[SDL_SCANCODE_LCTRL]) {
+				this->camera.ascend(-DELTA_ASCEND);
 			}
 			
 
@@ -223,7 +226,7 @@ void Visualisation::resizeWindow(){
 	SDL_GL_GetDrawableSize(this->window, &width, &height);
 
 	double fAspect = (double)width / (double)height;
-	double fovy = FOV;
+	double fovy = FOVY;
 
 	glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);

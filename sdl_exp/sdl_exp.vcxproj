@@ -125,6 +125,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="math_helper.cpp" />
     <ClCompile Include="Quaternion.cpp" />
+    <ClCompile Include="Vec3D.cpp" />
     <ClCompile Include="Visualisation.cpp" />
     <ClCompile Include="VisualisationScene.cpp" />
   </ItemGroup>
@@ -132,6 +133,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="math_helper.h" />
     <ClInclude Include="Quaternion.h" />
+    <ClInclude Include="Vec3D.h" />
     <ClInclude Include="Visualisation.h" />
     <ClInclude Include="VisualisationScene.h" />
   </ItemGroup>

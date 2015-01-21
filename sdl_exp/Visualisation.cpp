@@ -2,6 +2,8 @@
 #include "math_helper.h"
 #include <math.h>
 
+#include "Shaders.h"
+
 
 #define FOVY 60.0
 #define NEAR_CLIP 0.1
@@ -32,6 +34,8 @@ Visualisation::~Visualisation(){
 bool Visualisation::init(){
 	bool result = true;
 
+	SDL_Init(SDL_INIT_VIDEO);
+
 	window = SDL_CreateWindow
 		(
 		this->windowTitle,
@@ -55,9 +59,24 @@ bool Visualisation::init(){
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 
+		
 		// Get context
 		this->context = SDL_GL_CreateContext(window);
+
+		// Init glew.
+		GLenum err = glewInit();
+		if (GLEW_OK != err)
+		{
+			/* Problem: glewInit failed, something is seriously wrong. */
+			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+			exit(1);
+		}
+		
+
+		// Shader stuff?
+		Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag", 0);
 
 		// Setup gl stuff
 		glEnable(GL_DEPTH_TEST);
@@ -68,7 +87,6 @@ bool Visualisation::init(){
 		/*glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);*/
 		glEnable(GL_COLOR_MATERIAL);
-
 		glEnable(GL_NORMALIZE);
 
 		// Setup the projection matrix

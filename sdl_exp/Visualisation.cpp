@@ -76,7 +76,7 @@ bool Visualisation::init(){
 		
 
 		// Shader stuff?
-		Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag", 0);
+		Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag");
 
 		// Setup gl stuff
 		glEnable(GL_DEPTH_TEST);

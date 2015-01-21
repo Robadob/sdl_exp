@@ -93,5 +93,8 @@
     <None Include="glsl\main.vert">
       <Filter>glsl</Filter>
     </None>
+    <None Include="glsl\main.geom">
+      <Filter>glsl</Filter>
+    </None>
   </ItemGroup>
 </Project>

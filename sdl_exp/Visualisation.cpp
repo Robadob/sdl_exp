@@ -24,10 +24,10 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 	double theta = math_helper::toRadians(135);
 	double phi = math_helper::toRadians(-35);
 	this->camera = Camera(theta, phi, 10, 10, 10);
-	this->scene = VisualisationScene(&this->camera);
 }
 
 Visualisation::~Visualisation(){
+	delete this->scene;
 }
 
 
@@ -73,10 +73,12 @@ bool Visualisation::init(){
 			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
 			exit(1);
 		}
-		
 
 		// Shader stuff?
 		Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag");
+
+		// Create the scene - need to be done after glew is init
+		this->scene = new VisualisationScene(&this->camera);
 
 		// Setup gl stuff
 		glEnable(GL_DEPTH_TEST);
@@ -179,9 +181,9 @@ void Visualisation::run(){
 			}
 
 			// update
-			this->scene.update();
+			this->scene->update();
 			// render
-			this->scene.render();
+			this->scene->render();
 			// update the screen
 			SDL_GL_SwapWindow(window);
 		}

@@ -40,7 +40,7 @@ private:
 	SDL_Window* window;
 	SDL_GLContext context;
 	Camera camera;
-	VisualisationScene scene;
+	VisualisationScene* scene;
 
 	bool quit;
 

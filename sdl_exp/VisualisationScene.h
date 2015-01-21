@@ -19,5 +19,6 @@ public:
 private:
 	Camera* camera;
 
+
 };
 

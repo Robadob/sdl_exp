@@ -4,7 +4,7 @@
 #include "Axis.h"
 
 
-VisualisationScene::VisualisationScene(Camera* camera)
+VisualisationScene::VisualisationScene(Camera* camera) : camera(camera)
 {
 	this->camera = camera;
 }

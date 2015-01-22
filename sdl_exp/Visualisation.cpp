@@ -88,8 +88,8 @@ bool Visualisation::init(){
 		glCullFace(GL_BACK);
 		glShadeModel(GL_SMOOTH);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		/*glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);*/
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
 		glEnable(GL_COLOR_MATERIAL);
 		glEnable(GL_NORMALIZE);
 

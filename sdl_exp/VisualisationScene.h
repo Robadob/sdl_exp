@@ -6,6 +6,8 @@
 #include "SDL/SDL_opengl.h"
 
 #include "Camera.h"
+#include "Axis.h"
+#include "Entity.h"
 
 class VisualisationScene
 {
@@ -18,7 +20,9 @@ public:
 
 private:
 	Camera* camera;
-
+	Axis* axis;
+	Entity* object;
+	
 
 };
 

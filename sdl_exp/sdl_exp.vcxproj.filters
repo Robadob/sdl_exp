@@ -15,6 +15,11 @@
     </Filter>
     <Filter Include="glsl">
       <UniqueIdentifier>{8719067d-b56a-41f9-919a-b59f3ab89bcb}</UniqueIdentifier>
+      <Extensions>frag;vert;geom</Extensions>
+    </Filter>
+    <Filter Include="objects">
+      <UniqueIdentifier>{89407d9e-0293-4129-8ca5-45ddf6a6ad56}</UniqueIdentifier>
+      <Extensions>obj</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +53,9 @@
     <ClCompile Include="Shaders.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Visualisation.h">
@@ -78,6 +86,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

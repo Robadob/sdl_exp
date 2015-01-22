@@ -35,10 +35,25 @@ void VisualisationScene::render(){
 
 	axis.render();
 
-	c1.render();
+	c1.renderVBO();
 	glPushMatrix();
-		glTranslated(-4, 0, 4);
-		c2.render();
+	glTranslated(-4, 0, 4);
+	c2.render();
 	glPopMatrix();
-	
+
+	/*glPushMatrix();
+	glTranslated(10, 0, 10);
+	int N = 10;
+	for (int i = 0; i < N; ++i){
+		for (int j = 0; j < N; ++j){
+			for (int k = 0; k < N; ++k){
+				glPushMatrix();
+					glTranslated(1.1*i, 1.1*j, 1.1*k);
+					c1.render();
+				glPopMatrix();
+			}
+		}
+	}
+	glPopMatrix();
+	*/
 }

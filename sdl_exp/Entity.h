@@ -7,6 +7,13 @@ typedef float float3[3];
 typedef float float4[4];
 typedef int int3[3];
 
+struct mtl {
+	char* materialName;
+	float3 ambient, diffuse, specular;
+	float specularExponent, dissolve;
+	int illuminationMode;
+};
+
 class Entity
 {
 public:
@@ -31,6 +38,10 @@ protected:
 	//Vertex Buffer Objects for rendering
 	GLuint vertices_vbo;
 	GLuint faces_vbo;
+	// Material properties
+	mtl material;
+	
+
 	/**
 	 * Creates a vertex buffer object of the specified size
 	**/
@@ -48,6 +59,7 @@ protected:
 	 * @note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals
 	**/
 	void loadModelFromFile(const char *path, float modelScale);
+	void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
 	/**
 	 * Allocates the storage for model primitives
 	**/

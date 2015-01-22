@@ -16,7 +16,7 @@
 #define DELTA_STRAFE 0.1
 #define DELTA_ASCEND 0.1
 
-Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight) : quit(false){
+Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight) : isInitialised(false), quit(false){
 	this->windowTitle = windowTitle;
 	this->windowWidth = windowWidth;
 	this->windowHeight = windowHeight;
@@ -24,6 +24,8 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 	double theta = math_helper::toRadians(135);
 	double phi = math_helper::toRadians(-35);
 	this->camera = Camera(theta, phi, 10, 10, 10);
+
+	this->isInitialised = this->init();
 }
 
 Visualisation::~Visualisation(){
@@ -122,8 +124,8 @@ void Visualisation::close(){
 }
 
 void Visualisation::run(){
-	if (!this->init()){
-		printf("Init fail");
+	if (!this->isInitialised){
+		printf("Visulisation not initialised yet.");
 	}
 	else {
 		SDL_Event e;

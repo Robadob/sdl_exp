@@ -42,6 +42,7 @@ private:
 	Camera camera;
 	VisualisationScene* scene;
 
+	bool isInitialised;
 	bool quit;
 
 	char* windowTitle;

@@ -29,13 +29,14 @@ void VisualisationScene::render(){
 	// Place lighting here, before any objects
 	
 	//@todo temp lighting
+	glEnable(GL_LIGHT0);
 	float lightPosition[3] = {0, 10, 0};
 	float amb[3] = { 0.1f, 0.1f, 0.1f };
 	float white[3] = { 1, 1, 1 };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+	//glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+	//glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+	//glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
 
 	// Objects

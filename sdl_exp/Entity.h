@@ -1,18 +1,13 @@
 #ifndef __Entity_h__
 #define __Entity_h__
 
+#include "Material.h"
 #include "GL\glew.h"
 
 typedef float float3[3];
 typedef float float4[4];
 typedef int int3[3];
 
-struct mtl {
-	char* materialName;
-	float3 ambient, diffuse, specular;
-	float specularExponent, dissolve;
-	int illuminationMode;
-};
 
 class Entity
 {
@@ -39,7 +34,7 @@ protected:
 	GLuint vertices_vbo;
 	GLuint faces_vbo;
 	// Material properties
-	mtl material;
+	Material *material;
 	
 
 	/**

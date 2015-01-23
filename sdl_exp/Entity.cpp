@@ -15,6 +15,7 @@ Entity::Entity(const char *modelPath, float modelScale)
 	, vertices_vbo(0)
 	, faces_vbo(0)
 	, SCALE(modelScale)
+	, material(nullptr)
 {
 	loadModelFromFile(modelPath, modelScale);
 	//Vertex Buffer Objects
@@ -25,6 +26,10 @@ Entity::Entity(const char *modelPath, float modelScale)
 Entity::~Entity()
 {
 	freeModel();
+	if (this->material != NULL){
+		delete this->material;
+	}
+	
 }
 /**
  * Calls the necessary code to render the entities model
@@ -42,18 +47,15 @@ void Entity::render()
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_ELEMENT_ARRAY_BUFFER);
 
-	// If we have a material name, use the material
-	if (this->material.materialName != '\0'){
+	// If we have a 
+	if (this->material != NULL){
 		//glColor4f(1, 1, 1, 1);
-		//glColor4f(material.ambient[0], material.ambient[1], material.ambient[2], material.dissolve);
-		glEnable(GL_LIGHTING);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material.ambient);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material.diffuse);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material.specular);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &material.specularExponent);
-		float amb[3] = {1,1,0};
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, amb);
-		printf("amb: %f, %f, %f\n", material.ambient[0], material.ambient[1], material.ambient[2]);
+		//glColor4f(material->ambient[0], material->ambient[1], material->ambient[2], material->dissolve);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material->ambient.c_arr());
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material->diffuse.c_arr());
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material->specular.c_arr());
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &material->shininess);
+		printf("amb: %f, %f, %f\n", material->ambient.x, material->ambient.y, material->ambient.z);
 
 	}
 	else {
@@ -267,7 +269,6 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 	// Prep vars for storing mtl properties
 	char buffer[100];
 	char temp[100];
-	mtl mat;
 	float r, g, b;
 	int i;
 
@@ -280,12 +281,14 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 	const char* DISSOLVE_IDENTIFEIR = "d"; //alpha
 	const char* ILLUMINATION_MODE_IDENTIFIER = "illum";
 
+	this->material = new Material();
+
 	// iter file
 	while (!feof(file)) {
 		if (fscanf(file, "%s", buffer) == 1){
 			if (strcmp(buffer, MATERIAL_NAME_IDENTIFIER) == 0){
 				if (fscanf(file, "%s", &temp) == 1){
-					mat.materialName = temp;
+					//this->material->materialName = temp; // @todo
 				}
 				else {
 					printf("Bad material file...");
@@ -293,9 +296,9 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					mat.ambient[0] = r;
-					mat.ambient[1] = g;
-					mat.ambient[2] = b;
+					this->material->ambient.x = r;
+					this->material->ambient.y = g;
+					this->material->ambient.z = b;
 				}
 				else {
 					printf("Bad material file...");
@@ -303,9 +306,9 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					mat.diffuse[0] = r;
-					mat.diffuse[1] = g;
-					mat.diffuse[2] = b;
+					this->material->diffuse.x = r;
+					this->material->diffuse.y = g;
+					this->material->diffuse.z = b;
 				}
 				else {
 					printf("Bad material file...");
@@ -313,9 +316,9 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					mat.specular[0] = r;
-					mat.specular[1] = g;
-					mat.specular[2] = b;
+					this->material->specular.x = r;
+					this->material->specular.y = g;
+					this->material->specular.z = b;
 				}
 				else {
 					printf("Bad material file...");
@@ -323,7 +326,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, SPECULAR_EXPONENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f", &r) == 1){
-					mat.specularExponent = r;
+					this->material->shininess = r;
 				}
 				else {
 					printf("Bad material file...");
@@ -331,7 +334,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, DISSOLVE_IDENTIFEIR) == 0) {
 				if (fscanf(file, "%f", &r) == 1){
-					mat.dissolve = r;
+					this->material->dissolve = r;
 				}
 				else {
 					printf("Bad material file...");
@@ -339,7 +342,9 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, ILLUMINATION_MODE_IDENTIFIER) == 0) {
 				if (fscanf(file, "%d", &i) == 1){
-					mat.illuminationMode = i;
+					//@todo  ignore this for now.
+
+					//this->material->illuminationMode = i;
 				}
 				else {
 					printf("Bad material file...");
@@ -348,8 +353,6 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 
 		}
 	}
-
-	this->material = mat;
 	
 }
 

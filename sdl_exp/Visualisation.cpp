@@ -77,7 +77,7 @@ bool Visualisation::init(){
 		}
 
 		// Shader stuff?
-		Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag");
+		//Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag");
 
 		// Create the scene - need to be done after glew is init
 		this->scene = new VisualisationScene(&this->camera);

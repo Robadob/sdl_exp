@@ -1,21 +1,22 @@
 #pragma once
 
-#include "Vec3F.h"
+#include "Vec4F.h"
 
 class Material
 {
 public:
 	Material();
-	Material(Vec3F ambient, Vec3F diffuse, Vec3F specular, Vec3F emission, float shininess, float dissolve);
+	Material(Vec4F ambient, Vec4F diffuse, Vec4F specular, Vec4F emission, float shininess, float dissolve);
 	~Material();
 
-	Vec3F ambient;
-	Vec3F diffuse;
-	Vec3F specular;
-	Vec3F emission; // Unused;
+	Vec4F ambient;
+	Vec4F diffuse;
+	Vec4F specular;
+	Vec4F emission; // Unused;
 	float shininess;
 	float dissolve;
 
+	void useMaterial();
 	void printToConsole();
 };
 

@@ -49,18 +49,13 @@ void Entity::render()
 
 	// If we have a 
 	if (this->material != NULL){
-		//glColor4f(1, 1, 1, 1);
-		//glColor4f(material->ambient[0], material->ambient[1], material->ambient[2], material->dissolve);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material->ambient.c_arr());
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material->diffuse.c_arr());
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material->specular.c_arr());
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &material->shininess);
-		printf("amb: %f, %f, %f\n", material->ambient.x, material->ambient.y, material->ambient.z);
+		
+		this->material->useMaterial();
 
 	}
 	else {
 		//Red
-		glColor4f(1.0, 0.0, 0.0, 1.0);
+		//glColor4f(1.0, 0.0, 0.0, 1.0);
 	}
 
 	glPushMatrix();
@@ -296,9 +291,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->ambient.x = r;
-					this->material->ambient.y = g;
-					this->material->ambient.z = b;
+					this->material->ambient.xyzw(r, g, b, 1.0);
 				}
 				else {
 					printf("Bad material file...");
@@ -306,9 +299,8 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->diffuse.x = r;
-					this->material->diffuse.y = g;
-					this->material->diffuse.z = b;
+					this->material->diffuse.xyzw(r, g, b, 1.0);
+
 				}
 				else {
 					printf("Bad material file...");
@@ -316,9 +308,8 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->specular.x = r;
-					this->material->specular.y = g;
-					this->material->specular.z = b;
+					this->material->specular.xyzw(r, g, b, 1.0);
+
 				}
 				else {
 					printf("Bad material file...");

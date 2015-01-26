@@ -13,8 +13,6 @@ public:
 	void normalize();
 	void xyz(float x, float y, float z);
 
-	float *c_arr();
-
 	// Operators
 	friend Vec3F operator+(const Vec3F &a, const Vec3F &b);
 	friend Vec3F operator-(const Vec3F &a, const Vec3F &b);

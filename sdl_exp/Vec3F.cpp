@@ -31,11 +31,6 @@ void Vec3F::xyz(float x, float y, float z){
 	this->z = z;
 }
 
-float* Vec3F::c_arr(){
-	float arr[4] = {this->x, this->y, this->z, 1.0f}; // Gross hacky thing for materials
-	return arr;
-}
-
 
 // Operators
 Vec3F operator+(const Vec3F &a, const Vec3F &b){

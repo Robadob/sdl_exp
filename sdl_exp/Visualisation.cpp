@@ -1,6 +1,8 @@
 #include "Visualisation.h"
 #include "math_helper.h"
 #include <math.h>
+#include <string>
+#include <sstream>
 
 #include "Shaders.h"
 
@@ -15,6 +17,7 @@
 #define DELTA_MOVE 0.1
 #define DELTA_STRAFE 0.1
 #define DELTA_ASCEND 0.1
+#define ONE_SECOND_MS 1000
 
 Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight) : isInitialised(false), quit(false){
 	this->windowTitle = windowTitle;
@@ -38,7 +41,7 @@ bool Visualisation::init(){
 
 	SDL_Init(SDL_INIT_VIDEO);
 
-	window = SDL_CreateWindow
+	this->window = SDL_CreateWindow
 		(
 		this->windowTitle,
 		SDL_WINDOWPOS_UNDEFINED,
@@ -48,7 +51,7 @@ bool Visualisation::init(){
 		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
 		);
 
-	if (window == NULL){
+	if (this->window == NULL){
 		printf("window failed to init");
 		result = false;
 	}
@@ -131,6 +134,9 @@ void Visualisation::run(){
 		SDL_Event e;
 		SDL_StartTextInput();
 		while (!this->quit){
+			// Update the fps
+			this->updateFPS();
+			
 
 			// Handle continues press keys (movement)
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -273,4 +279,27 @@ void Visualisation::handleMouseMove(int x, int y){
 bool Visualisation::isFullscreen(){
 	// Use window borders as a toggle to detect fullscreen.
 	return SDL_GetWindowFlags(this->window) & SDL_WINDOW_BORDERLESS;
+}
+
+// Super simple fps counter imoplementation
+void Visualisation::updateFPS(){
+	// Update the current time
+	this->currentTime = SDL_GetTicks();
+	// Update frame counter
+	this->frameCount += 1;
+	// If it's been more than a second, do something.
+	if (this->currentTime > this->previousTime + ONE_SECOND_MS){
+		// Calculate average fps.
+		double fps = this->frameCount / double(this->currentTime - this->previousTime) * ONE_SECOND_MS;
+		// printf("FPS: %f (%d, %d, %d)\n", fps, this->frameCount, this->currentTime, this->previousTime);
+
+		// Update the title to include FPS at the end.
+		std::ostringstream newTitle;
+		newTitle << this->windowTitle << " (" << std::to_string(fps) << " fps)";
+		SDL_SetWindowTitle(this->window, newTitle.str().c_str());
+
+		// reset values;
+		this->previousTime = this->currentTime;
+		this->frameCount = 0;
+	}
 }

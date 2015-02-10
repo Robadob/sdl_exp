@@ -136,7 +136,6 @@ void Visualisation::run(){
 		while (!this->quit){
 			// Update the fps
 			this->updateFPS();
-			
 
 			// Handle continues press keys (movement)
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -291,8 +290,6 @@ void Visualisation::updateFPS(){
 	if (this->currentTime > this->previousTime + ONE_SECOND_MS){
 		// Calculate average fps.
 		double fps = this->frameCount / double(this->currentTime - this->previousTime) * ONE_SECOND_MS;
-		// printf("FPS: %f (%d, %d, %d)\n", fps, this->frameCount, this->currentTime, this->previousTime);
-
 		// Update the title to include FPS at the end.
 		std::ostringstream newTitle;
 		newTitle << this->windowTitle << " (" << std::to_string(fps) << " fps)";

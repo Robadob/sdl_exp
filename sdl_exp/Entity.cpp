@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 
 /**
  * @param modelPath Path to .obj format model file
@@ -14,6 +15,7 @@ Entity::Entity(const char *modelPath, float modelScale)
 	, vertices_vbo(0)
 	, faces_vbo(0)
 	, SCALE(modelScale)
+	, material(nullptr)
 {
 	loadModelFromFile(modelPath, modelScale);
 	//Vertex Buffer Objects
@@ -24,6 +26,10 @@ Entity::Entity(const char *modelPath, float modelScale)
 Entity::~Entity()
 {
 	freeModel();
+	if (this->material != NULL){
+		delete this->material;
+	}
+	
 }
 /**
  * Calls the necessary code to render the entities model
@@ -41,8 +47,16 @@ void Entity::render()
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_ELEMENT_ARRAY_BUFFER);
 
-	//Red
-	glColor4f(1.0,0.0,0.0,1.0);
+	// If we have a 
+	if (this->material != NULL){
+		
+		this->material->useMaterial();
+
+	}
+	else {
+		//Red
+		//glColor4f(1.0, 0.0, 0.0, 1.0);
+	}
 
 	glPushMatrix();
 		///glTranslatef(0,0,0);		
@@ -93,6 +107,8 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 	const char* VERTEX_IDENTIFIER = "v";
 	const char* VERTEX_NORMAL_IDENTIFIER = "vn";
 	const char* FACE_IDENTIFIER = "f";
+	const char* MTLLIB_IDENTIFIER = "mtllib";
+	const char* USEMTL_IDENTIFEIR = "usemtl";
 	//Counters
 	int vertices_read = 0; 
 	int normals_read = 0; 
@@ -101,6 +117,8 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 	char buffer[100];
 	float x,y,z;
 	int f1a, f1b, f2a, f2b, f3a, f3b;
+	char materialFile[100] = ""; // @todo - this could be improved;
+	char materialName[100] = ""; // @todo - this could be improved;
 	//Open file
 	FILE* file = fopen(path, "r");
 	if (file == NULL){
@@ -179,9 +197,28 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 					printf("Incomplete face data\n");
 				}	
 			}
+			else if (strcmp(buffer, MTLLIB_IDENTIFIER) == 0){
+				if (fscanf(file, "%s", &materialFile) != 1){
+					printf("Incomplete material filename");
+					// reset materialFile
+					materialFile[0] = '\0';
+				}
+			}
+			else if (strcmp(buffer, USEMTL_IDENTIFEIR) == 0){
+				if (fscanf(file, "%s", &materialName) != 1){
+					printf("Incomplete material name");
+					// reset materialName
+					materialName[0] = '\0';
+				}
+			}
 		}
 	}
-	
+	if (materialFile[0] != '\0' && materialName != '\0'){
+		// Materials are in use, attempt to load the material file
+		loadMaterialFromFile(path, materialFile, materialName);
+	}
+
+
 	printf("%s: %i Vertices, %i V-Normals & %i Faces were loaded.\n",path,vertices_read,normals_read,faces_read);
 	if(modelScale>0)
 	{
@@ -210,6 +247,106 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 	fclose(file);
 	free(t_normals);
 }
+
+// @todo - this only works with 1 material per file.
+void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName){
+	// Figure out the actual filepath, obj path dir but with matrial filename on the end.
+	std::string objectPath = objPath;
+	unsigned found = objectPath.find_last_of('/');
+	std::string materialPath = objectPath.substr(0, found).append("/").append(materialFilename);
+
+	//Open file
+	FILE* file = fopen(materialPath.c_str(), "r");
+	if (file == NULL){
+		printf("Could not open ,material '%s'!\n", materialPath.c_str());
+		return;
+	}
+	// Prep vars for storing mtl properties
+	char buffer[100];
+	char temp[100];
+	float r, g, b;
+	int i;
+
+	// identifier strings
+	const char* MATERIAL_NAME_IDENTIFIER = "newmtl";
+	const char* AMBIENT_IDENTIFIER = "Ka";
+	const char* DIFFUSE_IDENTIFIER = "Kd";
+	const char* SPECULAR_IDENTIFIER = "Ks";
+	const char* SPECULAR_EXPONENT_IDENTIFIER = "Ns";
+	const char* DISSOLVE_IDENTIFEIR = "d"; //alpha
+	const char* ILLUMINATION_MODE_IDENTIFIER = "illum";
+
+	this->material = new Material();
+
+	// iter file
+	while (!feof(file)) {
+		if (fscanf(file, "%s", buffer) == 1){
+			if (strcmp(buffer, MATERIAL_NAME_IDENTIFIER) == 0){
+				if (fscanf(file, "%s", &temp) == 1){
+					//this->material->materialName = temp; // @todo
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
+				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+					this->material->ambient.xyzw(r, g, b, 1.0);
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
+				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+					this->material->diffuse.xyzw(r, g, b, 1.0);
+
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
+				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+					this->material->specular.xyzw(r, g, b, 1.0);
+
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (strcmp(buffer, SPECULAR_EXPONENT_IDENTIFIER) == 0){
+				if (fscanf(file, "%f", &r) == 1){
+					this->material->shininess = r;
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (strcmp(buffer, DISSOLVE_IDENTIFEIR) == 0) {
+				if (fscanf(file, "%f", &r) == 1){
+					this->material->dissolve = r;
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (strcmp(buffer, ILLUMINATION_MODE_IDENTIFIER) == 0) {
+				if (fscanf(file, "%d", &i) == 1){
+					//@todo  ignore this for now.
+
+					//this->material->illuminationMode = i;
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+
+		}
+	}
+	
+}
+
 /**
  * Allocates the storage for model primitives
 **/

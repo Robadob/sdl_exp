@@ -34,6 +34,7 @@ public:
 	void resizeWindow();
 	void handleMouseMove(int x, int y);
 	bool isFullscreen();
+	void updateFPS();
 
 
 private:
@@ -50,6 +51,10 @@ private:
 	int windowHeight;
 	
 	SDL_Rect windowedBounds;
+
+	unsigned int previousTime = 0;
+	unsigned int currentTime;
+	unsigned int frameCount = 0;
 
 };
 

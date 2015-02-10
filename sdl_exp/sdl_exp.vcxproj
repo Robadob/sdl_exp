@@ -126,10 +126,13 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="math_helper.cpp" />
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Vec3D.cpp" />
+    <ClCompile Include="Vec3F.cpp" />
+    <ClCompile Include="Vec4F.cpp" />
     <ClCompile Include="Visualisation.cpp" />
     <ClCompile Include="VisualisationScene.cpp" />
   </ItemGroup>
@@ -137,11 +140,14 @@
     <ClInclude Include="Axis.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="math_helper.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="Vec3D.h" />
+    <ClInclude Include="Vec3F.h" />
+    <ClInclude Include="Vec4F.h" />
     <ClInclude Include="Visualisation.h" />
     <ClInclude Include="VisualisationScene.h" />
   </ItemGroup>

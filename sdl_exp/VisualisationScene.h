@@ -22,6 +22,9 @@ private:
 	Camera* camera;
 	Axis* axis;
 	Entity* object;
+	Entity* mesh256;
+
+	int tick = 0;
 	
 
 };

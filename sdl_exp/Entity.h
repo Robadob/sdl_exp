@@ -1,11 +1,13 @@
 #ifndef __Entity_h__
 #define __Entity_h__
 
+#include "Material.h"
 #include "GL\glew.h"
 
 typedef float float3[3];
 typedef float float4[4];
 typedef int int3[3];
+
 
 class Entity
 {
@@ -31,6 +33,10 @@ protected:
 	//Vertex Buffer Objects for rendering
 	GLuint vertices_vbo;
 	GLuint faces_vbo;
+	// Material properties
+	Material *material;
+	
+
 	/**
 	 * Creates a vertex buffer object of the specified size
 	**/
@@ -48,6 +54,7 @@ protected:
 	 * @note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals
 	**/
 	void loadModelFromFile(const char *path, float modelScale);
+	void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
 	/**
 	 * Allocates the storage for model primitives
 	**/

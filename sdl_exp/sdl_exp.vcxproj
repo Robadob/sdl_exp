@@ -84,12 +84,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\ptheywood\local_code\sdl_exp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\ptheywood\local_code\sdl_exp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;glew64.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,11 +122,41 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Axis.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="math_helper.cpp" />
+    <ClCompile Include="Quaternion.cpp" />
+    <ClCompile Include="Shaders.cpp" />
+    <ClCompile Include="Vec3D.cpp" />
+    <ClCompile Include="Vec3F.cpp" />
+    <ClCompile Include="Vec4F.cpp" />
     <ClCompile Include="Visualisation.cpp" />
+    <ClCompile Include="VisualisationScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Axis.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Entity.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="math_helper.h" />
+    <ClInclude Include="Quaternion.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Shaders.h" />
+    <ClInclude Include="Vec3D.h" />
+    <ClInclude Include="Vec3F.h" />
+    <ClInclude Include="Vec4F.h" />
     <ClInclude Include="Visualisation.h" />
+    <ClInclude Include="VisualisationScene.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="sdl_exp.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="glsl\main.frag" />
+    <None Include="glsl\main.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

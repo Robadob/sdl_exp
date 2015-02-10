@@ -1,7 +1,13 @@
 #pragma once
 
 #include <stdio.h>
+#include "gl\glew.h"
 #include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
+
+#include "VisualisationScene.h"
+#include "Camera.h"
+
 #undef main
 
 
@@ -16,8 +22,6 @@ public:
 
 	bool init();
 	void handleKeypress(SDL_Keycode keycode, int x, int y);
-	void update();
-	void render();
 	void close();
 	void run(); // @todo - improve
 
@@ -26,20 +30,31 @@ public:
 	
 	void setQuit(bool quit);
 	void toggleFullScreen();
+	void toggleMouseMode();
+	void resizeWindow();
+	void handleMouseMove(int x, int y);
+	bool isFullscreen();
+	void updateFPS();
 
 
 private:
 	SDL_Window* window;
-	SDL_Renderer* renderer;
+	SDL_GLContext context;
+	Camera camera;
+	VisualisationScene* scene;
 
-	bool quit = false;
+	bool isInitialised;
+	bool quit;
 
 	char* windowTitle;
 	int windowWidth;
 	int windowHeight;
 	
-	bool isFullscreen;
-
 	SDL_Rect windowedBounds;
+
+	unsigned int previousTime = 0;
+	unsigned int currentTime;
+	unsigned int frameCount = 0;
+
 };
 

@@ -68,9 +68,11 @@ void Entity::renderInstances(int instanceCount)
 	//Set vertex buffer, and init pointers to vertices, normals
 	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
 
+	// pass vertices
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+	// pass normals
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(float3))));
 
@@ -99,13 +101,14 @@ void Entity::renderInstances(int instanceCount)
 **/
 void Entity::createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size)
 {
+	checkGLError();
 	glGenBuffers( 1, vbo);
+	checkGLError();
 	glBindBuffer( target, *vbo);
-
+	checkGLError();
 	glBufferData( target, size, 0, GL_STATIC_DRAW);
-
+	checkGLError();
 	glBindBuffer( target, 0);
-
 	checkGLError();
 }
 /**
@@ -407,11 +410,10 @@ void Entity::scaleModel(float modelScale)
 }
 //Not linking with the necessary libs to convert glu error codes to strings :(
 void Entity::checkGLError(){
-	int err;
-	if((err = glGetError()) != GL_NO_ERROR)
+	GLuint error = glGetError();
+	if (error != GL_NO_ERROR)
 	{
-		//const char* message = (const char*)gluErrorString(err);
-		//fprintf(stderr, "OpenGL Error Occured : %s\n", message
-		printf("OpenGL Error Occured: %i\n",err);// : %s\n", message);
+		const char* errMessage = (const char*)gluErrorString(error);
+		fprintf(stderr, "(entity) OpenGL Error #%d: %s\n", error, errMessage);
 	}
 }

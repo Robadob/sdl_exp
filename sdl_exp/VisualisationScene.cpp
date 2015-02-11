@@ -4,8 +4,8 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* shaders) : camer
 {
 	this->camera = camera;
 	this->shaders = shaders;
-	this->object = new Entity("objects/cube.obj", 1.0f);
-	this->mesh256 = new Entity("objects/mesh256.obj", 1.0f);
+	this->object = new Entity("objects/icosphere.obj", 1.0f);
+	//this->mesh256 = new Entity("objects/mesh256.obj", 1.0f);
 
 
 	this->axis = new Axis(5.0);
@@ -39,24 +39,24 @@ void VisualisationScene::render(){
 	// Place lighting here, before any objects
 	
 	//@todo temp lighting
-	//glPushMatrix();
+	glPushMatrix();
 	//	glRotatef(this->tick, 0, 1, 0);
 
-	//	glEnable(GL_LIGHT0);
-	//	float lightPosition[4] = {0, 10, 10, 1};
-	//	float amb[4] = { 0.1f, 0.1f, 0.1f, 1};
-	//	float white[4] = { 1, 1, 1, 1 };
-	//	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	//	glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-	//	glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
-	//	glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+		glEnable(GL_LIGHT0);
+		float lightPosition[4] = {0, 10, 0, 1};
+		float amb[4] = { 0.1f, 0.1f, 0.1f, 1};
+		float white[4] = { 1, 1, 1, 1 };
+		glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+		glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
-	//	// Spotlight stuff
-	//	float angle = 10.0f;
-	//	float direction[4] = { 0.0f, -1.0f, -1.0f, 0};
-	//	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
-	//	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
-	//glPopMatrix();
+		// Spotlight stuff
+		float angle = 10.0f;
+		float direction[4] = { 0.0f, -1.0f, 0.0f, 0};
+		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
+		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
+	glPopMatrix();
 	// Objects
 
 	//this->axis->render();

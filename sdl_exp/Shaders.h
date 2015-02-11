@@ -35,7 +35,7 @@ private:
 	void destroyProgram();
 	void checkGLError();
 	void checkShaderCompileError(int shaderId, char* shaderPath);
-	void checkProgramCompileError();
+	void checkProgramCompileError(int programId);
 
 };
 

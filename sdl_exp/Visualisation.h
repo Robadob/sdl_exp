@@ -6,6 +6,7 @@
 #include "SDL/SDL_opengl.h"
 
 #include "VisualisationScene.h"
+#include "Shaders.h"
 #include "Camera.h"
 
 #undef main
@@ -41,6 +42,7 @@ private:
 	SDL_Window* window;
 	SDL_GLContext context;
 	Camera camera;
+	Shaders* shaders = nullptr;
 	VisualisationScene* scene;
 
 	bool isInitialised;

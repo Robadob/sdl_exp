@@ -1,4 +1,7 @@
 #pragma once
+
+#include <GL/glew.h>
+
 class Shaders
 {
 public:
@@ -10,8 +13,11 @@ public:
 	bool hasGeometryShader();
 
 	void createShaders();
+	void reloadShaders();
 	void useProgram();
 	void clearProgram();
+	void setUniformi(int location, int value);
+	void setUniformMatrix4fv(int location, GLfloat* value);
 
 private:
 	char* vertexShaderPath;

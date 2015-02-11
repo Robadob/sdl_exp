@@ -6,13 +6,14 @@
 #include "SDL/SDL_opengl.h"
 
 #include "Camera.h"
+#include "Shaders.h"
 #include "Axis.h"
 #include "Entity.h"
 
 class VisualisationScene
 {
 public:
-	VisualisationScene(Camera* camera = nullptr);
+	VisualisationScene(Camera* camera = nullptr, Shaders* shaders = nullptr);
 	~VisualisationScene();
 
 	void update();
@@ -20,6 +21,7 @@ public:
 
 private:
 	Camera* camera;
+	Shaders* shaders;
 	Axis* axis;
 	Entity* object;
 	Entity* mesh256;

@@ -4,7 +4,6 @@
 #include <string>
 #include <sstream>
 
-#include "Shaders.h"
 
 
 #define FOVY 60.0
@@ -33,6 +32,7 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 
 Visualisation::~Visualisation(){
 	delete this->scene;
+	delete this->shaders;
 }
 
 
@@ -64,7 +64,8 @@ bool Visualisation::init(){
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+
 
 		
 		// Get context
@@ -80,10 +81,12 @@ bool Visualisation::init(){
 		}
 
 		// Shader stuff?
-		//Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag");
+		
+		this->shaders = new Shaders("glsl/main.vert", "glsl/main.frag");
 
 		// Create the scene - need to be done after glew is init
-		this->scene = new VisualisationScene(&this->camera);
+		this->scene = new VisualisationScene(&this->camera, this->shaders);
+		
 
 		// Setup gl stuff
 		glEnable(GL_DEPTH_TEST);
@@ -91,8 +94,8 @@ bool Visualisation::init(){
 		glCullFace(GL_BACK);
 		glShadeModel(GL_SMOOTH);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_LIGHTING);
-		glEnable(GL_LIGHT0);
+		//glEnable(GL_LIGHTING);
+		//glEnable(GL_LIGHT0);
 		//glEnable(GL_COLOR_MATERIAL);
 		glEnable(GL_NORMALIZE);
 
@@ -110,6 +113,9 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
 		break;
 	case SDLK_F11:
 		this->toggleFullScreen();
+		break;
+	case SDLK_F5:
+		this->shaders->reloadShaders();
 		break;
 	default:
 		// Do nothing?

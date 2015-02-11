@@ -38,35 +38,62 @@ void Entity::render()
 {
 	//Set vertex buffer, and init pointers to vertices, normals
 	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-	glVertexPointer(3, GL_FLOAT, 0, 0);
-	glNormalPointer(GL_FLOAT, 0, ((char *)NULL + (v_count*sizeof(float3))));//2nd half of verices_vbo
-	//Set faces buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_ELEMENT_ARRAY_BUFFER);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(float3))));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
 	// If we have a 
 	if (this->material != NULL){
-		
-		this->material->useMaterial();
-
+		//this->material->useMaterial();
 	}
 	else {
 		//Red
-		//glColor4f(1.0, 0.0, 0.0, 1.0);
+		glColor4f(1.0, 0.0, 0.0, 1.0);
 	}
-
 	glPushMatrix();
-		///glTranslatef(0,0,0);		
-		glDrawElements(GL_TRIANGLES, f_count*3, GL_UNSIGNED_INT, 0); 
+		glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0);
 	glPopMatrix();
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_ELEMENT_ARRAY_BUFFER);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
 }
+
+void Entity::renderInstances(int instanceCount)
+{
+	//Set vertex buffer, and init pointers to vertices, normals
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(float3))));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
+
+	// If we have a 
+	if (this->material != NULL){
+		//this->material->useMaterial();
+	}
+	else {
+		//Red
+		glColor4f(1.0, 0.0, 0.0, 1.0);
+	}
+	glPushMatrix();
+		glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, instanceCount);
+	glPopMatrix();
+
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
+
+}
+
+
 /**
  * Creates a vertex buffer object of the specified size
 **/

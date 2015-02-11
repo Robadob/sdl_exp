@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "GL\glew.h"
 
+
 typedef float float3[3];
 typedef float float4[4];
 typedef int int3[3];
@@ -22,6 +23,7 @@ public:
 	 * Calls the necessary code to render the entities model
 	**/
 	void render();
+	void renderInstances(int instanceCount);
 protected:
 	//World scale of the longest side (in the axis x, y or z)
 	const float SCALE;

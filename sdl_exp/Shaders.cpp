@@ -18,7 +18,7 @@ Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometr
 	this->geometryShaderPath = geometryShaderPath;
 	// Create the shaders
 	this->createShaders();
-	this->useProgram();
+	//this->useProgram();
 }
 
 Shaders::~Shaders(){
@@ -95,12 +95,40 @@ void Shaders::createShaders(){
 	delete geometrySource;
 }
 
+void Shaders::reloadShaders(){
+	fprintf(stdout, "Reloading Shaders\n");
+	this->createShaders();
+}
+
 void Shaders::useProgram(){
 	glUseProgram(this->programId);
+
+	glBindAttribLocation(this->programId, 0, "inPosition");
+	GLfloat model[16];
+	glGetFloatv(GL_MODELVIEW_MATRIX, model);
+	this->setUniformMatrix4fv(1, model);
+	//glUniformMatrix4fv(1, 1, GL_FALSE, model);
+	glGetFloatv(GL_PROJECTION_MATRIX, model);
+	this->setUniformMatrix4fv(2, model);
+	//glUniformMatrix4fv(2, 1, GL_FALSE, model);
+	// this->checkGLError(); 
 }
 
 void Shaders::clearProgram(){
 	glUseProgram(0);
+}
+
+void Shaders::setUniformi(int location, int value){
+	if (location >= 0){
+		glUniform1i(location, value);
+	}
+}
+
+void Shaders::setUniformMatrix4fv(int location, GLfloat* value){
+	if (location >= 0){
+		// Must be false and length with most likely just be 1. Can add an extra parameter version if required.
+		glUniformMatrix4fv(location, 1, GL_FALSE, value);
+	}
 }
 
 char* Shaders::loadShaderSource(char* file){
@@ -143,11 +171,11 @@ void Shaders::destroyProgram(){
 }
 
 void Shaders::checkGLError(){
-	int error;
-	if ((error = glGetError()) != GL_NO_ERROR)
+	GLuint error = glGetError();
+	if (error != GL_NO_ERROR)
 	{
-		const char* Message = (const char*)gluErrorString(error);
-		fprintf(stderr, "OpenGL Error : %s\n", Message);
+		const char* errMessage = (const char*)gluErrorString(error);
+		fprintf(stderr, "OpenGL Error #%d: %s\n", error, errMessage);
 	}
 }
 
@@ -169,6 +197,7 @@ void Shaders::checkShaderCompileError(int shaderId, char* shaderPath){
 		delete log;
 #if EXIT_ON_ERROR == 1
 		//@todo exit maybe?
+		system("pause"); // @temp for pausing on output.
 		exit(1);
 #endif
 	}
@@ -192,6 +221,7 @@ void Shaders::checkProgramCompileError(){
 		printf("%s\n", log);
 #if EXIT_ON_ERROR == 1
 		//@todo exit maybe?
+		system("pause"); // @temp for pausing on output.
 		exit(1);
 #endif
 	}

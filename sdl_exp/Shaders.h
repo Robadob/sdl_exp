@@ -28,6 +28,7 @@ private:
 	int fragmentShaderId;
 	int geometryShaderId;
 	int programId;
+	bool compileSuccessFlag;
 
 	char* loadShaderSource(char* file);
 	void destroyShaders();

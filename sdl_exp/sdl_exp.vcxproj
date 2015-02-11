@@ -130,6 +130,7 @@
     <ClCompile Include="math_helper.cpp" />
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="Shaders.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vec3D.cpp" />
     <ClCompile Include="Vec3F.cpp" />
     <ClCompile Include="Vec4F.cpp" />
@@ -145,6 +146,7 @@
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shaders.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vec3D.h" />
     <ClInclude Include="Vec3F.h" />
     <ClInclude Include="Vec4F.h" />

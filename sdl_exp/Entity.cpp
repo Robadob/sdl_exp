@@ -408,7 +408,7 @@ void Entity::scaleModel(float modelScale)
 		vertices[i][2]*=modelScale;
 	}
 }
-//Not linking with the necessary libs to convert glu error codes to strings :(
+
 void Entity::checkGLError(){
 	GLuint error = glGetError();
 	if (error != GL_NO_ERROR)

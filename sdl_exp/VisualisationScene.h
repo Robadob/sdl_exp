@@ -14,7 +14,7 @@
 class VisualisationScene
 {
 public:
-	VisualisationScene(Camera* camera = nullptr, Shaders* shaders = nullptr);
+	VisualisationScene(Camera* camera = nullptr, Shaders* vechShaders = nullptr, Shaders* envShaders = nullptr);
 	~VisualisationScene();
 
 	void update();
@@ -22,16 +22,21 @@ public:
 
 private:
 	Camera* camera;
-	Shaders* shaders;
+	Shaders* vechShaders;
+	Shaders* envShaders;
 
 	Axis* axis;
 	Entity* object;
 	Entity* mesh256;
 	// Temp stuff to move elsewhere at a later date
 	int agentCount = 0;
-	Texture* texture; 
+	Texture* agent_texture; 
 	GLuint agent_position_data_tbo;
 	GLuint agent_position_data_tex;
+	int environmentCount = 0;
+	Texture* environment_texture;
+	GLuint environment_position_data_tbo;
+	GLuint environment_position_data_tex;
 
 	int tick = 0;
 	

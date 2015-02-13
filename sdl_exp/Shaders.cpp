@@ -81,7 +81,7 @@ void Shaders::createShaders(){
 	}
 
 	// Only attempt to link the program if the compilation of each individual shader was successful.
-	if (true || this->compileSuccessFlag){
+	if (this->compileSuccessFlag){
 
 		// Create the program
 		int newProgramId = glCreateProgram();
@@ -137,7 +137,7 @@ void Shaders::useProgram(){
 	glBindAttribLocation(this->programId, 0, "in_position");
 	this->checkGLError();
 
-	glBindAttribLocation(this->programId, 1, "in_normal");
+	//glBindAttribLocation(this->programId, 1, "in_normal");
 	this->checkGLError();
 
 	GLfloat model[16];

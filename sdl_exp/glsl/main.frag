@@ -15,10 +15,8 @@ void main()
 
     vec4 location_data = texelFetch(location_data_map, int(instanceID));
     vec3 my_colour = vec3(0.0, 0.0, 0.0);
-    if(location_data.a == 0){
+    if(location_data.a < 1.0){
         my_colour.r = 1.0;
-    } else if (location_data.a == 1 ){
-        my_colour.g = 1.0;
     } else {
         my_colour.b = 1.0;
     }

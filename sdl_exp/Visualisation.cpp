@@ -32,7 +32,8 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 
 Visualisation::~Visualisation(){
 	delete this->scene;
-	delete this->shaders;
+	delete this->vechShaders;
+	delete this->envShaders;
 }
 
 
@@ -82,10 +83,11 @@ bool Visualisation::init(){
 
 		// Shader stuff?
 		
-		this->shaders = new Shaders("glsl/main.vert", "glsl/main.frag");
+		this->envShaders = new Shaders("glsl/main.vert", "glsl/main.frag");
+		this->vechShaders = new Shaders("glsl/vech.vert", "glsl/vech.frag");
 
 		// Create the scene - need to be done after glew is init
-		this->scene = new VisualisationScene(&this->camera, this->shaders);
+		this->scene = new VisualisationScene(&this->camera, this->vechShaders, this->envShaders);
 		
 
 		// Setup gl stuff
@@ -115,7 +117,8 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
 		this->toggleFullScreen();
 		break;
 	case SDLK_F5:
-		this->shaders->reloadShaders();
+		this->vechShaders->reloadShaders();
+		this->envShaders->reloadShaders();
 		break;
 	default:
 		// Do nothing?

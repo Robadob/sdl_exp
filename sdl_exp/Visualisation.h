@@ -42,7 +42,8 @@ private:
 	SDL_Window* window;
 	SDL_GLContext context;
 	Camera camera;
-	Shaders* shaders = nullptr;
+	Shaders* vechShaders = nullptr;
+	Shaders* envShaders = nullptr;
 	VisualisationScene* scene;
 
 	bool isInitialised;

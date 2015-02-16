@@ -4,6 +4,9 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
 #include "Vec3D.h"
+#include <glm\glm.hpp>
+#include <glm/gtx/transform.hpp>
+
 
 class Camera
 {
@@ -15,15 +18,15 @@ public:
 	void move(double distance);
 	void strafe(double distance);
 	void ascend(double distance);
-	void updateWorldPosition(Vec3D inc);
+	void updateWorldPosition(glm::dvec3 inc);
 	void calcTargetUp();
-	void view(); // Calls glu look at
+	glm::mat4 view(); // Calls glu look at
 
 private:
-	Vec3D target;
-	Vec3D eye;
-	Vec3D up;
-	Vec3D worldPosition;
+	glm::dvec3 target;
+	glm::dvec3 eye;
+	glm::dvec3 up;
+	glm::dvec3 worldPosition;
 	
 	double theta;
 	double phi;

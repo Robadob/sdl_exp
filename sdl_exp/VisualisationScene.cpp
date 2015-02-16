@@ -89,40 +89,41 @@ void VisualisationScene::update(){
 	}*/
 }
 
-void VisualisationScene::render(){
+void VisualisationScene::render(glm::mat4 projection){
 	glClearColor(0, 0, 0, 1);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
-	this->camera->view();
-	
+	//glLoadIdentity();
+	glm::mat4 view = this->camera->view();
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 modelview = view *  model;
+	//glm::mat4 mvp = projection * view * model; // reverse order is needed.
 
 	
 	// Place lighting here, before any objects
 	
 	//@todo temp lighting
-	glPushMatrix();
-	//	glRotatef(this->tick, 0, 1, 0);
 
-		glEnable(GL_LIGHT0);
-		float lightPosition[4] = {0, 10, 0, 1};
-		float amb[4] = { 0.1f, 0.1f, 0.1f, 1};
-		float white[4] = { 1, 1, 1, 1 };
-		glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-		glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-		glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
-		glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+	glEnable(GL_LIGHT0);
+	float lightPosition[4] = {0, 10, 0, 1};
+	float amb[4] = { 0.1f, 0.1f, 0.1f, 1};
+	float white[4] = { 1, 1, 1, 1 };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
-		// Spotlight stuff
-		float angle = 10.0f;
-		float direction[4] = { 0.0f, -1.0f, 0.0f, 0};
-		glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
-		glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
-	glPopMatrix();
+	// Spotlight stuff
+	float angle = 10.0f;
+	float direction[4] = { 0.0f, -1.0f, 0.0f, 0};
+	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
+	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
 	// Objects
 
 	// Use the environment shadersand texture to render the environment
 	this->envShaders->useProgram();
+	this->envShaders->setUniformMatrix4fv(1, &modelview[0][0]);
+	this->envShaders->setUniformMatrix4fv(2, &projection[0][0]);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER, this->environment_position_data_tex);
@@ -134,7 +135,8 @@ void VisualisationScene::render(){
 	this->envShaders->clearProgram();
 	// Use the vech shaders to render the agents
 	this->vechShaders->useProgram();
-
+	this->vechShaders->setUniformMatrix4fv(1, &modelview[0][0]);
+	this->vechShaders->setUniformMatrix4fv(2, &projection[0][0]);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_BUFFER, this->agent_position_data_tex);
 	glPushMatrix();

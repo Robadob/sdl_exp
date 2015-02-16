@@ -137,18 +137,18 @@ void Shaders::useProgram(){
 	glBindAttribLocation(this->programId, 0, "in_position");
 	this->checkGLError();
 
-	//glBindAttribLocation(this->programId, 1, "in_normal");
-	this->checkGLError();
+	////glBindAttribLocation(this->programId, 1, "in_normal");
+	//this->checkGLError();
 
-	GLfloat model[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, model);
-	this->setUniformMatrix4fv(1, model);
-	//glUniformMatrix4fv(1, 1, GL_FALSE, model);
-	this->checkGLError();
-	glGetFloatv(GL_PROJECTION_MATRIX, model);
-	this->setUniformMatrix4fv(2, model);
-	//glUniformMatrix4fv(2, 1, GL_FALSE, model);
-	this->checkGLError(); 
+	//GLfloat model[16];
+	//glGetFloatv(GL_MODELVIEW_MATRIX, model);
+	//this->setUniformMatrix4fv(1, model);
+	////glUniformMatrix4fv(1, 1, GL_FALSE, model);
+	//this->checkGLError();
+	//glGetFloatv(GL_PROJECTION_MATRIX, model);
+	//this->setUniformMatrix4fv(2, model);
+	////glUniformMatrix4fv(2, 1, GL_FALSE, model);
+	//this->checkGLError(); 
 }
 
 void Shaders::clearProgram(){
@@ -215,7 +215,7 @@ void Shaders::checkGLError(){
 	if (error != GL_NO_ERROR)
 	{
 		const char* errMessage = (const char*)gluErrorString(error);
-		fprintf(stderr, "OpenGL Error #%d: %s\n", error, errMessage);
+		fprintf(stderr, "(shaders)OpenGL Error #%d: %s\n", error, errMessage);
 	}
 }
 

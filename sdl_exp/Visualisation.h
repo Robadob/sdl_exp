@@ -4,6 +4,8 @@
 #include "gl\glew.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
+#include <glm\glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 #include "VisualisationScene.h"
 #include "Shaders.h"
@@ -45,6 +47,7 @@ private:
 	Shaders* vechShaders = nullptr;
 	Shaders* envShaders = nullptr;
 	VisualisationScene* scene;
+	glm::mat4 frustum;
 
 	bool isInitialised;
 	bool quit;

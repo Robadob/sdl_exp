@@ -3,11 +3,7 @@
 
 #include "Material.h"
 #include "GL\glew.h"
-
-typedef float float3[3];
-typedef float float4[4];
-typedef int int3[3];
-
+#include <glm\glm.hpp>
 
 class Entity
 {
@@ -22,14 +18,15 @@ public:
 	 * Calls the necessary code to render the entities model
 	**/
 	void render();
+	void renderInstances(int instanceCount);
 protected:
 	//World scale of the longest side (in the axis x, y or z)
 	const float SCALE;
 	//Model vertex and face counts
 	int v_count, f_count;
 	//Primitive data
-	float3 *vertices, *normals;
-	int3 *faces;
+	glm::vec3 *vertices, *normals;
+	glm::ivec3 *faces;
 	//Vertex Buffer Objects for rendering
 	GLuint vertices_vbo;
 	GLuint faces_vbo;

@@ -41,9 +41,6 @@
     <ClCompile Include="Quaternion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Vec3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Axis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,10 +53,7 @@
     <ClCompile Include="Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Vec3F.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vec4F.cpp">
+    <ClCompile Include="Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -79,9 +73,6 @@
     <ClInclude Include="Quaternion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vec3D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Axis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -97,10 +88,7 @@
     <ClInclude Include="Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vec3F.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vec4F.h">
+    <ClInclude Include="Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

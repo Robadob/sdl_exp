@@ -1,4 +1,9 @@
 #pragma once
+
+#include <GL/glew.h>
+#include <glm\glm.hpp>
+#include <glm/gtx/transform.hpp>
+
 class Shaders
 {
 public:
@@ -10,8 +15,11 @@ public:
 	bool hasGeometryShader();
 
 	void createShaders();
+	void reloadShaders();
 	void useProgram();
 	void clearProgram();
+	void setUniformi(int location, int value);
+	void setUniformMatrix4fv(int location, GLfloat* value);
 
 private:
 	char* vertexShaderPath;
@@ -22,13 +30,14 @@ private:
 	int fragmentShaderId;
 	int geometryShaderId;
 	int programId;
+	bool compileSuccessFlag;
 
 	char* loadShaderSource(char* file);
 	void destroyShaders();
 	void destroyProgram();
 	void checkGLError();
 	void checkShaderCompileError(int shaderId, char* shaderPath);
-	void checkProgramCompileError();
+	void checkProgramCompileError(int programId);
 
 };
 

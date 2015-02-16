@@ -19,8 +19,8 @@ Entity::Entity(const char *modelPath, float modelScale)
 {
 	loadModelFromFile(modelPath, modelScale);
 	//Vertex Buffer Objects
-	createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(float3)*2);//vertices+norms
-	createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(int3));
+	createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2);//vertices+norms
+	createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3));
 	bindVertexBufferData();
 }
 Entity::~Entity()
@@ -38,47 +38,77 @@ void Entity::render()
 {
 	//Set vertex buffer, and init pointers to vertices, normals
 	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-	glVertexPointer(3, GL_FLOAT, 0, 0);
-	glNormalPointer(GL_FLOAT, 0, ((char *)NULL + (v_count*sizeof(float3))));//2nd half of verices_vbo
-	//Set faces buffer
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_ELEMENT_ARRAY_BUFFER);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3))));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
 	// If we have a 
 	if (this->material != NULL){
-		
-		this->material->useMaterial();
-
+		//this->material->useMaterial();
 	}
 	else {
 		//Red
-		//glColor4f(1.0, 0.0, 0.0, 1.0);
+		glColor4f(1.0, 0.0, 0.0, 1.0);
 	}
-
 	glPushMatrix();
-		///glTranslatef(0,0,0);		
-		glDrawElements(GL_TRIANGLES, f_count*3, GL_UNSIGNED_INT, 0); 
+		glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0);
 	glPopMatrix();
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_ELEMENT_ARRAY_BUFFER);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
 }
+
+void Entity::renderInstances(int instanceCount)
+{
+	//Set vertex buffer, and init pointers to vertices, normals
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
+
+	// pass vertices
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	// pass normals
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3))));
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
+
+	// If we have a 
+	if (this->material != NULL){
+		//this->material->useMaterial();
+	}
+	else {
+		//Red
+		glColor4f(1.0, 0.0, 0.0, 1.0);
+	}
+	glPushMatrix();
+		glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, instanceCount);
+	glPopMatrix();
+
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(0);
+
+}
+
+
 /**
  * Creates a vertex buffer object of the specified size
 **/
 void Entity::createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size)
 {
+	checkGLError();
 	glGenBuffers( 1, vbo);
+	checkGLError();
 	glBindBuffer( target, *vbo);
-
+	checkGLError();
 	glBufferData( target, size, 0, GL_STATIC_DRAW);
-
+	checkGLError();
 	glBindBuffer( target, 0);
-
 	checkGLError();
 }
 /**
@@ -94,9 +124,9 @@ void Entity::deleteVertexBufferObject(GLuint *vbo)
 void Entity::bindVertexBufferData()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-	glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(float3)*2, vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2, vertices, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(int3), faces, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3), faces, GL_DYNAMIC_DRAW);
 }
 /**
  * Loads and scales the specified model into this class's primitive storage
@@ -141,7 +171,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 		}
 	}
 	//Create a temp space to cache normals
-	float3 *t_normals = (float3*)malloc(normals_read*sizeof(float3));
+	glm::vec3 *t_normals = (glm::vec3*)malloc(normals_read*sizeof(glm::vec3));
 	//Set/Reset vars
 	v_count = vertices_read;
 	f_count = faces_read;	
@@ -222,8 +252,8 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 	printf("%s: %i Vertices, %i V-Normals & %i Faces were loaded.\n",path,vertices_read,normals_read,faces_read);
 	if(modelScale>0)
 	{
-		float3 minVert = {100000,100000,100000};
-		float3 maxVert = {-100000,-100000,-100000};
+		glm::vec3 minVert = {100000,100000,100000};
+		glm::vec3 maxVert = {-100000,-100000,-100000};
 		for(int i=0;i<vertices_read;i++)
 		{
 			minVert[0]=(minVert[0]<vertices[i][0])?minVert[0]:vertices[i][0];
@@ -291,7 +321,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->ambient.xyzw(r, g, b, 1.0);
+					this->material->ambient = glm::vec4(r, g, b, 1.0);
 				}
 				else {
 					printf("Bad material file...");
@@ -299,7 +329,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->diffuse.xyzw(r, g, b, 1.0);
+					this->material->diffuse = glm::vec4(r, g, b, 1.0);
 
 				}
 				else {
@@ -308,7 +338,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->specular.xyzw(r, g, b, 1.0);
+					this->material->specular = glm::vec4(r, g, b, 1.0);
 
 				}
 				else {
@@ -352,9 +382,9 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 **/
 void Entity::allocateModel()
 {
-	vertices = (float3*)malloc(v_count*sizeof(float3)*2);
+	vertices = (glm::vec3*)malloc(v_count*sizeof(glm::vec3)*2);
 	normals = vertices+v_count;//Arrays are continuous
-	faces = (int3*)malloc(f_count*sizeof(int3));
+	faces = (glm::ivec3*)malloc(f_count*sizeof(glm::ivec3));
 }
 /**
  * Deallocates the storage for model primitives
@@ -378,13 +408,12 @@ void Entity::scaleModel(float modelScale)
 		vertices[i][2]*=modelScale;
 	}
 }
-//Not linking with the necessary libs to convert glu error codes to strings :(
+
 void Entity::checkGLError(){
-	int err;
-	if((err = glGetError()) != GL_NO_ERROR)
+	GLuint error = glGetError();
+	if (error != GL_NO_ERROR)
 	{
-		//const char* message = (const char*)gluErrorString(err);
-		//fprintf(stderr, "OpenGL Error Occured : %s\n", message
-		printf("OpenGL Error Occured: %i\n",err);// : %s\n", message);
+		const char* errMessage = (const char*)gluErrorString(error);
+		fprintf(stderr, "(entity) OpenGL Error #%d: %s\n", error, errMessage);
 	}
 }

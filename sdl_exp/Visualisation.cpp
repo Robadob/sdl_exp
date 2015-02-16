@@ -4,7 +4,6 @@
 #include <string>
 #include <sstream>
 
-#include "Shaders.h"
 
 
 #define FOVY 60.0
@@ -33,6 +32,8 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 
 Visualisation::~Visualisation(){
 	delete this->scene;
+	delete this->vechShaders;
+	delete this->envShaders;
 }
 
 
@@ -64,7 +65,8 @@ bool Visualisation::init(){
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+
 
 		
 		// Get context
@@ -80,10 +82,14 @@ bool Visualisation::init(){
 		}
 
 		// Shader stuff?
-		//Shaders shaders = Shaders("glsl/main.vert", "glsl/main.frag");
+		
+		this->envShaders = new Shaders("glsl/main.vert", "glsl/main.frag");
+		this->vechShaders= new Shaders("glsl/main.vert", "glsl/main.frag");
+		//this->vechShaders = new Shaders("glsl/vech.vert", "glsl/vech.frag");
 
 		// Create the scene - need to be done after glew is init
-		this->scene = new VisualisationScene(&this->camera);
+		this->scene = new VisualisationScene(&this->camera, this->vechShaders, this->envShaders);
+		
 
 		// Setup gl stuff
 		glEnable(GL_DEPTH_TEST);
@@ -110,6 +116,10 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
 		break;
 	case SDLK_F11:
 		this->toggleFullScreen();
+		break;
+	case SDLK_F5:
+		this->vechShaders->reloadShaders();
+		this->envShaders->reloadShaders();
 		break;
 	default:
 		// Do nothing?
@@ -190,7 +200,7 @@ void Visualisation::run(){
 			// update
 			this->scene->update();
 			// render
-			this->scene->render();
+			this->scene->render(this->frustum);
 			// update the screen
 			SDL_GL_SwapWindow(window);
 		}
@@ -262,10 +272,11 @@ void Visualisation::resizeWindow(){
 	double bottom = -top;
 	double left = fAspect * bottom;
 	double right = fAspect * top;
-	glFrustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	//glFrustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	this->frustum = glm::frustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
 	//gluPerspective(fovy, fAspect, NEAR_CLIP, FAR_CLIP);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 
 }
 

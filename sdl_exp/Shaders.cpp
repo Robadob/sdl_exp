@@ -11,14 +11,16 @@
 #define EXIT_ON_ERROR 0
 
 
-Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometryShaderPath){
+Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometryShaderPath) : compileSuccessFlag(true){
 	// This is a bit pointless but why not.
 	this->vertexShaderPath = vertexShaderPath;
 	this->fragmentShaderPath = fragmentShaderPath;
 	this->geometryShaderPath = geometryShaderPath;
 	// Create the shaders
 	this->createShaders();
-	this->useProgram();
+	//this->useProgram();
+	this->checkGLError();
+
 }
 
 Shaders::~Shaders(){
@@ -39,6 +41,8 @@ bool Shaders::hasGeometryShader(){
 
 
 void Shaders::createShaders(){
+	// Reset the flag
+	this->compileSuccessFlag = true;
 	// Load shader files
 	const char* vertexSource = loadShaderSource(this->vertexShaderPath);
 	const char* fragmentSource = loadShaderSource(this->fragmentShaderPath);
@@ -53,39 +57,66 @@ void Shaders::createShaders(){
 		this->vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 		//printf("\n>>vsi: %d\n", this->vertexShaderId);
 		glShaderSource(this->vertexShaderId, 1, &vertexSource, 0);
+		this->checkGLError();
 		glCompileShader(this->vertexShaderId);
+		this->checkGLError();
 		this->checkShaderCompileError(this->vertexShaderId, this->vertexShaderPath);
 
 	}
 	if (this->hasFragmentShader()){
 		this->fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(this->fragmentShaderId, 1, &fragmentSource, 0);
+		this->checkGLError();
 		glCompileShader(this->fragmentShaderId);
+		this->checkGLError();
 		this->checkShaderCompileError(this->fragmentShaderId, this->fragmentShaderPath);
 	}
 	if (this->hasGeometryShader()){
 		this->geometryShaderId = glCreateShader(GL_GEOMETRY_SHADER);
 		glShaderSource(this->geometryShaderId, 1, &geometrySource, 0);
+		this->checkGLError();
 		glCompileShader(this->geometryShaderId);
+		this->checkGLError();
 		this->checkShaderCompileError(this->geometryShaderId, this->geometryShaderPath);
 	}
 
-	// Create the program
-	this->programId = glCreateProgram();
+	// Only attempt to link the program if the compilation of each individual shader was successful.
+	if (this->compileSuccessFlag){
 
-	// Attach each included shader
-	if (this->hasVertexShader()){
-		glAttachShader(this->programId, this->vertexShaderId);
+		// Create the program
+		int newProgramId = glCreateProgram();
+		this->checkGLError();
+
+		// Attach each included shader
+		if (this->hasVertexShader()){
+			glAttachShader(newProgramId, this->vertexShaderId);
+			this->checkGLError();
+		}
+		if (this->hasFragmentShader()){
+			glAttachShader(newProgramId, this->fragmentShaderId);
+			this->checkGLError();
+		}
+		if (this->hasGeometryShader()){
+			glAttachShader(newProgramId, this->geometryShaderId);
+			this->checkGLError();
+		}
+		// Link the program and Ensure the program compiled correctly;
+		glLinkProgram(newProgramId);
+		this->checkGLError();
+
+		this->checkProgramCompileError(newProgramId);
+		this->checkGLError();
+		// If the program compiled ok, then we update the instance variable (for live reloading
+		if (this->compileSuccessFlag){
+			// Destroy the old program
+			this->destroyProgram();
+			this->checkGLError();
+			// Update the class var for the next usage.
+			this->programId = newProgramId;
+			this->checkGLError();
+		}
 	}
-	if (this->hasFragmentShader()){
-		glAttachShader(this->programId, this->fragmentShaderId);
-	}
-	if (this->hasGeometryShader()){
-		glAttachShader(this->programId, this->geometryShaderId);
-	}
-	// Link the program and Ensure the program compiled correctly;
-	glLinkProgram(this->programId);
-	this->checkProgramCompileError();
+	this->checkGLError();
 
 	// Clean up any shaders
 	this->destroyShaders();
@@ -95,12 +126,46 @@ void Shaders::createShaders(){
 	delete geometrySource;
 }
 
+void Shaders::reloadShaders(){
+	fprintf(stdout, "Reloading Shaders\n");
+	this->createShaders();
+}
+
 void Shaders::useProgram(){
 	glUseProgram(this->programId);
+
+	glBindAttribLocation(this->programId, 0, "in_position");
+	this->checkGLError();
+
+	////glBindAttribLocation(this->programId, 1, "in_normal");
+	//this->checkGLError();
+
+	//GLfloat model[16];
+	//glGetFloatv(GL_MODELVIEW_MATRIX, model);
+	//this->setUniformMatrix4fv(1, model);
+	////glUniformMatrix4fv(1, 1, GL_FALSE, model);
+	//this->checkGLError();
+	//glGetFloatv(GL_PROJECTION_MATRIX, model);
+	//this->setUniformMatrix4fv(2, model);
+	////glUniformMatrix4fv(2, 1, GL_FALSE, model);
+	//this->checkGLError(); 
 }
 
 void Shaders::clearProgram(){
 	glUseProgram(0);
+}
+
+void Shaders::setUniformi(int location, int value){
+	if (location >= 0){
+		glUniform1i(location, value);
+	}
+}
+
+void Shaders::setUniformMatrix4fv(int location, GLfloat* value){
+	if (location >= 0){
+		// Must be false and length with most likely just be 1. Can add an extra parameter version if required.
+		glUniformMatrix4fv(location, 1, GL_FALSE, value);
+	}
 }
 
 char* Shaders::loadShaderSource(char* file){
@@ -129,12 +194,15 @@ void Shaders::destroyShaders(){
 	// Destroy the shaders and program
 	if (this->hasVertexShader()){
 		glDeleteShader(this->vertexShaderId);
+		this->checkGLError();
 	}
 	if (this->hasFragmentShader()){
 		glDeleteShader(this->fragmentShaderId);
+		this->checkGLError();
 	}
 	if (this->hasGeometryShader()){
 		glDeleteShader(this->geometryShaderId);
+		this->checkGLError();
 	}
 }
 
@@ -143,11 +211,11 @@ void Shaders::destroyProgram(){
 }
 
 void Shaders::checkGLError(){
-	int error;
-	if ((error = glGetError()) != GL_NO_ERROR)
+	GLuint error = glGetError();
+	if (error != GL_NO_ERROR)
 	{
-		const char* Message = (const char*)gluErrorString(error);
-		fprintf(stderr, "OpenGL Error : %s\n", Message);
+		const char* errMessage = (const char*)gluErrorString(error);
+		fprintf(stderr, "(shaders)OpenGL Error #%d: %s\n", error, errMessage);
 	}
 }
 
@@ -167,8 +235,10 @@ void Shaders::checkShaderCompileError(int shaderId, char* shaderPath){
 		printf("Shader compilation error (%s) :\n", shaderPath);
 		printf("%s\n", log);
 		delete log;
+		this->compileSuccessFlag = false;
 #if EXIT_ON_ERROR == 1
 		//@todo exit maybe?
+		system("pause"); // @temp for pausing on output.
 		exit(1);
 #endif
 	}
@@ -177,9 +247,11 @@ void Shaders::checkShaderCompileError(int shaderId, char* shaderPath){
 
 
 
-void Shaders::checkProgramCompileError(){
+void Shaders::checkProgramCompileError(int programId){
 	int status;
-	glGetProgramiv(this->programId, GL_LINK_STATUS, &status);
+	this->checkGLError();
+	glGetProgramiv(programId, GL_LINK_STATUS, &status);
+	this->checkGLError();
 	if (status == GL_FALSE){
 		// Get the length of the info log
 		GLint len;
@@ -190,8 +262,11 @@ void Shaders::checkProgramCompileError(){
 		// Print the message
 		printf("Program compilation error:\n");
 		printf("%s\n", log);
+		this->compileSuccessFlag = false;
+		this->checkGLError();
 #if EXIT_ON_ERROR == 1
 		//@todo exit maybe?
+		system("pause"); // @temp for pausing on output.
 		exit(1);
 #endif
 	}

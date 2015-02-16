@@ -89,7 +89,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;glew64.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;glew32.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -130,9 +130,7 @@
     <ClCompile Include="math_helper.cpp" />
     <ClCompile Include="Quaternion.cpp" />
     <ClCompile Include="Shaders.cpp" />
-    <ClCompile Include="Vec3D.cpp" />
-    <ClCompile Include="Vec3F.cpp" />
-    <ClCompile Include="Vec4F.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Visualisation.cpp" />
     <ClCompile Include="VisualisationScene.cpp" />
   </ItemGroup>
@@ -145,9 +143,7 @@
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shaders.h" />
-    <ClInclude Include="Vec3D.h" />
-    <ClInclude Include="Vec3F.h" />
-    <ClInclude Include="Vec4F.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Visualisation.h" />
     <ClInclude Include="VisualisationScene.h" />
   </ItemGroup>

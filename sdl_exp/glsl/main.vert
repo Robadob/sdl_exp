@@ -7,6 +7,7 @@ layout(location = 1) in vec3 normal;
 // Uniforms
 layout(location = 1) uniform mat4 modelview_matrix;
 layout(location = 2) uniform mat4 projection_matrix;
+// layout(location = 1) uniform mat4 MVP;
 uniform samplerBuffer location_data_map;
 
 // Outpus

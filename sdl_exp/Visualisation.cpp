@@ -199,7 +199,7 @@ void Visualisation::run(){
 			// update
 			this->scene->update();
 			// render
-			this->scene->render();
+			this->scene->render(this->frustum);
 			// update the screen
 			SDL_GL_SwapWindow(window);
 		}
@@ -271,10 +271,11 @@ void Visualisation::resizeWindow(){
 	double bottom = -top;
 	double left = fAspect * bottom;
 	double right = fAspect * top;
-	glFrustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	//glFrustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	this->frustum = glm::frustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
 	//gluPerspective(fovy, fAspect, NEAR_CLIP, FAR_CLIP);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 
 }
 

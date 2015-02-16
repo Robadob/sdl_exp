@@ -1,18 +1,18 @@
 #pragma once
 
-#include "Vec4F.h"
+#include <glm\glm.hpp>
 
 class Material
 {
 public:
 	Material();
-	Material(Vec4F ambient, Vec4F diffuse, Vec4F specular, Vec4F emission, float shininess, float dissolve);
+	Material(glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec4 emission, float shininess, float dissolve);
 	~Material();
 
-	Vec4F ambient;
-	Vec4F diffuse;
-	Vec4F specular;
-	Vec4F emission; // Unused;
+	glm::vec4 ambient;
+	glm::vec4 diffuse;
+	glm::vec4 specular;
+	glm::vec4 emission; // Unused;
 	float shininess;
 	float dissolve;
 

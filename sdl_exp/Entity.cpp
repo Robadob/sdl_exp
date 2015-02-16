@@ -321,7 +321,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->ambient.xyzw(r, g, b, 1.0);
+					this->material->ambient = glm::vec4(r, g, b, 1.0);
 				}
 				else {
 					printf("Bad material file...");
@@ -329,7 +329,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->diffuse.xyzw(r, g, b, 1.0);
+					this->material->diffuse = glm::vec4(r, g, b, 1.0);
 
 				}
 				else {
@@ -338,7 +338,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->specular.xyzw(r, g, b, 1.0);
+					this->material->specular = glm::vec4(r, g, b, 1.0);
 
 				}
 				else {

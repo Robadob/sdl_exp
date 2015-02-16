@@ -19,8 +19,8 @@ Entity::Entity(const char *modelPath, float modelScale)
 {
 	loadModelFromFile(modelPath, modelScale);
 	//Vertex Buffer Objects
-	createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(float3)*2);//vertices+norms
-	createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(int3));
+	createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2);//vertices+norms
+	createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3));
 	bindVertexBufferData();
 }
 Entity::~Entity()
@@ -43,7 +43,7 @@ void Entity::render()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(float3))));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3))));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
@@ -74,7 +74,7 @@ void Entity::renderInstances(int instanceCount)
 
 	// pass normals
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(float3))));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3))));
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
@@ -124,9 +124,9 @@ void Entity::deleteVertexBufferObject(GLuint *vbo)
 void Entity::bindVertexBufferData()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-	glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(float3)*2, vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2, vertices, GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(int3), faces, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3), faces, GL_DYNAMIC_DRAW);
 }
 /**
  * Loads and scales the specified model into this class's primitive storage
@@ -171,7 +171,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 		}
 	}
 	//Create a temp space to cache normals
-	float3 *t_normals = (float3*)malloc(normals_read*sizeof(float3));
+	glm::vec3 *t_normals = (glm::vec3*)malloc(normals_read*sizeof(glm::vec3));
 	//Set/Reset vars
 	v_count = vertices_read;
 	f_count = faces_read;	
@@ -252,8 +252,8 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
 	printf("%s: %i Vertices, %i V-Normals & %i Faces were loaded.\n",path,vertices_read,normals_read,faces_read);
 	if(modelScale>0)
 	{
-		float3 minVert = {100000,100000,100000};
-		float3 maxVert = {-100000,-100000,-100000};
+		glm::vec3 minVert = {100000,100000,100000};
+		glm::vec3 maxVert = {-100000,-100000,-100000};
 		for(int i=0;i<vertices_read;i++)
 		{
 			minVert[0]=(minVert[0]<vertices[i][0])?minVert[0]:vertices[i][0];
@@ -382,9 +382,9 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 **/
 void Entity::allocateModel()
 {
-	vertices = (float3*)malloc(v_count*sizeof(float3)*2);
+	vertices = (glm::vec3*)malloc(v_count*sizeof(glm::vec3)*2);
 	normals = vertices+v_count;//Arrays are continuous
-	faces = (int3*)malloc(f_count*sizeof(int3));
+	faces = (glm::ivec3*)malloc(f_count*sizeof(glm::ivec3));
 }
 /**
  * Deallocates the storage for model primitives

@@ -1,5 +1,4 @@
 #include "VisualisationScene.h"
-typedef float float4[4];
 
 #define ENV_ROW_COUNT 4
 #define ENV_NODE_OFFSET 8
@@ -30,7 +29,7 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 	this->agent_texture->createTextureBufferObject(&this->agent_position_data_tbo, &this->agent_position_data_tex, this->agentCount);
 
 	// Generate some mock data
-	float4 *agentLocationData = (float4*)malloc(this->agentCount*sizeof(float4));
+	glm::vec4 *agentLocationData = (glm::vec4*)malloc(this->agentCount*sizeof(glm::vec4));
 	for (int i = 0; i < this->agentCount / agentsPerRow; ++i){
 		for (int j = 0; j < agentsPerRow; ++j){
 			int index = (i*agentsPerRow) + j;
@@ -43,8 +42,8 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 
 	// Bind the mock data?
 	glBindBuffer(GL_TEXTURE_BUFFER, this->agent_position_data_tbo);
-	glBufferData(GL_TEXTURE_BUFFER, this->agentCount * sizeof(float4), agentLocationData, GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(float3) * 2, vertices, GL_DYNAMIC_DRAW);
+	glBufferData(GL_TEXTURE_BUFFER, this->agentCount * sizeof(glm::vec4), agentLocationData, GL_STATIC_DRAW);
+
 
 	// Initialise and generate environment texture
 	this->environmentCount = ENV_ROW_COUNT * ENV_ROW_COUNT;
@@ -54,9 +53,9 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 	this->environment_texture->createTextureBufferObject(&this->environment_position_data_tbo, &this->environment_position_data_tex, this->environmentCount);
 
 	// Generate some mock data
-	float4 *envLocationData = (float4*)malloc(this->environmentCount*sizeof(float4));
+	glm::vec4 *envLocationData = (glm::vec4*)malloc(this->environmentCount*sizeof(glm::vec4));
 	for (int i = 0; i < this->environmentCount; ++i){
-		float4 d = { i, 0.0f, 0.0f, 1.0f };
+		glm::vec4 d = { i, 0.0f, 0.0f, 1.0f };
 		envLocationData[i][0] = ENV_NODE_OFFSET * (i / ENV_ROW_COUNT);
 		envLocationData[i][1] = 0.0f;
 		envLocationData[i][2] = ENV_NODE_OFFSET * (i % ENV_ROW_COUNT);
@@ -64,7 +63,7 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 	}
 	// Bind the mock data?
 	glBindBuffer(GL_TEXTURE_BUFFER, this->environment_position_data_tbo);
-	glBufferData(GL_TEXTURE_BUFFER, this->environmentCount * sizeof(float4), envLocationData, GL_STATIC_DRAW);
+	glBufferData(GL_TEXTURE_BUFFER, this->environmentCount * sizeof(glm::vec4), envLocationData, GL_STATIC_DRAW);
 
 	// Bind texture data - this probs shouldnt be here.
 	

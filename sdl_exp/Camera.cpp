@@ -76,13 +76,6 @@ void Camera::calcTargetUp(){
 }
 
 glm::mat4 Camera::view(){
-	//Vec3D worldEye = this->eye + this->worldPosition;
-	//Vec3D worldTarget = this->target + this->worldPosition;
-	/*gluLookAt(
-		worldEye.x, worldEye.y, worldEye.z,
-		worldTarget.x, worldTarget.y, worldTarget.z,
-		this->up.x, this->up.y, this->up.z
-		);*/
 	glm::dvec3 worldEye = this->eye + this->worldPosition;
 	glm::dvec3 worldTarget = this->target + this->worldPosition;
 	glm::mat4 view = glm::lookAt(worldEye, worldTarget, this->up);

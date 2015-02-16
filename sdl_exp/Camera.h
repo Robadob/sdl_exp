@@ -3,7 +3,6 @@
 #include "gl\glew.h"
 #include "SDL/SDL.h"
 #include "SDL/SDL_opengl.h"
-#include "Vec3D.h"
 #include <glm\glm.hpp>
 #include <glm/gtx/transform.hpp>
 

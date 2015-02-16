@@ -5,11 +5,11 @@
 
 #define DEFAULT_SHININESS 32
 
-Material::Material() : ambient(Vec4F(0, 0, 0, 1)), diffuse(Vec4F(0, 0, 0, 1)), specular(Vec4F(0, 0, 0, 1)), emission(Vec4F(0, 0, 0, 1)), shininess(DEFAULT_SHININESS), dissolve(1){
+Material::Material() : ambient(glm::vec4(0, 0, 0, 1)), diffuse(glm::vec4(0, 0, 0, 1)), specular(glm::vec4(0, 0, 0, 1)), emission(glm::vec4(0, 0, 0, 1)), shininess(DEFAULT_SHININESS), dissolve(1){
 
 }
 
-Material::Material(Vec4F ambient, Vec4F diffuse, Vec4F specular, Vec4F emission, float shininess, float dissolve)
+Material::Material(glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec4 emission, float shininess, float dissolve)
 {
 	this->ambient = ambient;
 	this->diffuse = diffuse;

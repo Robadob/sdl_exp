@@ -84,7 +84,8 @@ bool Visualisation::init(){
 		// Shader stuff?
 		
 		this->envShaders = new Shaders("glsl/main.vert", "glsl/main.frag");
-		this->vechShaders = new Shaders("glsl/vech.vert", "glsl/vech.frag");
+		this->vechShaders= new Shaders("glsl/main.vert", "glsl/main.frag");
+		//this->vechShaders = new Shaders("glsl/vech.vert", "glsl/vech.frag");
 
 		// Create the scene - need to be done after glew is init
 		this->scene = new VisualisationScene(&this->camera, this->vechShaders, this->envShaders);

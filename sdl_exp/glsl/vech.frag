@@ -47,7 +47,7 @@ void main()
     vec4 Ispec = front_light_specular * pow(max(dot(R, E), 0.0), 0.3 * front_light_shininess);
     Ispec = clamp(Ispec, 0.0, 1.0);
     // Set the final colour
-    color = vec4((my_colour/1), 1.0) + Iamb + Idiff + Ispec;
+    color = vec4((my_colour/3), 1.0) + Iamb + Idiff + Ispec;
 
     // End attempt
 

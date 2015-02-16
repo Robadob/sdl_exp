@@ -24,5 +24,5 @@ void main(void) {
     // Set output values for subsequent shaders
     instanceID = gl_InstanceID;
     // u_normal = (vec4(in_position, 1.0)).rbg;
-    u_normal = (vec4(in_position, 1.0)).rbg;
+    u_normal = ( modelview_matrix * vec4((in_position), 1.0)).rbg;
 }

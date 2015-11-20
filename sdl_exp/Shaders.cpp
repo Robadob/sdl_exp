@@ -1,3 +1,4 @@
+#define  _CRT_SECURE_NO_WARNINGS
 #include "Shaders.h"
 #include <stdio.h>
 #include <string.h>
@@ -9,6 +10,7 @@
 #include <GL/glew.h>
 
 #define EXIT_ON_ERROR 0
+
 
 
 Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometryShaderPath) : compileSuccessFlag(true){
@@ -28,15 +30,15 @@ Shaders::~Shaders(){
 }
 
 bool Shaders::hasVertexShader(){
-	return (bool) this->vertexShaderPath;
+	return this->vertexShaderPath!=0;
 }
 
 bool Shaders::hasFragmentShader(){
-	return (bool) this->fragmentShaderPath;
+    return this->fragmentShaderPath != 0;
 }
 
 bool Shaders::hasGeometryShader(){
-	return (bool) this->geometryShaderPath;
+    return this->geometryShaderPath != 0;
 }
 
 

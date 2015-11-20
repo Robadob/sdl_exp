@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "SDL/SDL_opengl.h"
 
-Axis::Axis(double length){
+Axis::Axis(float length){
 	this->length = length;
 }
 

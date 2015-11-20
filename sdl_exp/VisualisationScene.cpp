@@ -19,7 +19,7 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 	// Do some Texture stuff here for now, realted to the numbe of instnaces.
 	int agentsPerRoad = 1;
 	int agentsPerRow = (ENV_ROW_COUNT ) * agentsPerRoad;
-	float agentOffsetPerRoad = ENV_NODE_OFFSET / (agentsPerRoad +1);
+    float agentOffsetPerRoad = ENV_NODE_OFFSET / static_cast<float>(agentsPerRoad + 1);
 	
 
 	this->agentCount = agentsPerRow * agentsPerRow;
@@ -29,14 +29,14 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 	this->agent_texture->createTextureBufferObject(&this->agent_position_data_tbo, &this->agent_position_data_tex, this->agentCount);
 
 	// Generate some mock data
-	glm::vec4 *agentLocationData = (glm::vec4*)malloc(this->agentCount*sizeof(glm::vec4));
+    glm::vec4 *agentLocationData = static_cast<glm::vec4*>(malloc(this->agentCount*sizeof(glm::vec4)));
 	for (int i = 0; i < this->agentCount / agentsPerRow; ++i){
 		for (int j = 0; j < agentsPerRow; ++j){
 			int index = (i*agentsPerRow) + j;
 			agentLocationData[index][0] = agentOffsetPerRoad + (ENV_NODE_OFFSET * i);
 			agentLocationData[index][1] = 0;
-			agentLocationData[index][2] =  (ENV_NODE_OFFSET * j);
-			agentLocationData[index][3] = i % 3;
+            agentLocationData[index][2] = static_cast<float>(ENV_NODE_OFFSET * j);
+            agentLocationData[index][3] = static_cast<float>(i % 3);
 		}
 	}
 
@@ -53,13 +53,13 @@ VisualisationScene::VisualisationScene(Camera* camera, Shaders* vechShaders, Sha
 	this->environment_texture->createTextureBufferObject(&this->environment_position_data_tbo, &this->environment_position_data_tex, this->environmentCount);
 
 	// Generate some mock data
-	glm::vec4 *envLocationData = (glm::vec4*)malloc(this->environmentCount*sizeof(glm::vec4));
+    glm::vec4 *envLocationData = static_cast<glm::vec4*>(malloc(this->environmentCount*sizeof(glm::vec4)));
 	for (int i = 0; i < this->environmentCount; ++i){
 		glm::vec4 d = { i, 0.0f, 0.0f, 1.0f };
-		envLocationData[i][0] = ENV_NODE_OFFSET * (i / ENV_ROW_COUNT);
+        envLocationData[i][0] = static_cast<float>(ENV_NODE_OFFSET * (i / ENV_ROW_COUNT));
 		envLocationData[i][1] = 0.0f;
-		envLocationData[i][2] = ENV_NODE_OFFSET * (i % ENV_ROW_COUNT);
-		envLocationData[i][3] = i % ENV_COLOUR_COUNT;
+        envLocationData[i][2] = static_cast<float>(ENV_NODE_OFFSET * (i % ENV_ROW_COUNT));
+        envLocationData[i][3] = static_cast<float>(i % ENV_COLOUR_COUNT);
 	}
 	// Bind the mock data?
 	glBindBuffer(GL_TEXTURE_BUFFER, this->environment_position_data_tbo);

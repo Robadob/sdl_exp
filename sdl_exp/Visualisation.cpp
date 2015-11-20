@@ -6,16 +6,16 @@
 
 
 
-#define FOVY 60.0
-#define NEAR_CLIP 0.1
-#define FAR_CLIP 500.0
-#define DELTA_THETA_PHI 0.01
-#define MOUSE_SPEED 0.001
+#define FOVY 60.0f
+#define NEAR_CLIP 0.1f
+#define FAR_CLIP 500.0f
+#define DELTA_THETA_PHI 0.01f
+#define MOUSE_SPEED 0.001f
 
-#define MOUSE_SPEED_FPS 0.05
-#define DELTA_MOVE 0.1
-#define DELTA_STRAFE 0.1
-#define DELTA_ASCEND 0.1
+#define MOUSE_SPEED_FPS 0.05f
+#define DELTA_MOVE 0.1f
+#define DELTA_STRAFE 0.1f
+#define DELTA_ASCEND 0.1f
 #define ONE_SECOND_MS 1000
 
 Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight) : isInitialised(false), quit(false){
@@ -23,9 +23,9 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 	this->windowWidth = windowWidth;
 	this->windowHeight = windowHeight;
 
-	double theta = math_helper::toRadians(135);
-	double phi = math_helper::toRadians(-35);
-	this->camera = Camera(theta, phi, 10, 10, 10);
+	float theta = static_cast<float>(math_helper::toRadians(135));
+    float phi = static_cast<float>(math_helper::toRadians(-35));
+    this->camera = Camera(glm::vec3(10),theta, phi);
 
 	this->isInitialised = this->init();
 }
@@ -262,18 +262,18 @@ void Visualisation::resizeWindow(){
 
 	SDL_GL_GetDrawableSize(this->window, &width, &height);
 
-	double fAspect = (double)width / (double)height;
+    float fAspect = static_cast<float>(width) / static_cast<float>(height);
 	double fovy = FOVY;
 
 	glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	double top = tan(math_helper::toRadians(fovy * 0.5)) * NEAR_CLIP;
-	double bottom = -top;
-	double left = fAspect * bottom;
-	double right = fAspect * top;
+    float top = static_cast<float>(tan(math_helper::toRadians(fovy * 0.5)) * NEAR_CLIP);
+    float bottom = -top;
+    float left = fAspect * bottom;
+    float right = fAspect * top;
 	//glFrustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
-	this->frustum = glm::frustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
 	//gluPerspective(fovy, fAspect, NEAR_CLIP, FAR_CLIP);
 	//glMatrixMode(GL_MODELVIEW);
 	//glLoadIdentity();
@@ -282,13 +282,13 @@ void Visualisation::resizeWindow(){
 
 void Visualisation::handleMouseMove(int x, int y){
 	if (SDL_GetRelativeMouseMode()){
-		this->camera.updateThetaPhi(-x * MOUSE_SPEED, -y * MOUSE_SPEED);
+        this->camera.turn(-x * MOUSE_SPEED, -y * MOUSE_SPEED);
 	}
 }
 
 bool Visualisation::isFullscreen(){
 	// Use window borders as a toggle to detect fullscreen.
-	return SDL_GetWindowFlags(this->window) & SDL_WINDOW_BORDERLESS;
+    return (SDL_GetWindowFlags(this->window) & SDL_WINDOW_BORDERLESS) == SDL_WINDOW_BORDERLESS;
 }
 
 // Super simple fps counter imoplementation

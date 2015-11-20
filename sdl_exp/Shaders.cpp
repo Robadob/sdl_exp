@@ -49,13 +49,17 @@ void Shaders::createShaders(){
 	const char* vertexSource = loadShaderSource(this->vertexShaderPath);
 	const char* fragmentSource = loadShaderSource(this->fragmentShaderPath);
 	const char* geometrySource = loadShaderSource(this->geometryShaderPath);
+	//Check for shaders that didn't load correctly
+	if (vertexSource == 0) this->vertexShaderPath = 0;
+	if (fragmentSource == 0) this->fragmentShaderPath = 0;
+	if (geometrySource == 0) this->geometryShaderPath = 0;
 
-	// For each non empty shader
+	// For each shader we have been able to read.
 	// Create the empty shader handle
 	// Atrtempt to compile the shader
 	// Check compilation
 	// If it fails, bail out.
-	if (this->hasVertexShader()){
+	if (hasVertexShader()){
 		this->vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 		//printf("\n>>vsi: %d\n", this->vertexShaderId);
 		glShaderSource(this->vertexShaderId, 1, &vertexSource, 0);
@@ -65,7 +69,7 @@ void Shaders::createShaders(){
 		this->checkShaderCompileError(this->vertexShaderId, this->vertexShaderPath);
 
 	}
-	if (this->hasFragmentShader()){
+	if (hasFragmentShader()){
 		this->fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(this->fragmentShaderId, 1, &fragmentSource, 0);
 		this->checkGLError();
@@ -73,7 +77,7 @@ void Shaders::createShaders(){
 		this->checkGLError();
 		this->checkShaderCompileError(this->fragmentShaderId, this->fragmentShaderPath);
 	}
-	if (this->hasGeometryShader()){
+	if (hasGeometryShader()){
 		this->geometryShaderId = glCreateShader(GL_GEOMETRY_SHADER);
 		glShaderSource(this->geometryShaderId, 1, &geometrySource, 0);
 		this->checkGLError();
@@ -175,7 +179,13 @@ char* Shaders::loadShaderSource(char* file){
 	if (file != 0){
 		FILE* fptr = fopen(file, "rb");
 		if (!fptr){
-			return NULL;
+			printf("Shader not found: %s\n", file);
+#if EXIT_ON_ERROR == 1
+			//@todo exit maybe?
+			system("pause"); // @temp for pausing on output.
+			exit(1);
+#endif
+			return 0;
 		}
 		fseek(fptr, 0, SEEK_END);
 		long length = ftell(fptr);
@@ -256,7 +266,7 @@ void Shaders::checkProgramCompileError(int programId){
 	this->checkGLError();
 	if (status == GL_FALSE){
 		// Get the length of the info log
-		GLint len;
+		GLint len = 0;
 		glGetProgramiv(this->programId, GL_INFO_LOG_LENGTH, &len);
 		// Get the contents of the log message
 		char* log = new char[len + 1];

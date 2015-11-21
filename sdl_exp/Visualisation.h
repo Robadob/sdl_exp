@@ -22,52 +22,52 @@
 class Visualisation
 {
 public:
-	Visualisation(char* windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT);
-	~Visualisation();
+    Visualisation(char* windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT);
+    ~Visualisation();
 
-	bool init();
-	void handleKeypress(SDL_Keycode keycode, int x, int y);
-	void close();
-	void run(); // @todo - improve
+    bool init();
+    void handleKeypress(SDL_Keycode keycode, int x, int y);
+    void close();
+    void run(); // @todo - improve
 
-	char* getWindowTitle();
-	void setWindowTitle(char* windowTitle);
-	
-	void setQuit(bool quit);
-	void toggleFullScreen();
-	void toggleMouseMode();
-	void resizeWindow();
-	void handleMouseMove(int x, int y);
-	bool isFullscreen();
-	void updateFPS();
+    char* getWindowTitle();
+    void setWindowTitle(char* windowTitle);
+    
+    void setQuit(bool quit);
+    void toggleFullScreen();
+    void toggleMouseMode();
+    void resizeWindow();
+    void handleMouseMove(int x, int y);
+    bool isFullscreen();
+    void updateFPS();
 
-	void defaultProjection();
-	void defaultLighting();
-	void renderAxis();
-	void setRenderAxis(bool state);
+    void defaultProjection();
+    void defaultLighting();
+    void renderAxis();
+    void setRenderAxis(bool state);
 
 private:
-	SDL_Window* window;
-	SDL_GLContext context;
-	Camera camera;
-	VisualisationScene* scene;
-	glm::mat4 frustum;
+    SDL_Window* window;
+    SDL_GLContext context;
+    Camera camera;
+    VisualisationScene* scene;
+    glm::mat4 frustum;
 
-	bool isInitialised;
-	bool quit;
+    bool isInitialised;
+    bool quit;
 
-	bool renderAxisState;
-	Axis axis;
+    bool renderAxisState;
+    Axis axis;
 
-	char* windowTitle;
-	int windowWidth;
-	int windowHeight;
-	
-	SDL_Rect windowedBounds;
+    char* windowTitle;
+    int windowWidth;
+    int windowHeight;
+    
+    SDL_Rect windowedBounds;
 
-	unsigned int previousTime = 0;
-	unsigned int currentTime;
-	unsigned int frameCount = 0;
+    unsigned int previousTime = 0;
+    unsigned int currentTime;
+    unsigned int frameCount = 0;
 
 };
 

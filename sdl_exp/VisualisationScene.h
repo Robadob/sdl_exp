@@ -13,16 +13,16 @@
 class VisualisationScene
 {
 public:
-	VisualisationScene(Camera* camera = nullptr);
-	~VisualisationScene();
+    VisualisationScene(Camera* camera = nullptr);
+    ~VisualisationScene();
 
-	void update();
-	void reload();
-	void render(glm::mat4 projection);
-	void generate();
+    void update();
+    void reload();
+    void render(glm::mat4 projection);
+    void generate();
 
 private:
-	Camera* camera;
+    Camera* camera;
 
 };
 

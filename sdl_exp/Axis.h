@@ -3,9 +3,9 @@ class Axis
 {
 public:
     Axis(float length = 1.0);
-	~Axis();
+    ~Axis();
 
-	void render();
+    void render();
 
 private:
     float length;

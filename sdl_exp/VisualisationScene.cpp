@@ -1,9 +1,9 @@
 #include "VisualisationScene.h"
 
 VisualisationScene::VisualisationScene(Camera* camera)
-	: camera(camera)
+    : camera(camera)
 {
-	this->generate();
+    this->generate();
 }
 VisualisationScene::~VisualisationScene()
 {

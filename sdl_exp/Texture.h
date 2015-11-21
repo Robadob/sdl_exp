@@ -5,11 +5,11 @@
 class Texture
 {
 public:
-	Texture();
-	~Texture();
+    Texture();
+    ~Texture();
 
-	void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
-	void deleteTextureBufferObject(GLuint *tbo);
-	void checkGLError();
+    void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
+    void deleteTextureBufferObject(GLuint *tbo);
+    void checkGLError();
 };
 

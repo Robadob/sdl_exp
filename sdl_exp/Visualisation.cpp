@@ -1,13 +1,10 @@
 #include "Visualisation.h"
-#include "math_helper.h"
 #include <math.h>
 #include <string>
 #include <sstream>
 
-
-
 #define FOVY 60.0f
-#define NEAR_CLIP 0.1f
+#define NEAR_CLIP 0.001f
 #define FAR_CLIP 500.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
@@ -16,24 +13,24 @@
 #define DELTA_MOVE 0.1f
 #define DELTA_STRAFE 0.1f
 #define DELTA_ASCEND 0.1f
+#define DELTA_ROLL 0.01f
 #define ONE_SECOND_MS 1000
 
-Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight) : isInitialised(false), quit(false){
-	this->windowTitle = windowTitle;
-	this->windowWidth = windowWidth;
-	this->windowHeight = windowHeight;
-
-	float theta = static_cast<float>(math_helper::toRadians(135));
-    float phi = static_cast<float>(math_helper::toRadians(-35));
-    this->camera = Camera(glm::vec3(10),theta, phi);
-
+Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight)
+	: isInitialised(false)
+	, quit(false)
+	, windowTitle(windowTitle)
+	, windowWidth(windowWidth)
+	, windowHeight(windowHeight)
+	, camera()
+	, renderAxisState(false)
+	, axis(0.5)
+{
 	this->isInitialised = this->init();
 }
 
 Visualisation::~Visualisation(){
 	delete this->scene;
-	delete this->vechShaders;
-	delete this->envShaders;
 }
 
 
@@ -81,14 +78,8 @@ bool Visualisation::init(){
 			exit(1);
 		}
 
-		// Shader stuff?
-		
-		this->envShaders = new Shaders("glsl/main.vert", "glsl/main.frag");
-		this->vechShaders= new Shaders("glsl/main.vert", "glsl/main.frag");
-		//this->vechShaders = new Shaders("glsl/vech.vert", "glsl/vech.frag");
-
 		// Create the scene - need to be done after glew is init
-		this->scene = new VisualisationScene(&this->camera, this->vechShaders, this->envShaders);
+		this->scene = new VisualisationScene(&this->camera);
 		
 
 		// Setup gl stuff
@@ -99,7 +90,7 @@ bool Visualisation::init(){
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glEnable(GL_LIGHTING);
 		glEnable(GL_LIGHT0);
-		//glEnable(GL_COLOR_MATERIAL);
+		glEnable(GL_COLOR_MATERIAL);
 		glEnable(GL_NORMALIZE);
 
 		// Setup the projection matrix
@@ -118,8 +109,7 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
 		this->toggleFullScreen();
 		break;
 	case SDLK_F5:
-		this->vechShaders->reloadShaders();
-		this->envShaders->reloadShaders();
+		this->scene->reload();
 		break;
 	default:
 		// Do nothing?
@@ -150,16 +140,22 @@ void Visualisation::run(){
 			// Handle continues press keys (movement)
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
 			if (state[SDL_SCANCODE_W]) {
-				this->camera.move(-DELTA_MOVE);
+				this->camera.move(DELTA_MOVE);
 			}
 			if (state[SDL_SCANCODE_A]) {
 				this->camera.strafe(-DELTA_STRAFE);
 			}
 			if (state[SDL_SCANCODE_S]) {
-				this->camera.move(DELTA_MOVE);
+				this->camera.move(-DELTA_MOVE);
 			}
 			if (state[SDL_SCANCODE_D]) {
 				this->camera.strafe(DELTA_STRAFE);
+			}
+			if (state[SDL_SCANCODE_Q]) {
+				this->camera.roll(-DELTA_ROLL);
+			}
+			if (state[SDL_SCANCODE_E]) {
+				this->camera.roll(DELTA_ROLL);
 			}
 			if (state[SDL_SCANCODE_SPACE]) {
 				this->camera.ascend(DELTA_ASCEND);
@@ -200,7 +196,19 @@ void Visualisation::run(){
 			// update
 			this->scene->update();
 			// render
+			this->defaultProjection();
+			if (this->renderAxisState)
+				this->axis.render();
+			this->defaultLighting();
 			this->scene->render(this->frustum);
+			// check for GL errors
+			int err;
+			if ((err = glGetError()) != GL_NO_ERROR)
+			{
+				//const char* message = (const char*)gluErrorString(err);
+				//fprintf(stderr, "OpenGL Error Occured : %s\n", message
+				printf("OpenGL Error Occured: %i\n", err);// : %s\n", message);
+			}
 			// update the screen
 			SDL_GL_SwapWindow(window);
 		}
@@ -210,7 +218,72 @@ void Visualisation::run(){
 
 	this->close();
 }
+void Visualisation::defaultProjection()
+{
+	glViewport(0, 0, this->windowWidth, this->windowHeight);
+	glEnable(GL_CULL_FACE);
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glLoadMatrixf(glm::value_ptr(this->frustum));
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glLoadMatrixf(glm::value_ptr(this->camera.view()));
+}
+void Visualisation::defaultLighting()
+{
+	glEnable(GL_LIGHT0);
+	glm::vec3 eye = this->camera.getEye();
+	float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
+	float amb[4] = { 0.1f, 0.1f, 0.1f, 1 };
+	float white[4] = { 1, 1, 1, 1 };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
+	// Spotlight stuff
+	float angle = 10.0f;
+	glm::vec3 look = this->camera.getLook();
+	float direction[4] = { look.x, look.y, look.z, 0 };
+	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
+	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
+}
+void Visualisation::renderAxis()
+{
+	glPushMatrix();
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//Axis
+		glLineWidth(1);
+		glPushMatrix();
+			glColor4f(1.0, 1.0, 1.0, 1.0);//White-x
+			glBegin(GL_LINES);
+				glVertex3f(0, 0, 0);
+				glVertex3f(100, 0, 0);
+			glEnd();
+		glPopMatrix();
+		glPushMatrix();
+			glColor4f(0.0, 1.0, 0.0, 1.0);//Green-y
+			glBegin(GL_LINES);
+				glVertex3f(0, 0, 0);
+				glVertex3f(0, 100, 0);
+			glEnd();
+		glPopMatrix();
+		glPushMatrix();
+			glColor4f(0.0, 0.0, 1.0, 1.0);//Blue-z
+			glBegin(GL_LINES);
+				glVertex3f(0, 0, 0);
+				glVertex3f(0, 0, 100);
+			glEnd();
+		glPopMatrix();
+	glPopMatrix();
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+void Visualisation::setRenderAxis(bool state)
+{
+	this->renderAxisState = state;
+}
 char* Visualisation::getWindowTitle(){
 	return this->windowTitle;
 }
@@ -257,32 +330,22 @@ void Visualisation::toggleMouseMode(){
 
 void Visualisation::resizeWindow(){
 	// Use the sdl drawable size
-	int width;
-	int height;
+	SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
 
-	SDL_GL_GetDrawableSize(this->window, &width, &height);
-
-    float fAspect = static_cast<float>(width) / static_cast<float>(height);
+	float fAspect = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
 	double fovy = FOVY;
 
-	glViewport(0, 0, width, height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-    float top = static_cast<float>(tan(math_helper::toRadians(fovy * 0.5)) * NEAR_CLIP);
-    float bottom = -top;
-    float left = fAspect * bottom;
-    float right = fAspect * top;
-	//glFrustum(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	glViewport(0, 0, this->windowWidth, this->windowHeight);
+	float top = static_cast<float>(tan(glm::radians(fovy * 0.5)) * NEAR_CLIP);
+	float bottom = -top;
+	float left = fAspect * bottom;
+	float right = fAspect * top;
 	this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
-	//gluPerspective(fovy, fAspect, NEAR_CLIP, FAR_CLIP);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
-
 }
 
 void Visualisation::handleMouseMove(int x, int y){
 	if (SDL_GetRelativeMouseMode()){
-        this->camera.turn(-x * MOUSE_SPEED, -y * MOUSE_SPEED);
+        this->camera.turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
 	}
 }
 
@@ -303,7 +366,7 @@ void Visualisation::updateFPS(){
 		double fps = this->frameCount / double(this->currentTime - this->previousTime) * ONE_SECOND_MS;
 		// Update the title to include FPS at the end.
 		std::ostringstream newTitle;
-		newTitle << this->windowTitle << " (" << std::to_string(fps) << " fps)";
+		newTitle << this->windowTitle << " (" << std::to_string(static_cast<int>(std::ceil(fps))) << " fps)";
 		SDL_SetWindowTitle(this->window, newTitle.str().c_str());
 
 		// reset values;

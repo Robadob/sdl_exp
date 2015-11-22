@@ -16,7 +16,9 @@ Entity::Entity(const char *modelPath, float modelScale)
     , vertices_vbo(0)
     , faces_vbo(0)
     , SCALE(modelScale)
-    , material(nullptr)
+    , material(0)
+    , color(255,0,0)
+    , location(0.0f,0.0f,0.0f)
 {
     loadModelFromFile(modelPath, modelScale);
     //Vertex Buffer Objects
@@ -27,8 +29,9 @@ Entity::Entity(const char *modelPath, float modelScale)
 Entity::~Entity()
 {
     freeModel();
-    if (this->material != NULL){
+    if (this->material){
         delete this->material;
+        this->material = 0;
     }
     
 }
@@ -48,15 +51,15 @@ void Entity::render()
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
-    // If we have a 
-    if (this->material != NULL){
-        //this->material->useMaterial();
-    }
-    else {
-        //Red
-        glColor4f(1.0, 0.0, 0.0, 1.0);
-    }
     glPushMatrix();
+        glTranslatef(location.x, location.y, location.z); 
+        // If we have a 
+        if (this->material){
+            //this->material->useMaterial();
+        }
+        else {
+            glColor4f(color.x, color.y, color.z, 1.0);
+        }
         glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0);
     glPopMatrix();
 
@@ -79,15 +82,14 @@ void Entity::renderInstances(int instanceCount)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
 
+    glPushMatrix();
     // If we have a 
-    if (this->material != NULL){
+    if (this->material){
         //this->material->useMaterial();
     }
     else {
-        //Red
-        glColor4f(1.0, 0.0, 0.0, 1.0);
+        glColor4f(color.x, color.y, color.z, 1.0);
     }
-    glPushMatrix();
         glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, instanceCount);
     glPopMatrix();
 
@@ -377,7 +379,20 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     }
     
 }
-
+/**
+ * Set the color
+**/
+void Entity::setColor(glm::vec3 color)
+{
+    this->color = color;
+}
+/**
+* Set the location
+**/
+void Entity::setLocation(glm::vec3 location)
+{
+    this->location = location;
+}
 /**
  * Allocates the storage for model primitives
 **/
@@ -416,5 +431,12 @@ void Entity::checkGLError(){
     {
         const char* errMessage = (const char*)gluErrorString(error);
         fprintf(stderr, "(entity) OpenGL Error #%d: %s\n", error, errMessage);
+    }
+}
+void Entity::clearMaterial()
+{
+    if (this->material){
+        delete this->material;
+        this->material = 0;
     }
 }

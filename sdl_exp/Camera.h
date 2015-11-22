@@ -23,15 +23,20 @@ public:
     void strafe(float distance);
     void ascend(float distance);
     void roll(float distance);
+    void setStabilise(bool stabilise);
     glm::mat4 view(); 
-    void gluLookAt();
+    void gluLookAt(); 
+    glm::mat4 skyboxView();
+    void skyboxGluLookAt();
     const glm::vec3 getEye();
     const glm::vec3 getLook();
 private:
+    glm::vec3 pureUp;
     glm::vec3 eye;
     glm::vec3 look;
     glm::vec3 right;
     glm::vec3 up;
+    bool stabilise;
 };
 
 #endif

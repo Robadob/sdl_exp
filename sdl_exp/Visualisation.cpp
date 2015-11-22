@@ -22,15 +22,17 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
-    , camera()
+    , camera(glm::vec3(10,10,10))
     , renderAxisState(false)
     , axis(0.5)
 {
     this->isInitialised = this->init();
+    skybox = new Skybox("");
 }
 
 Visualisation::~Visualisation(){
     delete this->scene;
+    delete this->skybox;
 }
 
 
@@ -109,6 +111,7 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
         this->toggleFullScreen();
         break;
     case SDLK_F5:
+        this->skybox->reload();
         this->scene->reload();
         break;
     default:
@@ -196,6 +199,8 @@ void Visualisation::run(){
             // update
             this->scene->update();
             // render
+            this->clearFrame();
+            this->skybox->render(&camera, this->frustum);
             this->defaultProjection();
             if (this->renderAxisState)
                 this->axis.render();
@@ -218,12 +223,15 @@ void Visualisation::run(){
 
     this->close();
 }
-void Visualisation::defaultProjection()
+void Visualisation::clearFrame()
 {
     glViewport(0, 0, this->windowWidth, this->windowHeight);
-    glEnable(GL_CULL_FACE);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+void Visualisation::defaultProjection()
+{
+    glEnable(GL_CULL_FACE);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(this->frustum));
@@ -236,19 +244,20 @@ void Visualisation::defaultLighting()
     glEnable(GL_LIGHT0);
     glm::vec3 eye = this->camera.getEye();
     float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
-    float amb[4] = { 0.1f, 0.1f, 0.1f, 1 };
+    float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
+    float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
     float white[4] = { 1, 1, 1, 1 };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
     glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
     // Spotlight stuff
-    float angle = 10.0f;
-    glm::vec3 look = this->camera.getLook();
-    float direction[4] = { look.x, look.y, look.z, 0 };
-    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
-    glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
+    //float angle = 180.0f;
+    //glm::vec3 look = this->camera.getLook();
+   // float direction[4] = { look.x, look.y, look.z, 0 };
+    //glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
+    //glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
 }
 void Visualisation::renderAxis()
 {

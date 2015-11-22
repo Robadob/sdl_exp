@@ -13,6 +13,7 @@
 #include "VisualisationScene.h"
 #include "Camera.h"
 #include "Axis.h"
+#include "Skybox.h"
 
 #undef main
 
@@ -43,6 +44,7 @@ public:
 
     void defaultProjection();
     void defaultLighting();
+    void clearFrame();
     void renderAxis();
     void setRenderAxis(bool state);
 
@@ -58,6 +60,7 @@ private:
 
     bool renderAxisState;
     Axis axis;
+    Skybox *skybox;
 
     char* windowTitle;
     int windowWidth;

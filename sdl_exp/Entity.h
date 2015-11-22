@@ -19,6 +19,9 @@ public:
     **/
     void render();
     void renderInstances(int instanceCount);
+    void setColor(glm::vec3 color);
+    void setLocation(glm::vec3 location);
+    void clearMaterial();
 protected:
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
@@ -32,6 +35,10 @@ protected:
     GLuint faces_vbo;
     // Material properties
     Material *material;
+    //Color
+    glm::vec3 color;
+    //Location
+    glm::vec3 location;
     
 
     /**
@@ -64,7 +71,6 @@ protected:
      * Scales the vertices to fit the provided scale
     **/
     void scaleModel(float modelScale);
-
     void checkGLError();
 };
 

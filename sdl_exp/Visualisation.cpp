@@ -27,7 +27,7 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
     , axis(0.5)
 {
     this->isInitialised = this->init();
-    skybox = new Skybox("");
+    skybox = new Skybox();
 }
 
 Visualisation::~Visualisation(){

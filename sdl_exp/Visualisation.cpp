@@ -8,6 +8,7 @@
 #define FAR_CLIP 500.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
+#define SHIFT_MULTIPLIER 5.0f
 
 #define MOUSE_SPEED_FPS 0.05f
 #define DELTA_MOVE 0.1f
@@ -151,17 +152,18 @@ void Visualisation::run(){
 
             // Handle continues press keys (movement)
             const Uint8 *state = SDL_GetKeyboardState(NULL);
+            float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
             if (state[SDL_SCANCODE_W]) {
-                this->camera.move(DELTA_MOVE);
+                this->camera.move(DELTA_MOVE*turboMultiplier);
             }
             if (state[SDL_SCANCODE_A]) {
-                this->camera.strafe(-DELTA_STRAFE);
+                this->camera.strafe(-DELTA_STRAFE*turboMultiplier);
             }
             if (state[SDL_SCANCODE_S]) {
-                this->camera.move(-DELTA_MOVE);
+                this->camera.move(-DELTA_MOVE*turboMultiplier);
             }
             if (state[SDL_SCANCODE_D]) {
-                this->camera.strafe(DELTA_STRAFE);
+                this->camera.strafe(DELTA_STRAFE*turboMultiplier);
             }
             if (state[SDL_SCANCODE_Q]) {
                 this->camera.roll(-DELTA_ROLL);
@@ -170,10 +172,10 @@ void Visualisation::run(){
                 this->camera.roll(DELTA_ROLL);
             }
             if (state[SDL_SCANCODE_SPACE]) {
-                this->camera.ascend(DELTA_ASCEND);
+                this->camera.ascend(DELTA_ASCEND*turboMultiplier);
             }
             if (state[SDL_SCANCODE_LCTRL]) {
-                this->camera.ascend(-DELTA_ASCEND);
+                this->camera.ascend(-DELTA_ASCEND*turboMultiplier);
             }
             
 

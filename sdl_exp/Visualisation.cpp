@@ -15,6 +15,7 @@
 #define DELTA_ASCEND 0.1f
 #define DELTA_ROLL 0.01f
 #define ONE_SECOND_MS 1000
+#define VSYNC 1
 
 Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeight)
     : isInitialised(false)
@@ -66,6 +67,14 @@ bool Visualisation::init(){
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 
+        // Enable MSAA
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
+
+        int swapIntervalResult = SDL_GL_SetSwapInterval(VSYNC);
+        if(swapIntervalResult == -1){
+            printf("Swap Interval Failed: %s\n", SDL_GetError());
+        }
 
         
         // Get context

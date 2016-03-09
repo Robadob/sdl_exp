@@ -48,6 +48,9 @@ public:
     void renderAxis();
     void setRenderAxis(bool state);
 
+    Camera *getCamera();
+    VisualisationScene *getScene() const;
+
 private:
     SDL_Window* window;
     SDL_GLContext context;

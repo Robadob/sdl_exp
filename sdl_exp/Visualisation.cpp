@@ -394,3 +394,12 @@ void Visualisation::updateFPS(){
         this->frameCount = 0;
     }
 }
+
+Camera *Visualisation::getCamera() 
+{
+    return &this->camera;
+}
+VisualisationScene *Visualisation::getScene() const
+{
+    return this->scene;
+}

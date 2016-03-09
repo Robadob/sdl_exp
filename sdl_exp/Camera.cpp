@@ -40,18 +40,25 @@ void Camera::turn(float yaw, float pitch){
     look = normalize(rotate(this->look, -yaw, this->up));
     right = normalize(rotate(this->right, -yaw, this->up));
     //Rotate everything pitch rads about right vector
-    look = normalize(rotate(this->look, -pitch, this->right));
-    up = normalize(rotate(this->up, -pitch, this->right));
+    glm::vec3 look = normalize(rotate(this->look, -pitch, right));
+    glm::vec3 up = normalize(rotate(this->up, -pitch, right));
     if (stabilise)
     {
-        this->right = cross(pureUp, look);    //Right is perpendicular to look and (0,1,0)[Default up]
-        this->up = cross(right, look);        
+        glm::vec3 right = cross(pureUp, look);    //Right is perpendicular to look and (0,1,0)[Default up]
+        up = cross(right, look);
         if ((up.y < 0 && pureUp.y > 0) || (up.y > 0 && pureUp.y < 0))
         {
             up = -up;
             right = -right;
         }
+        //printf("%f\n", );
+        if (abs(dot(look, pureUp)) > 0.98)
+            return;//Turning too close to a pole, exit early
     }
+    //Commit changes
+    this->look = look;
+    this->right = right;
+    this->up = up;
 }
 /*
 Move eye specified distance along look

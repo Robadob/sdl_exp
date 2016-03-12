@@ -1,13 +1,12 @@
 #ifndef __Camera_h__
 #define __Camera_h__
 
-#include "gl/glew.h"
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
-#define USE_MATH_DEFINES
-#include <math.h>
-#include <glm/glm.hpp>
-#include <glm/gtx/rotate_vector.hpp>
+#include "GLcheck.h"
+
+#include <SDL\SDL.h>
+#include <SDL\SDL_opengl.h>
+#include <glm\glm.hpp>
+#include <glm\gtx\rotate_vector.hpp>
 
 class Camera
 {
@@ -30,6 +29,8 @@ public:
     void skyboxGluLookAt();
     const glm::vec3 getEye();
     const glm::vec3 getLook();
+    const glm::vec3 getUp();
+    const glm::vec3 getRight();
 private:
     glm::vec3 pureUp;
     glm::vec3 eye;
@@ -39,4 +40,4 @@ private:
     bool stabilise;
 };
 
-#endif
+#endif //ifndef __Camera_h__

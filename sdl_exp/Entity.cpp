@@ -5,10 +5,11 @@
 #include <fstream>
 #include <string>
 
-/**
- * @param modelPath Path to .obj format model file
- * @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
-**/
+/*
+Constructs an entity from the provided .obj model
+@param modelPath Path to .obj format model file
+@param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
+*/
 Entity::Entity(const char *modelPath, float modelScale)
     : vertices(0)
     , normals(0)
@@ -21,120 +22,117 @@ Entity::Entity(const char *modelPath, float modelScale)
     , location(0.0f,0.0f,0.0f)
 {
     loadModelFromFile(modelPath, modelScale);
-    //Vertex Buffer Objects
     createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2);//vertices+norms
     createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3));
-    bindVertexBufferData();
+    fillBuffers();
 }
-Entity::~Entity()
-{
+/*
+Destructor, free's memory allocated to store the model and its material
+*/
+Entity::~Entity(){
     freeModel();
-    if (this->material){
-        delete this->material;
-        this->material = 0;
-    }
-    
+    freeMaterial();
 }
-/**
- * Calls the necessary code to render the entities model
-**/
-void Entity::render()
-{
+/*
+Calls the necessary code to render a single instance of the entity
+@param vertLocation The shader attribute location to pass vertices
+@param normalLocation The shader attribute location to pass normals
+*/
+void Entity::render(GLuint vertLocation, GLuint normalLocation){
     //Set vertex buffer, and init pointers to vertices, normals
-    glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo));
+    //Pass vertices
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
+    GL_CALL(glVertexAttribPointer(vertLocation, 3, GL_FLOAT, GL_FALSE, 0, 0));
+    //Pass normals
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3))));
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
+    GL_CALL(glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3)))));
+    //Bind the faces to be rendered
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
-        glTranslatef(location.x, location.y, location.z); 
-        // If we have a 
+        //Translate the model according to it's location
+    GL_CALL(glTranslatef(location.x, location.y, location.z));
+        //Set the color or material
         if (this->material){
-            //this->material->useMaterial();
+            this->material->useMaterial();
         }
         else {
-            glColor4f(color.x, color.y, color.z, 1.0);
+            GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
         }
-        glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0);
+        GL_CALL(glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0));
     glPopMatrix();
 
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
 }
-
-void Entity::renderInstances(int instanceCount)
-{
+/*
+Calls the necessary code to render count instances of the entity
+The index of the instance being rendered can be identified within the vertex shader with the variable gl_InstanceID
+@param count The number of instances of the entity to render
+@param vertLocation The shader attribute location to pass vertices
+@param normalLocation The shader attribute location to pass normals
+*/
+void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocation){
     //Set vertex buffer, and init pointers to vertices, normals
-    glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-
-    // pass vertices
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo));
+    //Pass vertices
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // pass normals
+    GL_CALL(glVertexAttribPointer(vertLocation, 3, GL_FLOAT, GL_FALSE, 0, 0));
+    //Pass normals
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3))));
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
+    GL_CALL(glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3)))));
+    //Bind the faces to be rendered
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
-    // If we have a 
+    //Set the color or material
     if (this->material){
-        //this->material->useMaterial();
+        this->material->useMaterial();
     }
     else {
         glColor4f(color.x, color.y, color.z, 1.0);
     }
-        glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, instanceCount);
+    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
     glPopMatrix();
 
     glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
-
 }
-
-
-/**
- * Creates a vertex buffer object of the specified size
-**/
-void Entity::createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size)
-{
-    checkGLError();
-    glGenBuffers( 1, vbo);
-    checkGLError();
-    glBindBuffer( target, *vbo);
-    checkGLError();
-    glBufferData( target, size, 0, GL_STATIC_DRAW);
-    checkGLError();
-    glBindBuffer( target, 0);
-    checkGLError();
+/*
+Creates a vertex buffer object of the specified size
+@param vbo The pointer to store the buffer objects location in
+@param target The type of buffer to bind the buffer object (e.g. GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER)
+@param size The size of the buffer in bytes
+*/
+void Entity::createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size){
+    GL_CALL(glGenBuffers(1, vbo));
+    GL_CALL(glBindBuffer(target, *vbo));
+    GL_CALL(glBufferData(target, size, 0, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(target, 0));
 }
-/**
- * Deallocates the provided vertex buffer
-**/
-void Entity::deleteVertexBufferObject(GLuint *vbo)
-{
-    glDeleteBuffers(1, vbo);
+/*
+Deallocates the specified vertex buffer object
+@param vbo A pointer to the buffer objects location
+*/
+void Entity::deleteVertexBufferObject(GLuint *vbo){
+    GL_CALL(glDeleteBuffers(1, vbo));
 }
-/**
- * Binds model primitive data to the vertex buffer objects
-**/
-void Entity::bindVertexBufferData()
-{
+/*
+Copies the vertex, normal and face data into the relevant buffer objects
+*/
+void Entity::fillBuffers(){
     glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
     glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2, vertices, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3), faces, GL_DYNAMIC_DRAW);
 }
-/**
- * Loads and scales the specified model into this class's primitive storage
- * @note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals
-**/
+/*
+Loads and scales the specified model into this class's primitive storage
+@param path The path to the .obj model to be loaded
+@param modelScale The scale in world space which the model's longest distance (along the x, y or z axis) should be scaled to
+@note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals
+*/
 void Entity::loadModelFromFile(const char *path, float modelScale)
 {
     const char* VERTEX_IDENTIFIER = "v";
@@ -280,8 +278,13 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     fclose(file);
     free(t_normals);
 }
-
-// @todo - this only works with 1 material per file.
+/*
+Loads a single material from a .mtl file
+@param objPath The path to the model (we extract the directory_
+@param materialFilename The filename of the material file(.mtl)
+@param materialName The name of the material
+@todo - this only works with 1 material per file.
+*/
 void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName){
     // Figure out the actual filepath, obj path dir but with matrial filename on the end.
     std::string objectPath = objPath;
@@ -379,44 +382,43 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     }
     
 }
-/**
- * Set the color
-**/
-void Entity::setColor(glm::vec3 color)
-{
+/*
+Set the color of the model
+If the model has an associated material this value will be ignored
+*/
+void Entity::setColor(glm::vec3 color){
     this->color = color;
 }
-/**
-* Set the location
-**/
-void Entity::setLocation(glm::vec3 location)
-{
+/*
+Set the location of the model in world space
+*/
+void Entity::setLocation(glm::vec3 location){
     this->location = location;
 }
-/**
- * Allocates the storage for model primitives
-**/
-void Entity::allocateModel()
-{
+/*
+Allocates the storage for the model's primitives (vertices, normals and faces) according to the instance variables v_count and f_count
+@see freeModel()
+*/
+void Entity::allocateModel(){
     vertices = (glm::vec3*)malloc(v_count*sizeof(glm::vec3)*2);
     normals = vertices+v_count;//Arrays are continuous
     faces = (glm::ivec3*)malloc(f_count*sizeof(glm::ivec3));
 }
-/**
- * Deallocates the storage for model primitives
-**/
-void Entity::freeModel()
-{
+/*
+Frees the storage for the model's primitives
+@see allocateModel()
+*/
+void Entity::freeModel(){
     if(vertices)
         free(vertices);
     if(faces)
         free(faces);
 }
-/**
- * Scales the vertices to fit the provided scale
-**/
-void Entity::scaleModel(float modelScale)
-{
+/*
+Scales the values within vertices according to the provided scale
+@param modelScale Scaling factor
+*/
+void Entity::scaleModel(float modelScale){
     for(int i =0; i<v_count;i++)
     {
         vertices[i][0]*=modelScale;
@@ -424,17 +426,17 @@ void Entity::scaleModel(float modelScale)
         vertices[i][2]*=modelScale;
     }
 }
-
-void Entity::checkGLError(){
-    GLuint error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
-        const char* errMessage = (const char*)gluErrorString(error);
-        fprintf(stderr, "(entity) OpenGL Error #%d: %s\n", error, errMessage);
-    }
+/*
+Public alias to freeMaterial for backwards compatibility purposes
+@see freeMaterial()
+*/
+void Entity::clearMaterial(){
+    freeMaterial();
 }
-void Entity::clearMaterial()
-{
+/*
+Frees the storage for the model's material
+*/
+void Entity::freeMaterial(){
     if (this->material){
         delete this->material;
         this->material = 0;

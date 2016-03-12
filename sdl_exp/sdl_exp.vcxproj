@@ -158,6 +158,7 @@
     <ClInclude Include="Axis.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="GLcheck.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="resource.h" />

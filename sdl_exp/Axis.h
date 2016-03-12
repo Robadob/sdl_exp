@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __Axis_h__
+#define __Axis_h__
+
 class Axis
 {
 public:
@@ -11,3 +13,4 @@ private:
     float length;
 };
 
+#endif //ifndef __Axis_h__

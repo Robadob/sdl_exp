@@ -54,27 +54,30 @@ Rotate look and up, pitch radians about right
 */
 void Camera::turn(float yaw, float pitch){
     //Rotate everything yaw rads about up vector
-    look = normalize(rotate(this->look, -yaw, this->up));
-    right = normalize(rotate(this->right, -yaw, this->up));
+    this->look = normalize(rotate(this->look, -yaw, this->up));
+    this->right = normalize(rotate(this->right, -yaw, this->up));
     //Rotate everything pitch rads about right vector
-    glm::vec3 look = normalize(rotate(this->look, -pitch, right));
-    glm::vec3 up = normalize(rotate(this->up, -pitch, right));
+    glm::vec3 look = normalize(rotate(this->look, -pitch, this->right));
+    glm::vec3 up = normalize(rotate(this->up, -pitch, this->right));
     if (stabilise)
-    {
-        glm::vec3 right = cross(pureUp, look);    //Right is perpendicular to look and (0,1,0)[Default up]
+    {    
+        //Right is perpendicular to look and (0,1,0)[Default up]
+        glm::vec3 right = cross(this->pureUp, look);
+        //Stabilised up is perpendicular to right and look
         up = cross(right, look);
-        if ((up.y < 0 && pureUp.y > 0) || (up.y > 0 && pureUp.y < 0))
+        //Flip up and right if backwards
+        if ((up.y < 0 && this->pureUp.y > 0) || (up.y > 0 && this->pureUp.y < 0))
         {
             up = -up;
             right = -right;
         }
-        //printf("%f\n", );
-        if (abs(dot(look, pureUp)) > 0.98)
-            return;//Turning too close to a pole, exit early
+        //If the look vector gets too close to a pole, exit early to stop infinite rotation bug
+        if (abs(dot(look, this->pureUp)) > 0.98)
+            return;
     }
     //Commit changes
     this->look = look;
-    this->right = right;
+    this->right = right;//<-BUG? Copying instance var of right back into itself, rather than the local one declared out of scope above
     this->up = up;
 }
 /*

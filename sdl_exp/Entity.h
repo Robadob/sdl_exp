@@ -7,6 +7,9 @@
 
 #include "Material.h"
 
+/*
+A renderable model loaded from a .obj file
+*/
 class Entity
 {
 public:
@@ -22,17 +25,13 @@ protected:
     const float SCALE;
     //Model vertex and face counts
     int v_count, f_count;
-    //Primitive data
     glm::vec3 *vertices, *normals;
     glm::ivec3 *faces;
-    //Vertex Buffer Objects for rendering
     GLuint vertices_vbo;
     GLuint faces_vbo;
-    // Material properties
+    //Optional material (loaded automaically if detected within model file)
     Material *material;
-    //Color
     glm::vec3 color;
-    //Location
     glm::vec3 location;
     
     void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size);

@@ -427,7 +427,7 @@ void Entity::scaleModel(float modelScale){
     }
 }
 /*
-Public alias to freeMaterial for backwards compatibility purposes
+Public alias to freeMaterial() for backwards compatibility purposes
 @see freeMaterial()
 */
 void Entity::clearMaterial(){

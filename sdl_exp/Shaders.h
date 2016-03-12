@@ -1,8 +1,9 @@
-#pragma once
+#ifndef __Shaders_h__
+#define __Shaders_h__
 
-#include <GL/glew.h>
-#include <glm\glm.hpp>
-#include <glm/gtx/transform.hpp>
+//Define EXIT_ON_ERROR to cause the program to exit when shader compilation fails
+
+#include "GLcheck.h"
 
 class Shaders
 {
@@ -10,12 +11,13 @@ public:
     Shaders(char* vertexShaderPath=0, char* fragmentShaderPath=0, char* geometryShaderPath=0);
     ~Shaders();
 
-    bool hasVertexShader();
-    bool hasFragmentShader();
-    bool hasGeometryShader();
+    bool hasVertexShader() const;
+    bool hasFragmentShader() const;
+    bool hasGeometryShader() const;
+    bool getCompileSuccess() const;
 
     void createShaders();
-    void reloadShaders();
+    bool reloadShaders(bool silent = false);
     void useProgram();
     void clearProgram();
     void setUniformi(int location, int value);
@@ -35,9 +37,9 @@ private:
     char* loadShaderSource(char* file);
     void destroyShaders();
     void destroyProgram();
-    void checkGLError();
-    void checkShaderCompileError(int shaderId, char* shaderPath);
-    void checkProgramCompileError(int programId);
+    bool checkShaderCompileError(int shaderId, char* shaderPath);
+    bool checkProgramCompileError(int programId);
 
 };
 
+#endif //ifndef __Shaders_h__

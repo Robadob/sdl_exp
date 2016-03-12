@@ -5,6 +5,8 @@
 
 #include "GLcheck.h"
 
+#include <regex>
+
 class Shaders
 {
 public:
@@ -31,6 +33,9 @@ private:
     int vertexShaderId;
     int fragmentShaderId;
     int geometryShaderId;
+    unsigned int vertexShaderVersion;
+    unsigned int fragmentShaderVersion;
+    unsigned int geometryShaderVersion;
     int programId;
     bool compileSuccessFlag;
 
@@ -39,6 +44,10 @@ private:
     void destroyProgram();
     bool checkShaderCompileError(int shaderId, char* shaderPath);
     bool checkProgramCompileError(int programId);
+
+    std::regex versionRegex;
+    unsigned int findShaderVersion(const char *shaderSource);
+    int Shaders::findUniformLocation(const char *shaderSource, const char *uniformName);
 
 };
 

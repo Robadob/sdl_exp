@@ -22,6 +22,10 @@ Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometr
     , vertexShaderPath(vertexShaderPath)
     , fragmentShaderPath(fragmentShaderPath)
     , geometryShaderPath(geometryShaderPath)
+    , vertexShaderVersion(0)
+    , fragmentShaderVersion(0)
+    , geometryShaderVersion(0)
+    , versionRegex("#version ([0-9]+)", std::regex_constants::icase)
 {
     this->createShaders();
     GL_CHECK();
@@ -85,11 +89,9 @@ void Shaders::createShaders(){
     // Check compilation
     if (hasVertexShader()){
         this->vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-        //printf("\n>>vsi: %d\n", this->vertexShaderId);
         GL_CALL(glShaderSource(this->vertexShaderId, 1, &vertexSource, 0));
         GL_CALL(glCompileShader(this->vertexShaderId));
         this->checkShaderCompileError(this->vertexShaderId, this->vertexShaderPath);
-
     }
     if (hasFragmentShader()){
         this->fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
@@ -113,10 +115,8 @@ void Shaders::createShaders(){
         // Attach each included shader
         if (this->hasVertexShader())
             GL_CALL(glAttachShader(newProgramId, this->vertexShaderId));
-        
         if (this->hasFragmentShader())
             GL_CALL(glAttachShader(newProgramId, this->fragmentShaderId));
-        
         if (this->hasGeometryShader())
             GL_CALL(glAttachShader(newProgramId, this->geometryShaderId));
         
@@ -131,6 +131,18 @@ void Shaders::createShaders(){
             // Update the class var for the next usage.
             this->programId = newProgramId;
         }
+    }
+
+    //Compilation was successful, lets try and detect how to configure the shader
+    if (this->compileSuccessFlag)
+    {
+        //Detect shader version numbers
+        if (this->hasVertexShader())
+            this->vertexShaderVersion = this->findShaderVersion(vertexSource);
+        if (this->hasFragmentShader())
+            this->fragmentShaderVersion = this->findShaderVersion(fragmentSource);
+        if (this->hasGeometryShader())
+            this->geometryShaderVersion = this->findShaderVersion(geometrySource);
     }
 
     // Clean up any shaders
@@ -312,4 +324,26 @@ bool Shaders::checkProgramCompileError(int programId){
         return false;
     }
     return true;
+}
+/*
+Looks for the '#version xx' tag in the provided shader source and returns the numeric value
+@param shaderSource The shader code to detect the version from
+@return The detected shader version, 0 if one was not found
+*/
+unsigned int Shaders::findShaderVersion(const char *shaderSource)
+{
+    std::cmatch match;
+    //\#version ([0-9]+)\ <-versionRegex
+    if(std::regex_match(shaderSource, match, this->versionRegex))
+        return stoul(match[1]);
+    return 0;
+}
+/*
+Looks for the '#version xx' tag in the provided shader source and returns the numeric value
+@param shaderSource The shader code to detect the version from
+@return The detected shader version, 0 if one was not found
+*/
+int Shaders::findUniformLocation(const char *shaderSource, const char *uniformName)
+{
+    return -1;
 }

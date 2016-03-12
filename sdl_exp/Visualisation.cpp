@@ -72,14 +72,14 @@ bool Visualisation::init(){
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
-        int swapIntervalResult = SDL_GL_SetSwapInterval(VSYNC);
-        if(swapIntervalResult == -1){
-            printf("Swap Interval Failed: %s\n", SDL_GetError());
-        }
-
-        
         // Get context
         this->context = SDL_GL_CreateContext(window);
+
+        //Enable VSync
+        int swapIntervalResult = SDL_GL_SetSwapInterval(VSYNC);
+        if (swapIntervalResult == -1){
+            printf("Swap Interval Failed: %s\n", SDL_GetError());
+        }
 
         // Init glew.
         GLenum err = glewInit();

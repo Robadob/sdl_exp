@@ -61,3 +61,18 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Linguist overrides
+#
+# Fixes github language tracking
+###############################################################################
+*.h linguist-language=C++
+*.v linguist-language=GLSL
+*.vert linguist-language=GLSL
+*.f linguist-language=GLSL
+*.frag linguist-language=GLSL
+*.glsl linguist-language=GLSL
+include/* linguist-vendored
+lib/* linguist-vendored
+Debug/* linguist-vendored

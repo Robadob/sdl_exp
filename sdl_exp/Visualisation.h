@@ -49,7 +49,8 @@ public:
     void setRenderAxis(bool state);
 
     Camera *getCamera();
-    VisualisationScene *getScene() const;
+    VisualisationScene *getScene() const; 
+    glm::mat4 const *getFrustrumPtr();
 
 private:
     SDL_Window* window;

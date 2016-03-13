@@ -403,3 +403,12 @@ VisualisationScene *Visualisation::getScene() const
 {
     return this->scene;
 }
+
+/*
+Returns a constant pointer to the visualisations view frustum
+This pointer can be used to continuously track the visualisations projection matrix
+@return A pointer to the projection matrix
+*/
+glm::mat4 const *Visualisation::getFrustrumPtr(){
+    return &this->frustum;
+}

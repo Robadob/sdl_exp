@@ -31,7 +31,12 @@ public:
     const glm::vec3 getLook();
     const glm::vec3 getUp();
     const glm::vec3 getRight();
+    glm::mat4 const *Camera::getViewMatPtr();
+    glm::mat4 const *Camera::getSkyboxViewMatPtr();
 private:
+    void updateViews();
+    glm::mat4 viewMat;
+    glm::mat4 skyboxViewMat;
     glm::vec3 pureUp;
     glm::vec3 eye;
     glm::vec3 look;

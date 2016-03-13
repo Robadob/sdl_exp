@@ -40,6 +40,7 @@ Camera::Camera(glm::vec3 eye, glm::vec3 target)
         up = -up;
         right = -right;
     }
+    this->updateViews();
 }
 /*
 Default destructor
@@ -79,6 +80,7 @@ void Camera::turn(float yaw, float pitch){
     this->look = look;
     this->right = right;//<-BUG? Copying instance var of right back into itself, rather than the local one declared out of scope above
     this->up = up;
+    this->updateViews();
 }
 /*
 Move eye specified distance along look
@@ -86,6 +88,7 @@ Move eye specified distance along look
 */
 void Camera::move(float distance){
     eye += look*distance;
+    this->updateViews();
 }
 /*
 Rotate right and up, roll radians about look
@@ -95,6 +98,7 @@ void Camera::roll(float roll){
     pureUp = normalize(rotate(pureUp, roll, look));
     right = normalize(rotate(right, roll, look));
     up = normalize(rotate(up, roll, look));
+    this->updateViews();
 }
 /*
 Move eye specified distance along right
@@ -102,6 +106,7 @@ Move eye specified distance along right
 */
 void Camera::strafe(float distance){
     eye += right*distance;
+    this->updateViews();
 }
 /*
 Move eye specified distance along up
@@ -109,14 +114,23 @@ Move eye specified distance along up
 */
 void Camera::ascend(float distance){
     eye += up*distance;
+    this->updateViews();
+}
+/*
+Updates the view and skyboxView matrices
+Called whenever any internal camera variables are updated
+*/
+void Camera::updateViews(){
+    viewMat = glm::lookAt(eye, eye + look, up);
+    skyboxViewMat = glm::lookAt(glm::vec3(0), look, up);
 }
 /*
 Returns the projection matrix 
-For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_PROJECTION)
-@return the projection matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
+For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
+@return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
 */
 glm::mat4 Camera::view(){
-    return glm::lookAt(eye, eye + look, up);
+    return viewMat;
 }
 /*
 Calls gluLookAt()
@@ -132,11 +146,11 @@ void Camera::gluLookAt(){
 }
 /*
 Returns the projection matrix from the perspective required for rendering a skybox (direction only)
-For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_PROJECTION)
-@return the projection matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
+For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
+@return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
 */
 glm::mat4 Camera::skyboxView(){
-    return glm::lookAt(glm::vec3(0), look, up);
+    return skyboxViewMat;
 }
 /*
 Calls gluLookAt() from the perspective required for rendering a skybox (direction only) 
@@ -186,4 +200,20 @@ When the camera is not stabilsed, moving the mouse in a circular motion may caus
 */
 void Camera::setStabilise(bool stabilise){
     this->stabilise = stabilise;
+}
+/*
+Returns a constant pointer to the cameras modelview matrix
+This pointer can be used to continuously track the modelview matrix
+@return A pointer to the modelview matrix
+*/
+glm::mat4 const *Camera::getViewMatPtr(){
+    return &viewMat;
+}
+/*
+Returns a constant pointer to the cameras skybox modelview matrix
+This pointer can be used to continuously track the skybox modelview matrix
+@return A pointer to the modelview matrix
+*/
+glm::mat4 const *Camera::getSkyboxViewMatPtr(){
+    return &skyboxViewMat;
 }

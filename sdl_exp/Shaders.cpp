@@ -10,14 +10,16 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <glm\gtc\type_ptr.hpp>
 
 /*
 Constructs a shader program from the provided shader files
 @param vertexShaderPath Path to the GLSL vertex shader (nullptr if not required)
 @param fragmentShaderPath Path to the GLSL fragment shader (nullptr if not required)
 @param geometryShaderPath Path to the GLSL geometry shader (nullptr if not required)
+@param camera The camera object to pull the modelView and projection matrices from
 */
-Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometryShaderPath)
+Shaders::Shaders(char *vertexShaderPath, char *fragmentShaderPath, char *geometryShaderPath)
     : compileSuccessFlag(true)
     , vertexShaderPath(vertexShaderPath)
     , fragmentShaderPath(fragmentShaderPath)
@@ -26,6 +28,11 @@ Shaders::Shaders(char* vertexShaderPath, char* fragmentShaderPath, char* geometr
     , fragmentShaderVersion(0)
     , geometryShaderVersion(0)
     , versionRegex("#version ([0-9]+)", std::regex_constants::icase)
+    , projectionMatrixUniformLocation(-1)
+    , modelviewMatrixUniformLocation(-1)
+    , vertexAttributeLocation(-1)
+    , normalAttributeLocation(-1)
+    , colorAttributeLocation(-1)
 {
     this->createShaders();
     GL_CHECK();
@@ -143,6 +150,38 @@ void Shaders::createShaders(){
             this->fragmentShaderVersion = this->findShaderVersion(fragmentSource);
         if (this->hasGeometryShader())
             this->geometryShaderVersion = this->findShaderVersion(geometrySource);
+
+        //Locate the modelView matrix uniform
+        std::pair<int, GLenum> u_MV = findUniform(MODELVIEW_MATRIX_UNIFORM_NAME, this->programId);
+        if (u_MV.first >= 0 && u_MV.second == GL_FLOAT_MAT4)
+            modelviewMatrixUniformLocation = u_MV.first;
+        else
+            modelviewMatrixUniformLocation = -1;
+        //Locate the projection matrix uniform
+        std::pair<int, GLenum> u_PM = findUniform(PROJECTION_MATRIX_UNIFORM_NAME, this->programId);
+        if (u_PM.first >= 0 && u_PM.second == GL_FLOAT_MAT4)
+            projectionMatrixUniformLocation = u_PM.first;
+        else
+            projectionMatrixUniformLocation = -1;
+        //Locate the vertexPosition attribute
+        std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->programId);
+        if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
+            vertexAttributeLocation = a_V.first;
+        else
+            vertexAttributeLocation = -1;
+        //Locate the vertexNormal attribute
+        std::pair<int, GLenum> a_N = findAttribute(NORMAL_ATTRIBUTE_NAME, this->programId);
+        if (a_N.first >= 0 && (a_N.second == GL_FLOAT_VEC3 || a_N.second == GL_FLOAT_VEC4))
+            normalAttributeLocation = a_N.first;
+        else
+            normalAttributeLocation = -1;
+        //Locate the vertexColor attribute
+        std::pair<int, GLenum> a_C = findAttribute(COLOR_ATTRIBUTE_NAME, this->programId);
+        if (a_C.first >= 0 && (a_C.second == GL_FLOAT_VEC3 || a_C.second == GL_FLOAT_VEC4))
+            colorAttributeLocation = a_C.first;
+        else
+            colorAttributeLocation = -1;
+
     }
 
     // Clean up any shaders
@@ -164,8 +203,23 @@ bool Shaders::reloadShaders(bool silent){
     this->createShaders();
     return this->compileSuccessFlag;
 }
+
 /*
-Call this prior to rendering to enable the program and automatically bind known attributes
+Sets the pointer from which the ModelView matrix should be loaded from
+This pointer is likely provided by the Camera object
+*/
+void Shaders::setModelViewMatPtr(glm::mat4 const *modelViewMat){
+    this->modelviewMat = modelViewMat;
+}
+/*
+Sets the pointer from which the Projection matrix should be loaded from
+This pointer is likely provided by the Visualisation object
+*/
+void Shaders::setProjectionMatPtr(glm::mat4 const *projectionMat){
+    this->projectionMat = projectionMat;
+}
+/*
+Call this prior to rendering to enable the program and automatically bind known uniforms and attributes
 */
 void Shaders::useProgram(){
     GL_CALL(glUseProgram(this->programId));
@@ -173,17 +227,28 @@ void Shaders::useProgram(){
     GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
 
     ////glBindAttribLocation(this->programId, 1, "in_normal");
-    //this->checkGLError();
+    //this->checkGLError();    //If old shaders
+    //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
+    if (this->vertexShaderVersion <= 140 && this->modelviewMat > 0)
+    {//If old shaders where gl_ModelViewMatrix is available
+        glMatrixMode(GL_MODELVIEW);
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->modelviewMat)));
+    }
+    if (this->modelviewMatrixUniformLocation >= 0 && this->modelviewMat > 0)
+    {//If modeview matrix location and camera ptr are known
+        this->setUniformMatrix4fv(this->modelviewMatrixUniformLocation, glm::value_ptr(*this->modelviewMat));//camera
+    }
 
-    //GLfloat model[16];
-    //glGetFloatv(GL_MODELVIEW_MATRIX, model);
-    //this->setUniformMatrix4fv(1, model);
-    ////glUniformMatrix4fv(1, 1, GL_FALSE, model);
-    //this->checkGLError();
-    //glGetFloatv(GL_PROJECTION_MATRIX, model);
-    //this->setUniformMatrix4fv(2, model);
-    ////glUniformMatrix4fv(2, 1, GL_FALSE, model);
-    //this->checkGLError(); 
+    //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
+    if (this->vertexShaderVersion <= 140 && this->projectionMat > 0)
+    {//If old shaders where gl_ModelViewProjectionMatrix is available
+        glMatrixMode(GL_PROJECTION);
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projectionMat)));
+    }
+    if (this->projectionMatrixUniformLocation >= 0 && this->projectionMat > 0)
+    {//If projection matrix location and camera ptr are known
+        this->setUniformMatrix4fv(this->projectionMatrixUniformLocation, glm::value_ptr(*this->projectionMat));//view frustrum
+    }
 }
 /*
 Calls glUseProgram(0) to disable the currently active shader progam
@@ -197,7 +262,7 @@ Sets a uniform integer value
 @param value The value to be set
 @see glUniform1i()
 */
-void Shaders::setUniformi(int location, int value){
+void Shaders::setUniformi(const int location, const int value){
     if (location >= 0){
         glUniform1i(location, value);
     }
@@ -208,7 +273,7 @@ Sets a uniform matrix value
 @param value The value to be set
 @see glUniformMatrix4fv()
 */
-void Shaders::setUniformMatrix4fv(int location, GLfloat* value){
+void Shaders::setUniformMatrix4fv(const int location, const GLfloat* value){
     if (location >= 0){
         // Must be false and length with most likely just be 1. Can add an extra parameter version if required.
         glUniformMatrix4fv(location, 1, GL_FALSE, value);
@@ -339,11 +404,41 @@ unsigned int Shaders::findShaderVersion(const char *shaderSource)
     return 0;
 }
 /*
-Looks for the '#version xx' tag in the provided shader source and returns the numeric value
-@param shaderSource The shader code to detect the version from
-@return The detected shader version, 0 if one was not found
+Attempts to locate the speicified uniform's location and type
+@param uniformName The name of the uniform
+@param shaderProgram The programId of the shader
+@return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
+@note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
 */
-int Shaders::findUniformLocation(const char *shaderSource, const char *uniformName)
+std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, int shaderProgram)
 {
-    return -1;
+    int result = GL_CALL(glGetUniformLocation(shaderProgram, uniformName));
+    if (result > -1)
+    {
+        GLenum type;
+        GLint size;//Collect size, because its not documented that you can pass 0
+        GL_CALL(glGetActiveUniform(shaderProgram, result, 0, 0, &size, &type, 0));
+        return std::pair<int, GLenum>(result, type);
+    }
+    return  std::pair<int, GLenum>(-1, 0);
+}
+
+/*
+Attempts to locate the specified attribute's location and type
+@param attributeName The name of the attribute
+@param shaderProgram The programId of the shader
+@return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
+@note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
+*/
+std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, int shaderProgram)
+{
+    int result = GL_CALL(glGetAttribLocation(shaderProgram, attributeName));
+    if (result > -1)
+    {
+        GLenum type;
+        GLint size;//Collect size, because its not documented that you can pass 0
+        GL_CALL(glGetActiveAttrib(shaderProgram, result, 0, 0, &size, &type, 0));
+        return std::pair<int, GLenum>(result, type);
+    }
+    return  std::pair<int, GLenum>(-1, 0);
 }

@@ -3,6 +3,8 @@
 
 #include <GL\glew.h>
 
+//Define EXIT_ON_ERROR to cause the program to exit when a GL error occurs
+
 #ifdef _DEBUG //VS standard debug flag
 
 #include <stdlib.h>
@@ -13,8 +15,10 @@ inline static void HandleGLError(const char *file, int line) {
     if (error != GL_NO_ERROR)
     {
         printf("%s(%i) GL Error Occurred;\n%s\n", file, line, gluErrorString(error));
+#if EXIT_ON_ERROR
         getchar();
         exit(1);
+#endif
     }
 }
 

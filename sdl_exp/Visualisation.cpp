@@ -27,14 +27,13 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
     , camera(glm::vec3(10,10,10))
     , renderAxisState(false)
     , axis(0.5)
+    , msaaState(true)
 {
     this->isInitialised = this->init();
     skybox = new Skybox();
 }
 
 Visualisation::~Visualisation(){
-    delete this->scene;
-    delete this->skybox;
 }
 
 
@@ -42,6 +41,10 @@ bool Visualisation::init(){
     bool result = true;
 
     SDL_Init(SDL_INIT_VIDEO);
+
+    // Enable MSAA (Must occur before SDL_CreateWindow)
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
     this->window = SDL_CreateWindow
         (
@@ -67,10 +70,6 @@ bool Visualisation::init(){
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-
-        // Enable MSAA
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
         // Get context
         this->context = SDL_GL_CreateContext(window);
@@ -104,6 +103,7 @@ bool Visualisation::init(){
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_NORMALIZE);
+        setMSAA(this->msaaState);
 
         // Setup the projection matrix
         this->resizeWindow();
@@ -120,6 +120,9 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F11:
         this->toggleFullScreen();
         break;
+    case SDLK_F10:
+        this->setMSAA(!this->msaaState);
+        break;
     case SDLK_F5:
         this->skybox->reload();
         this->scene->reload();
@@ -130,9 +133,19 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     }
 }
 
-
+void Visualisation::setMSAA(bool state)
+{
+    this->msaaState = state;
+    if (this->msaaState)
+        glEnable(GL_MULTISAMPLE);
+    else
+        glDisable(GL_MULTISAMPLE);
+}
 
 void Visualisation::close(){
+    //Delete objects before we delete the GL context!
+    delete this->scene;
+    delete this->skybox;
     SDL_GL_DeleteContext(this->context);
     SDL_DestroyWindow(this->window);
     this->window = NULL;

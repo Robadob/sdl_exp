@@ -47,7 +47,7 @@ public:
     void clearFrame();
     void renderAxis();
     void setRenderAxis(bool state);
-
+    void setMSAA(bool state);
     Camera *getCamera();
     VisualisationScene *getScene() const; 
     glm::mat4 const *getFrustrumPtr();
@@ -63,6 +63,7 @@ private:
     bool quit;
 
     bool renderAxisState;
+    bool msaaState;
     Axis axis;
     Skybox *skybox;
 

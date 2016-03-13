@@ -47,7 +47,7 @@ public:
     void clearFrame();
     void renderAxis();
     void setRenderAxis(bool state);
-
+    void setMSAA(bool state);
     Camera *getCamera();
     VisualisationScene *getScene() const;
 
@@ -62,6 +62,7 @@ private:
     bool quit;
 
     bool renderAxisState;
+    bool msaaState;
     Axis axis;
     Skybox *skybox;
 

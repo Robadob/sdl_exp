@@ -59,10 +59,11 @@ void Camera::turn(float yaw, float pitch){
     //Rotate everything pitch rads about right vector
     glm::vec3 look = normalize(rotate(this->look, -pitch, this->right));
     glm::vec3 up = normalize(rotate(this->up, -pitch, this->right));
+    glm::vec3 right = this->right;
     if (stabilise)
     {    
         //Right is perpendicular to look and (0,1,0)[Default up]
-        glm::vec3 right = cross(this->pureUp, look);
+        right = cross(this->pureUp, look);
         //Stabilised up is perpendicular to right and look
         up = cross(right, look);
         //Flip up and right if backwards
@@ -77,7 +78,7 @@ void Camera::turn(float yaw, float pitch){
     }
     //Commit changes
     this->look = look;
-    this->right = right;//<-BUG? Copying instance var of right back into itself, rather than the local one declared out of scope above
+    this->right = right;
     this->up = up;
 }
 /*

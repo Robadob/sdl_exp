@@ -21,6 +21,8 @@ void Axis::render(){
     glUseProgram(0); //Use default shader
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
     glPushMatrix();
+    glDisable(GL_LIGHTING);
+    glPushAttrib(GL_ENABLE_BIT);
     glBegin(GL_LINES);
             // X axis
             glColor3f(1.0, 0.0, 0.0);     // Red
@@ -38,6 +40,7 @@ void Axis::render(){
             glVertex3f(0.0, 0.0, this->length);
     glEnd();
     GL_CHECK();
+    glPopAttrib();
     glPopMatrix();
     GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 }

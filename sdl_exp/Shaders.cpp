@@ -13,26 +13,26 @@
 #include <glm\gtc\type_ptr.hpp>
 
 /*
+Initial value 0, this is just used to auto increment vector attribute array
+*/
+int Shaders::VertexAttributeDetail::i = 0;
+
+/*
 Constructs a shader program from the provided shader files
 @param vertexShaderPath Path to the GLSL vertex shader (nullptr if not required)
 @param fragmentShaderPath Path to the GLSL fragment shader (nullptr if not required)
 @param geometryShaderPath Path to the GLSL geometry shader (nullptr if not required)
 @param camera The camera object to pull the modelView and projection matrices from
 */
-Shaders::Shaders(char *vertexShaderPath, char *fragmentShaderPath, char *geometryShaderPath)
-    : compileSuccessFlag(true)
-    , vertexShaderPath(vertexShaderPath)
+Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, const char *geometryShaderPath)
+    : vertexShaderPath(vertexShaderPath)
     , fragmentShaderPath(fragmentShaderPath)
     , geometryShaderPath(geometryShaderPath)
     , vertexShaderVersion(0)
     , fragmentShaderVersion(0)
     , geometryShaderVersion(0)
+    , compileSuccessFlag(true)
     , versionRegex("#version ([0-9]+)", std::regex_constants::icase)
-    , projectionMatrixUniformLocation(-1)
-    , modelviewMatrixUniformLocation(-1)
-    , vertexAttributeLocation(-1)
-    , normalAttributeLocation(-1)
-    , colorAttributeLocation(-1)
 {
     this->createShaders();
     GL_CHECK();
@@ -154,33 +154,33 @@ void Shaders::createShaders(){
         //Locate the modelView matrix uniform
         std::pair<int, GLenum> u_MV = findUniform(MODELVIEW_MATRIX_UNIFORM_NAME, this->programId);
         if (u_MV.first >= 0 && u_MV.second == GL_FLOAT_MAT4)
-            modelviewMatrixUniformLocation = u_MV.first;
+            this->modelview.location = u_MV.first;
         else
-            modelviewMatrixUniformLocation = -1;
+            this->modelview.location = -1;
         //Locate the projection matrix uniform
         std::pair<int, GLenum> u_PM = findUniform(PROJECTION_MATRIX_UNIFORM_NAME, this->programId);
         if (u_PM.first >= 0 && u_PM.second == GL_FLOAT_MAT4)
-            projectionMatrixUniformLocation = u_PM.first;
+            this->projection.location = u_PM.first;
         else
-            projectionMatrixUniformLocation = -1;
+            this->projection.location = -1;
         //Locate the vertexPosition attribute
         std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->programId);
         if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
-            vertexAttributeLocation = a_V.first;
+            this->vertexAttributeLocation = a_V.first;
         else
-            vertexAttributeLocation = -1;
+            this->vertexAttributeLocation = -1;
         //Locate the vertexNormal attribute
         std::pair<int, GLenum> a_N = findAttribute(NORMAL_ATTRIBUTE_NAME, this->programId);
         if (a_N.first >= 0 && (a_N.second == GL_FLOAT_VEC3 || a_N.second == GL_FLOAT_VEC4))
-            normalAttributeLocation = a_N.first;
+            this->normalAttributeLocation = a_N.first;
         else
-            normalAttributeLocation = -1;
+            this->normalAttributeLocation = -1;
         //Locate the vertexColor attribute
         std::pair<int, GLenum> a_C = findAttribute(COLOR_ATTRIBUTE_NAME, this->programId);
         if (a_C.first >= 0 && (a_C.second == GL_FLOAT_VEC3 || a_C.second == GL_FLOAT_VEC4))
-            colorAttributeLocation = a_C.first;
+            this->colorAttributeLocation = a_C.first;
         else
-            colorAttributeLocation = -1;
+            this->colorAttributeLocation = -1;
 
     }
 
@@ -203,57 +203,107 @@ bool Shaders::reloadShaders(bool silent){
     this->createShaders();
     return this->compileSuccessFlag;
 }
-
-/*
-Sets the pointer from which the ModelView matrix should be loaded from
-This pointer is likely provided by the Camera object
-*/
-void Shaders::setModelViewMatPtr(glm::mat4 const *modelViewMat){
-    this->modelviewMat = modelViewMat;
-}
-/*
-Sets the pointer from which the Projection matrix should be loaded from
-This pointer is likely provided by the Visualisation object
-*/
-void Shaders::setProjectionMatPtr(glm::mat4 const *projectionMat){
-    this->projectionMat = projectionMat;
-}
 /*
 Call this prior to rendering to enable the program and automatically bind known uniforms and attributes
 */
 void Shaders::useProgram(){
     GL_CALL(glUseProgram(this->programId));
 
-    GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
-
-    ////glBindAttribLocation(this->programId, 1, "in_normal");
-    //this->checkGLError();    //If old shaders
     //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
-    if (this->vertexShaderVersion <= 140 && this->modelviewMat > 0)
+    if (this->vertexShaderVersion <= 140 && this->modelview.matrixPtr > 0)
     {//If old shaders where gl_ModelViewMatrix is available
         glMatrixMode(GL_MODELVIEW);
-        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->modelviewMat)));
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->modelview.matrixPtr)));
     }
-    if (this->modelviewMatrixUniformLocation >= 0 && this->modelviewMat > 0)
+    if (this->modelview.location >= 0 && this->modelview.matrixPtr > 0)
     {//If modeview matrix location and camera ptr are known
-        this->setUniformMatrix4fv(this->modelviewMatrixUniformLocation, glm::value_ptr(*this->modelviewMat));//camera
+        this->setUniformMatrix4fv(this->modelview.location, glm::value_ptr(*this->modelview.matrixPtr));//camera
     }
 
     //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-    if (this->vertexShaderVersion <= 140 && this->projectionMat > 0)
+    if (this->vertexShaderVersion <= 140 && this->projection.matrixPtr > 0)
     {//If old shaders where gl_ModelViewProjectionMatrix is available
         glMatrixMode(GL_PROJECTION);
-        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projectionMat)));
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
     }
-    if (this->projectionMatrixUniformLocation >= 0 && this->projectionMat > 0)
+    if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
     {//If projection matrix location and camera ptr are known
-        this->setUniformMatrix4fv(this->projectionMatrixUniformLocation, glm::value_ptr(*this->projectionMat));//view frustrum
+        this->setUniformMatrix4fv(this->projection.location, glm::value_ptr(*this->projection.matrixPtr));//view frustrum
+    }
+
+    //Don't think we need to use
+    //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
+
+    //Set the vertex (location) attribute
+    if (this->vertexShaderVersion <= 140 && this->vertex.vecPtr > 0)
+    {//If old shaders where gl_Vertex is available
+        glEnableClientState(GL_VERTEX_ARRAY); 
+        glVertexPointer(this->vertex.size, GL_FLOAT, this->vertex.stride, this->vertex.vecPtr);
+    }
+    if (this->vertex.location >= 0 && this->vertex.bufferObject >= -1)
+    {//If vertex attribute location and vbo are known
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
+        glEnableVertexAttribArray(this->vertex.ATTRIB_ARRAY_ID);
+        GL_CALL(glVertexAttribPointer(this->vertex.location, this->vertex.size, GL_FLOAT, GL_FALSE, this->vertex.stride, ((char *)NULL + this->vertex.offset)));
+    }
+
+    //Set the vertex normal attribute
+    if (this->vertexShaderVersion <= 140 && this->normal.vecPtr > 0)
+    {//If old shaders where gl_Vertex is available
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glVertexPointer(this->normal.size, GL_FLOAT, this->normal.stride, this->normal.vecPtr);
+    }
+    if (this->normal.location >= 0 && this->normal.bufferObject >= -1)
+    {//If vertex attribute location and vbo are known
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normal.bufferObject));
+        glEnableVertexAttribArray(this->normal.ATTRIB_ARRAY_ID);
+        GL_CALL(glVertexAttribPointer(this->normal.location, this->normal.size, GL_FLOAT, GL_FALSE, this->normal.stride, ((char *)NULL + this->normal.offset)));
+    }
+
+    //Set the vertex color attribute
+    if (this->vertexShaderVersion <= 140 && this->color.vecPtr > 0)
+    {//If old shaders where gl_Vertex is available
+        glEnableClientState(GL_COLOR_ARRAY);
+        glVertexPointer(this->color.size, GL_FLOAT, this->color.stride, this->color.vecPtr);
+    }
+    if (this->color.location >= 0 && this->color.bufferObject >= -1)
+    {//If vertex attribute location and vbo are known
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
+        glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+        GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
     }
 }
 /*
-Calls glUseProgram(0) to disable the currently active shader progam
+Disables the currently active shader progam and attributes attached to this shader
 */
 void Shaders::clearProgram(){
+    //Vertex location
+    if (this->vertexShaderVersion <= 140 && this->vertex.vecPtr > 0)
+    {//If old shaders where gl_Vertex is available
+        glDisableClientState(GL_VERTEX_ARRAY);
+    }
+    if (this->vertex.location >= 0 && this->vertex.bufferObject >= -1)
+    {//If vertex attribute location and vbo are known
+        glDisableVertexAttribArray(this->vertex.ATTRIB_ARRAY_ID);
+    }
+    //Vertex normal
+    if (this->vertexShaderVersion <= 140 && this->normal.vecPtr > 0)
+    {//If old shaders where gl_Normal is available
+        glDisableClientState(GL_NORMAL_ARRAY);
+    }
+    if (this->normal.location >= 0 && this->normal.bufferObject >= -1)
+    {//If vertex attribute location and vbo are known
+        glDisableVertexAttribArray(this->normal.ATTRIB_ARRAY_ID);
+    }
+    //Vertex color
+    if (this->vertexShaderVersion <= 140 && this->color.vecPtr > 0)
+    {//If old shaders where gl_Color is available
+        glDisableClientState(GL_COLOR_ARRAY);
+    }
+    if (this->color.location >= 0 && this->color.bufferObject >= -1)
+    {//If vertex attribute location and vbo are known
+        glDisableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+    }
     GL_CALL(glUseProgram(0));
 }
 /*
@@ -284,7 +334,7 @@ Loads the text from the provided filepath
 @return A pointer to the loaded shader source
 @note the returned pointer is allocated via malloc, and should be free'd when nolonger required
 */
-char* Shaders::loadShaderSource(char* file){
+char* Shaders::loadShaderSource(const char* file){
     // If file path is 0 it is being omitted. kinda gross
     if (file != 0){
         FILE* fptr = fopen(file, "rb");
@@ -336,7 +386,7 @@ Compilation errors are printed to stderr and compileSuccessflag is set to false 
 @param shaderPath Path to the shader being checked (so that it can be easily identified in the error log)
 @return True if no errors were detected
 */
-bool Shaders::checkShaderCompileError(int shaderId, char* shaderPath){
+bool Shaders::checkShaderCompileError(int shaderId, const char* shaderPath){
     GL_CHECK();
     GLint status;
     GL_CALL(glGetShaderiv(shaderId, GL_COMPILE_STATUS, &status));
@@ -422,7 +472,6 @@ std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, int shaderP
     }
     return  std::pair<int, GLenum>(-1, 0);
 }
-
 /*
 Attempts to locate the specified attribute's location and type
 @param attributeName The name of the attribute
@@ -441,4 +490,96 @@ std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, int sha
         return std::pair<int, GLenum>(result, type);
     }
     return  std::pair<int, GLenum>(-1, 0);
+}
+/*
+Sets the pointer from which the ModelView matrix should be loaded from
+This pointer is likely provided by the Camera object
+*/
+void Shaders::setModelViewMatPtr(glm::mat4 const *modelViewMat){
+    this->modelview.matrixPtr = modelViewMat;
+}
+/*
+Sets the pointer from which the Projection matrix should be loaded from
+This pointer is likely provided by the Visualisation object
+*/
+void Shaders::setProjectionMatPtr(glm::mat4 const *projectionMat){
+    this->projection.matrixPtr = projectionMat;
+}
+/*
+Stores the details necessary for passing vertex (location) attributes to the shader via the modern method
+@param bufferObject The buffer object containing the attribute data
+@param offset The byte offset within the buffer that the data starts
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexAttributeDetail(GLuint bufferObject, unsigned int offset=0, unsigned int size=3, unsigned int stride=0)
+{
+    this->vertex.bufferObject = bufferObject;
+    this->vertex.offset = offset;
+    this->vertex.size = size;
+    this->vertex.stride = stride;
+}
+/*
+Stores the details necessary for passing vertex (location) attributes to the shader via the old method
+@param vecPtr A pointer to the attribute data
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexAttributeDetail(void *vecPtr, unsigned int size = 3, unsigned int stride = 0)
+{
+    this->vertex.vecPtr = vecPtr;
+    this->vertex.size = size;
+    this->vertex.stride = stride;
+}
+/*
+Stores the details necessary for passing vertex normal attributes to the shader via the modern method
+@param bufferObject The buffer object containing the attribute data
+@param offset The byte offset within the buffer that the data starts
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
+{
+    this->normal.bufferObject = bufferObject;
+    this->normal.offset = offset;
+    this->normal.size = size;
+    this->normal.stride = stride;
+}
+/*
+Stores the details necessary for passing vertex normal attributes to the shader via the old method
+@param vecPtr A pointer to the attribute data
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexNormalAttributeDetail(void *vecPtr, unsigned int size = 3, unsigned int stride = 0)
+{
+    this->normal.vecPtr = vecPtr;
+    this->normal.size = size;
+    this->normal.stride = stride;
+}
+/*
+Stores the details necessary for passing vertex normal attributes to the shader via the modern method
+@param bufferObject The buffer object containing the attribute data
+@param offset The byte offset within the buffer that the data starts
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
+{
+    this->color.bufferObject = bufferObject;
+    this->color.offset = offset;
+    this->color.size = size;
+    this->color.stride = stride;
+}
+/*
+Stores the details necessary for passing vertex normal attributes to the shader via the old method
+@param vecPtr A pointer to the attribute data
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexColorAttributeDetail(void *vecPtr, unsigned int size = 3, unsigned int stride = 0)
+{
+    this->color.vecPtr = vecPtr;
+    this->color.size = size;
+    this->color.stride = stride;
 }

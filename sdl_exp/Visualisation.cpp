@@ -95,8 +95,8 @@ bool Visualisation::init(){
         if (swapIntervalResult == -1){
             printf("Swap Interval Failed: %s\n", SDL_GetError());
         }
-
-        GL_CHECK();
+        
+        GLEW_INIT();
 
         // Create the scene - need to be done after GL context has been created
         this->scene = new VisualisationScene(this);

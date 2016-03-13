@@ -27,4 +27,16 @@ inline static void HandleGLError(const char *file, int line) {
 #define GL_CHECK() 
 
 #endif //ifdef  _DEBUG
+
+inline static void InitGlew() {
+    GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+        fprintf(stderr, "Error: %s\n", (char *)glewGetErrorString(err));
+        getchar();
+        exit(1);
+    }
+}
+#define GLEW_INIT() (InitGlew())
+
 #endif //ifndef __GLcheck_h__

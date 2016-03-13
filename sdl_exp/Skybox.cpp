@@ -141,7 +141,7 @@ void Skybox::reloadTextures()
 }
 void Skybox::reload()
 {
-    shaders.reloadShaders();
+    shaders.reloadShaders(true);
     this->reloadTextures();
 }
 void Skybox::render(Camera *camera, glm::mat4 projection)

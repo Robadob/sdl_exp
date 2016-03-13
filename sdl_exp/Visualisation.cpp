@@ -90,7 +90,7 @@ bool Visualisation::init(){
         }
 
         // Create the scene - need to be done after glew is init
-        this->scene = new VisualisationScene(&this->camera);
+        this->scene = new VisualisationScene(this);
         
 
         // Setup gl stuff

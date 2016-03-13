@@ -21,11 +21,10 @@ class Shaders
         VertexAttributeDetail() : ATTRIB_ARRAY_ID(i++){}
         const int ATTRIB_ARRAY_ID;  //Modern: Which vertex attrib array we store vbo data in.
         int location = -1;          //Modern: Attribute location within shader
-        GLuint bufferObject = -1;   //Modern: Buffer object containing data
-        unsigned int offset = 0;    //Modern: Specifies the offset within the buffer object
+        GLuint bufferObject = 0;   //Both: Buffer object containing data
+        unsigned int offset = 0;    //Both: Specifies the offset within the buffer object
         unsigned int size = 3;      //Both:   Number of vector elements per attribute (Must be 2, 3 or 4)
         unsigned int stride = 0;    //Both:   Spacing between elements within the array
-        const void *vecPtr = 0;     //Old:    Pointer to the attribute array to be loaded
     };
     //These constants are the names that will be searched for within the shaders
     const char *MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
@@ -52,6 +51,10 @@ public:
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
     void setProjectionMatPtr(glm::mat4 const *projectionMat);
+
+    void setVertexAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
 
 private:
     //Uniform and Attrib locations
@@ -91,12 +94,6 @@ private:
     unsigned int findShaderVersion(const char *shaderSource);
     std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, int shaderProgram);
     std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, int shaderProgram);
-    void setVertexAttributeDetail(GLuint bufferObject, unsigned offset, unsigned size, unsigned stride);
-    void setVertexAttributeDetail(void* vecPtr, unsigned size, unsigned stride);
-    void setVertexNormalAttributeDetail(GLuint bufferObject, unsigned offset, unsigned size, unsigned stride);
-    void setVertexNormalAttributeDetail(void* vecPtr, unsigned size, unsigned stride);
-    void setVertexColorAttributeDetail(GLuint bufferObject, unsigned offset, unsigned size, unsigned stride);
-    void setVertexColorAttributeDetail(void* vecPtr, unsigned size, unsigned stride);
 };
 
 #endif //ifndef __Shaders_h__

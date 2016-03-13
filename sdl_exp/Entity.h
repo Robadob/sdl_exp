@@ -6,6 +6,7 @@
 #include <glm\glm.hpp>
 
 #include "Material.h"
+#include "Shaders.h"
 
 /*
 A renderable model loaded from a .obj file
@@ -13,14 +14,15 @@ A renderable model loaded from a .obj file
 class Entity
 {
 public:
-    Entity(const char *modelPath, float modelScale=1.0);
+    Entity(const char *modelPath, float modelScale=1.0, Shaders *shaders=0);
     ~Entity();
-    void render(GLuint vertLocation=0, GLuint normalLocation=1);
+    void render();
     void renderInstances(int count, GLuint vertLocation = 0, GLuint normalLocation = 1);
     void setColor(glm::vec3 color);
     void setLocation(glm::vec3 location);
     inline void clearMaterial();
 protected:
+    Shaders *shaders;
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
     //Model vertex and face counts

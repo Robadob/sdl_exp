@@ -9,11 +9,14 @@
 
 #include "Camera.h"
 #include "Shaders.h"
+#include "Entity.h"
+
+class Visualisation;
 
 class VisualisationScene
 {
 public:
-    VisualisationScene(Camera* camera = nullptr);
+    VisualisationScene(Visualisation* vis = nullptr);
     ~VisualisationScene();
 
     void update();
@@ -22,7 +25,9 @@ public:
     void generate();
 
 private:
-    Camera* camera;
+    Visualisation *vis;
+    Entity *ent;
+    Shaders *shader;
 
 };
 

@@ -34,8 +34,6 @@ Visualisation::Visualisation(char* windowTitle, int windowWidth, int windowHeigh
 }
 
 Visualisation::~Visualisation(){
-    delete this->scene;
-    delete this->skybox;
 }
 
 
@@ -145,6 +143,9 @@ void Visualisation::setMSAA(bool state)
 }
 
 void Visualisation::close(){
+    //Delete objects before we delete the GL context!
+    delete this->scene;
+    delete this->skybox;
     SDL_GL_DeleteContext(this->context);
     SDL_DestroyWindow(this->window);
     this->window = NULL;

@@ -1,5 +1,4 @@
 #include "Visualisation.h"
-#include <stdio.h>
 
 int main()
 {

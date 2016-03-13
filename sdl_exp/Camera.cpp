@@ -1,7 +1,5 @@
 #include "Camera.h"
 
-#include <stdio.h>
-
 /*
 Initialises the camera located at (1,1,1) directed at (0,0,0)
 */
@@ -130,7 +128,7 @@ Returns the projection matrix
 For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
 @return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
 */
-glm::mat4 Camera::view(){
+glm::mat4 Camera::view() const{
     return viewMat;
 }
 /*
@@ -150,7 +148,7 @@ Returns the projection matrix from the perspective required for rendering a skyb
 For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
 @return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
 */
-glm::mat4 Camera::skyboxView(){
+glm::mat4 Camera::skyboxView() const{
     return skyboxViewMat;
 }
 /*
@@ -169,28 +167,36 @@ void Camera::skyboxGluLookAt(){
 Returns the cameras location
 @return The location of the camera in world space
 */
-const glm::vec3 Camera::getEye(){
+glm::vec3 Camera::getEye() const{
     return eye;
 }
 /*
 Returns the cameras normalized direction vector
 @return The normalized direction of the camera
 */
-const glm::vec3 Camera::getLook(){
+glm::vec3 Camera::getLook() const{
     return look;
 }
 /*
 Returns the cameras normalized up vector
 @return The normalized direction the camera treats as upwards
 */
-const glm::vec3 Camera::getUp(){
+glm::vec3 Camera::getUp() const{
     return up;
+}
+/*
+Returns the value of pureUp
+This value is used by the stabilisation to prevent the camera rolling unintentionally
+@return The normalized direction the camera treats as the true up
+*/
+glm::vec3 Camera::getPureUp() const{
+    return pureUp;
 }
 /*
 Returns the cameras normalized right vector
 @return The normalized direction the camera treats as rightwards
 */
-const glm::vec3 Camera::getRight(){
+glm::vec3 Camera::getRight() const{
     return right;
 }
 /*
@@ -207,7 +213,7 @@ Returns a constant pointer to the cameras modelview matrix
 This pointer can be used to continuously track the modelview matrix
 @return A pointer to the modelview matrix
 */
-glm::mat4 const *Camera::getViewMatPtr(){
+const glm::mat4 *Camera::getViewMatPtr() const{
     return &viewMat;
 }
 /*
@@ -215,6 +221,6 @@ Returns a constant pointer to the cameras skybox modelview matrix
 This pointer can be used to continuously track the skybox modelview matrix
 @return A pointer to the modelview matrix
 */
-glm::mat4 const *Camera::getSkyboxViewMatPtr(){
+const glm::mat4 *Camera::getSkyboxViewMatPtr() const{
     return &skyboxViewMat;
 }

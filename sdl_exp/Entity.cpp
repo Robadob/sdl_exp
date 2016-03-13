@@ -1,9 +1,7 @@
 #define  _CRT_SECURE_NO_WARNINGS
 #include "Entity.h"
 
-#include <iostream>
 #include <fstream>
-#include <string>
 
 /*
 Constructs an entity from the provided .obj model

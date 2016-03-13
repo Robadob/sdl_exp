@@ -1,8 +1,9 @@
 #include "Skybox.h" 
-#include "glm/gtc/type_ptr.hpp"
-#include "SDL/SDL_image.h"
+
+#include <glm\gtc\type_ptr.hpp>
+#include <SDL\SDL_image.h>
 #include <stdio.h>
-#include <string>
+
 /*
 Genric cube with vertices wound such that rendered faces are inwards
 */
@@ -49,10 +50,19 @@ float points[] = {
     -10.0f, -10.0f, 10.0f,
     10.0f, -10.0f, 10.0f
 };
-Skybox::Skybox(char* texturePath)
+/*
+Constructs a skybox entity
+@param projectionMat Pointer to the projection matrix to be used during render
+@param modelViewMat Pointer to the model view matrix to be used during render
+@param texturePath Path to directory containing files named left/right/back/front/up/down.png (bmp is also suitable).
+@param texturePath The provided must end with a /
+*/
+Skybox::Skybox(const glm::mat4 *modelViewMat, const glm::mat4 *projectionMat, char *texturePath)
     : shaders("../shaders/skybox.v", "../shaders/skybox.f")
     , texturePath(texturePath)
 {
+    //shaders.setModelViewMatPtr(modelViewMat);
+    //shaders.setProjectionMatPtr(projectionMat);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
    //Init the texture
@@ -69,18 +79,24 @@ Skybox::Skybox(char* texturePath)
     //Load the textures
     this->reloadTextures();
     
-    //Pass the textures to openGL
+    //Pass the textures to OpenGL
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    //glGenVertexArrays(1, &vao);
+    //glBindVertexArray(vao);
+    //glEnableVertexAttribArray(0);
+    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+    //shaders.setVertexAttributeDetail(vbo, 0, 3, 0);
 }
-SDL_Surface *Skybox::readTex(const char *texturePath)
-{
+/*
+Loads a texture from the provided .png or .bmp file
+@param texturePath Path to the texture to be loaded
+@note the SDL_Surface must be freed using SDL_FreeSurface()
+*/
+SDL_Surface *Skybox::readTex(const char *texturePath){
     std::string imagePath;
     imagePath.assign(texturePath).append(".png");
     SDL_Surface *image = IMG_Load(imagePath.c_str());
@@ -101,14 +117,18 @@ SDL_Surface *Skybox::readTex(const char *texturePath)
     }
     return image;
 }
-Skybox::~Skybox()
-{
+/*
+Deallocates used GL buffers
+*/
+Skybox::~Skybox(){
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteTextures(1, &texName);
 }
-void Skybox::reloadTextures()
-{
+/*
+Loads the skybox textures
+*/
+void Skybox::reloadTextures(){
     glBindTexture(GL_TEXTURE_CUBE_MAP, texName);
     SDL_Surface *image;
     std::string imagePath;
@@ -139,18 +159,23 @@ void Skybox::reloadTextures()
     SDL_FreeSurface(image);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
+/*
+Reloads the skybox's shaders and textures
+*/
 void Skybox::reload()
 {
     shaders.reloadShaders(true);
     this->reloadTextures();
 }
+/*
+Renders the skybox
+*/
 void Skybox::render(Camera *camera, glm::mat4 projection)
 {
     glPushMatrix();
     //Setup shaders
-    shaders.useProgram();
-    shaders.setUniformMatrix4fv(1, &camera->skyboxView()[0][0]);
-    shaders.setUniformMatrix4fv(2, &projection[0][0]);
+    //shaders.useProgram();
+    //Set texture sampler
     shaders.setUniformi(3, 0);
 
     // Enable/Disable features
@@ -165,13 +190,13 @@ void Skybox::render(Camera *camera, glm::mat4 projection)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texName);
     //glBindSampler(0, linearFiltering);
-    glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    //glBindVertexArray(vao);
+    //glEnableVertexAttribArray(0);
+    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(GL_TRUE);
-    glDisableVertexAttribArray(0);
+    //glDisableVertexAttribArray(0);
 
     // Restore enable bits and matrix
     glPopAttrib();

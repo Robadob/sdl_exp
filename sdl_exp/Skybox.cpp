@@ -61,8 +61,8 @@ Skybox::Skybox(const glm::mat4 *modelViewMat, const glm::mat4 *projectionMat, ch
     : shaders("../shaders/skybox.v", "../shaders/skybox.f")
     , texturePath(texturePath)
 {
-    //shaders.setModelViewMatPtr(modelViewMat);
-    //shaders.setProjectionMatPtr(projectionMat);
+    shaders.setModelViewMatPtr(modelViewMat);
+    shaders.setProjectionMatPtr(projectionMat);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
    //Init the texture
@@ -83,13 +83,8 @@ Skybox::Skybox(const glm::mat4 *modelViewMat, const glm::mat4 *projectionMat, ch
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
-    //glGenVertexArrays(1, &vao);
-    //glBindVertexArray(vao);
-    //glEnableVertexAttribArray(0);
-    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-    //shaders.setVertexAttributeDetail(vbo, 0, 3, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    shaders.setVertexAttributeDetail(vbo, 0, 3, 0);
 }
 /*
 Loads a texture from the provided .png or .bmp file
@@ -174,7 +169,7 @@ void Skybox::render(Camera *camera, glm::mat4 projection)
 {
     glPushMatrix();
     //Setup shaders
-    //shaders.useProgram();
+    shaders.useProgram();
     //Set texture sampler
     shaders.setUniformi(3, 0);
 
@@ -189,14 +184,8 @@ void Skybox::render(Camera *camera, glm::mat4 projection)
     glDepthMask(GL_FALSE);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texName);
-    //glBindSampler(0, linearFiltering);
-    //glBindVertexArray(vao);
-    //glEnableVertexAttribArray(0);
-    //glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(GL_TRUE);
-    //glDisableVertexAttribArray(0);
 
     // Restore enable bits and matrix
     glPopAttrib();

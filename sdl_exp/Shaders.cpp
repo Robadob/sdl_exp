@@ -15,7 +15,6 @@
 /*
 Initial value 0, this is just used to auto increment vector attribute array
 */
-int Shaders::VertexAttributeDetail::i = 0;
 
 /*
 Constructs a shader program from the provided shader files
@@ -35,9 +34,9 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase)
     , modelview{}
     , projection{}
-    , vertex{}
-    , normal{}
-    , color{}
+    , vertex{0}
+    , normal{1}
+    , color{2}
 {
     this->createShaders();
     GL_CHECK();
@@ -171,21 +170,21 @@ void Shaders::createShaders(){
         //Locate the vertexPosition attribute
         std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->programId);
         if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
-            this->vertexAttributeLocation = a_V.first;
+            this->vertex.location = a_V.first;
         else
-            this->vertexAttributeLocation = -1;
+            this->vertex.location = -1;
         //Locate the vertexNormal attribute
         std::pair<int, GLenum> a_N = findAttribute(NORMAL_ATTRIBUTE_NAME, this->programId);
         if (a_N.first >= 0 && (a_N.second == GL_FLOAT_VEC3 || a_N.second == GL_FLOAT_VEC4))
-            this->normalAttributeLocation = a_N.first;
+            this->normal.location = a_N.first;
         else
-            this->normalAttributeLocation = -1;
+            this->normal.location = -1;
         //Locate the vertexColor attribute
         std::pair<int, GLenum> a_C = findAttribute(COLOR_ATTRIBUTE_NAME, this->programId);
         if (a_C.first >= 0 && (a_C.second == GL_FLOAT_VEC3 || a_C.second == GL_FLOAT_VEC4))
-            this->colorAttributeLocation = a_C.first;
+            this->color.location = a_C.first;
         else
-            this->colorAttributeLocation = -1;
+            this->color.location = -1;
 
     }
 
@@ -246,7 +245,7 @@ void Shaders::useProgram(){
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
         glVertexPointer(this->vertex.size, GL_FLOAT, this->vertex.stride, ((char *)NULL + this->vertex.offset));
     }
-    if (this->vertex.location >= 0 && this->vertex.bufferObject > -1)
+    if (this->vertex.location >= 0 && this->vertex.bufferObject > 0)
     {//If vertex attribute location and vbo are known
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
         glEnableVertexAttribArray(this->vertex.ATTRIB_ARRAY_ID);

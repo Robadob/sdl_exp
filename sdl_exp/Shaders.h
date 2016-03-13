@@ -17,8 +17,7 @@ class Shaders
     };
     struct VertexAttributeDetail
     {
-        static int i;               //Counter to auto set ATTRIB_ARRAY_ID
-        VertexAttributeDetail() : ATTRIB_ARRAY_ID(i++){}
+        VertexAttributeDetail(int i) : ATTRIB_ARRAY_ID(i) { }
         const int ATTRIB_ARRAY_ID;  //Modern: Which vertex attrib array we store vbo data in.
         int location = -1;          //Modern: Attribute location within shader
         GLuint bufferObject = 0;   //Both: Buffer object containing data
@@ -57,10 +56,6 @@ public:
     void setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
 
 private:
-    //Uniform and Attrib locations
-    int vertexAttributeLocation;
-    int normalAttributeLocation;
-    int colorAttributeLocation;
     //Matrix uniform pointers
     UniformMatrixDetail modelview;
     UniformMatrixDetail projection;

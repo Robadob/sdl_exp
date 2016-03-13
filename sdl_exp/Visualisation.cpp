@@ -150,8 +150,12 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F10:
         this->setMSAA(!this->msaaState);
         break;
+    case SDLK_F9:
+        this->setSkybox(!this->skybox);
+        break;
     case SDLK_F5:
-        this->skybox->reload();
+        if (this->skybox)
+            this->skybox->reload();
         this->scene->reload();
         break;
     default:
@@ -321,7 +325,7 @@ Toggles whether the skybox should be used or not
 */
 void Visualisation::setSkybox(bool state){
     if (state&&!this->skybox)
-        this->skybox = new Skybox(this->getCamera()->getViewMatPtr(), this->getFrustrumPtr());
+        this->skybox = new Skybox(this->getCamera()->getSkyboxViewMatPtr(), this->getFrustrumPtr());
     else if (!state&&this->skybox)
     {
         delete this->skybox;

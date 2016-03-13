@@ -9,100 +9,90 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="glsl">
+    <Filter Include="Shaders">
       <UniqueIdentifier>{8719067d-b56a-41f9-919a-b59f3ab89bcb}</UniqueIdentifier>
       <Extensions>frag;vert;geom</Extensions>
     </Filter>
-    <Filter Include="objects">
-      <UniqueIdentifier>{89407d9e-0293-4129-8ca5-45ddf6a6ad56}</UniqueIdentifier>
-      <Extensions>obj</Extensions>
+    <Filter Include="Header Files\Visualisation">
+      <UniqueIdentifier>{9f06c0e5-b4a5-4a33-bec3-1788504027f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation">
+      <UniqueIdentifier>{6af7b0a9-3790-4a3e-bbb6-e3340098803e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Util">
+      <UniqueIdentifier>{9299d9cc-b5b0-460c-8abf-0fbd3b7a5ec0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Visualisation.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Axis.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Camera.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="VisualisationScene.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Entity.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Axis.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Material.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Shaders.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Shaders.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Entity.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Skybox.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Texture.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\Visualisation.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="Skybox.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="visualisation\VisualisationScene.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Visualisation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VisualisationScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Quaternion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Axis.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Entity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Skybox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GLcheck.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="sdl_exp.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
-      <Filter>glsl</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="glsl\main.vert">
-      <Filter>glsl</Filter>
+      <Filter>Shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="visualisation\VisualisationScene.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Axis.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Camera.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Entity.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Material.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Shaders.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Skybox.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Texture.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Visualisation.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\GLcheck.h">
+      <Filter>Header Files\Visualisation\Util</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

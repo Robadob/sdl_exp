@@ -1,13 +1,8 @@
-#pragma once
+#ifndef __VisualisationScene_h__
+#define __VisualisationScene_h__
 
-#include <stdio.h>
-#include "gl/glew.h"
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
 #include <glm/glm.hpp>
-#include <glm/gtx/transform.hpp>
 
-#include "Camera.h"
 #include "Shaders.h"
 #include "Entity.h"
 
@@ -31,3 +26,4 @@ private:
 
 };
 
+#endif //ifndef __VisualisationScene_h__

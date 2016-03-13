@@ -4,6 +4,8 @@
 #include "Camera.h"
 #include "Shaders.h"
 
+#include <SDL/SDL.h>
+
 #define TEXTURE_SIZE 64
 
 class Skybox

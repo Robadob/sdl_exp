@@ -3,7 +3,7 @@
 
 #include "GLcheck.h"
 
-#include <glm\glm.hpp>
+#include <glm/glm.hpp>
 
 #include "Material.h"
 #include "Shaders.h"

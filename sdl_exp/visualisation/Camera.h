@@ -3,10 +3,7 @@
 
 #include "GLcheck.h"
 
-#include <SDL\SDL.h>
-#include <SDL\SDL_opengl.h>
-#include <glm\glm.hpp>
-#include <glm\gtx\rotate_vector.hpp>
+#include <glm/glm.hpp>
 
 class Camera
 {

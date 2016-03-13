@@ -1,7 +1,6 @@
 #include "Skybox.h" 
 
-#include <glm\gtc\type_ptr.hpp>
-#include <SDL\SDL_image.h>
+#include <SDL/SDL_image.h>
 #include <stdio.h>
 
 /*

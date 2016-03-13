@@ -1,11 +1,10 @@
 #include "Axis.h"
 
 #include "GLcheck.h"
-
-#include <stdio.h>
-#include <SDL\SDL_opengl.h>
-
-
+/*
+Constructs a new axis object
+@param length The length of each drawn axis
+*/
 Axis::Axis(float length){
     this->length = length;
 }

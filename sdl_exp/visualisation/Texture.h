@@ -1,6 +1,7 @@
-#pragma once
+#ifndef __Texture_h__
+#define __Texture_h__
 
-#include "GL\glew.h"
+#include "GLcheck.h"
 
 class Texture
 {
@@ -10,6 +11,6 @@ public:
 
     void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
     void deleteTextureBufferObject(GLuint *tbo);
-    void checkGLError();
 };
 
+#endif //ifndef __Texture_h__

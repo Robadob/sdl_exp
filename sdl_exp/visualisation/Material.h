@@ -1,5 +1,7 @@
-#pragma once
-#include <glm\glm.hpp>
+#ifndef __Material_h__
+#define __Material_h__
+
+#include <glm/glm.hpp>
 
 class Material
 {
@@ -19,3 +21,4 @@ public:
     void printToConsole();
 };
 
+#endif //ifndef __Maerial_h__

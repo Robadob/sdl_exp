@@ -143,37 +143,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Axis.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Material.cpp" />
-    <ClCompile Include="Shaders.cpp" />
-    <ClCompile Include="Skybox.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Visualisation.cpp" />
-    <ClCompile Include="VisualisationScene.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Axis.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Entity.h" />
-    <ClInclude Include="GLcheck.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="Quaternion.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="Shaders.h" />
-    <ClInclude Include="Skybox.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Visualisation.h" />
-    <ClInclude Include="VisualisationScene.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="sdl_exp.rc" />
+    <ClCompile Include="visualisation\Axis.cpp" />
+    <ClCompile Include="visualisation\Camera.cpp" />
+    <ClCompile Include="visualisation\Entity.cpp" />
+    <ClCompile Include="visualisation\Material.cpp" />
+    <ClCompile Include="visualisation\Shaders.cpp" />
+    <ClCompile Include="visualisation\Skybox.cpp" />
+    <ClCompile Include="visualisation\Texture.cpp" />
+    <ClCompile Include="visualisation\Visualisation.cpp" />
+    <ClCompile Include="visualisation\VisualisationScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag" />
     <None Include="glsl\main.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="visualisation\Axis.h" />
+    <ClInclude Include="visualisation\Camera.h" />
+    <ClInclude Include="visualisation\Entity.h" />
+    <ClInclude Include="visualisation\GLcheck.h" />
+    <ClInclude Include="visualisation\Material.h" />
+    <ClInclude Include="visualisation\Shaders.h" />
+    <ClInclude Include="visualisation\Skybox.h" />
+    <ClInclude Include="visualisation\Texture.h" />
+    <ClInclude Include="visualisation\Visualisation.h" />
+    <ClInclude Include="visualisation\VisualisationScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

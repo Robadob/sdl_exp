@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+#include <glm/gtx/rotate_vector.hpp>
+
 /*
 Initialises the camera located at (1,1,1) directed at (0,0,0)
 */

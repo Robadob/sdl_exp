@@ -1,6 +1,8 @@
 #include "Material.h"
+
 #include <stdio.h>
-#include "GL\glew.h"
+
+#include "GLcheck.h"
 
 
 #define DEFAULT_SHININESS 32

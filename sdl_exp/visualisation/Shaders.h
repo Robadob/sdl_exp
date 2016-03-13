@@ -5,7 +5,7 @@
 
 #include "GLcheck.h"
 
-#include <glm\glm.hpp>
+#include <glm/glm.hpp>
 #include <regex>
 
 class Shaders

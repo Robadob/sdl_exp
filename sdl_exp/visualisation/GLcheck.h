@@ -1,7 +1,7 @@
 #ifndef __GLcheck_h__
 #define __GLcheck_h__
 
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 //Define EXIT_ON_ERROR to cause the program to exit when a GL error occurs
 

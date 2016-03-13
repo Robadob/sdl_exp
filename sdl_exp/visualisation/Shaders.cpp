@@ -5,12 +5,9 @@
 #include "Shaders.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <vector>
-#include <iostream>
 #include <fstream>
-#include <glm\gtc\type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 /*
 Initial value 0, this is just used to auto increment vector attribute array

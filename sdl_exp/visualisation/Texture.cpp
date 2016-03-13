@@ -25,18 +25,9 @@ void Texture::createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint siz
     glBindBuffer(GL_TEXTURE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_BUFFER, 0);
 
-    this->checkGLError();
+    GL_CHECK();
 }
 
 void Texture::deleteTextureBufferObject(GLuint *tbo){
     glDeleteBuffers(1, tbo);
-}
-
-void Texture::checkGLError(){
-    GLuint error = glGetError();
-    if (error != GL_NO_ERROR)
-    {
-        const char* errMessage = (const char*)gluErrorString(error);
-        fprintf(stderr, "(textures) OpenGL Error #%d: %s\n", error, errMessage);
-    }
 }

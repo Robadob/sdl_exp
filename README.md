@@ -13,9 +13,24 @@ The easiest way to utilise this library appears to be;
   * `OpenGL32.lib`
   * `glu32.lib`
 * Delete the sample `main.cpp`, to remove the duplicate entry point.
-* Copy the .h and .cpp files from `sdl_exp` into a named directory within your own source (e.g. `sdl_exp`).
-* Where required, include e.g `sdl_exp/Visualisation.h`.
-* Declare a `Visualisation` object, and call the `run()` method.
+* Copy the `sdl_exp/visualisation` directory into your own source directory.
+* Create a new class which extends `Scene` and overrides all of its virtual methods 
+  * `EntityScene.h` & `EntityScene.cpp` are provided as an example of how to configure your own `Scene`.
+  * Make sure to call the constructor of Scene, as this will automatically manage your Projection and ModelView matrices!
+* Within your main method you can now create the Visualisation;
+```C++
+    Visualisation v = Visualisation("Visulisation Example", 1280, 720);
+    EntityScene *scene = new EntityScene(v);
+    v.run();
+```
+
+##Note
+The `Shaders` and `Entity` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your matrix uniforms and virtex attributes.
+* `_modelViewMat` - ModelView Matrix[Mat4]
+* `_projectionMat` - Projection Matrix[Mat4]
+* `_vertex` - Vertex Position[Vec3/Vec4]
+* `_normal` - Vertex Normal[Vec3/Vec4]
+* `_color` - Vertex Color[Vec3/Vec4]
 
 ##Dependencies
 All dependent libraries are included within the repo, licenses are available on their relevant websites.

@@ -7,6 +7,7 @@
 
 #include <glm/glm.hpp>
 #include <regex>
+#include <vector>
 
 class Shaders
 {
@@ -20,10 +21,16 @@ class Shaders
         VertexAttributeDetail(int i) : ATTRIB_ARRAY_ID(i) { }
         const int ATTRIB_ARRAY_ID;  //Modern: Which vertex attrib array we store vbo data in.
         int location = -1;          //Modern: Attribute location within shader
-        GLuint bufferObject = 0;   //Both: Buffer object containing data
+        GLuint bufferObject = 0;    //Both: Buffer object containing data
         unsigned int offset = 0;    //Both: Specifies the offset within the buffer object
         unsigned int size = 3;      //Both:   Number of vector elements per attribute (Must be 2, 3 or 4)
         unsigned int stride = 0;    //Both:   Spacing between elements within the array
+    };
+    struct UniformTextureDetail
+    {
+        GLuint name;
+        GLint location;
+        GLenum type;
     };
     //These constants are the names that will be searched for within the shaders
     const char *MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
@@ -45,8 +52,6 @@ public:
     bool reload(bool silent = false);
     void useProgram();
     void clearProgram();
-    void setUniformi(const int location, const int value);
-    void setUniformMatrix4fv(const int location, const GLfloat* value);
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
     void setProjectionMatPtr(glm::mat4 const *projectionMat);
@@ -54,6 +59,8 @@ public:
     void setVertexAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
     void setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
     void setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+
+    bool addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
 private:
     //Matrix uniform pointers
@@ -63,6 +70,9 @@ private:
     VertexAttributeDetail normal;
     VertexAttributeDetail color;
 
+    //Texture tracking
+    std::vector<UniformTextureDetail> textures;
+    
     //Shader file paths
     const char *vertexShaderPath;
     const char *fragmentShaderPath;
@@ -84,6 +94,10 @@ private:
     void destroyProgram();
     bool checkShaderCompileError(int shaderId, const char *shaderPath);
     bool checkProgramCompileError(int programId);
+
+    //Private because these must be called after useProgram()
+    void setUniformi(const int location, const int value);
+    void setUniformMatrix4fv(const int location, const GLfloat* value);
 
     std::regex versionRegex;
     unsigned int findShaderVersion(const char *shaderSource);

@@ -75,6 +75,8 @@ Skybox::Skybox(const glm::mat4 *modelViewMat, const glm::mat4 *projectionMat, ch
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
 
+    shaders.addTextureUniform(texName, "cube_texture", GL_TEXTURE_CUBE_MAP);
+
     //Load the textures
     this->reloadTextures();
     
@@ -170,7 +172,7 @@ void Skybox::render(Camera *camera, glm::mat4 projection)
     //Setup shaders
     shaders.useProgram();
     //Set texture sampler
-    shaders.setUniformi(3, 0);
+    //shaders.setUniformi(3, 0);
 
     // Enable/Disable features
     glPushAttrib(GL_ENABLE_BIT);
@@ -181,8 +183,8 @@ void Skybox::render(Camera *camera, glm::mat4 projection)
     glDisable(GL_BLEND);
 
     glDepthMask(GL_FALSE);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texName);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_CUBE_MAP, texName);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glDepthMask(GL_TRUE);
 

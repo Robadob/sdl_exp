@@ -34,6 +34,8 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , vertex{0}
     , normal{1}
     , color{2}
+    , textures()
+    , programId(0)
 {
     this->createShaders();
     GL_CHECK();
@@ -210,6 +212,8 @@ Call this prior to rendering to enable the program and automatically bind known 
 void Shaders::useProgram(){
     GL_CALL(glUseProgram(this->programId));
 
+    //glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
+
     //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
     if (this->vertexShaderVersion <= 140 && this->projection.matrixPtr > 0)
     {//If old shaders where gl_ModelViewProjectionMatrix is available
@@ -231,7 +235,6 @@ void Shaders::useProgram(){
     {//If modeview matrix location and camera ptr are known
         this->setUniformMatrix4fv(this->modelview.location, glm::value_ptr(*this->modelview.matrixPtr));//camera
     }
-
 
     //Don't think we need to use
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
@@ -277,11 +280,20 @@ void Shaders::useProgram(){
         glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
         GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
     }
+
+    //Set any Texture buffers
+    for (unsigned int i = 0; i < textures.size(); i++)
+    {
+        glActiveTexture(GL_TEXTURE0+i);
+        glBindTexture(textures[i].type, textures[i].name);
+        this->setUniformi(textures[i].location, i);
+    }
 }
 /*
 Disables the currently active shader progam and attributes attached to this shader
 */
 void Shaders::clearProgram(){
+    //Massively shorten this with glPopAttrib()?
     //Vertex location
     if (this->vertexShaderVersion <= 140 && this->vertex.bufferObject > 0)
     {//If old shaders where gl_Vertex is available
@@ -551,4 +563,24 @@ void Shaders::setVertexColorAttributeDetail(GLuint bufferObject, unsigned int of
     this->color.offset = offset;
     this->color.size = size;
     this->color.stride = stride;
+}
+/*
+Adds a texture buffer to be loaded when useProgram() is called
+@param texture The name of the texture (as returned by glGenTexture())
+@param uniformName The name of the uniform within the shader this texture should be bound to
+@param type The type of texture being bound
+*/
+bool Shaders::addTextureUniform(GLuint texture, const char *uniformName, GLenum type)
+{
+    if (this->programId>=0)
+    {
+        GLint location = glGetUniformLocation(this->programId, uniformName);
+        if (location!=-1)
+        {
+            textures.push_back(UniformTextureDetail{texture, location, type});
+            return true;
+        }
+        GL_CHECK();
+    }
+    return false;
 }

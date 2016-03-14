@@ -51,7 +51,10 @@
     <ClCompile Include="visualisation\Visualisation.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\VisualisationScene.cpp">
+    <ClCompile Include="EntityScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Scene.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,9 +67,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="visualisation\VisualisationScene.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\Axis.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
@@ -93,6 +93,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Scene.h">
+      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

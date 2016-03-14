@@ -158,7 +158,7 @@ Reloads the skybox's shaders and textures
 */
 void Skybox::reload()
 {
-    shaders.reloadShaders(true);
+    shaders.reload(true);
     this->reloadTextures();
 }
 /*

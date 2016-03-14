@@ -42,7 +42,7 @@ public:
     bool getCompileSuccess() const;
 
     void createShaders();
-    bool reloadShaders(bool silent = false);
+    bool reload(bool silent = false);
     void useProgram();
     void clearProgram();
     void setUniformi(const int location, const int value);

@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "GLcheck.h"
+#include "Scene.h"
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.001f
@@ -36,11 +37,12 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
-    , camera(glm::vec3(10,10,10))
+    , camera(glm::vec3(50,50,50))
     , renderAxisState(false)
-    , axis(0.5)
+    , axis(25)
     , msaaState(true)
     , skybox(0)
+    , scene(0)
 {
     this->isInitialised = this->init();
 }
@@ -98,9 +100,6 @@ bool Visualisation::init(){
         }
         
         GLEW_INIT();
-
-        // Create the scene - need to be done after GL context has been created
-        this->scene = new VisualisationScene(this);
         
         // Setup gl stuff
         glEnable(GL_DEPTH_TEST);
@@ -120,6 +119,17 @@ bool Visualisation::init(){
         return true;
     }
     return false;
+}
+/*
+Sets the scene to be rendered
+@param scene The desired scene
+@return Returns the previously bound scene
+*/
+Scene *Visualisation::setScene(Scene *scene)
+{
+    Scene *oldScene = this->scene;
+    this->scene = scene;
+    return oldScene;
 }
 /*
 Moves the camera according to the motion of the mouse (whilst the mouse is attatched to the window via toggleMouseMode())
@@ -157,7 +167,8 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F5:
         if (this->skybox)
             this->skybox->reload();
-        this->scene->reload();
+        if (this->scene)
+            this->scene->reload();
         break;
     default:
         // Do nothing?
@@ -171,7 +182,7 @@ void Visualisation::close(){
     //Delete objects before we delete the GL context!
     if (this->scene)
     {
-        delete this->scene;
+        this->scene->kill();
         this->scene = 0;
     }
     if (this->skybox)
@@ -191,6 +202,9 @@ Executes the render loop
 void Visualisation::run(){
     if (!this->isInitialised){
         printf("Visulisation not initialised yet.");
+    }
+    else if (!this->scene){
+        printf("Scene not yet set.");
     }
     else {
         SDL_Event e;
@@ -264,7 +278,7 @@ void Visualisation::run(){
             if (this->renderAxisState)
                 this->axis.render();
             this->defaultLighting();
-            this->scene->render(this->frustum);
+            this->scene->render();
 
             GL_CHECK();
 
@@ -466,7 +480,7 @@ const Camera *Visualisation::getCamera() const{
 Returns a pointer to the visualisation's Scene
 @return The scene
 */
-const VisualisationScene *Visualisation::getScene() const{
+const Scene *Visualisation::getScene() const{
     return this->scene;
 }
 /*

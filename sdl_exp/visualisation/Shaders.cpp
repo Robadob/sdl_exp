@@ -68,7 +68,7 @@ bool Shaders::hasGeometryShader() const{
     return this->geometryShaderPath != 0;
 }
 /*
-Returns whether the last call to createShaders() (via object creation or a call to reloadShaders()) was successful
+Returns whether the last call to createShaders() (via object creation or a call to reload()) was successful
 @return True if the currently loaded shaders match the last loaded shaders
 */
 bool Shaders::getCompileSuccess() const{
@@ -198,7 +198,7 @@ If shader creation fails, the existing shaders will continue to be used
 @param silent When false 'Reloading shaders' will be printed to console
 @return True when the new shaders were loaded successfully
 */
-bool Shaders::reloadShaders(bool silent){
+bool Shaders::reload(bool silent){
     if (!silent)
         printf("Reloading Shaders\n");
     this->createShaders();
@@ -209,6 +209,17 @@ Call this prior to rendering to enable the program and automatically bind known 
 */
 void Shaders::useProgram(){
     GL_CALL(glUseProgram(this->programId));
+
+    //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
+    if (this->vertexShaderVersion <= 140 && this->projection.matrixPtr > 0)
+    {//If old shaders where gl_ModelViewProjectionMatrix is available
+        glMatrixMode(GL_PROJECTION);
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
+    }
+    if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
+    {//If projection matrix location and camera ptr are known
+        this->setUniformMatrix4fv(this->projection.location, glm::value_ptr(*this->projection.matrixPtr));//view frustrum
+    }
 
     //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
     if (this->vertexShaderVersion <= 140 && this->modelview.matrixPtr > 0)
@@ -221,16 +232,6 @@ void Shaders::useProgram(){
         this->setUniformMatrix4fv(this->modelview.location, glm::value_ptr(*this->modelview.matrixPtr));//camera
     }
 
-    //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-    if (this->vertexShaderVersion <= 140 && this->projection.matrixPtr > 0)
-    {//If old shaders where gl_ModelViewProjectionMatrix is available
-        glMatrixMode(GL_PROJECTION);
-        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
-    }
-    if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
-    {//If projection matrix location and camera ptr are known
-        this->setUniformMatrix4fv(this->projection.location, glm::value_ptr(*this->projection.matrixPtr));//view frustrum
-    }
 
     //Don't think we need to use
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));

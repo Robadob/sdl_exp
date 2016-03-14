@@ -16,8 +16,9 @@ Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
     , faces_vbo(0)
     , SCALE(modelScale)
     , material(0)
-    , color(255,0,0)
-    , location(0.0f,0.0f,0.0f)
+    , color(1,0,0)
+    , location(0.0f)
+    , rotation(0.0f)
     , shaders(shaders)
 {
     loadModelFromFile(modelPath, modelScale);
@@ -51,6 +52,8 @@ void Entity::render(){
 
     glPushMatrix();
         //Translate the model according to it's location
+        glMatrixMode(GL_MODELVIEW);
+        GL_CALL(glRotatef(rotation.w, rotation.x, rotation.y, rotation.z));
         GL_CALL(glTranslatef(location.x, location.y, location.z));
         //Set the color or material
         if (this->material){
@@ -390,6 +393,13 @@ Set the location of the model in world space
 */
 void Entity::setLocation(glm::vec3 location){
     this->location = location;
+}
+/*
+Set the rotation of the model in world space
+@param rotation glm::vec4(axis.x, axis.y, axis.z, degrees)
+*/
+void Entity::setRotation(glm::vec4 rotation){
+    this->rotation = rotation;
 }
 /*
 Allocates the storage for the model's primitives (vertices, normals and faces) according to the instance variables v_count and f_count

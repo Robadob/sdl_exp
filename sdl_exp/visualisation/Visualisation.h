@@ -4,12 +4,14 @@
 #include <SDL/SDL.h>
 #include <glm/glm.hpp>
 
-#include "VisualisationScene.h"
+//#include "Scene.h"
 #include "Camera.h"
 #include "Axis.h"
 #include "Skybox.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
+
+class Scene;
 
 /*
 This class provides an OpenGL window
@@ -20,6 +22,7 @@ public:
     Visualisation(char *windowTitle, int windowWidth, int windowHeight);
     ~Visualisation();
 
+    Scene *setScene(Scene *scene);
     void run(); // @todo - improve
 
     const char *getWindowTitle() const;
@@ -37,7 +40,7 @@ public:
     void setMSAA(bool state); 
     void Visualisation::setSkybox(bool state);
     const Camera *getCamera() const;
-    const VisualisationScene *getScene() const;
+    const Scene *getScene() const;
     const glm::mat4 *getFrustrumPtr() const;
 
 private:
@@ -53,7 +56,7 @@ private:
     SDL_GLContext context;
 
     Camera camera;
-    VisualisationScene* scene;
+    Scene* scene;
     glm::mat4 frustum;
 
     bool isInitialised;

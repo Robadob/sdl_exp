@@ -55,10 +55,9 @@ void Entity::render(){
         glMatrixMode(GL_MODELVIEW);
         GL_CALL(glRotatef(rotation.w, rotation.x, rotation.y, rotation.z));
         GL_CALL(glTranslatef(location.x, location.y, location.z));
-        //Set the color or material
-        if (this->material){
+        //Set the color and material
+        if (this->material)
             this->material->useMaterial();
-        }
         GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
         GL_CALL(glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0));
     glPopMatrix();
@@ -73,30 +72,24 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocation){
-    //Set vertex buffer, and init pointers to vertices, normals
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo));
-    //Pass vertices
-    glEnableVertexAttribArray(0);
-    GL_CALL(glVertexAttribPointer(vertLocation, 3, GL_FLOAT, GL_FALSE, 0, 0));
-    //Pass normals
-    glEnableVertexAttribArray(1);
-    GL_CALL(glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, ((char *)NULL + (v_count*sizeof(glm::vec3)))));
+    if (shaders)
+        shaders->useProgram();
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
-    //Set the color or material
-    if (this->material){
-        this->material->useMaterial();
-    }
-    else {
-        glColor4f(color.x, color.y, color.z, 1.0);
-    }
-    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
+        //Translate the model(s) according to it's(their) location
+        glMatrixMode(GL_MODELVIEW);
+        GL_CALL(glRotatef(rotation.w, rotation.x, rotation.y, rotation.z));
+        GL_CALL(glTranslatef(location.x, location.y, location.z));
+        //Set the color and material
+        if (this->material)
+            this->material->useMaterial();
+        GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
+        GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
     glPopMatrix();
-
-    glDisableVertexAttribArray(1);
-    glDisableVertexAttribArray(0);
+    if (shaders)
+        shaders->clearProgram();
 }
 /*
 Creates a vertex buffer object of the specified size

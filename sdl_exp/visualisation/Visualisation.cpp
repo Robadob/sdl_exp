@@ -196,6 +196,84 @@ void Visualisation::close(){
     SDL_Quit();
 }
 /*
+Renders a single frame
+@note Also handle user inputs
+*/
+void Visualisation::render()
+{
+    SDL_Event e;
+    // Handle continuous key presses (movement)
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
+    if (state[SDL_SCANCODE_W]) {
+        this->camera.move(DELTA_MOVE*turboMultiplier);
+    }
+    if (state[SDL_SCANCODE_A]) {
+        this->camera.strafe(-DELTA_STRAFE*turboMultiplier);
+    }
+    if (state[SDL_SCANCODE_S]) {
+        this->camera.move(-DELTA_MOVE*turboMultiplier);
+    }
+    if (state[SDL_SCANCODE_D]) {
+        this->camera.strafe(DELTA_STRAFE*turboMultiplier);
+    }
+    if (state[SDL_SCANCODE_Q]) {
+        this->camera.roll(-DELTA_ROLL);
+    }
+    if (state[SDL_SCANCODE_E]) {
+        this->camera.roll(DELTA_ROLL);
+    }
+    if (state[SDL_SCANCODE_SPACE]) {
+        this->camera.ascend(DELTA_ASCEND*turboMultiplier);
+    }
+    if (state[SDL_SCANCODE_LCTRL]) {
+        this->camera.ascend(-DELTA_ASCEND*turboMultiplier);
+    }
+
+    // handle each event on the queue
+    while (SDL_PollEvent(&e) != 0){
+        switch (e.type){
+        case SDL_QUIT:
+            this->quit();
+            break;
+        case SDL_KEYDOWN:
+        {
+            int x = 0;
+            int y = 0;
+            SDL_GetMouseState(&x, &y);
+            this->handleKeypress(e.key.keysym.sym, x, y);
+        }
+            break;
+            //case SDL_MOUSEWHEEL:
+            //break;
+        case SDL_MOUSEMOTION:
+            this->handleMouseMove(e.motion.xrel, e.motion.yrel);
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            this->toggleMouseMode();
+            break;
+
+        }
+    }
+
+    // update
+    this->scene->update();
+    // render
+    this->clearFrame();
+    if (this->skybox)
+        this->skybox->render(&camera, this->frustum);
+    this->defaultProjection();
+    if (this->renderAxisState)
+        this->axis.render();
+    this->defaultLighting();
+    this->scene->render();
+
+    GL_CHECK();
+
+    // update the screen
+    SDL_GL_SwapWindow(window);
+}
+/*
 Executes the render loop
 @see setQuit() to externally kill the loop
 */
@@ -207,83 +285,13 @@ void Visualisation::run(){
         printf("Scene not yet set.");
     }
     else {
-        SDL_Event e;
         SDL_StartTextInput();
         this->continueRender = true;
         while (this->continueRender){
             // Update the fps in the window title
             this->updateFPS();
 
-            // Handle continuous key presses (movement)
-            const Uint8 *state = SDL_GetKeyboardState(NULL);
-            float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
-            if (state[SDL_SCANCODE_W]) {
-                this->camera.move(DELTA_MOVE*turboMultiplier);
-            }
-            if (state[SDL_SCANCODE_A]) {
-                this->camera.strafe(-DELTA_STRAFE*turboMultiplier);
-            }
-            if (state[SDL_SCANCODE_S]) {
-                this->camera.move(-DELTA_MOVE*turboMultiplier);
-            }
-            if (state[SDL_SCANCODE_D]) {
-                this->camera.strafe(DELTA_STRAFE*turboMultiplier);
-            }
-            if (state[SDL_SCANCODE_Q]) {
-                this->camera.roll(-DELTA_ROLL);
-            }
-            if (state[SDL_SCANCODE_E]) {
-                this->camera.roll(DELTA_ROLL);
-            }
-            if (state[SDL_SCANCODE_SPACE]) {
-                this->camera.ascend(DELTA_ASCEND*turboMultiplier);
-            }
-            if (state[SDL_SCANCODE_LCTRL]) {
-                this->camera.ascend(-DELTA_ASCEND*turboMultiplier);
-            }
-            
-            // handle each event on the queue
-            while (SDL_PollEvent(&e) != 0){
-                switch (e.type){
-                    case SDL_QUIT:
-                        this->quit();
-                        break;
-                    case SDL_KEYDOWN:
-                        {
-                            int x = 0;
-                            int y = 0;
-                            SDL_GetMouseState(&x, &y);
-                            this->handleKeypress(e.key.keysym.sym, x, y);
-                        }
-                        break;
-                    //case SDL_MOUSEWHEEL:
-                        //break;
-                    case SDL_MOUSEMOTION:
-                        this->handleMouseMove(e.motion.xrel, e.motion.yrel);
-                        break;
-                    case SDL_MOUSEBUTTONDOWN:
-                        this->toggleMouseMode();
-                        break;
-
-                }
-            }
-
-            // update
-            this->scene->update();
-            // render
-            this->clearFrame();
-            if (this->skybox)
-                this->skybox->render(&camera, this->frustum);
-            this->defaultProjection();
-            if (this->renderAxisState)
-                this->axis.render();
-            this->defaultLighting();
-            this->scene->render();
-
-            GL_CHECK();
-
-            // update the screen
-            SDL_GL_SwapWindow(window);
+            this->render();
         }
         SDL_StopTextInput();
 

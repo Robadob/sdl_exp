@@ -23,6 +23,7 @@ public:
     ~Visualisation();
 
     Scene *setScene(Scene *scene);
+    void Visualisation::render();
     void run(); // @todo - improve
 
     const char *getWindowTitle() const;

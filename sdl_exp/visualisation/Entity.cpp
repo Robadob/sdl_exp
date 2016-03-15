@@ -179,6 +179,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     unsigned int textures_size = 2;
 
     printf("\rLoading Model: %s [Counting Elements]", path);
+    printf("\n");//Temp whilst we have vert counters inside loop
     ////Count vertices/faces, attributes
     char c;
     int dotCtr;
@@ -345,6 +346,8 @@ exit_loop:;
                 goto exit_loop;
         }
     }
+    //Cleanup buffer
+    delete buffer;
 
     printf("\rLoading Model: %s [Assigning Elements]", path);
 

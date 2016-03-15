@@ -2,13 +2,12 @@
 #define __GLcheck_h__
 
 #include <GL/glew.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 //Define EXIT_ON_ERROR to cause the program to exit when a GL error occurs
 
 #ifdef _DEBUG //VS standard debug flag
-
-#include <stdlib.h>
-#include <stdio.h>
 
 inline static void HandleGLError(const char *file, int line) {
     GLuint error = glGetError();

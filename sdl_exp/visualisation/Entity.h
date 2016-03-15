@@ -30,8 +30,8 @@ protected:
     unsigned int v_count, n_count, c_count, t_count, f_count;//Number of
     unsigned int v_size, t_size, c_size;//Number of components
 
-    float *vertices, *normals, *colors, *textures;//Variable length vectors
-    glm::ivec3 *faces;
+    float *vertices, *normals, *colors, *textures;
+    unsigned int *faces;
 
     GLuint vertices_vbo, normals_vbo, colors_vbo, textures_vbo, faces_vbo;
 

@@ -8,7 +8,7 @@
 
 #define NORMALS_SIZE 3
 #define DEFAULT_TEXTURE_SIZE 2
-#define FACE_SIZE 3
+#define FACES_SIZE 3
 
 /*
 Constructs an entity from the provided .obj model
@@ -182,6 +182,9 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     unsigned int colors_size = 0;
     unsigned int textures_size = 2;
 
+    bool face_hasNormals = false;
+    bool face_hasTextures = false;
+
     printf("\rLoading Model: %s [Counting Elements]", path);
     printf("\n");//Temp whilst we have vert counters inside loop
     ////Count vertices/faces, attributes
@@ -259,6 +262,27 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
             //If the first char is 'f', increment face count
         case 'f':
             faces_read++;
+            dotCtr=0;
+            //Workout whether the format is 'v' 'v//n' or 'v/t/n'
+            while ((c = fgetc(file)) != '\n')
+            {
+                lnLen++;
+                if (c == EOF){
+                    goto exit_loop;
+                }//If we find 1 slash, check whether we find 2 in a row
+                else if (c == '/')
+                {
+                    face_hasNormals = true;
+                    //If not two / in a row, then we have textures
+                    if ((c = fgetc(file)) != '/')
+                    {
+                        face_hasTextures = true;
+                        if (c == EOF)
+                            goto exit_loop;
+                    }
+                    break;
+                }
+            }
             break;
         }
         //Speed to the end of the line and begin next iteration
@@ -294,10 +318,13 @@ exit_loop:;
     clearerr(file);
     fseek(file, 0, SEEK_SET);
     //Allocate temporary buffers for components that may require aligning with relevant vertices
-    //TODO: Create T_Normal, T_Color, T_Texture
+    //TODO: Create T_Normal, T_Color, T_Texture, T_norm_pos, T_tex_pos
     float *t_normals = (float *)malloc(normals_read * NORMALS_SIZE * sizeof(float));
-    float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
     float *t_textures = (float *)malloc(textures_read*textures_size*sizeof(float));
+    //float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
+    //3 parts to each face
+    unsigned int *t_norm_pos = (unsigned int *)malloc(vertices_read*FACES_SIZE*sizeof(unsigned int));
+    unsigned int *t_tex_pos = (unsigned int *)malloc(vertices_read*FACES_SIZE*sizeof(unsigned int));
     //Reset local counters
     v_count = 0;
     c_count = 0;
@@ -370,7 +397,7 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the color array
-                    t_colors[(c_count * c_size) + componentsRead] = (float)atof(buffer);
+                    colors[(c_count * c_size) + componentsRead] = (float)atof(buffer);//t_colors
                     componentsRead++;
                 }
                 //Ifwe read a color, increment count
@@ -480,7 +507,53 @@ exit_loop:;
             break;
             //If the first char is 'f', increment face count
         case 'f':
-//TODO: Read face line of file
+            //Read face line of file
+            componentsRead = 0;
+            //Read all components
+            do
+            {
+                //Find the first char
+                while ((c = fgetc(file)) != EOF) {
+                    if (c != ' ')
+                        break;
+                }
+                //Fill buffer with the components
+                componentLength = 0;
+                do
+                {
+                    if (c == EOF)
+                        goto exit_loop2;
+                    buffer[componentLength] = c;
+                    componentLength++;
+                } while ((c = fgetc(file)) != '/' && c != ' ');
+                //End component string
+                buffer[componentLength] = '\0';
+                //Decide which array to load it into (faces, tex pos, norm pos)
+                switch (componentsRead%(1+(int)face_hasNormals+(int)face_hasTextures))
+                {
+                //This is a vertex index
+                case 0:
+                    faces[componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures)] = (unsigned int)std::strtoul(buffer, 0, 0);
+                //This is a normal index
+                case 1:
+                    t_tex_pos[componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures)] = (unsigned int)std::strtoul(buffer, 0, 0);
+                    break;
+                //This is a texture index
+                case 2:
+                    t_tex_pos[componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures)] = (unsigned int)std::strtoul(buffer, 0, 0);
+                    break;
+                }
+                t_normals[(n_count * NORMALS_SIZE) + componentsRead] = (float)atof(buffer);
+                componentsRead++;
+            } while (componentsRead<NORMALS_SIZE);
+            //Speed to the end of the normal line
+            while ((c = fgetc(file)) != '\n')
+            {
+                if (c == EOF)
+                    goto exit_loop2;
+            }
+            n_count++;
+            continue;//Skip to next iteration, otherwise we will miss a line
             break;
         }
         //Speed to the end of the line and begin next iteration
@@ -488,7 +561,7 @@ exit_loop:;
         {
             lnLen++;
             if (c == EOF)
-                goto exit_loop;
+                goto exit_loop2;
         }
     }
 exit_loop2:;
@@ -496,6 +569,18 @@ exit_loop2:;
     delete buffer;
 
     printf("\rLoading Model: %s [Assigning Elements]", path);
+    //Clone textures and normals into their arrays
+    for (unsigned int i = 0; i < v_count; i++)
+    {
+        normals[i] = t_normals[t_norm_pos[i]];
+        textures[i] = t_textures[t_tex_pos[i]];
+        //colors[i] = t_colors[faces[i]];
+    }
+    //Free temps
+    delete t_normals;
+    delete t_norm_pos;
+    delete t_textures;
+    delete t_tex_pos;
 
     printf("\rLoading Model: %s [Complete!]\n", path);
     ////Iterate file, reading in vertices, normals & faces
@@ -728,7 +813,7 @@ void Entity::allocateModel(){
         colors = (float*)malloc(v_count*c_size*sizeof(float));
     if (t_count)//1 texture per vertex
         textures = (float*)malloc(v_count*t_size*sizeof(float));
-    faces = (glm::ivec3*)malloc(f_count*sizeof(glm::ivec3));
+    faces = (unsigned int*)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
 }
 /*
 Frees the storage for the model's primitives

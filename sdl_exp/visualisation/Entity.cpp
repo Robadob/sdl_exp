@@ -295,6 +295,8 @@ exit_loop:;
     t_count = 0;
     n_count = 0;
     f_count = 0;
+    unsigned int componentsRead = 0;
+    unsigned int componentLength = 0;
     //Allocate temporary buffers for components that may require aligning with relevant vertices
 //TODO: Create T_Normal, T_Color, T_Texture
     //Create buffer to read lines of the file into
@@ -304,8 +306,6 @@ exit_loop:;
     printf("\rLoading Model: %s [Loading Elements]", path);
     //Read file by line, again.
     while ((c = fgetc(file)) != EOF) {
-        lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
-        lnLen = 1;
         //If the first char == 'v'
         switch (c)
         {
@@ -318,7 +318,39 @@ exit_loop:;
                 //Vertex found, increment count and check whether it also contains a colour value many elements it contains
             case ' ':
 //TODO: Read vertex line of file
-                break;
+                componentsRead = 0;
+                //Read all components
+                do
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    //Fill buffer with the components
+                    componentLength = 0;
+                    do
+                    {
+                        if (c == EOF)
+                            goto exit_loop2;
+                        buffer[componentLength] = c;
+                        componentLength++;
+                    } while ((c = fgetc(file)) != ' ');
+                    //End component string
+                    buffer[componentLength] = '\0';
+                    //Load it into the vert array
+                    vertices[(v_count * v_size) + componentsRead] = (float)atof(buffer);
+                    componentsRead++;
+                } while (componentsRead<v_size);
+                //Speed to the end of the vertex line
+                while ((c = fgetc(file)) != '\n')
+                {
+                    if (c == EOF)
+                        goto exit_loop2;
+                }
+                printf("\n(%f, %f, %f)\n", vertices[(v_count * v_size)], vertices[(v_count * v_size)] + 1, vertices[(v_count * v_size)] + 2);
+                v_count++;
+                continue;//Skip to next iteration, otherwise we will miss a line
                 //Normal found, increment count
             case 'n':
 //TODO: Read normal line of file
@@ -346,6 +378,7 @@ exit_loop:;
                 goto exit_loop;
         }
     }
+exit_loop2:;
     //Cleanup buffer
     delete buffer;
 

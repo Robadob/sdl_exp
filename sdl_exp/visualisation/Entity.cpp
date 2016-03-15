@@ -131,6 +131,7 @@ Loads and scales the specified model into this class's primitive storage
 */
 void Entity::loadModelFromFile(const char *path, float modelScale)
 {
+    printf("\r Loading Model: %s", path);
     //vn -3.631894 -0.637774 1.635071
     //vn norm.x norm.y norm.z
     //v - 1.878153 - 3.189111 0.041601 0.043137 0.039216 0.027451
@@ -155,7 +156,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     FILE* file = fopen(path, "r");
     //std::ifstream file(path);
     if (!file){
-        printf("Could not open model '%s'!\n", path);
+        printf("\rLoading Model: Could not open model '%s'!\n", path);
         return;
     }
 
@@ -177,42 +178,32 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     unsigned int colors_size = 0;
     unsigned int textures_size = 2;
 
+    printf("\rLoading Model: %s [Counting Elements]", path);
     ////Count vertices/faces, attributes
     char c;
     int dotCtr;
+    unsigned int lnLen = 0, lnLenMax = 0;//Used to find the longest line of the file
+    //For each line of the file (the end of the loop finds the end of the line before continuing)
     while ((c = fgetc(file)) != EOF) {
+        lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
+        lnLen=1;
+        //If the first char == 'v'
         switch (c)
         {
         case 'v':
             if ((c = fgetc(file)) == EOF)
                 goto exit_loop;
-
+            //If the second char == 't', 'n', 'p' or ' '
             switch (c)
             {
-            case 't':
-                textures_read++;
-                dotCtr = 0;
-                while ((c = fgetc(file)) != '\n')
-                {
-                    if (c == EOF)
-                        goto exit_loop;
-                    else if (c == '.')
-                        dotCtr++;
-                }
-                textures_size = dotCtr;
-                continue;//Skip to next iteration, otherwise we will miss a line
-            case 'n':
-                normals_read++;
-                break;
-            case 'p':
-                parameters_read++;
-                break;
-            default:
+                //Vertex found, increment count and check whether it also contains a colour value many elements it contains
+            case ' ':
                 vertices_read++;
-                //Count the number of '.', if >4 we assume there are colours
                 dotCtr = 0;
+                //Count the number of '.', if >4 we assume there are colours
                 while ((c = fgetc(file)) != '\n')
                 {
+                    lnLen++;
                     if (c == EOF)
                         goto exit_loop;
                     else if (c == '.')
@@ -235,21 +226,47 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
                     break;
                 }
                 continue;//Skip to next iteration, otherwise we will miss a line
+                //Normal found, increment count
+            case 'n':
+                normals_read++;
+                break;
+                //Parameter found, we don't support this but count anyway
+            case 'p':
+                parameters_read++;
+                break;
+                //Texture found, increment count and check how many components it contains
+            case 't':
+                textures_read++;
+                dotCtr = 0;
+                //Count the number of '.' before the next newline
+                while ((c = fgetc(file)) != '\n')
+                {
+                    lnLen++;
+                    if (c == EOF)
+                        goto exit_loop;
+                    else if (c == '.')
+                        dotCtr++;
+                }
+                textures_size = dotCtr;
+                continue;//Skip to next iteration, otherwise we will miss a line
             }
             break;
+            //If the first char is 'f', increment face count
         case 'f':
             faces_read++;
             break;
         }
-        //Speed to the end of the line and break
+        //Speed to the end of the line and begin next iteration
         while ((c = fgetc(file)) != '\n')
         {
+            lnLen++;
             if (c == EOF)
                 goto exit_loop;
         }
-        printf("\rVert: %i:%i, Normal: %i, Face: %i, Tex: %i:%i, Color: %i:%i", vertices_read, vertices_size, normals_read, faces_read, textures_read, textures_size, colors_read, colors_size);
+        printf("\rVert: %i:%i, Normal: %i, Face: %i, Tex: %i:%i, Color: %i:%i, Ln:%i", vertices_read, vertices_size, normals_read, faces_read, textures_read, textures_size, colors_read, colors_size, lnLenMax);
     }
 exit_loop:;
+    lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
 
     if (parameters_read > 0){
         fprintf(stderr, "Model '%s' contains parameter space vertices, these are unsupported at this time.", path);
@@ -277,8 +294,61 @@ exit_loop:;
     t_count = 0;
     n_count = 0;
     f_count = 0;
- 
+    //Allocate temporary buffers for components that may require aligning with relevant vertices
+//TODO: Create T_Normal, T_Color, T_Texture
+    //Create buffer to read lines of the file into
+    unsigned int bufferLen = lnLenMax + 2;
+    char *buffer = new char[bufferLen];
 
+    printf("\rLoading Model: %s [Loading Elements]", path);
+    //Read file by line, again.
+    while ((c = fgetc(file)) != EOF) {
+        lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
+        lnLen = 1;
+        //If the first char == 'v'
+        switch (c)
+        {
+        case 'v':
+            if ((c = fgetc(file)) == EOF)
+                goto exit_loop;
+            //If the second char == 't', 'n', 'p' or ' '
+            switch (c)
+            {
+                //Vertex found, increment count and check whether it also contains a colour value many elements it contains
+            case ' ':
+//TODO: Read vertex line of file
+                break;
+                //Normal found, increment count
+            case 'n':
+//TODO: Read normal line of file
+                break;
+                //Parameter found, we don't support this but count anyway
+            case 'p':
+//TODO: Read parameter line of file
+                break;
+                //Texture found, increment count and check how many components it contains
+            case 't':
+//TODO: Read texture line of file
+                break;
+            }
+            break;
+            //If the first char is 'f', increment face count
+        case 'f':
+//TODO: Read face line of file
+            break;
+        }
+        //Speed to the end of the line and begin next iteration
+        while ((c = fgetc(file)) != '\n')
+        {
+            lnLen++;
+            if (c == EOF)
+                goto exit_loop;
+        }
+    }
+
+    printf("\rLoading Model: %s [Assigning Elements]", path);
+
+    printf("\rLoading Model: %s [Complete!]\n", path);
     ////Iterate file, reading in vertices, normals & faces
     //while (!feof(file)) {
     //    if (fscanf(file, "%s", buffer) == 1){
@@ -503,12 +573,12 @@ Allocates the storage for the model's primitives (vertices, normals and faces) a
 */
 void Entity::allocateModel(){
     vertices = (float*)malloc(v_count*v_size*sizeof(float));
-    if (n_count)
-        normals = (glm::vec3*)malloc(n_count*sizeof(glm::vec3));
-    if (c_count)
-        colors = (float*)malloc(c_count*c_size*sizeof(float));
-    if (t_count)
-        textures = (float*)malloc(t_count*t_size*sizeof(float));
+    if (n_count)//1 normal per vertex
+        normals = (glm::vec3*)malloc(v_count*sizeof(glm::vec3));
+    if (c_count)//1 color per vertex
+        colors = (float*)malloc(v_count*c_size*sizeof(float));
+    if (t_count)//1 texture per vertex
+        textures = (float*)malloc(v_count*t_size*sizeof(float));
     faces = (glm::ivec3*)malloc(f_count*sizeof(glm::ivec3));
 }
 /*

@@ -6,6 +6,10 @@
 #include <string>
 #include <regex>
 
+#define NORMALS_SIZE 3
+#define DEFAULT_TEXTURE_SIZE 2
+#define FACE_SIZE 3
+
 /*
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
@@ -289,6 +293,11 @@ exit_loop:;
     //Reset file pointer
     clearerr(file);
     fseek(file, 0, SEEK_SET);
+    //Allocate temporary buffers for components that may require aligning with relevant vertices
+    //TODO: Create T_Normal, T_Color, T_Texture
+    float *t_normals = (float *)malloc(normals_read * NORMALS_SIZE * sizeof(float));
+    float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
+    float *t_textures = (float *)malloc(textures_read*textures_size*sizeof(float));
     //Reset local counters
     v_count = 0;
     c_count = 0;
@@ -297,8 +306,6 @@ exit_loop:;
     f_count = 0;
     unsigned int componentsRead = 0;
     unsigned int componentLength = 0;
-    //Allocate temporary buffers for components that may require aligning with relevant vertices
-//TODO: Create T_Normal, T_Color, T_Texture
     //Create buffer to read lines of the file into
     unsigned int bufferLen = lnLenMax + 2;
     char *buffer = new char[bufferLen];
@@ -315,9 +322,69 @@ exit_loop:;
             //If the second char == 't', 'n', 'p' or ' '
             switch (c)
             {
-                //Vertex found, increment count and check whether it also contains a colour value many elements it contains
             case ' ':
-//TODO: Read vertex line of file
+                //Read vertex line of file
+                componentsRead = 0;
+                //Read all vertex components
+                do
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    //Fill buffer with the vertex components
+                    componentLength = 0;
+                    do
+                    {
+                        if (c == EOF)
+                            goto exit_loop2;
+                        buffer[componentLength] = c;
+                        componentLength++;
+                    } while ((c = fgetc(file)) != ' ');
+                    //End component string
+                    buffer[componentLength] = '\0';
+                    //Load it into the vert array
+                    vertices[(v_count * v_size) + componentsRead] = (float)atof(buffer);
+                    componentsRead++;
+                } while (componentsRead<v_size);
+                v_count++;
+                componentsRead = 0;
+                //Read all color components (if required)
+                while (componentsRead<c_size)
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    //Fill buffer with the vetex components
+                    componentLength = 0;
+                    do
+                    {
+                        if (c == EOF)
+                            goto exit_loop2;
+                        buffer[componentLength] = c;
+                        componentLength++;
+                    } while ((c = fgetc(file)) != ' ');
+                    //End component string
+                    buffer[componentLength] = '\0';
+                    //Load it into the color array
+                    t_colors[(c_count * c_size) + componentsRead] = (float)atof(buffer);
+                    componentsRead++;
+                }
+                //Ifwe read a color, increment count
+                if (componentsRead > 0)
+                    c_count++;
+                //Speed to the end of the vertex line
+                while ((c = fgetc(file)) != '\n')
+                {
+                    if (c == EOF)
+                        goto exit_loop2;
+                }
+                continue;//Skip to next iteration, otherwise we will miss a line
+            case 'n':
+                //Read normal line of file
                 componentsRead = 0;
                 //Read all components
                 do
@@ -338,31 +405,77 @@ exit_loop:;
                     } while ((c = fgetc(file)) != ' ');
                     //End component string
                     buffer[componentLength] = '\0';
-                    //Load it into the vert array
-                    vertices[(v_count * v_size) + componentsRead] = (float)atof(buffer);
+                    //Load it into the temporary normal array
+                    t_normals[(n_count * NORMALS_SIZE) + componentsRead] = (float)atof(buffer);
                     componentsRead++;
-                } while (componentsRead<v_size);
-                //Speed to the end of the vertex line
+                } while (componentsRead<NORMALS_SIZE);
+                //Speed to the end of the normal line
                 while ((c = fgetc(file)) != '\n')
                 {
                     if (c == EOF)
                         goto exit_loop2;
                 }
-                printf("\n(%f, %f, %f)\n", vertices[(v_count * v_size)], vertices[(v_count * v_size)] + 1, vertices[(v_count * v_size)] + 2);
-                v_count++;
+                n_count++;
                 continue;//Skip to next iteration, otherwise we will miss a line
-                //Normal found, increment count
-            case 'n':
-//TODO: Read normal line of file
-                break;
-                //Parameter found, we don't support this but count anyway
-            case 'p':
-//TODO: Read parameter line of file
-                break;
-                //Texture found, increment count and check how many components it contains
             case 't':
-//TODO: Read texture line of file
-                break;
+                //Read texture line of file
+                componentsRead = 0;
+                //Read all components
+                do
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    //Fill buffer with the components
+                    componentLength = 0;
+                    do
+                    {
+                        if (c == EOF)
+                            goto exit_loop2;
+                        buffer[componentLength] = c;
+                        componentLength++;
+                    } while ((c = fgetc(file)) != ' ');
+                    //End component string
+                    buffer[componentLength] = '\0';
+                    //Load it into the temporary textures array
+                    t_textures[(t_count * t_size) + componentsRead] = (float)atof(buffer);
+                } while (componentsRead<DEFAULT_TEXTURE_SIZE);
+                //Read the final texture element if provided (special case, enclosed in [])
+                if (componentsRead < t_size)//If 3 texture coords
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    if (c == '[')
+                    {
+                        //Fill buffer with the components
+                        componentLength = 0;
+                        while ((c = fgetc(file)) != ']');
+                        {
+                            if (c == EOF)
+                                goto exit_loop2;
+                            buffer[componentLength] = c;
+                            componentLength++;
+                        }
+                        //End component string
+                        buffer[componentLength] = '\0';
+                        //Load it into the temporary textures array
+                        t_textures[(t_count * t_size) + componentsRead] = (float)atof(buffer);
+                    }
+                    componentsRead++;
+                }
+                //Speed to the end of the texture line
+                while ((c = fgetc(file)) != '\n')
+                {
+                    if (c == EOF)
+                        goto exit_loop2;
+                }
+                t_count++;
+                continue;//Skip to next iteration, otherwise we will miss a line
             }
             break;
             //If the first char is 'f', increment face count
@@ -610,7 +723,7 @@ Allocates the storage for the model's primitives (vertices, normals and faces) a
 void Entity::allocateModel(){
     vertices = (float*)malloc(v_count*v_size*sizeof(float));
     if (n_count)//1 normal per vertex
-        normals = (glm::vec3*)malloc(v_count*sizeof(glm::vec3));
+        normals = (float*)malloc(v_count*NORMALS_SIZE*sizeof(float));
     if (c_count)//1 color per vertex
         colors = (float*)malloc(v_count*c_size*sizeof(float));
     if (t_count)//1 texture per vertex

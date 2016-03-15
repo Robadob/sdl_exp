@@ -2,6 +2,9 @@
 #include "Entity.h"
 
 #include <fstream>
+#include <sstream>
+#include <string>
+#include <regex>
 
 /*
 Constructs an entity from the provided .obj model
@@ -9,11 +12,10 @@ Constructs an entity from the provided .obj model
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
 */
 Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
-    : vertices(0)
-    , normals(0)
-    , faces(0)
-    , vertices_vbo(0)
-    , faces_vbo(0)
+    : vertices(0), normals(0), colors(0), textures(0), faces(0)
+    , vertices_vbo(0), normals_vbo(0), colors_vbo(0), textures_vbo(0), faces_vbo(0)
+    , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0)
+    , v_size(3), c_size(3), t_size(2)
     , SCALE(modelScale)
     , material(0)
     , color(1,0,0)
@@ -22,6 +24,8 @@ Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
     , shaders(shaders)
 {
     loadModelFromFile(modelPath, modelScale);
+    if (!vertices)
+        return;
     createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2);//vertices+norms
     createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3));
     fillBuffers();
@@ -127,148 +131,247 @@ Loads and scales the specified model into this class's primitive storage
 */
 void Entity::loadModelFromFile(const char *path, float modelScale)
 {
-    const char* VERTEX_IDENTIFIER = "v";
-    const char* VERTEX_NORMAL_IDENTIFIER = "vn";
-    const char* FACE_IDENTIFIER = "f";
-    const char* MTLLIB_IDENTIFIER = "mtllib";
-    const char* USEMTL_IDENTIFEIR = "usemtl";
-    //Counters
-    int vertices_read = 0; 
-    int normals_read = 0; 
-    int faces_read = 0;
-    //Placeholders
-    char buffer[100];
-    float x,y,z;
-    int f1a, f1b, f2a, f2b, f3a, f3b;
-    char materialFile[100] = ""; // @todo - this could be improved;
-    char materialName[100] = ""; // @todo - this could be improved;
+    //vn -3.631894 -0.637774 1.635071
+    //vn norm.x norm.y norm.z
+    //v - 1.878153 - 3.189111 0.041601 0.043137 0.039216 0.027451
+    //v vert.x vert.y vert.z color.x color.y color.z
+    //v may be in the form v v v, v v v v, v v v v c c c
+    //f 85291//85291 85947//85947 86027//86027
+    //f vert1/tex1/norm1 vert2/tex2/norm2 vert3/tex3/norm3
+    //f may be in form: v, v//n or v/t/n
+
+    //const char* VERTEX_IDENTIFIER = "v";
+    //const char* VERTEX_NORMAL_IDENTIFIER = "vn";
+    //const char* FACE_IDENTIFIER = "f";
+    //const char* MTLLIB_IDENTIFIER = "mtllib";
+    //const char* USEMTL_IDENTIFEIR = "usemtl";
+    ////Placeholders
+    //char buffer[100];
+    //float x,y,z;
+    //int f1a, f1b, f2a, f2b, f3a, f3b;
+    //char materialFile[100] = ""; // @todo - this could be improved;
+    //char materialName[100] = ""; // @todo - this could be improved;
     //Open file
     FILE* file = fopen(path, "r");
-    if (file == NULL){
+    //std::ifstream file(path);
+    if (!file){
         printf("Could not open model '%s'!\n", path);
         return;
     }
-    //Count vertices/faces
-    while (!feof(file)) {
-        if (fscanf(file, "%s", buffer) == 1){
-            if(strcmp(buffer, VERTEX_IDENTIFIER) == 0){
-                if (fscanf(file, "%f %f %f", &x, &y, &z) == 3)
-                    vertices_read++;
-            }else if(strcmp(buffer, VERTEX_NORMAL_IDENTIFIER) == 0){
-                if (fscanf(file, "%f %f %f", &x, &y, &z) == 3)
-                    normals_read++;
-            }else if(strcmp(buffer, FACE_IDENTIFIER) == 0){
-                if (fscanf(file, "%i//%i %i//%i %i//%i", &f1a, &f1b, &f2a, &f2b, &f3a, &f3b) == 6)
-                    faces_read++;
+
+    //const std::regex VERTEX_LINE("v +(-?[0-9]+\.[0-9]+ *){3,8}", std::regex::optimize);
+   // const std::regex TEXTURE_LINE("vt +(-?[0-9]+\.[0-9]+ *){3}", std::regex::optimize);
+    //const std::regex NORMAL_LINE("vn +(-?[0-9]+\.[0-9]+ *){3}", std::regex::optimize);
+    //const std::regex FACE_LINE("f +(([0-9]+)(/([0-9]+)?/([0-9]+))? *){3} *", std::regex::optimize);
+
+
+    //Counters
+    unsigned int vertices_read = 0;
+    unsigned int normals_read = 0;
+    unsigned int colors_read = 0;
+    unsigned int textures_read = 0;
+    unsigned int faces_read = 0;
+    unsigned int parameters_read = 0;
+
+    unsigned int vertices_size = 3;
+    unsigned int colors_size = 0;
+    unsigned int textures_size = 2;
+
+    ////Count vertices/faces, attributes
+    char c;
+    int dotCtr;
+    while ((c = fgetc(file)) != EOF) {
+        switch (c)
+        {
+        case 'v':
+            if ((c = fgetc(file)) == EOF)
+                goto exit_loop;
+
+            switch (c)
+            {
+            case 't':
+                textures_read++;
+                dotCtr = 0;
+                while ((c = fgetc(file)) != '\n')
+                {
+                    if (c == EOF)
+                        goto exit_loop;
+                    else if (c == '.')
+                        dotCtr++;
+                }
+                textures_size = dotCtr;
+                continue;//Skip to next iteration, otherwise we will miss a line
+            case 'n':
+                normals_read++;
+                break;
+            case 'p':
+                parameters_read++;
+                break;
+            default:
+                vertices_read++;
+                //Count the number of '.', if >4 we assume there are colours
+                dotCtr = 0;
+                while ((c = fgetc(file)) != '\n')
+                {
+                    if (c == EOF)
+                        goto exit_loop;
+                    else if (c == '.')
+                        dotCtr++;
+                }
+                //Workout vertex and colour sizes
+                switch (dotCtr)
+                {
+                case 8:
+                    colors_read++;
+                    colors_size = 4;
+                case 4:
+                    vertices_size = 4;
+                    break;
+                case 7:
+                    vertices_size = 4;
+                case 6:
+                    colors_size = 3;
+                    colors_read++;
+                    break;
+                }
+                continue;//Skip to next iteration, otherwise we will miss a line
             }
+            break;
+        case 'f':
+            faces_read++;
+            break;
         }
+        //Speed to the end of the line and break
+        while ((c = fgetc(file)) != '\n')
+        {
+            if (c == EOF)
+                goto exit_loop;
+        }
+        printf("\rVert: %i:%i, Normal: %i, Face: %i, Tex: %i:%i, Color: %i:%i", vertices_read, vertices_size, normals_read, faces_read, textures_read, textures_size, colors_read, colors_size);
     }
-    //Create a temp space to cache normals
-    glm::vec3 *t_normals = (glm::vec3*)malloc(normals_read*sizeof(glm::vec3));
-    //Set/Reset vars
+exit_loop:;
+
+    if (parameters_read > 0){
+        fprintf(stderr, "Model '%s' contains parameter space vertices, these are unsupported at this time.", path);
+        return;
+    }
+
+    //Set instance var counts
     v_count = vertices_read;
-    f_count = faces_read;    
-    vertices_read = 0; 
-    normals_read = 0; 
-    faces_read = 0;
+    c_count = colors_read;
+    t_count = textures_read;
+    n_count = normals_read;
+    f_count = faces_read;
+    //Set instance var sizes
+    v_size = vertices_size;//3-4
+    t_size = textures_size;//2-3
+    c_size = colors_size;//3-4
+    //Allocate memory
+    allocateModel();
+    //Reset file pointer
     clearerr(file);
     fseek(file, 0, SEEK_SET);
-    //Allocate
-    allocateModel();
+    //Reset local counters
+    v_count = 0;
+    c_count = 0;
+    t_count = 0;
+    n_count = 0;
+    f_count = 0;
+ 
 
-    //Iterate file, reading in vertices, normals & faces
-    while (!feof(file)) {
-        if (fscanf(file, "%s", buffer) == 1){
-            if(strcmp(buffer, VERTEX_IDENTIFIER) == 0){
-                if (fscanf(file, "%f %f %f", &x, &y, &z) == 3){
-                    vertices[vertices_read][0] = x;
-                    vertices[vertices_read][1] = y;
-                    vertices[vertices_read][2] = z;
-                    vertices_read++;
-                }else{
-                    printf("Incomplete vertex data\n");
-                }
-            }else if(strcmp(buffer, VERTEX_NORMAL_IDENTIFIER) == 0){
-                if (fscanf(file, "%f %f %f", &x, &y, &z) == 3){
-                    t_normals[normals_read][0] = x;
-                    t_normals[normals_read][1] = y;
-                    t_normals[normals_read][2] = z;
-                    normals_read++;
-                }else{
-                    printf("Incomplete vertex normal data\n");
-                }
-            }else if(strcmp(buffer, FACE_IDENTIFIER) == 0){
-                //expect 3 vertices
-                if (fscanf(file, "%i//%i %i//%i %i//%i", &f1a, &f1b, &f2a, &f2b, &f3a, &f3b) == 6){
-                    faces[faces_read][0] = f1a-1;
-                    faces[faces_read][1] = f2a-1;
-                    faces[faces_read][2] = f3a-1;
-                    //Copy across all referenced normals
-                    normals[f1a-1][0] = t_normals[f1b-1][0];
-                    normals[f1a-1][1] = t_normals[f1b-1][1];
-                    normals[f1a-1][2] = t_normals[f1b-1][2];
+    ////Iterate file, reading in vertices, normals & faces
+    //while (!feof(file)) {
+    //    if (fscanf(file, "%s", buffer) == 1){
+    //        if(strcmp(buffer, VERTEX_IDENTIFIER) == 0){
+    //            if (fscanf(file, "%f %f %f", &x, &y, &z) == 3){
+    //                vertices[vertices_read][0] = x;
+    //                vertices[vertices_read][1] = y;
+    //                vertices[vertices_read][2] = z;
+    //                vertices_read++;
+    //            }else{
+    //                printf("Incomplete vertex data\n");
+    //            }
+    //        }else if(strcmp(buffer, VERTEX_NORMAL_IDENTIFIER) == 0){
+    //            if (fscanf(file, "%f %f %f", &x, &y, &z) == 3){
+    //                t_normals[normals_read][0] = x;
+    //                t_normals[normals_read][1] = y;
+    //                t_normals[normals_read][2] = z;
+    //                normals_read++;
+    //            }else{
+    //                printf("Incomplete vertex normal data\n");
+    //            }
+    //        }else if(strcmp(buffer, FACE_IDENTIFIER) == 0){
+    //            //expect 3 vertices
+    //            if (fscanf(file, "%i//%i %i//%i %i//%i", &f1a, &f1b, &f2a, &f2b, &f3a, &f3b) == 6){
+    //                faces[faces_read][0] = f1a-1;
+    //                faces[faces_read][1] = f2a-1;
+    //                faces[faces_read][2] = f3a-1;
+    //                //Copy across all referenced normals
+    //                normals[f1a-1][0] = t_normals[f1b-1][0];
+    //                normals[f1a-1][1] = t_normals[f1b-1][1];
+    //                normals[f1a-1][2] = t_normals[f1b-1][2];
 
-                    normals[f2a-1][0] = t_normals[f2b-1][0];
-                    normals[f2a-1][1] = t_normals[f2b-1][1];
-                    normals[f2a-1][2] = t_normals[f2b-1][2];
+    //                normals[f2a-1][0] = t_normals[f2b-1][0];
+    //                normals[f2a-1][1] = t_normals[f2b-1][1];
+    //                normals[f2a-1][2] = t_normals[f2b-1][2];
 
-                    normals[f3a-1][0] = t_normals[f3b-1][0];
-                    normals[f3a-1][1] = t_normals[f3b-1][1];
-                    normals[f3a-1][2] = t_normals[f3b-1][2];
-                    faces_read++;
-                }else{
-                    printf("Incomplete face data\n");
-                }    
-            }
-            else if (strcmp(buffer, MTLLIB_IDENTIFIER) == 0){
-                if (fscanf(file, "%s", &materialFile) != 1){
-                    printf("Incomplete material filename");
-                    // reset materialFile
-                    materialFile[0] = '\0';
-                }
-            }
-            else if (strcmp(buffer, USEMTL_IDENTIFEIR) == 0){
-                if (fscanf(file, "%s", &materialName) != 1){
-                    printf("Incomplete material name");
-                    // reset materialName
-                    materialName[0] = '\0';
-                }
-            }
-        }
-    }
-    if (materialFile[0] != '\0' && materialName != '\0'){
-        // Materials are in use, attempt to load the material file
-        loadMaterialFromFile(path, materialFile, materialName);
-    }
+    //                normals[f3a-1][0] = t_normals[f3b-1][0];
+    //                normals[f3a-1][1] = t_normals[f3b-1][1];
+    //                normals[f3a-1][2] = t_normals[f3b-1][2];
+    //                faces_read++;
+    //            }else{
+    //                printf("Incomplete face data\n");
+    //            }    
+    //        }
+    //        else if (strcmp(buffer, MTLLIB_IDENTIFIER) == 0){
+    //            if (fscanf(file, "%s", &materialFile) != 1){
+    //                printf("Incomplete material filename");
+    //                // reset materialFile
+    //                materialFile[0] = '\0';
+    //            }
+    //        }
+    //        else if (strcmp(buffer, USEMTL_IDENTIFEIR) == 0){
+    //            if (fscanf(file, "%s", &materialName) != 1){
+    //                printf("Incomplete material name");
+    //                // reset materialName
+    //                materialName[0] = '\0';
+    //            }
+    //        }
+    //    }
+    //}
+    //if (materialFile[0] != '\0' && materialName != '\0'){
+    //    // Materials are in use, attempt to load the material file
+    //    loadMaterialFromFile(path, materialFile, materialName);
+    //}
 
 
-    printf("%s: %i Vertices, %i V-Normals & %i Faces were loaded.\n",path,vertices_read,normals_read,faces_read);
-    if(modelScale>0)
-    {
-        glm::vec3 minVert = {100000,100000,100000};
-        glm::vec3 maxVert = {-100000,-100000,-100000};
-        for(int i=0;i<vertices_read;i++)
-        {
-            minVert[0]=(minVert[0]<vertices[i][0])?minVert[0]:vertices[i][0];
-            maxVert[0]=(maxVert[0]>vertices[i][0])?maxVert[0]:vertices[i][0];
-        
-            minVert[1]=(minVert[1]<vertices[i][1])?minVert[1]:vertices[i][1];
-            maxVert[1]=(maxVert[1]>vertices[i][1])?maxVert[1]:vertices[i][1];
+    //printf("%s: %i Vertices, %i V-Normals & %i Faces were loaded.\n",path,vertices_read,normals_read,faces_read);
+    //if(modelScale>0)
+    //{
+    //    glm::vec3 minVert = {100000,100000,100000};
+    //    glm::vec3 maxVert = {-100000,-100000,-100000};
+    //    for(int i=0;i<vertices_read;i++)
+    //    {
+    //        minVert[0]=(minVert[0]<vertices[i][0])?minVert[0]:vertices[i][0];
+    //        maxVert[0]=(maxVert[0]>vertices[i][0])?maxVert[0]:vertices[i][0];
+    //    
+    //        minVert[1]=(minVert[1]<vertices[i][1])?minVert[1]:vertices[i][1];
+    //        maxVert[1]=(maxVert[1]>vertices[i][1])?maxVert[1]:vertices[i][1];
 
-            minVert[2]=(minVert[2]<vertices[i][2])?minVert[2]:vertices[i][2];
-            maxVert[2]=(maxVert[2]>vertices[i][2])?maxVert[2]:vertices[i][2];
-        }
-    
-        printf("Original Model Dimensions(%0.4f,%0.4f,%0.4f)",maxVert[0],maxVert[1],maxVert[2]);
-        //maxVert-=minVert;
-        maxVert[0]-=minVert[0];    maxVert[1]-=minVert[1];    maxVert[2]-=minVert[2];
-        float longestAxis = (maxVert[0]>maxVert[1])?maxVert[0]:maxVert[1];
-        longestAxis = (longestAxis>maxVert[2])?longestAxis:maxVert[2];
-        printf(", Scaling model by: %0.4f\n",modelScale/longestAxis);
-        scaleModel(modelScale/longestAxis);
-    }
-    fclose(file);
-    free(t_normals);
+    //        minVert[2]=(minVert[2]<vertices[i][2])?minVert[2]:vertices[i][2];
+    //        maxVert[2]=(maxVert[2]>vertices[i][2])?maxVert[2]:vertices[i][2];
+    //    }
+    //
+    //    printf("Original Model Dimensions(%0.4f,%0.4f,%0.4f)",maxVert[0],maxVert[1],maxVert[2]);
+    //    //maxVert-=minVert;
+    //    maxVert[0]-=minVert[0];    maxVert[1]-=minVert[1];    maxVert[2]-=minVert[2];
+    //    float longestAxis = (maxVert[0]>maxVert[1])?maxVert[0]:maxVert[1];
+    //    longestAxis = (longestAxis>maxVert[2])?longestAxis:maxVert[2];
+    //    printf(", Scaling model by: %0.4f\n",modelScale/longestAxis);
+    //    scaleModel(modelScale/longestAxis);
+    //}
+    //fclose(file);
+    //free(t_normals);
 }
 /*
 Loads a single material from a .mtl file
@@ -399,8 +502,13 @@ Allocates the storage for the model's primitives (vertices, normals and faces) a
 @see freeModel()
 */
 void Entity::allocateModel(){
-    vertices = (glm::vec3*)malloc(v_count*sizeof(glm::vec3)*2);
-    normals = vertices+v_count;//Arrays are continuous
+    vertices = (float*)malloc(v_count*v_size*sizeof(float));
+    if (n_count)
+        normals = (glm::vec3*)malloc(n_count*sizeof(glm::vec3));
+    if (c_count)
+        colors = (float*)malloc(c_count*c_size*sizeof(float));
+    if (t_count)
+        textures = (float*)malloc(t_count*t_size*sizeof(float));
     faces = (glm::ivec3*)malloc(f_count*sizeof(glm::ivec3));
 }
 /*
@@ -418,11 +526,10 @@ Scales the values within vertices according to the provided scale
 @param modelScale Scaling factor
 */
 void Entity::scaleModel(float modelScale){
-    for(int i =0; i<v_count;i++)
+    unsigned int v_total = v_count*v_size;
+    for (unsigned int i = 0; i<v_total; i++)
     {
-        vertices[i][0]*=modelScale;
-        vertices[i][1]*=modelScale;
-        vertices[i][2]*=modelScale;
+        vertices[i]*=modelScale;
     }
 }
 /*

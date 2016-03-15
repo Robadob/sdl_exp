@@ -27,11 +27,15 @@ protected:
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
     //Model vertex and face counts
-    int v_count, f_count;
-    glm::vec3 *vertices, *normals;
+    unsigned int v_count, n_count, c_count, t_count, f_count;//Number of
+    unsigned int v_size, t_size, c_size;//Number of components
+
+    float *vertices, *colors, *textures;//Variable length vectors
+    glm::vec3 *normals;
     glm::ivec3 *faces;
-    GLuint vertices_vbo;
-    GLuint faces_vbo;
+
+    GLuint vertices_vbo, normals_vbo, colors_vbo, textures_vbo, faces_vbo;
+
     //Optional material (loaded automaically if detected within model file)
     Material *material;
     glm::vec3 color;

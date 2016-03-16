@@ -4,9 +4,9 @@
 
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation, new Shaders("../shaders/flat.v", "../shaders/flat.f"))
-    , icosphere("../models/icosphere.obj", 10.0f, shaders)
+    , icosphere("../models/icosphere.obj", 100.0f, shaders)
     , colorShader(new Shaders("../shaders/color.v", "../shaders/color.f"))
-    , colorModel("C:/Users/Robadob/Desktop/rothwell-wy-1.obj", 1.0f, colorShader)
+    , colorModel("C:/Users/rob/Desktop/rothwell-wy-1.obj", 1.0f, colorShader)
     , tick(0.0f)
 {
     this->visualisation.setSkybox(true);

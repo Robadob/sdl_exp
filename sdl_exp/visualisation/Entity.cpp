@@ -639,6 +639,7 @@ exit_loop2:;
     {
         int i_norm = face_hasNormals ? t_norm_pos[i] : 0;
         int i_vert = faces[i];
+        glm::vec3 t_normalised_norm;
         //If vn pair hasn't been assigned an id yet
         if (vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] == UINT_MAX)
         {
@@ -646,8 +647,11 @@ exit_loop2:;
             for (unsigned int k = 0; k < v_size; k++)
                 vertices[(vn_assigned*v_size) + k] = t_vertices[(i_vert*v_size) + k];
             if (face_hasNormals)
+            {//Normalise normals
+                t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * NORMALS_SIZE)], t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 1, t_normals[(t_norm_pos[i] * NORMALS_SIZE)]+2));
                 for (unsigned int k = 0; k < NORMALS_SIZE; k++)
-                    normals[(vn_assigned*NORMALS_SIZE) + k] = t_normals[(t_norm_pos[i] * NORMALS_SIZE) + k];
+                    normals[(vn_assigned*NORMALS_SIZE) + k] = t_normalised_norm[k];
+            }
             if (c_count)
                 for (unsigned int k = 0; k < c_size; k++)
                     colors[(vn_assigned*c_size) + k] = t_colors[(i_vert*c_size) + k];

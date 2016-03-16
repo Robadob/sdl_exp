@@ -27,6 +27,7 @@ protected:
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
     //Model vertex and face counts
+    unsigned int vn_count;
     unsigned int v_count, n_count, c_count, t_count, f_count;//Number of
     unsigned int v_size, t_size, c_size;//Number of components
 
@@ -41,9 +42,8 @@ protected:
     glm::vec3 location;
     glm::vec4 rotation;
     
-    void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size);
+    void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size, void *data);
     void deleteVertexBufferObject(GLuint *vbo);
-    void fillBuffers();
     void loadModelFromFile(const char *path, float modelScale);
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
     void allocateModel();
@@ -51,5 +51,4 @@ protected:
     void scaleModel(float modelScale);
     void freeMaterial();
 };
-
 #endif //ifndef __Entity_h__

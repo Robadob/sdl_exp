@@ -4,7 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <regex>
+#include <unordered_map>
+#include <functional>
 
 #define NORMALS_SIZE 3
 #define DEFAULT_TEXTURE_SIZE 2
@@ -18,7 +19,7 @@ Constructs an entity from the provided .obj model
 Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
     : vertices(0), normals(0), colors(0), textures(0), faces(0)
     , vertices_vbo(0), normals_vbo(0), colors_vbo(0), textures_vbo(0), faces_vbo(0)
-    , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0)
+    , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0), vn_count(0)
     , v_size(3), c_size(3), t_size(2)
     , SCALE(modelScale)
     , material(0)
@@ -28,22 +29,30 @@ Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
     , shaders(shaders)
 {
     loadModelFromFile(modelPath, modelScale);
-    if (!vertices)
-        return;
-    createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2);//vertices+norms
-    createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3));
-    fillBuffers();
     //If shaders have been provided, set them up
-    if (this->shaders)
+    if (vertices&&this->shaders)
     {
-        this->shaders->setVertexAttributeDetail(vertices_vbo, 0, 3, 0);
-        this->shaders->setVertexNormalAttributeDetail(vertices_vbo, v_count*sizeof(glm::vec3), 3, 0);
+        this->shaders->setVertexAttributeDetail(vertices_vbo, 0, v_size, 0);
+        if (normals_vbo)
+            this->shaders->setVertexNormalAttributeDetail(normals_vbo, 0, NORMALS_SIZE, 0);
+        if (colors_vbo)
+            this->shaders->setVertexColorAttributeDetail(colors_vbo, 0, c_size, 0);
+        if (textures_vbo)
+            this->shaders->setVertexTextureAttributeDetail(textures_vbo, 0, t_size, 0);
     }
 }
 /*
 Destructor, free's memory allocated to store the model and its material
 */
 Entity::~Entity(){
+    deleteVertexBufferObject(&vertices_vbo);
+    if (normals_vbo)
+        deleteVertexBufferObject(&normals_vbo);
+    if (colors_vbo)
+        deleteVertexBufferObject(&colors_vbo);
+    if (textures_vbo)
+        deleteVertexBufferObject(&textures_vbo);
+    deleteVertexBufferObject(&faces_vbo);
     freeModel();
     freeMaterial();
 }
@@ -105,10 +114,10 @@ Creates a vertex buffer object of the specified size
 @param target The type of buffer to bind the buffer object (e.g. GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER)
 @param size The size of the buffer in bytes
 */
-void Entity::createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size){
+void Entity::createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size, void *data){
     GL_CALL(glGenBuffers(1, vbo));
     GL_CALL(glBindBuffer(target, *vbo));
-    GL_CALL(glBufferData(target, size, 0, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(target, size, data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(target, 0));
 }
 /*
@@ -119,13 +128,18 @@ void Entity::deleteVertexBufferObject(GLuint *vbo){
     GL_CALL(glDeleteBuffers(1, vbo));
 }
 /*
-Copies the vertex, normal and face data into the relevant buffer objects
+Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
-void Entity::fillBuffers(){
-    glBindBuffer(GL_ARRAY_BUFFER, vertices_vbo);
-    glBufferData(GL_ARRAY_BUFFER, v_count*sizeof(glm::vec3)*2, vertices, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, f_count*sizeof(glm::ivec3), faces, GL_DYNAMIC_DRAW);
+unsigned long hashing_func(std::pair<unsigned int, unsigned int> key)
+{
+    return (!(key.first) << (sizeof(unsigned long) - sizeof(unsigned int))) ^ key.second;
+}
+/*
+Used by loadModelFromFile() in a hashmap of vertex-normal pairs
+*/
+bool key_equal_fn(std::pair<unsigned int, unsigned int> t1, std::pair<unsigned int, unsigned int> t2)
+{
+    return t1.first == t2.first&&t1.second == t2.second;
 }
 /*
 Loads and scales the specified model into this class's primitive storage
@@ -164,11 +178,6 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
         return;
     }
 
-    //const std::regex VERTEX_LINE("v +(-?[0-9]+\.[0-9]+ *){3,8}", std::regex::optimize);
-   // const std::regex TEXTURE_LINE("vt +(-?[0-9]+\.[0-9]+ *){3}", std::regex::optimize);
-    //const std::regex NORMAL_LINE("vn +(-?[0-9]+\.[0-9]+ *){3}", std::regex::optimize);
-    //const std::regex FACE_LINE("f +(([0-9]+)(/([0-9]+)?/([0-9]+))? *){3} *", std::regex::optimize);
-
 
     //Counters
     unsigned int vertices_read = 0;
@@ -185,7 +194,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     bool face_hasNormals = false;
     bool face_hasTextures = false;
 
-    printf("\rLoading Model: %s [Counting Elements]", path);
+    printf("\rLoading Model: %s [Counting Elements]                ", path);
     printf("\n");//Temp whilst we have vert counters inside loop
     ////Count vertices/faces, attributes
     char c;
@@ -305,39 +314,65 @@ exit_loop:;
     //Set instance var counts
     v_count = vertices_read;
     c_count = colors_read;
-    t_count = textures_read;
     n_count = normals_read;
+    t_count = textures_read;
     f_count = faces_read;
+    if (v_count == 0 || f_count == 0)
+    {
+        fprintf(stderr, "Vertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n");
+        fclose(file);
+        return;
+    }
+    if ((c_count != 0 && v_count != c_count))
+    {
+        fprintf(stderr, "Vertex color count does not match vertex count, vertex colors will be ignored.\n");
+        c_count = 0;
+    }
+    if(t_count != 0 && v_count != t_count)
+    {
+        fprintf(stderr, "Vertex texture count does not match vertex count, vertex textures will be ignored.\n");
+        t_count = 0;
+    }
     //Set instance var sizes
     v_size = vertices_size;//3-4
     t_size = textures_size;//2-3
     c_size = colors_size;//3-4
-    //Allocate memory
-    allocateModel();
+    //Allocate faces
+    faces = (unsigned int*)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
     //Reset file pointer
     clearerr(file);
     fseek(file, 0, SEEK_SET);
     //Allocate temporary buffers for components that may require aligning with relevant vertices
     //TODO: Create T_Normal, T_Color, T_Texture, T_norm_pos, T_tex_pos
+    float *t_vertices = (float *)malloc(vertices_read * vertices_size * sizeof(float));
+    float *t_colors = (float *)malloc(colors_read * colors_size * sizeof(float));
     float *t_normals = (float *)malloc(normals_read * NORMALS_SIZE * sizeof(float));
     float *t_textures = (float *)malloc(textures_read*textures_size*sizeof(float));
     //float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
-    //3 parts to each face
-    unsigned int *t_norm_pos = (unsigned int *)malloc(vertices_read*FACES_SIZE*sizeof(unsigned int));
-    unsigned int *t_tex_pos = (unsigned int *)malloc(vertices_read*FACES_SIZE*sizeof(unsigned int));
+    //3 parts to each face,store the relevant norm and tex indexes
+    unsigned int *t_norm_pos=0;
+    if (face_hasNormals)
+        t_norm_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
+    else
+        n_count = 0;
+    unsigned int *t_tex_pos=0;
+    if (face_hasTextures)
+        t_tex_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
+    else
+        v_count;
     //Reset local counters
-    v_count = 0;
-    c_count = 0;
-    t_count = 0;
-    n_count = 0;
-    f_count = 0;
+    vertices_read = 0;
+    colors_read = 0;
+    normals_read = 0;
+    textures_read = 0;
+    faces_read = 0;
     unsigned int componentsRead = 0;
     unsigned int componentLength = 0;
     //Create buffer to read lines of the file into
     unsigned int bufferLen = lnLenMax + 2;
     char *buffer = new char[bufferLen];
 
-    printf("\rLoading Model: %s [Loading Elements]", path);
+    printf("\rLoading Model: %s [Loading Elements]      ", path);
     //Read file by line, again.
     while ((c = fgetc(file)) != EOF) {
         //If the first char == 'v'
@@ -368,14 +403,16 @@ exit_loop:;
                             goto exit_loop2;
                         buffer[componentLength] = c;
                         componentLength++;
-                    } while ((c = fgetc(file)) != ' ');
+                    } while (((c = fgetc(file)) >= '0' && c <= '9') || c == '.');
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the vert array
-                    vertices[(v_count * v_size) + componentsRead] = (float)atof(buffer);
+                    t_vertices[(vertices_read * v_size) + componentsRead] = (float)atof(buffer);
                     componentsRead++;
                 } while (componentsRead<v_size);
-                v_count++;
+                vertices_read++;
+                if (c == '\n')
+                    continue;
                 componentsRead = 0;
                 //Read all color components (if required)
                 while (componentsRead<c_size)
@@ -385,7 +422,7 @@ exit_loop:;
                         if (c != ' ')
                             break;
                     }
-                    //Fill buffer with the vetex components
+                    //Fill buffer with the color components
                     componentLength = 0;
                     do
                     {
@@ -393,16 +430,18 @@ exit_loop:;
                             goto exit_loop2;
                         buffer[componentLength] = c;
                         componentLength++;
-                    } while ((c = fgetc(file)) != ' ');
+                    } while (((c = fgetc(file)) >= '0' && c <= '9' )|| c == '.');
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the color array
-                    colors[(c_count * c_size) + componentsRead] = (float)atof(buffer);//t_colors
+                    t_colors[(colors_read * c_size) + componentsRead] = (float)atof(buffer);//t_colors
                     componentsRead++;
                 }
-                //Ifwe read a color, increment count
+                //If we read a color, increment count
                 if (componentsRead > 0)
-                    c_count++;
+                    colors_read++;
+                if (c == '\n')
+                    continue;
                 //Speed to the end of the vertex line
                 while ((c = fgetc(file)) != '\n')
                 {
@@ -421,7 +460,7 @@ exit_loop:;
                         if (c != ' ')
                             break;
                     }
-                    //Fill buffer with the components
+                    //Fill buffer with the normal components
                     componentLength = 0;
                     do
                     {
@@ -429,20 +468,22 @@ exit_loop:;
                             goto exit_loop2;
                         buffer[componentLength] = c;
                         componentLength++;
-                    } while ((c = fgetc(file)) != ' ');
+                    } while (((c = fgetc(file)) >= '0' && c <= '9') || c == '.');
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary normal array
-                    t_normals[(n_count * NORMALS_SIZE) + componentsRead] = (float)atof(buffer);
+                    t_normals[(normals_read * NORMALS_SIZE) + componentsRead] = (float)atof(buffer);
                     componentsRead++;
                 } while (componentsRead<NORMALS_SIZE);
+                normals_read++;
+                if (c == '\n')
+                    continue;
                 //Speed to the end of the normal line
                 while ((c = fgetc(file)) != '\n')
                 {
                     if (c == EOF)
                         goto exit_loop2;
                 }
-                n_count++;
                 continue;//Skip to next iteration, otherwise we will miss a line
             case 't':
                 //Read texture line of file
@@ -455,7 +496,7 @@ exit_loop:;
                         if (c != ' ')
                             break;
                     }
-                    //Fill buffer with the components
+                    //Fill buffer with the vert/tex/norm index components
                     componentLength = 0;
                     do
                     {
@@ -463,11 +504,11 @@ exit_loop:;
                             goto exit_loop2;
                         buffer[componentLength] = c;
                         componentLength++;
-                    } while ((c = fgetc(file)) != ' ');
+                    } while (((c = fgetc(file)) >= '0' && c <= '9') || c == '.');
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary textures array
-                    t_textures[(t_count * t_size) + componentsRead] = (float)atof(buffer);
+                    t_textures[(textures_read * t_size) + componentsRead] = (float)atof(buffer);
                 } while (componentsRead<DEFAULT_TEXTURE_SIZE);
                 //Read the final texture element if provided (special case, enclosed in [])
                 if (componentsRead < t_size)//If 3 texture coords
@@ -491,17 +532,19 @@ exit_loop:;
                         //End component string
                         buffer[componentLength] = '\0';
                         //Load it into the temporary textures array
-                        t_textures[(t_count * t_size) + componentsRead] = (float)atof(buffer);
+                        t_textures[(textures_read * t_size) + componentsRead] = (float)atof(buffer);
                     }
                     componentsRead++;
                 }
+                textures_read++;
+                if (c == '\n')
+                    continue;
                 //Speed to the end of the texture line
                 while ((c = fgetc(file)) != '\n')
                 {
                     if (c == EOF)
                         goto exit_loop2;
                 }
-                t_count++;
                 continue;//Skip to next iteration, otherwise we will miss a line
             }
             break;
@@ -514,7 +557,7 @@ exit_loop:;
             {
                 //Find the first char
                 while ((c = fgetc(file)) != EOF) {
-                    if (c != ' ')
+                    if (c >= '0' && c <= '9')
                         break;
                 }
                 //Fill buffer with the components
@@ -525,36 +568,32 @@ exit_loop:;
                         goto exit_loop2;
                     buffer[componentLength] = c;
                     componentLength++;
-                } while ((c = fgetc(file)) != '/' && c != ' ');
+                } while ((c = fgetc(file)) >='0' && c<='9');
                 //End component string
                 buffer[componentLength] = '\0';
                 //Decide which array to load it into (faces, tex pos, norm pos)
                 switch (componentsRead%(1+(int)face_hasNormals+(int)face_hasTextures))
                 {
                 //This is a vertex index
-                case 0:
-                    faces[componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures)] = (unsigned int)std::strtoul(buffer, 0, 0);
+                case 0: //Decrease value by 1, obj is 1-index, our arrays are 0-index
+                    faces[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0)-1;
+                    break;
                 //This is a normal index
                 case 1:
-                    t_tex_pos[componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures)] = (unsigned int)std::strtoul(buffer, 0, 0);
+                    t_norm_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0)-1;
                     break;
                 //This is a texture index
                 case 2:
-                    t_tex_pos[componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures)] = (unsigned int)std::strtoul(buffer, 0, 0);
+                    t_tex_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0)-1;
                     break;
                 }
-                t_normals[(n_count * NORMALS_SIZE) + componentsRead] = (float)atof(buffer);
                 componentsRead++;
-            } while (componentsRead<NORMALS_SIZE);
-            //Speed to the end of the normal line
-            while ((c = fgetc(file)) != '\n')
-            {
-                if (c == EOF)
-                    goto exit_loop2;
-            }
-            n_count++;
-            continue;//Skip to next iteration, otherwise we will miss a line
-            break;
+
+               
+            } while (componentsRead<(unsigned int)((1 + (int)face_hasNormals + (int)face_hasTextures))*FACES_SIZE);
+            faces_read++;
+            if (c == '\n')
+                continue;
         }
         //Speed to the end of the line and begin next iteration
         while ((c = fgetc(file)) != '\n')
@@ -567,115 +606,89 @@ exit_loop:;
 exit_loop2:;
     //Cleanup buffer
     delete buffer;
+    printf("\rLoading Model: %s [Calculating VN Pair Count]       ", path);
+    std::unordered_map<
+        std::pair<unsigned int, unsigned int>, 
+        unsigned int,
+        std::function<unsigned long(std::pair<unsigned int, unsigned int>)>,
+        std::function<bool(std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>) >
+    > vn_pairs(f_count*FACES_SIZE, hashing_func, key_equal_fn);
+    vn_pairs.reserve(f_count*FACES_SIZE);//f_count is max number of pairs, should reduce resizing
+    //Calculate the number of unique vertex-normal pairs
+    for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
+    {
+        if (face_hasNormals)
+            vn_pairs[std::pair<unsigned int, unsigned int>(faces[i], t_norm_pos[i])] = UINT_MAX;
+        else
+            vn_pairs[std::pair<unsigned int, unsigned int>(faces[i], 0)] = UINT_MAX;
+
+    }
+    vn_count = vn_pairs.size();
+    //Allocate instance vars
+    vertices = (float*)malloc(vn_count*v_size*sizeof(float));
+    if (face_hasNormals)//1 normal per vertex
+        normals = (float*)malloc(vn_count*NORMALS_SIZE*sizeof(float));
+    if (c_count)//1 color per vertex
+        colors = (float*)malloc(vn_count*c_size*sizeof(float));
+    if (face_hasTextures)//1 texture per vertex
+        textures = (float*)malloc(vn_count*t_size*sizeof(float));
 
     printf("\rLoading Model: %s [Assigning Elements]", path);
-    //Clone textures and normals into their arrays
-    for (unsigned int i = 0; i < v_count; i++)
+    unsigned int vn_assigned = 0;
+    for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
     {
-        normals[i] = t_normals[t_norm_pos[i]];
-        textures[i] = t_textures[t_tex_pos[i]];
-        //colors[i] = t_colors[faces[i]];
+        int i_norm = face_hasNormals ? t_norm_pos[i] : 0;
+        int i_vert = faces[i];
+        //If vn pair hasn't been assigned an id yet
+        if (vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] == UINT_MAX)
+        {
+            //Set all n components of vertices and attributes to that id
+            for (unsigned int k = 0; k < v_size; k++)
+                vertices[(vn_assigned*v_size) + k] = t_vertices[(i_vert*v_size) + k];
+            if (face_hasNormals)
+                for (unsigned int k = 0; k < NORMALS_SIZE; k++)
+                    normals[(vn_assigned*NORMALS_SIZE) + k] = t_normals[(t_norm_pos[i] * NORMALS_SIZE) + k];
+            if (c_count)
+                for (unsigned int k = 0; k < c_size; k++)
+                    colors[(vn_assigned*c_size) + k] = t_colors[(i_vert*c_size) + k];
+            if (face_hasTextures)
+                for (unsigned int k = 0; k < t_size; k++)
+                    textures[(vn_assigned*t_size) + k] = t_textures[(t_tex_pos[i] * t_size) + k];
+            //Assign it new lowest id
+            vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] = vn_assigned++;
+        }
+        //Update index from face
+        faces[i] = vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
     }
     //Free temps
-    delete t_normals;
-    delete t_norm_pos;
-    delete t_textures;
-    delete t_tex_pos;
+    free(t_vertices);
+    free(t_colors);
+    free(t_normals);
+    free(t_textures);
+    free(t_norm_pos);
+    free(t_tex_pos);
+    //Load VBOs
+    printf("\rLoading Model: %s [Generating VBOs!]              ", path);
 
-    printf("\rLoading Model: %s [Complete!]\n", path);
-    ////Iterate file, reading in vertices, normals & faces
-    //while (!feof(file)) {
-    //    if (fscanf(file, "%s", buffer) == 1){
-    //        if(strcmp(buffer, VERTEX_IDENTIFIER) == 0){
-    //            if (fscanf(file, "%f %f %f", &x, &y, &z) == 3){
-    //                vertices[vertices_read][0] = x;
-    //                vertices[vertices_read][1] = y;
-    //                vertices[vertices_read][2] = z;
-    //                vertices_read++;
-    //            }else{
-    //                printf("Incomplete vertex data\n");
-    //            }
-    //        }else if(strcmp(buffer, VERTEX_NORMAL_IDENTIFIER) == 0){
-    //            if (fscanf(file, "%f %f %f", &x, &y, &z) == 3){
-    //                t_normals[normals_read][0] = x;
-    //                t_normals[normals_read][1] = y;
-    //                t_normals[normals_read][2] = z;
-    //                normals_read++;
-    //            }else{
-    //                printf("Incomplete vertex normal data\n");
-    //            }
-    //        }else if(strcmp(buffer, FACE_IDENTIFIER) == 0){
-    //            //expect 3 vertices
-    //            if (fscanf(file, "%i//%i %i//%i %i//%i", &f1a, &f1b, &f2a, &f2b, &f3a, &f3b) == 6){
-    //                faces[faces_read][0] = f1a-1;
-    //                faces[faces_read][1] = f2a-1;
-    //                faces[faces_read][2] = f3a-1;
-    //                //Copy across all referenced normals
-    //                normals[f1a-1][0] = t_normals[f1b-1][0];
-    //                normals[f1a-1][1] = t_normals[f1b-1][1];
-    //                normals[f1a-1][2] = t_normals[f1b-1][2];
-
-    //                normals[f2a-1][0] = t_normals[f2b-1][0];
-    //                normals[f2a-1][1] = t_normals[f2b-1][1];
-    //                normals[f2a-1][2] = t_normals[f2b-1][2];
-
-    //                normals[f3a-1][0] = t_normals[f3b-1][0];
-    //                normals[f3a-1][1] = t_normals[f3b-1][1];
-    //                normals[f3a-1][2] = t_normals[f3b-1][2];
-    //                faces_read++;
-    //            }else{
-    //                printf("Incomplete face data\n");
-    //            }    
-    //        }
-    //        else if (strcmp(buffer, MTLLIB_IDENTIFIER) == 0){
-    //            if (fscanf(file, "%s", &materialFile) != 1){
-    //                printf("Incomplete material filename");
-    //                // reset materialFile
-    //                materialFile[0] = '\0';
-    //            }
-    //        }
-    //        else if (strcmp(buffer, USEMTL_IDENTIFEIR) == 0){
-    //            if (fscanf(file, "%s", &materialName) != 1){
-    //                printf("Incomplete material name");
-    //                // reset materialName
-    //                materialName[0] = '\0';
-    //            }
-    //        }
-    //    }
-    //}
-    //if (materialFile[0] != '\0' && materialName != '\0'){
-    //    // Materials are in use, attempt to load the material file
-    //    loadMaterialFromFile(path, materialFile, materialName);
-    //}
-
-
-    //printf("%s: %i Vertices, %i V-Normals & %i Faces were loaded.\n",path,vertices_read,normals_read,faces_read);
-    //if(modelScale>0)
-    //{
-    //    glm::vec3 minVert = {100000,100000,100000};
-    //    glm::vec3 maxVert = {-100000,-100000,-100000};
-    //    for(int i=0;i<vertices_read;i++)
-    //    {
-    //        minVert[0]=(minVert[0]<vertices[i][0])?minVert[0]:vertices[i][0];
-    //        maxVert[0]=(maxVert[0]>vertices[i][0])?maxVert[0]:vertices[i][0];
-    //    
-    //        minVert[1]=(minVert[1]<vertices[i][1])?minVert[1]:vertices[i][1];
-    //        maxVert[1]=(maxVert[1]>vertices[i][1])?maxVert[1]:vertices[i][1];
-
-    //        minVert[2]=(minVert[2]<vertices[i][2])?minVert[2]:vertices[i][2];
-    //        maxVert[2]=(maxVert[2]>vertices[i][2])?maxVert[2]:vertices[i][2];
-    //    }
-    //
-    //    printf("Original Model Dimensions(%0.4f,%0.4f,%0.4f)",maxVert[0],maxVert[1],maxVert[2]);
-    //    //maxVert-=minVert;
-    //    maxVert[0]-=minVert[0];    maxVert[1]-=minVert[1];    maxVert[2]-=minVert[2];
-    //    float longestAxis = (maxVert[0]>maxVert[1])?maxVert[0]:maxVert[1];
-    //    longestAxis = (longestAxis>maxVert[2])?longestAxis:maxVert[2];
-    //    printf(", Scaling model by: %0.4f\n",modelScale/longestAxis);
-    //    scaleModel(modelScale/longestAxis);
-    //}
-    //fclose(file);
-    //free(t_normals);
+    createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, vn_count*v_size*sizeof(float), (void*)vertices);
+    if (face_hasNormals)
+        createVertexBufferObject(&normals_vbo, GL_ARRAY_BUFFER, vn_count*NORMALS_SIZE*sizeof(float), (void*)normals);
+    if (c_count)
+        createVertexBufferObject(&colors_vbo, GL_ARRAY_BUFFER, vn_count*c_size*sizeof(float), (void*)colors);
+    if (face_hasTextures)
+        createVertexBufferObject(&textures_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)textures);
+    createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
+    printf("\rLoading Model: %s [Complete!]                 \n", path);
+    //Can the host copies be freed after a bind?
+    //free(vertices);
+    //if (normals)
+    //    free(normals);
+    //if (colors)
+    //    free(colors);
+    //if (textures)
+    //    free(textures);
+    //free(faces);
+    fclose(file);
 }
 /*
 Loads a single material from a .mtl file
@@ -802,28 +815,18 @@ void Entity::setRotation(glm::vec4 rotation){
     this->rotation = rotation;
 }
 /*
-Allocates the storage for the model's primitives (vertices, normals and faces) according to the instance variables v_count and f_count
-@see freeModel()
-*/
-void Entity::allocateModel(){
-    vertices = (float*)malloc(v_count*v_size*sizeof(float));
-    if (n_count)//1 normal per vertex
-        normals = (float*)malloc(v_count*NORMALS_SIZE*sizeof(float));
-    if (c_count)//1 color per vertex
-        colors = (float*)malloc(v_count*c_size*sizeof(float));
-    if (t_count)//1 texture per vertex
-        textures = (float*)malloc(v_count*t_size*sizeof(float));
-    faces = (unsigned int*)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
-}
-/*
 Frees the storage for the model's primitives
 @see allocateModel()
 */
 void Entity::freeModel(){
-    if(vertices)
-        free(vertices);
-    if(faces)
-        free(faces);
+    free(vertices);
+    if (normals)
+        free(normals);
+    if (colors)
+        free(colors);
+    if (textures)
+        free(textures);
+    free(faces);
 }
 /*
 Scales the values within vertices according to the provided scale

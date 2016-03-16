@@ -38,6 +38,7 @@ class Shaders
     const char *VERTEX_ATTRIBUTE_NAME = "_vertex";
     const char *NORMAL_ATTRIBUTE_NAME = "_normal";
     const char *COLOR_ATTRIBUTE_NAME = "_color";
+    const char *TEXTURE_ATTRIBUTE_NAME = "_texture";
 
 public:
     Shaders(const char *vertexShaderPath = 0, const char *fragmentShaderPath = 0, const char *geometryShaderPath = 0);
@@ -59,6 +60,7 @@ public:
     void setVertexAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
     void setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
     void setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setVertexTextureAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
 
     bool addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
@@ -69,9 +71,10 @@ private:
     VertexAttributeDetail vertex;
     VertexAttributeDetail normal;
     VertexAttributeDetail color;
+    VertexAttributeDetail texture;
 
     //Texture tracking
-    std::vector<UniformTextureDetail> textures;
+    std::vector<UniformTextureDetail> samplers;
     
     //Shader file paths
     const char *vertexShaderPath;

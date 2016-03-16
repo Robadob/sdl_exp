@@ -34,7 +34,8 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , vertex{0}
     , normal{1}
     , color{2}
-    , textures()
+    , texture{3}
+    , samplers()
     , programId(0)
 {
     this->createShaders();
@@ -282,11 +283,11 @@ void Shaders::useProgram(){
     }
 
     //Set any Texture buffers
-    for (unsigned int i = 0; i < textures.size(); i++)
+    for (unsigned int i = 0; i < samplers.size(); i++)
     {
         glActiveTexture(GL_TEXTURE0+i);
-        glBindTexture(textures[i].type, textures[i].name);
-        this->setUniformi(textures[i].location, i);
+        glBindTexture(samplers[i].type, samplers[i].name);
+        this->setUniformi(samplers[i].location, i);
     }
 }
 /*
@@ -537,7 +538,7 @@ void Shaders::setVertexAttributeDetail(GLuint bufferObject, unsigned int offset 
     this->vertex.stride = stride;
 }
 /*
-Stores the details necessary for passing vertex normal attributes to the shader via the modern method
+Stores the details necessary for passing vertex normal attributes
 @param bufferObject The buffer object containing the attribute data
 @param offset The byte offset within the buffer that the data starts
 @param size The number of components per attribute (either 2, 3 or 4)
@@ -551,7 +552,7 @@ void Shaders::setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int o
     this->normal.stride = stride;
 }
 /*
-Stores the details necessary for passing vertex normal attributes to the shader via the modern method
+Stores the details necessary for passing vertex color attributes to the shader
 @param bufferObject The buffer object containing the attribute data
 @param offset The byte offset within the buffer that the data starts
 @param size The number of components per attribute (either 2, 3 or 4)
@@ -563,6 +564,20 @@ void Shaders::setVertexColorAttributeDetail(GLuint bufferObject, unsigned int of
     this->color.offset = offset;
     this->color.size = size;
     this->color.stride = stride;
+}
+/*
+Stores the details necessary for passing vertex texture attributes to the shader
+@param bufferObject The buffer object containing the attribute data
+@param offset The byte offset within the buffer that the data starts
+@param size The number of components per attribute (either 2, 3 or 4)
+@param stride The byte offset between consecutive attributes
+*/
+void Shaders::setVertexTextureAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride)
+{
+    this->texture.bufferObject = bufferObject;
+    this->texture.offset = offset;
+    this->texture.size = size;
+    this->texture.stride = stride;
 }
 /*
 Adds a texture buffer to be loaded when useProgram() is called
@@ -577,7 +592,7 @@ bool Shaders::addTextureUniform(GLuint texture, const char *uniformName, GLenum 
         GLint location = glGetUniformLocation(this->programId, uniformName);
         if (location!=-1)
         {
-            textures.push_back(UniformTextureDetail{texture, location, type});
+            samplers.push_back(UniformTextureDetail{ texture, location, type });
             return true;
         }
         GL_CHECK();

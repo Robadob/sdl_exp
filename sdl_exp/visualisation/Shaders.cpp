@@ -442,10 +442,10 @@ bool Shaders::checkProgramCompileError(int programId){
     if (status == GL_FALSE){
         // Get the length of the info log
         GLint len = 0;
-        GL_CALL(glGetProgramiv(this->programId, GL_INFO_LOG_LENGTH, &len));
+        GL_CALL(glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &len));
         // Get the contents of the log message
-        char* log = new char[len + 1];
-        GL_CALL(glGetProgramInfoLog(this->programId, len, NULL, log));
+        char* log = new char[len+1];
+        GL_CALL(glGetProgramInfoLog(programId, len, 0, log));
         // Print the message
         fprintf(stderr, "Program compilation error:\n");
         fprintf(stderr, "%s\n", log);

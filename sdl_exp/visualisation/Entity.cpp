@@ -682,7 +682,6 @@ exit_loop2:;
     if (face_hasTextures)
         createVertexBufferObject(&textures_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)textures);
     createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
-    printf("\rLoading Model: %s [Complete!]                 \n", path);
     //Can the host copies be freed after a bind?
     //free(vertices);
     //if (normals)
@@ -693,6 +692,7 @@ exit_loop2:;
     //    free(textures);
     //free(faces);
     fclose(file);
+    printf("\rLoading Model: %s [Complete!]                 \n", path);
 }
 /*
 Loads a single material from a .mtl file

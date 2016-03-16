@@ -5,7 +5,7 @@
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation, new Shaders("../shaders/flat.v", "../shaders/flat.f"))
     , icosphere("../models/icosphere.obj", 100.0f, shaders)
-    , colorShader(new Shaders("../shaders/color.v", "../shaders/color.f"))
+    , colorShader(new Shaders("../shaders/flat.v", "../shaders/flat.f"))
     , colorModel("C:/Users/rob/Desktop/rothwell-wy-1.obj", 1.0f, colorShader)
     , tick(0.0f)
 {
@@ -24,13 +24,16 @@ void EntityScene::update()
     this->tick = (float)fmod(this->tick,360);
     this->icosphere.setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
     this->icosphere.setLocation(glm::vec3(25 * sin(this->tick), 0, 25 * cos(this->tick)));
+    this->colorModel.setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
 }
 /*
 Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
+    glDisable(GL_CULL_FACE);
     colorModel.render();
+    glEnable(GL_CULL_FACE);
     icosphere.render();
 }
 /*

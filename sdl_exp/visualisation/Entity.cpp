@@ -301,7 +301,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
             if (c == EOF)
                 goto exit_loop;
         }
-        printf("\rVert: %i:%i, Normal: %i, Face: %i, Tex: %i:%i, Color: %i:%i, Ln:%i", vertices_read, vertices_size, normals_read, faces_read, textures_read, textures_size, colors_read, colors_size, lnLenMax);
+        //printf("\rVert: %i:%i, Normal: %i, Face: %i, Tex: %i:%i, Color: %i:%i, Ln:%i", vertices_read, vertices_size, normals_read, faces_read, textures_read, textures_size, colors_read, colors_size, lnLenMax);
     }
 exit_loop:;
     lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;

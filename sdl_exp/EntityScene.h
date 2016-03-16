@@ -17,6 +17,8 @@ public:
     void update() override;
 private:
     Entity icosphere;
+    Entity colorModel;
+    Shaders *colorShader;
     float tick;
     ~EntityScene() override;//Private to prevent stack allocation
 };

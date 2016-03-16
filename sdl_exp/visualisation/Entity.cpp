@@ -6,10 +6,12 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <thread>
 
 #define NORMALS_SIZE 3
 #define DEFAULT_TEXTURE_SIZE 2
 #define FACES_SIZE 3
+#define VN_PAIR std::pair<unsigned int, unsigned int>
 
 /*
 Constructs an entity from the provided .obj model
@@ -132,7 +134,7 @@ Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
 unsigned long hashing_func(std::pair<unsigned int, unsigned int> key)
 {
-    return (~key.first << (sizeof(unsigned long) - sizeof(unsigned int))) ^ key.second;
+    return (key.first << (sizeof(unsigned long) - sizeof(unsigned int))) & key.second;
 }
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs
@@ -194,8 +196,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     bool face_hasNormals = false;
     bool face_hasTextures = false;
 
-    printf("\rLoading Model: %s [Counting Elements]                ", path);
-    printf("\n");//Temp whilst we have vert counters inside loop
+    printf("\rLoading Model: %s [Counting Elements]", path);
     ////Count vertices/faces, attributes
     char c;
     int dotCtr;
@@ -307,7 +308,7 @@ exit_loop:;
     lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
 
     if (parameters_read > 0){
-        fprintf(stderr, "Model '%s' contains parameter space vertices, these are unsupported at this time.", path);
+        fprintf(stderr, "\nModel '%s' contains parameter space vertices, these are unsupported at this time.", path);
         return;
     }
 
@@ -319,18 +320,18 @@ exit_loop:;
     f_count = faces_read;
     if (v_count == 0 || f_count == 0)
     {
-        fprintf(stderr, "Vertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n");
+        fprintf(stderr, "\nVertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n");
         fclose(file);
         return;
     }
     if ((c_count != 0 && v_count != c_count))
     {
-        fprintf(stderr, "Vertex color count does not match vertex count, vertex colors will be ignored.\n");
+        fprintf(stderr, "\nVertex color count does not match vertex count, vertex colors will be ignored.\n");
         c_count = 0;
     }
     if(t_count != 0 && v_count != t_count)
     {
-        fprintf(stderr, "Vertex texture count does not match vertex count, vertex textures will be ignored.\n");
+        fprintf(stderr, "\nVertex texture count does not match vertex count, vertex textures will be ignored.\n");
         t_count = 0;
     }
     //Set instance var sizes
@@ -372,7 +373,7 @@ exit_loop:;
     unsigned int bufferLen = lnLenMax + 2;
     char *buffer = new char[bufferLen];
 
-    printf("\rLoading Model: %s [Loading Elements]      ", path);
+    printf("\rLoading Model: %s [Loading Elements] ", path);
     //Read file by line, again.
     while ((c = fgetc(file)) != EOF) {
         //If the first char == 'v'
@@ -606,24 +607,22 @@ exit_loop:;
 exit_loop2:;
     //Cleanup buffer
     delete buffer;
-    printf("\rLoading Model: %s [Calculating VN Pair Count]       ", path);
-    std::unordered_map<
-        std::pair<unsigned int, unsigned int>, 
+    printf("\rLoading Model: %s [Calculating Pairs]", path);
+    auto vn_pairs = new std::unordered_map <
+        VN_PAIR,
         unsigned int,
-        std::function<unsigned long(std::pair<unsigned int, unsigned int>)>,
-        std::function<bool(std::pair<unsigned int, unsigned int>, std::pair<unsigned int, unsigned int>) >
-    > vn_pairs(f_count*FACES_SIZE, hashing_func, key_equal_fn);
-    vn_pairs.reserve(f_count*FACES_SIZE);//f_count is max number of pairs, should reduce resizing
+        std::function<unsigned long(VN_PAIR)>,
+        std::function < bool(VN_PAIR, VN_PAIR) >
+    >(f_count*FACES_SIZE, hashing_func, key_equal_fn);
     //Calculate the number of unique vertex-normal pairs
     for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
     {
         if (face_hasNormals)
-            vn_pairs[std::pair<unsigned int, unsigned int>(faces[i], t_norm_pos[i])] = UINT_MAX;
+            (*vn_pairs)[std::pair<unsigned int, unsigned int>(faces[i], t_norm_pos[i])] = UINT_MAX;
         else
-            vn_pairs[std::pair<unsigned int, unsigned int>(faces[i], 0)] = UINT_MAX;
-
+            (*vn_pairs)[std::pair<unsigned int, unsigned int>(faces[i], 0)] = UINT_MAX;
     }
-    vn_count = vn_pairs.size();
+    vn_count = vn_pairs->size();
     //Allocate instance vars
     vertices = (float*)malloc(vn_count*v_size*sizeof(float));
     if (face_hasNormals)//1 normal per vertex
@@ -641,7 +640,7 @@ exit_loop2:;
         int i_vert = faces[i];
         glm::vec3 t_normalised_norm;
         //If vn pair hasn't been assigned an id yet
-        if (vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] == UINT_MAX)
+        if ((*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] == UINT_MAX)
         {
             //Set all n components of vertices and attributes to that id
             for (unsigned int k = 0; k < v_size; k++)
@@ -659,12 +658,16 @@ exit_loop2:;
                 for (unsigned int k = 0; k < t_size; k++)
                     textures[(vn_assigned*t_size) + k] = t_textures[(t_tex_pos[i] * t_size) + k];
             //Assign it new lowest id
-            vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] = vn_assigned++;
+            (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] = vn_assigned++;
         }
         //Update index from face
-        faces[i] = vn_pairs[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
+        faces[i] = (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
     }
-    //Free temps
+    ////Free temps
+    printf("\rLwaiting              ", path);
+    std::thread([vn_pairs](){
+        delete vn_pairs;
+    }).detach();
     free(t_vertices);
     free(t_colors);
     free(t_normals);

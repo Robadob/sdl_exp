@@ -5,6 +5,8 @@
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation, new Shaders("../shaders/flat.v", "../shaders/flat.f"))
     , icosphere("../models/icosphere.obj", 10.0f, shaders)
+    , colorShader(new Shaders("../shaders/color.v", "../shaders/color.f"))
+    , colorModel("C:/Users/Robadob/Desktop/rothwell-wy-1.obj", 1.0f, colorShader)
     , tick(0.0f)
 {
     this->visualisation.setSkybox(true);
@@ -28,6 +30,7 @@ Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
+    colorModel.render();
     icosphere.render();
 }
 /*
@@ -35,6 +38,7 @@ Manual destructor because the Scene MUST be destroyed prior to the Visualisation
 */
 EntityScene::~EntityScene()
 {
+    delete colorShader;
     delete shaders;
 }
 /*
@@ -44,6 +48,7 @@ Called when the user requests a reload
 void EntityScene::reload()
 {
     shaders->reload();
+    colorShader->reload();
     this->icosphere.setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
 }
 

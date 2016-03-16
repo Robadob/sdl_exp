@@ -132,7 +132,7 @@ Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
 unsigned long hashing_func(std::pair<unsigned int, unsigned int> key)
 {
-    return (!(key.first) << (sizeof(unsigned long) - sizeof(unsigned int))) ^ key.second;
+    return (~key.first << (sizeof(unsigned long) - sizeof(unsigned int))) ^ key.second;
 }
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs

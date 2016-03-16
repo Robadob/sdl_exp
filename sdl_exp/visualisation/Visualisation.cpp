@@ -80,7 +80,7 @@ bool Visualisation::init(){
         SDL_WINDOWPOS_UNDEFINED,
         this->windowWidth,
         this->windowHeight,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
+        SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
         );
 
     if (this->window == NULL){
@@ -103,7 +103,7 @@ bool Visualisation::init(){
         
         // Setup gl stuff
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
+        glDisable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         glShadeModel(GL_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -285,6 +285,7 @@ void Visualisation::run(){
         printf("Scene not yet set.");
     }
     else {
+        SDL_ShowWindow(this->window);
         SDL_StartTextInput();
         this->continueRender = true;
         while (this->continueRender){

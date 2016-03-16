@@ -132,14 +132,15 @@ void Entity::deleteVertexBufferObject(GLuint *vbo){
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
-unsigned long hashing_func(std::pair<unsigned int, unsigned int> key)
+unsigned long hashing_func(VN_PAIR key)
 {
-    return (key.first << (sizeof(unsigned long) - sizeof(unsigned int))) & key.second;
+    static int offset = (sizeof(long) - sizeof(int)) * 8;
+    return (key.first << offset) & key.second;
 }
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
-bool key_equal_fn(std::pair<unsigned int, unsigned int> t1, std::pair<unsigned int, unsigned int> t2)
+bool key_equal_fn(VN_PAIR t1, VN_PAIR t2)
 {
     return t1.first == t2.first&&t1.second == t2.second;
 }

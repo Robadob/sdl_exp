@@ -145,7 +145,16 @@ bool key_equal_fn(VN_PAIR t1, VN_PAIR t2)
     return t1.first == t2.first&&t1.second == t2.second;
 }
 /*
-Loads and scales the specified model into this class's primitive storage
+Loads and scales the specified model into this classes primitive storage
+
+This method support most mutations of .obj files;
+Vertices: 3-4 components
+Colors: 3-4 components
+Normals: 3 components
+Textures: 2-3 components (the optional 3rd component is wrapped in [], and is expected to be 1.0)
+Faces: 3 components per, each indexing a vertex, and optionally a normal, or a normal and a texture.
+The attributes that support variable length chars are designed according to the wikipedia spec
+
 @param path The path to the .obj model to be loaded
 @param modelScale The scale in world space which the model's longest distance (along the x, y or z axis) should be scaled to
 @note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals

@@ -270,13 +270,13 @@ void Shaders::useProgram(){
 
     //Set the vertex color attribute
     if (this->vertexShaderVersion <= 140 && this->color.bufferObject > 0)
-    {//If old shaders where gl_Vertex is available
+    {//If old shaders where gl_Color is available
         glEnableClientState(GL_COLOR_ARRAY);
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
         glColorPointer(this->color.size, GL_FLOAT, this->color.stride, ((char *)NULL + this->color.offset));
     }
-    if (this->color.location >= 0 && this->color.bufferObject >= 0)
-    {//If vertex attribute location and vbo are known
+    if (this->color.location >= 0 && this->color.bufferObject > 0)
+    {//If color attribute location and vbo are known
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
         glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
         GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));

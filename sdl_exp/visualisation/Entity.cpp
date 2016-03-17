@@ -893,3 +893,75 @@ void Entity::freeMaterial(){
         this->material = 0;
     }
 }
+struct ExportMask
+{
+    char FILE_TYPE_FLAG;
+    char VERSION_FLAG;
+    char SIZE_OF_FLOAT;
+    char SIZE_OF_UINT;
+    int  FILE_HAS_VERTICES_3 : 1;
+    int  FILE_HAS_VERTICES_4 : 1;
+    int  FILE_HAS_NORMALS_3 : 1;//Currently normals can only be len 3, reserved regardless
+    int  FILE_HAS_COLORS_3 : 1;
+    int  FILE_HAS_COLORS_4 : 1;
+    int  FILE_HAS_TEXTURES_2 : 1;
+    int  FILE_HAS_TEXTURES_3 : 1;
+    int  RESERVED_SPACE : 32;
+};
+/*
+Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
+@param file Path to the desired output file
+*/
+void Entity::exportModel(char *path)
+{
+    static char FILE_TYPE_FLAG = 0x12;
+    static char FILE_TYPE_VERSION = 1;
+    FILE * file;
+    file = fopen(path, "wb");
+    if (!file)
+    {
+        fprintf(stderr, "Could not open file for writing: %s\n", path);
+    }
+    //Generate export mask
+    ExportMask mask
+    {
+        FILE_TYPE_FLAG,
+        FILE_TYPE_VERSION,
+        sizeof(float),
+        sizeof(unsigned int),
+        v_count&&v_size == 3,
+        v_count&&v_size == 4,
+        n_count&&NORMALS_SIZE == 3,
+        c_count&&c_size == 3,
+        c_count&&c_size == 4,
+        t_count&&t_size == 2,
+        t_count&&t_size == 3,
+        0
+    };
+    //Write out the export mask
+    fwrite(&mask, sizeof(ExportMask), 1, file);
+    //Write out each buffer in order
+    if (v_count && (v_size == 3 || v_size == 4))
+    {
+        fwrite(&v_count, sizeof(unsigned int), 1, file);
+        fwrite(&vertices, sizeof(float), v_count*v_size, file);
+    }
+    if (n_count && (NORMALS_SIZE == 3))
+    {
+        fwrite(&n_count, sizeof(unsigned int), 1, file);
+        fwrite(&normals, sizeof(float), n_count*NORMALS_SIZE, file);
+    }
+    if (c_count && (c_size == 3 || c_size == 4))
+    {
+        fwrite(&c_count, sizeof(unsigned int), 1, file);
+        fwrite(&colors, sizeof(float), c_count*c_size, file);
+    }
+    if (t_count && (t_size == 2 || t_size == 3))
+    {
+        fwrite(&t_count, sizeof(unsigned int), 1, file);
+        fwrite(&textures, sizeof(float), t_count*t_size, file);
+    }
+    //Finish by writing the file type flag again
+    fwrite(&FILE_TYPE_FLAG, sizeof(char), 1, file);
+    fclose(file);
+}

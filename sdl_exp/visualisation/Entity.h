@@ -23,7 +23,8 @@ public:
     void setRotation(glm::vec4 rotation);
     glm::vec3 getLocation() const;
     glm::vec4 getRotation() const;
-    inline void clearMaterial();
+    inline void clearMaterial(); 
+    void exportModel(char *path);
 protected:
     Shaders *shaders;
     //World scale of the longest side (in the axis x, y or z)

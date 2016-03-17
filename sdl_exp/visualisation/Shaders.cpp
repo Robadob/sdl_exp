@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/transform.hpp>
+
+#include "Entity.h"
 
 /*
 Initial value 0, this is just used to auto increment vector attribute array
@@ -209,8 +212,9 @@ bool Shaders::reload(bool silent){
 }
 /*
 Call this prior to rendering to enable the program and automatically bind known uniforms and attributes
+@param e If an entity is passed, their location and rotation values will be applied to the ModelView matrix before it is loaded
 */
-void Shaders::useProgram(){
+void Shaders::useProgram(Entity *e){
     GL_CALL(glUseProgram(this->programId));
 
     //glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
@@ -231,10 +235,32 @@ void Shaders::useProgram(){
     {//If old shaders where gl_ModelViewMatrix is available
         glMatrixMode(GL_MODELVIEW);
         GL_CALL(glLoadMatrixf(glm::value_ptr(*this->modelview.matrixPtr)));
+        if (e)
+        {
+            glm::vec4 rot = e->getRotation();
+            glm::vec3 tran = e->getLocation();
+            //Do rotation
+            GL_CALL(glRotatef(rot.w, rot.x, rot.y, rot.z));
+            //Do translation
+            GL_CALL(glTranslatef(tran.x, tran.y, tran.z));
+        }
     }
     if (this->modelview.location >= 0 && this->modelview.matrixPtr > 0)
     {//If modeview matrix location and camera ptr are known
-        this->setUniformMatrix4fv(this->modelview.location, glm::value_ptr(*this->modelview.matrixPtr));//camera
+        if (e)
+        {
+            glm::vec4 rot = e->getRotation();
+            glm::vec3 tran = e->getLocation();
+            //Do rotation & translatio;
+            this->setUniformMatrix4fv(
+                this->modelview.location,
+                glm::value_ptr(glm::translate(glm::rotate(*this->modelview.matrixPtr, rot.w, glm::vec3(rot.x, rot.y, rot.z)), tran))
+                );
+        }
+        else
+        {
+            this->setUniformMatrix4fv(this->modelview.location, glm::value_ptr(*this->modelview.matrixPtr));
+        }
     }
 
     //Don't think we need to use

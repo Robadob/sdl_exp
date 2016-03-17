@@ -66,16 +66,12 @@ Calls the necessary code to render a single instance of the entity
 */
 void Entity::render(){
     if (shaders)
-        shaders->useProgram();
+        shaders->useProgram(this);
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
         //Translate the model according to it's location
-        glMatrixMode(GL_MODELVIEW);
-        GL_CALL(glRotatef(rotation.w, rotation.x, rotation.y, rotation.z));
-        GL_CALL(glTranslatef(location.x, location.y, location.z));
-        //Set the color and material
         if (this->material)
             this->material->useMaterial();
         GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
@@ -93,15 +89,11 @@ The index of the instance being rendered can be identified within the vertex sha
 */
 void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocation){
     if (shaders)
-        shaders->useProgram();
+        shaders->useProgram(this);
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
-        //Translate the model(s) according to it's(their) location
-        glMatrixMode(GL_MODELVIEW);
-        GL_CALL(glRotatef(rotation.w, rotation.x, rotation.y, rotation.z));
-        GL_CALL(glTranslatef(location.x, location.y, location.z));
         //Set the color and material
         if (this->material)
             this->material->useMaterial();
@@ -843,6 +835,22 @@ Set the rotation of the model in world space
 */
 void Entity::setRotation(glm::vec4 rotation){
     this->rotation = rotation;
+}
+/*
+Returns the location of the entity
+@return a vec3 containing the x, y, z coords the model should be translated to
+*/
+glm::vec3 Entity::getLocation() const
+{
+    return this->location;
+}
+/*
+Returns the rotation of the entity
+@return a vec4 containing the x, y, z coords of the axis the model should be rotated w degrees around
+*/
+glm::vec4 Entity::getRotation() const
+{
+    return this->rotation;
 }
 /*
 Frees the storage for the model's primitives

@@ -9,6 +9,8 @@
 #include <regex>
 #include <vector>
 
+class Entity;
+
 class Shaders
 {
     struct UniformMatrixDetail
@@ -51,7 +53,7 @@ public:
 
     void createShaders();
     bool reload(bool silent = false);
-    void useProgram();
+    void useProgram(Entity *e = 0);
     void clearProgram();
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);

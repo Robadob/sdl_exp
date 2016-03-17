@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <functional>
 #include <thread>
+#include <glm/gtx/component_wise.hpp>
 
 #define NORMALS_SIZE 3
 #define DEFAULT_TEXTURE_SIZE 2
@@ -384,6 +385,8 @@ exit_loop:;
     char *buffer = new char[bufferLen];
 
     printf("\rLoading Model: %s [Loading Elements] ", path);
+    glm::vec3 modelMin(FLT_MAX);
+    glm::vec3 modelMax(-FLT_MAX);
     //Read file by line, again.
     while ((c = fgetc(file)) != EOF) {
         //If the first char == 'v'
@@ -419,6 +422,11 @@ exit_loop:;
                     buffer[componentLength] = '\0';
                     //Load it into the vert array
                     t_vertices[(vertices_read * v_size) + componentsRead] = (float)atof(buffer);
+                    //Check for model min/max
+                    if (t_vertices[(vertices_read * v_size) + componentsRead] > modelMax[componentsRead])
+                        modelMax[componentsRead] = t_vertices[(vertices_read * v_size) + componentsRead];
+                    if (t_vertices[(vertices_read * v_size) + componentsRead] < modelMin[componentsRead])
+                        modelMin[componentsRead] = t_vertices[(vertices_read * v_size) + componentsRead];
                     componentsRead++;
                 } while (componentsRead<v_size);
                 vertices_read++;
@@ -641,7 +649,10 @@ exit_loop2:;
         colors = (float*)malloc(vn_count*c_size*sizeof(float));
     if (face_hasTextures)//1 texture per vertex
         textures = (float*)malloc(vn_count*t_size*sizeof(float));
-
+    //Calculate scale factor
+    float scaleFactor = 1.0;
+    if (modelScale>0)
+        scaleFactor = modelScale/glm::compMax(modelMax - modelMin);
     printf("\rLoading Model: %s [Assigning Elements]", path);
     unsigned int vn_assigned = 0;
     for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
@@ -654,7 +665,9 @@ exit_loop2:;
         {
             //Set all n components of vertices and attributes to that id
             for (unsigned int k = 0; k < v_size; k++)
-                vertices[(vn_assigned*v_size) + k] = t_vertices[(i_vert*v_size) + k];
+            {
+                vertices[(vn_assigned*v_size) + k] = t_vertices[(i_vert*v_size) + k] * scaleFactor;
+            }
             if (face_hasNormals)
             {//Normalise normals
                 t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * NORMALS_SIZE)], t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 1, t_normals[(t_norm_pos[i] * NORMALS_SIZE)]+2));

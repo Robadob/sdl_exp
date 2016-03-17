@@ -1,9 +1,6 @@
 #define  _CRT_SECURE_NO_WARNINGS
 #include "Entity.h"
 
-#include <fstream>
-#include <sstream>
-#include <string>
 #include <unordered_map>
 #include <functional>
 #include <thread>
@@ -13,6 +10,9 @@
 #define DEFAULT_TEXTURE_SIZE 2
 #define FACES_SIZE 3
 #define VN_PAIR std::pair<unsigned int, unsigned int>
+
+const char *Entity::OBJ_TYPE = ".obj";
+const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
 
 /*
 Constructs an entity from the provided .obj model
@@ -25,13 +25,14 @@ Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
     , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0), vn_count(0)
     , v_size(3), c_size(3), t_size(2)
     , SCALE(modelScale)
+    , modelPath(modelPath)
     , material(0)
-    , color(1,0,0)
+    , color(1, 0, 0)
     , location(0.0f)
     , rotation(0.0f)
     , shaders(shaders)
 {
-    loadModelFromFile(modelPath, modelScale);
+    loadModelFromFile();
     //If shaders have been provided, set them up
     if (vertices&&this->shaders)
     {
@@ -71,11 +72,11 @@ void Entity::render(){
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
-        //Translate the model according to it's location
-        if (this->material)
-            this->material->useMaterial();
-        GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-        GL_CALL(glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0));
+    //Translate the model according to it's location
+    if (this->material)
+        this->material->useMaterial();
+    GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
+    GL_CALL(glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0));
     glPopMatrix();
     if (shaders)
         shaders->clearProgram();
@@ -94,11 +95,11 @@ void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocati
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
 
     glPushMatrix();
-        //Set the color and material
-        if (this->material)
-            this->material->useMaterial();
-        GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-        GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
+    //Set the color and material
+    if (this->material)
+        this->material->useMaterial();
+    GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
+    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
     glPopMatrix();
     if (shaders)
         shaders->clearProgram();
@@ -147,14 +148,33 @@ Normals: 3 components
 Textures: 2-3 components (the optional 3rd component is wrapped in [], and is expected to be 1.0)
 Faces: 3 components per, each indexing a vertex, and optionally a normal, or a normal and a texture.
 The attributes that support variable length chars are designed according to the wikipedia spec
-
-@param path The path to the .obj model to be loaded
-@param modelScale The scale in world space which the model's longest distance (along the x, y or z axis) should be scaled to
-@note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals
 */
-void Entity::loadModelFromFile(const char *path, float modelScale)
+void Entity::loadModelFromFile()
 {
-    printf("\r Loading Model: %s", path);
+    FILE* file;
+    if (endsWith(modelPath, OBJ_TYPE))
+    {
+        std::string exportPath(modelPath);
+        std::string objPath(OBJ_TYPE);
+        exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
+        if (endsWith(modelPath, EXPORT_TYPE))
+        {
+            importModel(modelPath);
+            return;
+        }
+        else if ((file = fopen(exportPath.c_str(), "r")))
+        {
+            fclose(file);
+            importModel(exportPath.c_str());
+            return;
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);
+        return;
+    }
+    printf("\r Loading Model: %s", modelPath);
     //vn -3.631894 -0.637774 1.635071
     //vn norm.x norm.y norm.z
     //v - 1.878153 - 3.189111 0.041601 0.043137 0.039216 0.027451
@@ -176,10 +196,10 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     //char materialFile[100] = ""; // @todo - this could be improved;
     //char materialName[100] = ""; // @todo - this could be improved;
     //Open file
-    FILE* file = fopen(path, "r");
+    file = fopen(modelPath, "r");
     //std::ifstream file(path);
     if (!file){
-        printf("\rLoading Model: Could not open model '%s'!\n", path);
+        printf("\rLoading Model: Could not open model '%s'!\n", modelPath);
         return;
     }
 
@@ -199,7 +219,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     bool face_hasNormals = false;
     bool face_hasTextures = false;
 
-    printf("\rLoading Model: %s [Counting Elements]", path);
+    printf("\rLoading Model: %s [Counting Elements]", modelPath);
     ////Count vertices/faces, attributes
     char c;
     int dotCtr;
@@ -207,7 +227,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
     //For each line of the file (the end of the loop finds the end of the line before continuing)
     while ((c = fgetc(file)) != EOF) {
         lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
-        lnLen=1;
+        lnLen = 1;
         //If the first char == 'v'
         switch (c)
         {
@@ -275,7 +295,7 @@ void Entity::loadModelFromFile(const char *path, float modelScale)
             //If the first char is 'f', increment face count
         case 'f':
             faces_read++;
-            dotCtr=0;
+            dotCtr = 0;
             //Workout whether the format is 'v' 'v//n' or 'v/t/n'
             while ((c = fgetc(file)) != '\n')
             {
@@ -311,7 +331,7 @@ exit_loop:;
     lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
 
     if (parameters_read > 0){
-        fprintf(stderr, "\nModel '%s' contains parameter space vertices, these are unsupported at this time.", path);
+        fprintf(stderr, "\nModel '%s' contains parameter space vertices, these are unsupported at this time.", modelPath);
         return;
     }
 
@@ -332,7 +352,7 @@ exit_loop:;
         fprintf(stderr, "\nVertex color count does not match vertex count, vertex colors will be ignored.\n");
         c_count = 0;
     }
-    if(t_count != 0 && v_count != t_count)
+    if (t_count != 0 && v_count != t_count)
     {
         fprintf(stderr, "\nVertex texture count does not match vertex count, vertex textures will be ignored.\n");
         t_count = 0;
@@ -347,23 +367,22 @@ exit_loop:;
     clearerr(file);
     fseek(file, 0, SEEK_SET);
     //Allocate temporary buffers for components that may require aligning with relevant vertices
-    //TODO: Create T_Normal, T_Color, T_Texture, T_norm_pos, T_tex_pos
     float *t_vertices = (float *)malloc(vertices_read * vertices_size * sizeof(float));
     float *t_colors = (float *)malloc(colors_read * colors_size * sizeof(float));
     float *t_normals = (float *)malloc(normals_read * NORMALS_SIZE * sizeof(float));
     float *t_textures = (float *)malloc(textures_read*textures_size*sizeof(float));
     //float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
     //3 parts to each face,store the relevant norm and tex indexes
-    unsigned int *t_norm_pos=0;
+    unsigned int *t_norm_pos = 0;
     if (face_hasNormals)
         t_norm_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
     else
         n_count = 0;
-    unsigned int *t_tex_pos=0;
+    unsigned int *t_tex_pos = 0;
     if (face_hasTextures)
         t_tex_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
     else
-        v_count;
+        t_count = 0;
     //Reset local counters
     vertices_read = 0;
     colors_read = 0;
@@ -376,7 +395,7 @@ exit_loop:;
     unsigned int bufferLen = lnLenMax + 2;
     char *buffer = new char[bufferLen];
 
-    printf("\rLoading Model: %s [Loading Elements] ", path);
+    printf("\rLoading Model: %s [Loading Elements] ", modelPath);
     glm::vec3 modelMin(FLT_MAX);
     glm::vec3 modelMax(-FLT_MAX);
     //Read file by line, again.
@@ -441,7 +460,7 @@ exit_loop:;
                             goto exit_loop2;
                         buffer[componentLength] = c;
                         componentLength++;
-                    } while (((c = fgetc(file)) >= '0' && c <= '9' )|| c == '.');
+                    } while (((c = fgetc(file)) >= '0' && c <= '9') || c == '.');
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the color array
@@ -579,28 +598,28 @@ exit_loop:;
                         goto exit_loop2;
                     buffer[componentLength] = c;
                     componentLength++;
-                } while ((c = fgetc(file)) >='0' && c<='9');
+                } while ((c = fgetc(file)) >= '0' && c <= '9');
                 //End component string
                 buffer[componentLength] = '\0';
                 //Decide which array to load it into (faces, tex pos, norm pos)
-                switch (componentsRead%(1+(int)face_hasNormals+(int)face_hasTextures))
+                switch (componentsRead % (1 + (int)face_hasNormals + (int)face_hasTextures))
                 {
-                //This is a vertex index
+                    //This is a vertex index
                 case 0: //Decrease value by 1, obj is 1-index, our arrays are 0-index
-                    faces[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0)-1;
+                    faces[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
-                //This is a normal index
+                    //This is a normal index
                 case 1:
-                    t_norm_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0)-1;
+                    t_norm_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
-                //This is a texture index
+                    //This is a texture index
                 case 2:
-                    t_tex_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0)-1;
+                    t_tex_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                 }
                 componentsRead++;
 
-               
+
             } while (componentsRead<(unsigned int)((1 + (int)face_hasNormals + (int)face_hasTextures))*FACES_SIZE);
             faces_read++;
             if (c == '\n')
@@ -617,7 +636,7 @@ exit_loop:;
 exit_loop2:;
     //Cleanup buffer
     delete buffer;
-    printf("\rLoading Model: %s [Calculating Pairs]", path);
+    printf("\rLoading Model: %s [Calculating Pairs]", modelPath);
     auto vn_pairs = new std::unordered_map <
         VN_PAIR,
         unsigned int,
@@ -632,20 +651,32 @@ exit_loop2:;
         else
             (*vn_pairs)[std::pair<unsigned int, unsigned int>(faces[i], 0)] = UINT_MAX;
     }
-    vn_count = vn_pairs->size();
+    vn_count = (unsigned int)vn_pairs->size();
+
+
     //Allocate instance vars
     vertices = (float*)malloc(vn_count*v_size*sizeof(float));
+    v_count = vn_count;
     if (face_hasNormals)//1 normal per vertex
+    {
         normals = (float*)malloc(vn_count*NORMALS_SIZE*sizeof(float));
+        n_count = vn_count;
+    }
     if (c_count)//1 color per vertex
+    {
         colors = (float*)malloc(vn_count*c_size*sizeof(float));
+        c_count = vn_count;
+    }
     if (face_hasTextures)//1 texture per vertex
+    {
         textures = (float*)malloc(vn_count*t_size*sizeof(float));
+        t_count = vn_count;
+    }
     //Calculate scale factor
     float scaleFactor = 1.0;
-    if (modelScale>0)
-        scaleFactor = modelScale/glm::compMax(modelMax - modelMin);
-    printf("\rLoading Model: %s [Assigning Elements]", path);
+    if (SCALE>0)
+        scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    printf("\rLoading Model: %s [Assigning Elements]", modelPath);
     unsigned int vn_assigned = 0;
     for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
     {
@@ -662,7 +693,7 @@ exit_loop2:;
             }
             if (face_hasNormals)
             {//Normalise normals
-                t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * NORMALS_SIZE)], t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 1, t_normals[(t_norm_pos[i] * NORMALS_SIZE)]+2));
+                t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * NORMALS_SIZE)], t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 1, t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 2));
                 for (unsigned int k = 0; k < NORMALS_SIZE; k++)
                     normals[(vn_assigned*NORMALS_SIZE) + k] = t_normalised_norm[k];
             }
@@ -679,7 +710,7 @@ exit_loop2:;
         faces[i] = (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
     }
     ////Free temps
-    printf("\rLwaiting              ", path);
+    printf("\rLwaiting              ");
     std::thread([vn_pairs](){
         delete vn_pairs;
     }).detach();
@@ -690,16 +721,8 @@ exit_loop2:;
     free(t_norm_pos);
     free(t_tex_pos);
     //Load VBOs
-    printf("\rLoading Model: %s [Generating VBOs!]              ", path);
-
-    createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, vn_count*v_size*sizeof(float), (void*)vertices);
-    if (face_hasNormals)
-        createVertexBufferObject(&normals_vbo, GL_ARRAY_BUFFER, vn_count*NORMALS_SIZE*sizeof(float), (void*)normals);
-    if (c_count)
-        createVertexBufferObject(&colors_vbo, GL_ARRAY_BUFFER, vn_count*c_size*sizeof(float), (void*)colors);
-    if (face_hasTextures)
-        createVertexBufferObject(&textures_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)textures);
-    createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
+    printf("\rLoading Model: %s [Generating VBOs!]              ", modelPath);
+    generateVertexBufferObjects();
     //Can the host copies be freed after a bind?
     //free(vertices);
     //if (normals)
@@ -710,7 +733,7 @@ exit_loop2:;
     //    free(textures);
     //free(faces);
     fclose(file);
-    printf("\rLoading Model: %s [Complete!]                 \n", path);
+    printf("\rLoading Model: %s [Complete!]                 \n", modelPath);
 }
 /*
 Loads a single material from a .mtl file
@@ -722,7 +745,7 @@ Loads a single material from a .mtl file
 void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName){
     // Figure out the actual filepath, obj path dir but with matrial filename on the end.
     std::string objectPath = objPath;
-    unsigned found = objectPath.find_last_of('/');
+    unsigned int found = (unsigned int)objectPath.find_last_of('/');
     std::string materialPath = objectPath.substr(0, found).append("/").append(materialFilename);
 
     //Open file
@@ -814,7 +837,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 
         }
     }
-    
+
 }
 /*
 Set the color of the model
@@ -867,17 +890,6 @@ void Entity::freeModel(){
     free(faces);
 }
 /*
-Scales the values within vertices according to the provided scale
-@param modelScale Scaling factor
-*/
-void Entity::scaleModel(float modelScale){
-    unsigned int v_total = v_count*v_size;
-    for (unsigned int i = 0; i<v_total; i++)
-    {
-        vertices[i]*=modelScale;
-    }
-}
-/*
 Public alias to freeMaterial() for backwards compatibility purposes
 @see freeMaterial()
 */
@@ -893,35 +905,53 @@ void Entity::freeMaterial(){
         this->material = 0;
     }
 }
-struct ExportMask
-{
-    char FILE_TYPE_FLAG;
-    char VERSION_FLAG;
-    char SIZE_OF_FLOAT;
-    char SIZE_OF_UINT;
-    int  FILE_HAS_VERTICES_3 : 1;
-    int  FILE_HAS_VERTICES_4 : 1;
-    int  FILE_HAS_NORMALS_3 : 1;//Currently normals can only be len 3, reserved regardless
-    int  FILE_HAS_COLORS_3 : 1;
-    int  FILE_HAS_COLORS_4 : 1;
-    int  FILE_HAS_TEXTURES_2 : 1;
-    int  FILE_HAS_TEXTURES_3 : 1;
-    int  RESERVED_SPACE : 32;
-};
 /*
-Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
-@param file Path to the desired output file
+Exports the current model to a faster loading binary format which represents a direct copy of the buffers required by the model
+Models are stored by appending .sdl_export to their existing filename
+Models are stored in the following format;
+#Header
+[1 byte]                File type flag
+[1 byte]                Exporter version
+[1 byte]                float length (bytes)
+[1 byte]                uint length (bytes)
+[1 float]               Model scale (length of longest axis)
+[1 uint]                vn_count
+[1 bit]                 File contains (float) vertices of size 3
+[1 bit]                 File contains (float) vertices of size 4
+[1 bit]                 File contains (float) normals of size 3
+[1 bit]                 File contains (float) colors of size 3
+[1 bit]                 File contains (float) colors of size 4
+[1 bit]                 File contains (float) textures of size 2
+[1 bit]                 File contains (float) textures of size 3
+[1 bit]                 File contains (uint) faces of size 3
+[4 byte]                Reserved space for future expansion
+##Data## (Per item marked true from the bit fields in the header)
+[1 uint]                Number of items
+[n x size float/uint]   Item data
+##Footer##
+[1 byte]    File type flag
 */
-void Entity::exportModel(char *path)
+void Entity::exportModel() const
 {
-    static char FILE_TYPE_FLAG = 0x12;
-    static char FILE_TYPE_VERSION = 1;
+    std::string exportPath(modelPath);
+    std::string objPath(OBJ_TYPE);
+    if (!endsWith(modelPath, EXPORT_TYPE))
+    {
+        exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
+    }
     FILE * file;
-    file = fopen(path, "wb");
+    if ((file = fopen(exportPath.c_str(), "r")))
+    {
+        fprintf(stderr, "Cannot export model, file already exists.\n");
+        fclose(file);
+        return;
+    }
+    file = fopen(exportPath.c_str(), "wb");
     if (!file)
     {
-        fprintf(stderr, "Could not open file for writing: %s\n", path);
+        fprintf(stderr, "Could not open file for writing: %s\n", exportPath.c_str());
     }
+    printf("Exporting model: %s\n", exportPath.c_str());
     //Generate export mask
     ExportMask mask
     {
@@ -929,6 +959,8 @@ void Entity::exportModel(char *path)
         FILE_TYPE_VERSION,
         sizeof(float),
         sizeof(unsigned int),
+        SCALE,
+        vn_count,
         v_count&&v_size == 3,
         v_count&&v_size == 4,
         n_count&&NORMALS_SIZE == 3,
@@ -936,6 +968,7 @@ void Entity::exportModel(char *path)
         c_count&&c_size == 4,
         t_count&&t_size == 2,
         t_count&&t_size == 3,
+        f_count&&FACES_SIZE == 3,
         0
     };
     //Write out the export mask
@@ -944,24 +977,186 @@ void Entity::exportModel(char *path)
     if (v_count && (v_size == 3 || v_size == 4))
     {
         fwrite(&v_count, sizeof(unsigned int), 1, file);
-        fwrite(&vertices, sizeof(float), v_count*v_size, file);
+        fwrite(vertices, sizeof(float), v_count*v_size, file);
     }
     if (n_count && (NORMALS_SIZE == 3))
     {
         fwrite(&n_count, sizeof(unsigned int), 1, file);
-        fwrite(&normals, sizeof(float), n_count*NORMALS_SIZE, file);
+        fwrite(normals, sizeof(float), n_count*NORMALS_SIZE, file);
     }
     if (c_count && (c_size == 3 || c_size == 4))
     {
         fwrite(&c_count, sizeof(unsigned int), 1, file);
-        fwrite(&colors, sizeof(float), c_count*c_size, file);
+        fwrite(colors, sizeof(float), c_count*c_size, file);
     }
     if (t_count && (t_size == 2 || t_size == 3))
     {
         fwrite(&t_count, sizeof(unsigned int), 1, file);
-        fwrite(&textures, sizeof(float), t_count*t_size, file);
+        fwrite(textures, sizeof(float), t_count*t_size, file);
+    }
+    if (f_count && (FACES_SIZE == 3))
+    {
+        fwrite(&f_count, sizeof(unsigned int), 1, file);
+        fwrite(faces, sizeof(unsigned int), f_count*FACES_SIZE, file);
     }
     //Finish by writing the file type flag again
     fwrite(&FILE_TYPE_FLAG, sizeof(char), 1, file);
     fclose(file);
+}
+/*
+Util method used to check whether the candidate string ends with the suffix
+@param candidate The string we will search for the suffix
+@param suffix The substring to check whether
+*/
+bool Entity::endsWith(const char *candidate, const char *suffix)
+{
+    std::string t_candidate(candidate);
+    std::string t_suffix(suffix);
+    std::transform(t_candidate.begin(), t_candidate.end(), t_candidate.begin(), ::tolower);
+    std::transform(t_suffix.begin(), t_suffix.end(), t_suffix.begin(), ::tolower);
+    return (t_suffix == t_candidate.substr(t_candidate.length() - t_suffix.length(), t_suffix.length()));
+}
+/*
+Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
+@param file Path to the desired output file
+*/
+void Entity::importModel(const char *path)
+{
+    //Generate import path
+    std::string importPath(path);
+    std::string objPath(OBJ_TYPE);
+    if (endsWith(path, OBJ_TYPE))
+    {
+        importPath = importPath.substr(0, importPath.length() - objPath.length()).append(EXPORT_TYPE);
+    }
+    else if (!endsWith(path, EXPORT_TYPE))
+    {
+        fprintf(stderr, "Model File: %s, is not a support filetype (e.g. %s, %s)\n", path, OBJ_TYPE, EXPORT_TYPE);
+        return;
+    }
+    //Open file
+    FILE * file;
+    file = fopen(importPath.c_str(), "rb");
+    if (!file)
+    {
+        fprintf(stderr, "Could not open file for reading: %s. Aborting import\n", importPath.c_str());
+    }
+    printf("Importing Model: %s\n", importPath.c_str());
+    //Read in the export mask
+    ExportMask mask;
+    fread(&mask, sizeof(ExportMask), 1, file);
+    //Check file type flag exists
+    if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG)
+    {
+        fprintf(stderr, "FILE TYPE FLAG missing from file header: %s. Aborting import\n", importPath.c_str());
+        fclose(file);
+        return;
+    }
+    //Check version is supported
+    if (mask.VERSION_FLAG > FILE_TYPE_VERSION)
+    {
+        fprintf(stderr, "File %s is of newer version %i, this software supports a maximum version of %i. Aborting import\n", importPath.c_str(), (unsigned int)mask.VERSION_FLAG, (unsigned int)FILE_TYPE_VERSION);
+        fclose(file);
+        return;
+    }
+    //Check float/uint lengths aren't too short
+    if (sizeof(float) != mask.SIZE_OF_FLOAT)
+    {
+        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %i bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
+        fclose(file);
+        return;
+    }
+    if (sizeof(unsigned int) != mask.SIZE_OF_UINT)
+    {
+        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %i bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
+        fclose(file);
+        return;
+    }
+    vn_count = mask.VN_COUNT;
+    //Read in buffers
+    if (mask.FILE_HAS_VERTICES_3 || mask.FILE_HAS_VERTICES_4)
+    {
+        v_size = mask.FILE_HAS_VERTICES_3 ? 3 : 4;
+        fread(&v_count, sizeof(unsigned int), 1, file);
+        vertices = (float *)malloc(sizeof(float)*v_size*v_count);
+        if (v_size*v_count != fread(vertices, sizeof(float), v_size*v_count, file))
+        {
+            fprintf(stderr, "fread err: vertices\n");
+        };
+    }
+    if (mask.FILE_HAS_NORMALS_3)
+    {
+        fread(&n_count, sizeof(unsigned int), 1, file);
+        normals = (float *)malloc(sizeof(float)*NORMALS_SIZE*n_count);
+        if (NORMALS_SIZE*n_count != fread(normals, sizeof(float), NORMALS_SIZE*n_count, file))
+        {
+            fprintf(stderr, "fread err: normals\n");
+        };
+    }
+    if (mask.FILE_HAS_COLORS_3 || mask.FILE_HAS_COLORS_4)
+    {
+        c_size = mask.FILE_HAS_COLORS_3 ? 3 : 4;
+        fread(&c_count, sizeof(unsigned int), 1, file);
+        colors = (float *)malloc(sizeof(float)*c_size*c_count);
+        if (c_size*c_count != fread(colors, sizeof(float), c_size*c_count, file))
+        {
+            fprintf(stderr, "fread err: colors\n");
+        };
+    }
+    if (mask.FILE_HAS_TEXTURES_2 || mask.FILE_HAS_TEXTURES_3)
+    {
+        t_size = mask.FILE_HAS_TEXTURES_2 ? 2 : 3;
+        fread(&t_count, sizeof(unsigned int), 1, file);
+        textures = (float *)malloc(sizeof(float)*t_size*t_count);
+        if (t_size*t_count != fread(textures, sizeof(float), t_size*t_count, file))
+        {
+            fprintf(stderr, "fread err: textures\n");
+        };
+    }
+    if (mask.FILE_HAS_FACES_3)
+    {
+        fread(&f_count, sizeof(unsigned int), 1, file);
+        faces = (unsigned int *)malloc(sizeof(unsigned int)*FACES_SIZE*f_count);
+        if (FACES_SIZE*f_count != fread(faces, sizeof(unsigned int), FACES_SIZE*f_count, file))
+        {
+            fprintf(stderr, "fread err: faces\n");
+        };
+    }
+    //Check file footer contains flag (to confirm it was closed correctly
+    fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
+    if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG)
+    {
+        fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
+        return;
+    }
+    fclose(file);
+    //Check model scale
+    if (SCALE>0 && mask.SCALE <= 0)
+    {
+        fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE, SCALE);
+    }
+    //Scale the model
+    else if (SCALE>0 && mask.SCALE != SCALE)
+    {
+        float scaleFactor = SCALE / mask.SCALE;
+        for (unsigned int i = 0; i < v_count*v_size; i++)
+            vertices[i] *= scaleFactor;
+    }
+    //Allocate VBOs
+    generateVertexBufferObjects();
+    printf("Model import was successful: %s\n", importPath.c_str());
+}
+/*
+Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
+*/
+void Entity::generateVertexBufferObjects()
+{
+    createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, vn_count*v_size*sizeof(float), (void*)vertices);
+    if (n_count)
+        createVertexBufferObject(&normals_vbo, GL_ARRAY_BUFFER, vn_count*NORMALS_SIZE*sizeof(float), (void*)normals);
+    if (c_count)
+        createVertexBufferObject(&colors_vbo, GL_ARRAY_BUFFER, vn_count*c_size*sizeof(float), (void*)colors);
+    if (t_count)
+        createVertexBufferObject(&textures_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)textures);
+    createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
 }

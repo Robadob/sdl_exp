@@ -4,16 +4,20 @@
 
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation, new Shaders("../shaders/flat.v", "../shaders/flat.f"))
-    , icosphere("../models/icosphere.obj", 100.0f, shaders)
-    , colorShader(new Shaders("../shaders/flat.v", "../shaders/flat.f"))
-    , colorModel("C:/Users/rob/Desktop/rothwell-wy-1.obj", 1.0f, colorShader)
+    , icosphere("../models/icosphere_color.obj", 5.0f, shaders)
+    , colorShader(new Shaders("../shaders/flat.v", "../shaders/flat.f"))// ("../shaders/flat.v", "../shaders/flat.f"))
+    , colorModel("C:/Users/rob/Desktop/rothwell-wy-1.obj", 10.0f, colorShader)
     , tick(0.0f)
 {
+    this->colorShader->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
+    this->colorShader->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
     this->visualisation.setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
     this->visualisation.setRenderAxis(true); 
     srand((unsigned int)time(0));
     this->icosphere.setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+    this->colorModel.setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
+    this->colorModel.exportModel();
 }
 /*
 Called once per frame when Scene animation calls should be executed

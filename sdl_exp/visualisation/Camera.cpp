@@ -64,16 +64,10 @@ void Camera::turn(float yaw, float pitch){
     if (stabilise)
     {    
         //Right is perpendicular to look and (0,1,0)[Default up]
-        right = cross(this->pureUp, look);
+        right = cross(look, this->pureUp);
         //Stabilised up is perpendicular to right and look
         up = cross(right, look);
-        //Flip up and right if backwards
-        if ((up.y < 0 && this->pureUp.y > 0) || (up.y > 0 && this->pureUp.y < 0))
-        {
-            up = -up;
-            right = -right;
-        }
-        //If the look vector gets too close to a pole, exit early to stop infinite rotation bug
+        //Don't let look get too close to pure up, else we will spin
         if (abs(dot(look, this->pureUp)) > 0.98)
             return;
     }

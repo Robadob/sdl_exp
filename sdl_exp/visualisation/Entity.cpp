@@ -12,7 +12,7 @@
 #define VN_PAIR std::pair<unsigned int, unsigned int>
 
 const char *Entity::OBJ_TYPE = ".obj";
-const char *Entity::EXPORT_TYPE = ".obj.sdl_exp";
+const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
 
 /*
 Constructs an entity from the provided .obj model
@@ -1132,7 +1132,7 @@ void Entity::importModel(const char *path)
     else if (SCALE>0 && mask.SCALE != SCALE)
     {
         float scaleFactor = SCALE / mask.SCALE;
-        for (int i=0; i < v_count*v_size; i++)
+        for (unsigned int i=0; i < v_count*v_size; i++)
             vertices[i] *= scaleFactor;
     }
     //Allocate VBOs

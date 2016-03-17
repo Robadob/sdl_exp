@@ -1065,11 +1065,6 @@ void Entity::importModel(const char *path)
         fclose(file);
         return;
     }
-    //Check model scale
-    if (mask.SCALE!=SCALE)
-    {
-        fprintf(stderr, "File %s contains a model of scale: %.3f, you requested a model of scale %.3f.\nScaling imported models is not yet supported, model will remain default size.\n", importPath.c_str(), mask.SCALE, SCALE);
-    }
     vn_count = mask.VN_COUNT;
     //Read in buffers
     if (mask.FILE_HAS_VERTICES_3||mask.FILE_HAS_VERTICES_4)
@@ -1128,6 +1123,18 @@ void Entity::importModel(const char *path)
         return;
     }
     fclose(file);
+    //Check model scale
+    if (SCALE>0 && mask.SCALE <= 0)
+    {
+        fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE, SCALE);
+    }
+    //Scale the model
+    else if (SCALE>0 && mask.SCALE != SCALE)
+    {
+        float scaleFactor = SCALE / mask.SCALE;
+        for (int i=0; i < v_count*v_size; i++)
+            vertices[i] *= scaleFactor;
+    }
     //Allocate VBOs
     generateVertexBufferObjects();
     printf("Model import was successful: %s\n", importPath.c_str());

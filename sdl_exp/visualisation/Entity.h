@@ -3,18 +3,34 @@
 
 #include "GLcheck.h"
 
+#include <memory>
 #include <glm/glm.hpp>
 
 #include "Material.h"
 #include "Shaders.h"
 
+namespace Stock
+{
+    namespace Models
+    {
+        struct Model
+        {
+            char *path;
+        };
+        const Model ICOSPHERE{ "../models/icosphere.obj" };
+        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj" };
+        const Model CUBE{ "../models/cube.obj" };
+        const Model ROTHWELL{ "../models/rothwell-wy-1.obj" };
+    };
+};
 /*
 A renderable model loaded from a .obj file
 */
 class Entity
 {
 public:
-    Entity(const char *modelPath, float modelScale = 1.0, Shaders *shaders = 0);
+    Entity::Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
+    Entity(const char *modelPath, float modelScale = 1.0, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
     ~Entity();
     void render();
     void renderInstances(int count, GLuint vertLocation = 0, GLuint normalLocation = 1);
@@ -25,8 +41,9 @@ public:
     glm::vec4 getRotation() const;
     inline void clearMaterial();
     void exportModel() const;
+    std::shared_ptr<Shaders> getShaders() const;
 protected:
-    Shaders *shaders;
+    std::shared_ptr<Shaders> shaders;
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
     const char *modelPath;

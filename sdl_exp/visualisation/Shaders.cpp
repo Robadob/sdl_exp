@@ -13,9 +13,10 @@
 #include "Entity.h"
 
 /*
-Initial value 0, this is just used to auto increment vector attribute array
+Convenience constructor
 */
-
+Shaders::Shaders(Stock::Shaders::ShaderSet set)
+    :Shaders(set.vertex, set.fragment, set.geometry){}
 /*
 Constructs a shader program from the provided shader files
 @param vertexShaderPath Path to the GLSL vertex shader (nullptr if not required)

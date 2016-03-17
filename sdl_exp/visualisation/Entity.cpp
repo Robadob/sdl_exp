@@ -13,13 +13,17 @@
 
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
-
+/*
+Convenience constructor.
+*/
+Entity::Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders)
+    :Entity(model.path, scale, shaders) { }
 /*
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
 */
-Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
+Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders> shaders)
     : vertices(0), normals(0), colors(0), textures(0), faces(0)
     , vertices_vbo(0), normals_vbo(0), colors_vbo(0), textures_vbo(0), faces_vbo(0)
     , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0), vn_count(0)
@@ -34,7 +38,7 @@ Entity::Entity(const char *modelPath, float modelScale, Shaders *shaders)
 {
     loadModelFromFile();
     //If shaders have been provided, set them up
-    if (vertices&&this->shaders)
+    if (vertices&&this->shaders!=nullptr)
     {
         this->shaders->setVertexAttributeDetail(vertices_vbo, 0, v_size, 0);
         if (normals_vbo)
@@ -66,7 +70,7 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(){
-    if (shaders)
+    if (this->shaders != nullptr)
         shaders->useProgram(this);
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
@@ -78,7 +82,7 @@ void Entity::render(){
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
     GL_CALL(glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0));
     glPopMatrix();
-    if (shaders)
+    if (this->shaders != nullptr)
         shaders->clearProgram();
 }
 /*
@@ -89,7 +93,7 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocation){
-    if (shaders)
+    if (this->shaders != nullptr)
         shaders->useProgram(this);
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
@@ -101,7 +105,7 @@ void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocati
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
     GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
     glPopMatrix();
-    if (shaders)
+    if (this->shaders != nullptr)
         shaders->clearProgram();
 }
 /*
@@ -152,6 +156,7 @@ The attributes that support variable length chars are designed according to the 
 void Entity::loadModelFromFile()
 {
     FILE* file;
+    //Redirect pre-exported models, and cancel if not .obj
     if (endsWith(modelPath, OBJ_TYPE))
     {
         std::string exportPath(modelPath);
@@ -175,34 +180,13 @@ void Entity::loadModelFromFile()
         return;
     }
     printf("\r Loading Model: %s", modelPath);
-    //vn -3.631894 -0.637774 1.635071
-    //vn norm.x norm.y norm.z
-    //v - 1.878153 - 3.189111 0.041601 0.043137 0.039216 0.027451
-    //v vert.x vert.y vert.z color.x color.y color.z
-    //v may be in the form v v v, v v v v, v v v v c c c
-    //f 85291//85291 85947//85947 86027//86027
-    //f vert1/tex1/norm1 vert2/tex2/norm2 vert3/tex3/norm3
-    //f may be in form: v, v//n or v/t/n
 
-    //const char* VERTEX_IDENTIFIER = "v";
-    //const char* VERTEX_NORMAL_IDENTIFIER = "vn";
-    //const char* FACE_IDENTIFIER = "f";
-    //const char* MTLLIB_IDENTIFIER = "mtllib";
-    //const char* USEMTL_IDENTIFEIR = "usemtl";
-    ////Placeholders
-    //char buffer[100];
-    //float x,y,z;
-    //int f1a, f1b, f2a, f2b, f3a, f3b;
-    //char materialFile[100] = ""; // @todo - this could be improved;
-    //char materialName[100] = ""; // @todo - this could be improved;
     //Open file
     file = fopen(modelPath, "r");
-    //std::ifstream file(path);
     if (!file){
         printf("\rLoading Model: Could not open model '%s'!\n", modelPath);
         return;
     }
-
 
     //Counters
     unsigned int vertices_read = 0;
@@ -220,7 +204,7 @@ void Entity::loadModelFromFile()
     bool face_hasTextures = false;
 
     printf("\rLoading Model: %s [Counting Elements]", modelPath);
-    ////Count vertices/faces, attributes
+    //Count vertices/faces, attributes
     char c;
     int dotCtr;
     unsigned int lnLen = 0, lnLenMax = 0;//Used to find the longest line of the file
@@ -1159,4 +1143,11 @@ void Entity::generateVertexBufferObjects()
     if (t_count)
         createVertexBufferObject(&textures_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)textures);
     createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
+}
+/*
+Returns a shared pointer to this entities shaders
+*/
+std::shared_ptr<Shaders> Entity::getShaders() const
+{
+    return shaders;
 }

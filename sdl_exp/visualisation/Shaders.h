@@ -11,6 +11,21 @@
 
 class Entity;
 
+namespace Stock
+{
+    namespace Shaders
+    {
+        struct ShaderSet
+        {
+            char *vertex;
+            char *fragment;
+            char *geometry;
+        };
+        const ShaderSet FLAT{ "../shaders/flat.v", "../shaders/flat.f", 0 };
+        const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", 0 };
+        const ShaderSet COLOR{ "../shaders/color.v", "../shaders/color.f", 0 };
+    };
+};
 class Shaders
 {
     struct UniformMatrixDetail
@@ -43,6 +58,7 @@ class Shaders
     const char *TEXTURE_ATTRIBUTE_NAME = "_texture";
 
 public:
+    Shaders(Stock::Shaders::ShaderSet set);
     Shaders(const char *vertexShaderPath = 0, const char *fragmentShaderPath = 0, const char *geometryShaderPath = 0);
     ~Shaders();
 

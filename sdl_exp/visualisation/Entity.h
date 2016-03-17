@@ -51,7 +51,6 @@ protected:
     void loadModelFromFile();
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
     void freeModel();
-    void scaleModel(float modelScale);
     void freeMaterial();
     void Entity::generateVertexBufferObjects();
 private:

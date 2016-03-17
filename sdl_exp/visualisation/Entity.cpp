@@ -148,10 +148,6 @@ Normals: 3 components
 Textures: 2-3 components (the optional 3rd component is wrapped in [], and is expected to be 1.0)
 Faces: 3 components per, each indexing a vertex, and optionally a normal, or a normal and a texture.
 The attributes that support variable length chars are designed according to the wikipedia spec
-
-@param path The path to the .obj model to be loaded
-@param modelScale The scale in world space which the model's longest distance (along the x, y or z axis) should be scaled to
-@note Loading of vertex normals was disabled to suit some models that have non matching counts of vertices and vertex normals
 */
 void Entity::loadModelFromFile()
 {
@@ -894,17 +890,6 @@ void Entity::freeModel(){
     free(faces);
 }
 /*
-Scales the values within vertices according to the provided scale
-@param modelScale Scaling factor
-*/
-void Entity::scaleModel(float modelScale){
-    unsigned int v_total = v_count*v_size;
-    for (unsigned int i = 0; i<v_total; i++)
-    {
-        vertices[i]*=modelScale;
-    }
-}
-/*
 Public alias to freeMaterial() for backwards compatibility purposes
 @see freeMaterial()
 */
@@ -921,8 +906,30 @@ void Entity::freeMaterial(){
     }
 }
 /*
-Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
-@param file Path to the desired output file
+Exports the current model to a faster loading binary format which represents a direct copy of the buffers required by the model
+Models are stored by appending .sdl_export to their existing filename
+Models are stored in the following format;
+#Header
+[1 byte]                File type flag
+[1 byte]                Exporter version
+[1 byte]                float length (bytes)
+[1 byte]                uint length (bytes)
+[1 float]               Model scale (length of longest axis)
+[1 uint]                vn_count
+[1 bit]                 File contains (float) vertices of size 3
+[1 bit]                 File contains (float) vertices of size 4
+[1 bit]                 File contains (float) normals of size 3
+[1 bit]                 File contains (float) colors of size 3
+[1 bit]                 File contains (float) colors of size 4
+[1 bit]                 File contains (float) textures of size 2
+[1 bit]                 File contains (float) textures of size 3
+[1 bit]                 File contains (uint) faces of size 3
+[4 byte]                Reserved space for future expansion
+##Data## (Per item marked true from the bit fields in the header)
+[1 uint]                Number of items
+[n x size float/uint]   Item data
+##Footer##
+[1 byte]    File type flag
 */
 void Entity::exportModel() const
 {
@@ -1139,6 +1146,9 @@ void Entity::importModel(const char *path)
     generateVertexBufferObjects();
     printf("Model import was successful: %s\n", importPath.c_str());
 }
+/*
+Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
+*/
 void Entity::generateVertexBufferObjects()
 {
     createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, vn_count*v_size*sizeof(float), (void*)vertices);

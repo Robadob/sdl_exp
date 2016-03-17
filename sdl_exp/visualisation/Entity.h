@@ -21,6 +21,8 @@ public:
     void setColor(glm::vec3 color);
     void setLocation(glm::vec3 location);
     void setRotation(glm::vec4 rotation);
+    glm::vec3 getLocation() const;
+    glm::vec4 getRotation() const;
     inline void clearMaterial();
 protected:
     Shaders *shaders;

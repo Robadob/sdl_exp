@@ -189,6 +189,12 @@ void Shaders::createShaders(){
             this->color.location = a_C.first;
         else
             this->color.location = -1;
+        //Locate the vertexTexCoords attribute
+        std::pair<int, GLenum> a_T = findAttribute(TEXTURE_ATTRIBUTE_NAME, this->programId);
+        if (a_T.first >= 0 && (a_T.second == GL_FLOAT_VEC2 || a_T.second == GL_FLOAT_VEC3))
+            this->texture.location = a_T.first;
+        else
+            this->texture.location = -1;
 
     }
 
@@ -276,8 +282,8 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->vertex.location >= 0 && this->vertex.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
         glEnableVertexAttribArray(this->vertex.ATTRIB_ARRAY_ID);
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
         GL_CALL(glVertexAttribPointer(this->vertex.location, this->vertex.size, GL_FLOAT, GL_FALSE, this->vertex.stride, ((char *)NULL + this->vertex.offset)));
     }
 
@@ -290,12 +296,12 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->normal.location >= 0 && this->normal.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normal.bufferObject));
         glEnableVertexAttribArray(this->normal.ATTRIB_ARRAY_ID);
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normal.bufferObject));
         GL_CALL(glVertexAttribPointer(this->normal.location, this->normal.size, GL_FLOAT, GL_FALSE, this->normal.stride, ((char *)NULL + this->normal.offset)));
     }
 
-    //Set the vertex color attribute
+    //Set the vertex color attributes
     if (this->vertexShaderVersion <= 140 && this->color.bufferObject > 0)
     {//If old shaders where gl_Color is available
         glEnableClientState(GL_COLOR_ARRAY);
@@ -304,8 +310,22 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->color.location >= 0 && this->color.bufferObject > 0)
     {//If color attribute location and vbo are known
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
         glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
+        GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
+    }
+
+    //Set the vertex texture coord attributes
+    if (this->vertexShaderVersion <= 140 && this->texture.bufferObject > 0)
+    {//If old shaders where gl_TexCoord is available
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texture.bufferObject));
+        glTexCoordPointer(this->texture.size, GL_FLOAT, this->texture.stride, ((char *)NULL + this->texture.offset));
+    }
+    if (this->color.location >= 0 && this->color.bufferObject > 0)
+    {//If color attribute location and vbo are known
+        glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
         GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
     }
 

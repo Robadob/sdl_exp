@@ -4,7 +4,7 @@
 
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation)
-    , icosphere(new Entity(Stock::Models::ICOSPHERE, 5.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::PHONG))))
+    , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::PHONG))))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 10.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::COLOR))))
     , tick(0.0f)
 {

@@ -52,10 +52,10 @@ protected:
     unsigned int v_count, n_count, c_count, t_count, f_count;//Number of
     unsigned int v_size, t_size, c_size;//Number of components
 
-    float *vertices, *normals, *colors, *textures;
+    float *vertices, *normals, *colors, *texcoords;
     unsigned int *faces;
 
-    GLuint vertices_vbo, normals_vbo, colors_vbo, textures_vbo, faces_vbo;
+    GLuint vertices_vbo, normals_vbo, colors_vbo, texcoords_vbo, faces_vbo;
 
     //Optional material (loaded automaically if detected within model file)
     Material *material;
@@ -88,8 +88,8 @@ private:
         unsigned int  FILE_HAS_NORMALS_3 : 1;//Currently normals can only be len 3, reserved regardless
         unsigned int  FILE_HAS_COLORS_3 : 1;
         unsigned int  FILE_HAS_COLORS_4 : 1;
-        unsigned int  FILE_HAS_TEXTURES_2 : 1;
-        unsigned int  FILE_HAS_TEXTURES_3 : 1;
+        unsigned int  FILE_HAS_TEXCOORDS_2 : 1;
+        unsigned int  FILE_HAS_TEXCOORDS_3 : 1;
         unsigned int  FILE_HAS_FACES_3 : 1;
         unsigned int  RESERVED_SPACE : 32;
     };

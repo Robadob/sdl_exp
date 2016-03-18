@@ -35,8 +35,6 @@ class Shaders
     };
     struct VertexAttributeDetail
     {
-        VertexAttributeDetail(int i) : ATTRIB_ARRAY_ID(i) { }
-        const int ATTRIB_ARRAY_ID;  //Modern: Which vertex attrib array we store vbo data in.
         int location = -1;          //Modern: Attribute location within shader
         GLuint bufferObject = 0;    //Both: Buffer object containing data
         unsigned int offset = 0;    //Both: Specifies the offset within the buffer object
@@ -55,7 +53,7 @@ class Shaders
     const char *VERTEX_ATTRIBUTE_NAME = "_vertex";
     const char *NORMAL_ATTRIBUTE_NAME = "_normal";
     const char *COLOR_ATTRIBUTE_NAME = "_color";
-    const char *TEXTURE_ATTRIBUTE_NAME = "_texture";
+    const char *TEXCOORD_ATTRIBUTE_NAME = "_texture";
 
 public:
     Shaders(Stock::Shaders::ShaderSet set);
@@ -76,9 +74,9 @@ public:
     void setProjectionMatPtr(glm::mat4 const *projectionMat);
 
     void setVertexAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
-    void setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
-    void setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
-    void setVertexTextureAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setNormalAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setTexCoordAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
 
     bool addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
@@ -89,10 +87,10 @@ private:
     VertexAttributeDetail vertex;
     VertexAttributeDetail normal;
     VertexAttributeDetail color;
-    VertexAttributeDetail texture;
+    VertexAttributeDetail texcoord;
 
     //Texture tracking
-    std::vector<UniformTextureDetail> samplers;
+    std::vector<UniformTextureDetail> textures;
     
     //Shader file paths
     const char *vertexShaderPath;
@@ -113,8 +111,8 @@ private:
     char *loadShaderSource(const char *file);
     void destroyShaders();
     void destroyProgram();
-    bool checkShaderCompileError(int shaderId, const char *shaderPath);
-    bool checkProgramCompileError(int programId);
+    bool checkShaderCompileError(const int shaderId, const char *shaderPath);
+    bool checkProgramCompileError(const int programId);
 
     //Private because these must be called after useProgram()
     void setUniformi(const int location, const int value);
@@ -122,8 +120,8 @@ private:
 
     std::regex versionRegex;
     unsigned int findShaderVersion(const char *shaderSource);
-    std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, int shaderProgram);
-    std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, int shaderProgram);
+    std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int shaderProgram);
+    std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, const int shaderProgram);
 };
 
 #endif //ifndef __Shaders_h__

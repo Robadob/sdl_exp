@@ -4,7 +4,7 @@
 
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation)
-    , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::PHONG))))
+    , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::COLOR))))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 10.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::COLOR))))
     , tick(0.0f)
 {
@@ -16,6 +16,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     srand((unsigned int)time(0));
     this->icosphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
     this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
+    this->colorModel->setColor(glm::vec3(0.0, 1.0, 1.0));
     this->colorModel->exportModel();
 }
 /*

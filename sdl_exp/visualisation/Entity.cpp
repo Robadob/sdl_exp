@@ -7,7 +7,7 @@
 #include <glm/gtx/component_wise.hpp>
 
 #define NORMALS_SIZE 3
-#define DEFAULT_TEXTURE_SIZE 2
+#define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
 #define VN_PAIR std::pair<unsigned int, unsigned int>
 
@@ -24,8 +24,8 @@ Constructs an entity from the provided .obj model
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
 */
 Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders> shaders)
-    : vertices(0), normals(0), colors(0), textures(0), faces(0)
-    , vertices_vbo(0), normals_vbo(0), colors_vbo(0), textures_vbo(0), faces_vbo(0)
+    : vertices(0), normals(0), colors(0), texcoords(0), faces(0)
+    , vertices_vbo(0), normals_vbo(0), colors_vbo(0), texcoords_vbo(0), faces_vbo(0)
     , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0), vn_count(0)
     , v_size(3), c_size(3), t_size(2)
     , SCALE(modelScale)
@@ -42,11 +42,11 @@ Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders>
     {
         this->shaders->setVertexAttributeDetail(vertices_vbo, 0, v_size, 0);
         if (normals_vbo)
-            this->shaders->setVertexNormalAttributeDetail(normals_vbo, 0, NORMALS_SIZE, 0);
+            this->shaders->setNormalAttributeDetail(normals_vbo, 0, NORMALS_SIZE, 0);
         if (colors_vbo)
-            this->shaders->setVertexColorAttributeDetail(colors_vbo, 0, c_size, 0);
-        if (textures_vbo)
-            this->shaders->setVertexTextureAttributeDetail(textures_vbo, 0, t_size, 0);
+            this->shaders->setColorAttributeDetail(colors_vbo, 0, c_size, 0);
+        if (texcoords_vbo)
+            this->shaders->setTexCoordAttributeDetail(texcoords_vbo, 0, t_size, 0);
     }
 }
 /*
@@ -58,8 +58,8 @@ Entity::~Entity(){
         deleteVertexBufferObject(&normals_vbo);
     if (colors_vbo)
         deleteVertexBufferObject(&colors_vbo);
-    if (textures_vbo)
-        deleteVertexBufferObject(&textures_vbo);
+    if (texcoords_vbo)
+        deleteVertexBufferObject(&texcoords_vbo);
     deleteVertexBufferObject(&faces_vbo);
     freeModel();
     freeMaterial();
@@ -192,16 +192,16 @@ void Entity::loadModelFromFile()
     unsigned int vertices_read = 0;
     unsigned int normals_read = 0;
     unsigned int colors_read = 0;
-    unsigned int textures_read = 0;
+    unsigned int texcoords_read = 0;
     unsigned int faces_read = 0;
     unsigned int parameters_read = 0;
 
     unsigned int vertices_size = 3;
     unsigned int colors_size = 0;
-    unsigned int textures_size = 2;
+    unsigned int texcoords_size = 2;
 
     bool face_hasNormals = false;
-    bool face_hasTextures = false;
+    bool face_hasTexcoords = false;
 
     printf("\rLoading Model: %s [Counting Elements]", modelPath);
     //Count vertices/faces, attributes
@@ -261,7 +261,7 @@ void Entity::loadModelFromFile()
                 break;
                 //Texture found, increment count and check how many components it contains
             case 't':
-                textures_read++;
+                texcoords_read++;
                 dotCtr = 0;
                 //Count the number of '.' before the next newline
                 while ((c = fgetc(file)) != '\n')
@@ -272,7 +272,7 @@ void Entity::loadModelFromFile()
                     else if (c == '.')
                         dotCtr++;
                 }
-                textures_size = dotCtr;
+                texcoords_size = dotCtr;
                 continue;//Skip to next iteration, otherwise we will miss a line
             }
             break;
@@ -293,7 +293,7 @@ void Entity::loadModelFromFile()
                     //If not two / in a row, then we have textures
                     if ((c = fgetc(file)) != '/')
                     {
-                        face_hasTextures = true;
+                        face_hasTexcoords = true;
                         if (c == EOF)
                             goto exit_loop;
                     }
@@ -323,7 +323,7 @@ exit_loop:;
     v_count = vertices_read;
     c_count = colors_read;
     n_count = normals_read;
-    t_count = textures_read;
+    t_count = texcoords_read;
     f_count = faces_read;
     if (v_count == 0 || f_count == 0)
     {
@@ -343,7 +343,7 @@ exit_loop:;
     }
     //Set instance var sizes
     v_size = vertices_size;//3-4
-    t_size = textures_size;//2-3
+    t_size = texcoords_size;//2-3
     c_size = colors_size;//3-4
     //Allocate faces
     faces = (unsigned int*)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
@@ -354,7 +354,7 @@ exit_loop:;
     float *t_vertices = (float *)malloc(vertices_read * vertices_size * sizeof(float));
     float *t_colors = (float *)malloc(colors_read * colors_size * sizeof(float));
     float *t_normals = (float *)malloc(normals_read * NORMALS_SIZE * sizeof(float));
-    float *t_textures = (float *)malloc(textures_read*textures_size*sizeof(float));
+    float *t_texcoords = (float *)malloc(texcoords_read*texcoords_size*sizeof(float));
     //float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
     //3 parts to each face,store the relevant norm and tex indexes
     unsigned int *t_norm_pos = 0;
@@ -363,7 +363,7 @@ exit_loop:;
     else
         n_count = 0;
     unsigned int *t_tex_pos = 0;
-    if (face_hasTextures)
+    if (face_hasTexcoords)
         t_tex_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
     else
         t_count = 0;
@@ -371,7 +371,7 @@ exit_loop:;
     vertices_read = 0;
     colors_read = 0;
     normals_read = 0;
-    textures_read = 0;
+    texcoords_read = 0;
     faces_read = 0;
     unsigned int componentsRead = 0;
     unsigned int componentLength = 0;
@@ -522,8 +522,8 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary textures array
-                    t_textures[(textures_read * t_size) + componentsRead] = (float)atof(buffer);
-                } while (componentsRead<DEFAULT_TEXTURE_SIZE);
+                    t_texcoords[(texcoords_read * t_size) + componentsRead] = (float)atof(buffer);
+                } while (componentsRead<DEFAULT_TEXCOORD_SIZE);
                 //Read the final texture element if provided (special case, enclosed in [])
                 if (componentsRead < t_size)//If 3 texture coords
                 {
@@ -546,11 +546,11 @@ exit_loop:;
                         //End component string
                         buffer[componentLength] = '\0';
                         //Load it into the temporary textures array
-                        t_textures[(textures_read * t_size) + componentsRead] = (float)atof(buffer);
+                        t_texcoords[(texcoords_read * t_size) + componentsRead] = (float)atof(buffer);
                     }
                     componentsRead++;
                 }
-                textures_read++;
+                texcoords_read++;
                 if (c == '\n')
                     continue;
                 //Speed to the end of the texture line
@@ -586,25 +586,25 @@ exit_loop:;
                 //End component string
                 buffer[componentLength] = '\0';
                 //Decide which array to load it into (faces, tex pos, norm pos)
-                switch (componentsRead % (1 + (int)face_hasNormals + (int)face_hasTextures))
+                switch (componentsRead % (1 + (int)face_hasNormals + (int)face_hasTexcoords))
                 {
                     //This is a vertex index
                 case 0: //Decrease value by 1, obj is 1-index, our arrays are 0-index
-                    faces[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    faces[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                     //This is a normal index
                 case 1:
-                    t_norm_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    t_norm_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                     //This is a texture index
                 case 2:
-                    t_tex_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTextures))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    t_tex_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                 }
                 componentsRead++;
 
 
-            } while (componentsRead<(unsigned int)((1 + (int)face_hasNormals + (int)face_hasTextures))*FACES_SIZE);
+            } while (componentsRead<(unsigned int)((1 + (int)face_hasNormals + (int)face_hasTexcoords))*FACES_SIZE);
             faces_read++;
             if (c == '\n')
                 continue;
@@ -651,9 +651,9 @@ exit_loop2:;
         colors = (float*)malloc(vn_count*c_size*sizeof(float));
         c_count = vn_count;
     }
-    if (face_hasTextures)//1 texture per vertex
+    if (face_hasTexcoords)//1 texture per vertex
     {
-        textures = (float*)malloc(vn_count*t_size*sizeof(float));
+        texcoords = (float*)malloc(vn_count*t_size*sizeof(float));
         t_count = vn_count;
     }
     //Calculate scale factor
@@ -684,9 +684,9 @@ exit_loop2:;
             if (c_count)
                 for (unsigned int k = 0; k < c_size; k++)
                     colors[(vn_assigned*c_size) + k] = t_colors[(i_vert*c_size) + k];
-            if (face_hasTextures)
+            if (face_hasTexcoords)
                 for (unsigned int k = 0; k < t_size; k++)
-                    textures[(vn_assigned*t_size) + k] = t_textures[(t_tex_pos[i] * t_size) + k];
+                    texcoords[(vn_assigned*t_size) + k] = t_texcoords[(t_tex_pos[i] * t_size) + k];
             //Assign it new lowest id
             (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] = vn_assigned++;
         }
@@ -701,7 +701,7 @@ exit_loop2:;
     free(t_vertices);
     free(t_colors);
     free(t_normals);
-    free(t_textures);
+    free(t_texcoords);
     free(t_norm_pos);
     free(t_tex_pos);
     //Load VBOs
@@ -869,8 +869,8 @@ void Entity::freeModel(){
         free(normals);
     if (colors)
         free(colors);
-    if (textures)
-        free(textures);
+    if (texcoords)
+        free(texcoords);
     free(faces);
 }
 /*
@@ -905,8 +905,8 @@ Models are stored in the following format;
 [1 bit]                 File contains (float) normals of size 3
 [1 bit]                 File contains (float) colors of size 3
 [1 bit]                 File contains (float) colors of size 4
-[1 bit]                 File contains (float) textures of size 2
-[1 bit]                 File contains (float) textures of size 3
+[1 bit]                 File contains (float) texcoords of size 2
+[1 bit]                 File contains (float) texcoords of size 3
 [1 bit]                 File contains (uint) faces of size 3
 [4 byte]                Reserved space for future expansion
 ##Data## (Per item marked true from the bit fields in the header)
@@ -976,7 +976,7 @@ void Entity::exportModel() const
     if (t_count && (t_size == 2 || t_size == 3))
     {
         fwrite(&t_count, sizeof(unsigned int), 1, file);
-        fwrite(textures, sizeof(float), t_count*t_size, file);
+        fwrite(texcoords, sizeof(float), t_count*t_size, file);
     }
     if (f_count && (FACES_SIZE == 3))
     {
@@ -1087,12 +1087,12 @@ void Entity::importModel(const char *path)
             fprintf(stderr, "fread err: colors\n");
         };
     }
-    if (mask.FILE_HAS_TEXTURES_2 || mask.FILE_HAS_TEXTURES_3)
+    if (mask.FILE_HAS_TEXCOORDS_2 || mask.FILE_HAS_TEXCOORDS_3)
     {
-        t_size = mask.FILE_HAS_TEXTURES_2 ? 2 : 3;
+        t_size = mask.FILE_HAS_TEXCOORDS_2 ? 2 : 3;
         fread(&t_count, sizeof(unsigned int), 1, file);
-        textures = (float *)malloc(sizeof(float)*t_size*t_count);
-        if (t_size*t_count != fread(textures, sizeof(float), t_size*t_count, file))
+        texcoords = (float *)malloc(sizeof(float)*t_size*t_count);
+        if (t_size*t_count != fread(texcoords, sizeof(float), t_size*t_count, file))
         {
             fprintf(stderr, "fread err: textures\n");
         };
@@ -1141,7 +1141,7 @@ void Entity::generateVertexBufferObjects()
     if (c_count)
         createVertexBufferObject(&colors_vbo, GL_ARRAY_BUFFER, vn_count*c_size*sizeof(float), (void*)colors);
     if (t_count)
-        createVertexBufferObject(&textures_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)textures);
+        createVertexBufferObject(&texcoords_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)texcoords);
     createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
 }
 /*

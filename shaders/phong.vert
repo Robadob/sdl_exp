@@ -5,8 +5,8 @@ varying vec3 v;
 
 void main(void)  
 {     
-   v = vec3(gl_ModelViewMatrix * gl_Vertex);       
-   N = gl_Normal;//normalize(gl_NormalMatrix * );
-   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;  
-   gl_FrontColor = gl_Color;
+    v = vec3(gl_ModelViewMatrix * gl_Vertex);       
+    N = gl_Normal;//normalize(gl_NormalMatrix * );
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;  
+    gl_FrontColor = gl_Color;
 }

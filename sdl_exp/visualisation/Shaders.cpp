@@ -35,11 +35,11 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase)
     , modelview{}
     , projection{}
-    , vertex{0}
-    , normal{1}
-    , color{2}
-    , texture{3}
-    , samplers()
+    , vertex{}
+    , normal{}
+    , color{}
+    , texcoord{}
+    , textures()
     , programId(0)
 {
     this->createShaders();
@@ -190,11 +190,11 @@ void Shaders::createShaders(){
         else
             this->color.location = -1;
         //Locate the vertexTexCoords attribute
-        std::pair<int, GLenum> a_T = findAttribute(TEXTURE_ATTRIBUTE_NAME, this->programId);
+        std::pair<int, GLenum> a_T = findAttribute(TEXCOORD_ATTRIBUTE_NAME, this->programId);
         if (a_T.first >= 0 && (a_T.second == GL_FLOAT_VEC2 || a_T.second == GL_FLOAT_VEC3))
-            this->texture.location = a_T.first;
+            this->texcoord.location = a_T.first;
         else
-            this->texture.location = -1;
+            this->texcoord.location = -1;
 
     }
 
@@ -261,7 +261,7 @@ void Shaders::useProgram(Entity *e){
             //Do rotation & translatio;
             this->setUniformMatrix4fv(
                 this->modelview.location,
-                glm::value_ptr(glm::translate(glm::rotate(*this->modelview.matrixPtr, rot.w, glm::vec3(rot.x, rot.y, rot.z)), tran))
+                glm::value_ptr(glm::translate(glm::rotate(*this->modelview.matrixPtr, glm::radians(rot.w), glm::vec3(rot.x, rot.y, rot.z)), tran))
                 );
         }
         else
@@ -282,7 +282,7 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->vertex.location >= 0 && this->vertex.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        glEnableVertexAttribArray(this->vertex.ATTRIB_ARRAY_ID);
+        glEnableVertexAttribArray(this->vertex.location);
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
         GL_CALL(glVertexAttribPointer(this->vertex.location, this->vertex.size, GL_FLOAT, GL_FALSE, this->vertex.stride, ((char *)NULL + this->vertex.offset)));
     }
@@ -296,7 +296,7 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->normal.location >= 0 && this->normal.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        glEnableVertexAttribArray(this->normal.ATTRIB_ARRAY_ID);
+        glEnableVertexAttribArray(this->normal.location);
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normal.bufferObject));
         GL_CALL(glVertexAttribPointer(this->normal.location, this->normal.size, GL_FLOAT, GL_FALSE, this->normal.stride, ((char *)NULL + this->normal.offset)));
     }
@@ -310,31 +310,31 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->color.location >= 0 && this->color.bufferObject > 0)
     {//If color attribute location and vbo are known
-        glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+        glEnableVertexAttribArray(this->color.location);
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
         GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
     }
 
     //Set the vertex texture coord attributes
-    if (this->vertexShaderVersion <= 140 && this->texture.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->texcoord.bufferObject > 0)
     {//If old shaders where gl_TexCoord is available
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texture.bufferObject));
-        glTexCoordPointer(this->texture.size, GL_FLOAT, this->texture.stride, ((char *)NULL + this->texture.offset));
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoord.bufferObject));
+        glTexCoordPointer(this->texcoord.size, GL_FLOAT, this->texcoord.stride, ((char *)NULL + this->texcoord.offset));
     }
-    if (this->color.location >= 0 && this->color.bufferObject > 0)
-    {//If color attribute location and vbo are known
-        glEnableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+    if (this->texcoord.location >= 0 && this->texcoord.bufferObject > 0)
+    {//If texture attribute location and vbo are known
+        glEnableVertexAttribArray(this->texcoord.location);
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
-        GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
+        GL_CALL(glVertexAttribPointer(this->texcoord.location, this->texcoord.size, GL_FLOAT, GL_FALSE, this->texcoord.stride, ((char *)NULL + this->texcoord.offset)));
     }
 
     //Set any Texture buffers
-    for (unsigned int i = 0; i < samplers.size(); i++)
+    for (unsigned int i = 0; i < textures.size(); i++)
     {
         glActiveTexture(GL_TEXTURE0+i);
-        glBindTexture(samplers[i].type, samplers[i].name);
-        this->setUniformi(samplers[i].location, i);
+        glBindTexture(textures[i].type, textures[i].name);
+        this->setUniformi(textures[i].location, i);
     }
 }
 /*
@@ -349,7 +349,7 @@ void Shaders::clearProgram(){
     }
     if (this->vertex.location >= 0 && this->vertex.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->vertex.ATTRIB_ARRAY_ID);
+        glDisableVertexAttribArray(this->vertex.location);
     }
     //Vertex normal
     if (this->vertexShaderVersion <= 140 && this->normal.bufferObject > 0)
@@ -358,7 +358,7 @@ void Shaders::clearProgram(){
     }
     if (this->normal.location >= 0 && this->normal.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->normal.ATTRIB_ARRAY_ID);
+        glDisableVertexAttribArray(this->normal.location);
     }
     //Vertex color
     if (this->vertexShaderVersion <= 140 && this->color.bufferObject > 0)
@@ -367,7 +367,16 @@ void Shaders::clearProgram(){
     }
     if (this->color.location >= 0 && this->color.bufferObject > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->color.ATTRIB_ARRAY_ID);
+        glDisableVertexAttribArray(this->color.location);
+    }
+    //Vertex color
+    if (this->vertexShaderVersion <= 140 && this->texcoord.bufferObject > 0)
+    {//If old shaders where gl_Color is available
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
+    if (this->texcoord.location >= 0 && this->texcoord.bufferObject > 0)
+    {//If vertex attribute location and vbo are known
+        glDisableVertexAttribArray(this->texcoord.location);
     }
     GL_CALL(glUseProgram(0));
 }
@@ -525,7 +534,7 @@ Attempts to locate the speicified uniform's location and type
 @return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
 @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
 */
-std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, int shaderProgram)
+std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int shaderProgram)
 {
     int result = GL_CALL(glGetUniformLocation(shaderProgram, uniformName));
     if (result > -1)
@@ -544,7 +553,7 @@ Attempts to locate the specified attribute's location and type
 @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
 @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
 */
-std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, int shaderProgram)
+std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, const int shaderProgram)
 {
     int result = GL_CALL(glGetAttribLocation(shaderProgram, attributeName));
     if (result > -1)
@@ -591,7 +600,7 @@ Stores the details necessary for passing vertex normal attributes
 @param size The number of components per attribute (either 2, 3 or 4)
 @param stride The byte offset between consecutive attributes
 */
-void Shaders::setVertexNormalAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
+void Shaders::setNormalAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
 {
     this->normal.bufferObject = bufferObject;
     this->normal.offset = offset;
@@ -605,7 +614,7 @@ Stores the details necessary for passing vertex color attributes to the shader
 @param size The number of components per attribute (either 2, 3 or 4)
 @param stride The byte offset between consecutive attributes
 */
-void Shaders::setVertexColorAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
+void Shaders::setColorAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
 {
     this->color.bufferObject = bufferObject;
     this->color.offset = offset;
@@ -619,12 +628,12 @@ Stores the details necessary for passing vertex texture attributes to the shader
 @param size The number of components per attribute (either 2, 3 or 4)
 @param stride The byte offset between consecutive attributes
 */
-void Shaders::setVertexTextureAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride)
+void Shaders::setTexCoordAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride)
 {
-    this->texture.bufferObject = bufferObject;
-    this->texture.offset = offset;
-    this->texture.size = size;
-    this->texture.stride = stride;
+    this->texcoord.bufferObject = bufferObject;
+    this->texcoord.offset = offset;
+    this->texcoord.size = size;
+    this->texcoord.stride = stride;
 }
 /*
 Adds a texture buffer to be loaded when useProgram() is called
@@ -639,7 +648,7 @@ bool Shaders::addTextureUniform(GLuint texture, const char *uniformName, GLenum 
         GLint location = glGetUniformLocation(this->programId, uniformName);
         if (location!=-1)
         {
-            samplers.push_back(UniformTextureDetail{ texture, location, type });
+            textures.push_back(UniformTextureDetail{ texture, location, type });
             return true;
         }
         GL_CHECK();

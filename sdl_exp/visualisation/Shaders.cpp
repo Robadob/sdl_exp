@@ -35,10 +35,10 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase)
     , modelview{}
     , projection{}
-    , vertex{}
-    , normal{}
-    , color{}
-    , texcoord{}
+    , positions(GL_FLOAT, 3, sizeof(float))
+    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+    , colors(GL_FLOAT, 3, sizeof(float))
+    , texcoords(GL_FLOAT, 2, sizeof(float))
     , textures()
     , programId(0)
 {
@@ -174,27 +174,27 @@ void Shaders::createShaders(){
         //Locate the vertexPosition attribute
         std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->programId);
         if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
-            this->vertex.location = a_V.first;
+            this->positions.location = a_V.first;
         else
-            this->vertex.location = -1;
+            this->positions.location = -1;
         //Locate the vertexNormal attribute
         std::pair<int, GLenum> a_N = findAttribute(NORMAL_ATTRIBUTE_NAME, this->programId);
         if (a_N.first >= 0 && (a_N.second == GL_FLOAT_VEC3 || a_N.second == GL_FLOAT_VEC4))
-            this->normal.location = a_N.first;
+            this->normals.location = a_N.first;
         else
-            this->normal.location = -1;
+            this->normals.location = -1;
         //Locate the vertexColor attribute
         std::pair<int, GLenum> a_C = findAttribute(COLOR_ATTRIBUTE_NAME, this->programId);
         if (a_C.first >= 0 && (a_C.second == GL_FLOAT_VEC3 || a_C.second == GL_FLOAT_VEC4))
-            this->color.location = a_C.first;
+            this->colors.location = a_C.first;
         else
-            this->color.location = -1;
+            this->colors.location = -1;
         //Locate the vertexTexCoords attribute
         std::pair<int, GLenum> a_T = findAttribute(TEXCOORD_ATTRIBUTE_NAME, this->programId);
         if (a_T.first >= 0 && (a_T.second == GL_FLOAT_VEC2 || a_T.second == GL_FLOAT_VEC3))
-            this->texcoord.location = a_T.first;
+            this->texcoords.location = a_T.first;
         else
-            this->texcoord.location = -1;
+            this->texcoords.location = -1;
 
     }
 
@@ -273,60 +273,89 @@ void Shaders::useProgram(Entity *e){
     //Don't think we need to use
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
 
+    GLuint activeVBO = 0;
     //Set the vertex (location) attribute
-    if (this->vertexShaderVersion <= 140 && this->vertex.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->positions.vbo > 0)
     {//If old shaders where gl_Vertex is available
         glEnableClientState(GL_VERTEX_ARRAY);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
-        glVertexPointer(this->vertex.size, GL_FLOAT, this->vertex.stride, ((char *)NULL + this->vertex.offset));
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->positions.vbo));
+        glVertexPointer(this->positions.components, this->positions.componentType, this->positions.stride, ((char *)NULL + this->positions.offset));
+        activeVBO = this->positions.vbo;
     }
-    if (this->vertex.location >= 0 && this->vertex.bufferObject > 0)
+    if (this->positions.location >= 0 && this->positions.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glEnableVertexAttribArray(this->vertex.location);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->vertex.bufferObject));
-        GL_CALL(glVertexAttribPointer(this->vertex.location, this->vertex.size, GL_FLOAT, GL_FALSE, this->vertex.stride, ((char *)NULL + this->vertex.offset)));
+        glEnableVertexAttribArray(this->positions.location);
+        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->positions.vbo));
+        GL_CALL(glVertexAttribPointer(this->positions.location, this->positions.components, this->positions.componentType, GL_FALSE, this->positions.stride, ((char *)NULL + this->positions.offset)));
+        activeVBO = this->positions.vbo;
     }
 
     //Set the vertex normal attribute
-    if (this->vertexShaderVersion <= 140 && this->normal.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->normals.vbo > 0)
     {//If old shaders where gl_Vertex is available
         glEnableClientState(GL_NORMAL_ARRAY);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normal.bufferObject));
-        glNormalPointer(GL_FLOAT, this->normal.stride, ((char *)NULL + this->normal.offset));
+        if (activeVBO != this->normals.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normals.vbo));
+            activeVBO = this->normals.vbo;
+        }
+        glNormalPointer(this->normals.componentType, this->normals.stride, ((char *)NULL + this->normals.offset));
     }
-    if (this->normal.location >= 0 && this->normal.bufferObject > 0)
+    if (this->normals.location >= 0 && this->normals.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glEnableVertexAttribArray(this->normal.location);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normal.bufferObject));
-        GL_CALL(glVertexAttribPointer(this->normal.location, this->normal.size, GL_FLOAT, GL_FALSE, this->normal.stride, ((char *)NULL + this->normal.offset)));
+        glEnableVertexAttribArray(this->normals.location);
+        if (activeVBO!=this->normals.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normals.vbo));
+            activeVBO = this->normals.vbo;
+        }
+        GL_CALL(glVertexAttribPointer(this->normals.location, this->normals.components, this->positions.componentType, GL_FALSE, this->normals.stride, ((char *)NULL + this->normals.offset)));
     }
 
     //Set the vertex color attributes
-    if (this->vertexShaderVersion <= 140 && this->color.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->colors.vbo > 0)
     {//If old shaders where gl_Color is available
         glEnableClientState(GL_COLOR_ARRAY);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
-        glColorPointer(this->color.size, GL_FLOAT, this->color.stride, ((char *)NULL + this->color.offset));
+        if (activeVBO != this->colors.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->colors.vbo));
+            activeVBO = this->colors.vbo;
+        }
+        glColorPointer(this->colors.components, this->colors.componentType, this->colors.stride, ((char *)NULL + this->colors.offset));
     }
-    if (this->color.location >= 0 && this->color.bufferObject > 0)
+    if (this->colors.location >= 0 && this->colors.vbo > 0)
     {//If color attribute location and vbo are known
-        glEnableVertexAttribArray(this->color.location);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
-        GL_CALL(glVertexAttribPointer(this->color.location, this->color.size, GL_FLOAT, GL_FALSE, this->color.stride, ((char *)NULL + this->color.offset)));
+        glEnableVertexAttribArray(this->colors.location);
+        if (activeVBO != this->colors.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->colors.vbo));
+            activeVBO = this->colors.vbo;
+        }
+        GL_CALL(glVertexAttribPointer(this->colors.location, this->colors.components, this->colors.componentType, GL_FALSE, this->colors.stride, ((char *)NULL + this->colors.offset)));
     }
 
     //Set the vertex texture coord attributes
-    if (this->vertexShaderVersion <= 140 && this->texcoord.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->texcoords.vbo > 0)
     {//If old shaders where gl_TexCoord is available
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoord.bufferObject));
-        glTexCoordPointer(this->texcoord.size, GL_FLOAT, this->texcoord.stride, ((char *)NULL + this->texcoord.offset));
+        if (activeVBO != this->texcoords.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
+            activeVBO = this->texcoords.vbo;
+        }
+        glTexCoordPointer(this->texcoords.componentSize, this->texcoords.componentType, this->texcoords.stride, ((char *)NULL + this->texcoords.offset));
+        activeVBO = this->positions.vbo;
     }
-    if (this->texcoord.location >= 0 && this->texcoord.bufferObject > 0)
+    if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
     {//If texture attribute location and vbo are known
-        glEnableVertexAttribArray(this->texcoord.location);
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->color.bufferObject));
-        GL_CALL(glVertexAttribPointer(this->texcoord.location, this->texcoord.size, GL_FLOAT, GL_FALSE, this->texcoord.stride, ((char *)NULL + this->texcoord.offset)));
+        glEnableVertexAttribArray(this->texcoords.location);
+        if (activeVBO != this->texcoords.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
+            activeVBO = this->texcoords.vbo;
+        }
+        GL_CALL(glVertexAttribPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, GL_FALSE, this->texcoords.stride, ((char *)NULL + this->texcoords.offset)));
+        activeVBO = this->positions.vbo;
     }
 
     //Set any Texture buffers
@@ -343,40 +372,40 @@ Disables the currently active shader progam and attributes attached to this shad
 void Shaders::clearProgram(){
     //Massively shorten this with glPopAttrib()?
     //Vertex location
-    if (this->vertexShaderVersion <= 140 && this->vertex.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->positions.vbo > 0)
     {//If old shaders where gl_Vertex is available
         glDisableClientState(GL_VERTEX_ARRAY);
     }
-    if (this->vertex.location >= 0 && this->vertex.bufferObject > 0)
+    if (this->positions.location >= 0 && this->positions.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->vertex.location);
+        glDisableVertexAttribArray(this->positions.location);
     }
     //Vertex normal
-    if (this->vertexShaderVersion <= 140 && this->normal.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->normals.vbo > 0)
     {//If old shaders where gl_Normal is available
         glDisableClientState(GL_NORMAL_ARRAY);
     }
-    if (this->normal.location >= 0 && this->normal.bufferObject > 0)
+    if (this->normals.location >= 0 && this->normals.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->normal.location);
+        glDisableVertexAttribArray(this->normals.location);
     }
     //Vertex color
-    if (this->vertexShaderVersion <= 140 && this->color.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->colors.vbo > 0)
     {//If old shaders where gl_Color is available
         glDisableClientState(GL_COLOR_ARRAY);
     }
-    if (this->color.location >= 0 && this->color.bufferObject > 0)
+    if (this->colors.location >= 0 && this->colors.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->color.location);
+        glDisableVertexAttribArray(this->colors.location);
     }
     //Vertex color
-    if (this->vertexShaderVersion <= 140 && this->texcoord.bufferObject > 0)
+    if (this->vertexShaderVersion <= 140 && this->texcoords.vbo > 0)
     {//If old shaders where gl_Color is available
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
-    if (this->texcoord.location >= 0 && this->texcoord.bufferObject > 0)
+    if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->texcoord.location);
+        glDisableVertexAttribArray(this->texcoords.location);
     }
     GL_CALL(glUseProgram(0));
 }
@@ -580,60 +609,40 @@ void Shaders::setProjectionMatPtr(glm::mat4 const *projectionMat){
     this->projection.matrixPtr = projectionMat;
 }
 /*
-Stores the details necessary for passing vertex (location) attributes to the shader via the modern method
-@param bufferObject The buffer object containing the attribute data
-@param offset The byte offset within the buffer that the data starts
-@param size The number of components per attribute (either 2, 3 or 4)
-@param stride The byte offset between consecutive attributes
+Stores the details necessary for passing vertex position attributes to the shader via the modern method
+@param vad The VertexAttributeDetail object containing the attribute data
 */
-void Shaders::setVertexAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size=3, unsigned int stride=0)
+void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad)
 {
-    this->vertex.bufferObject = bufferObject;
-    this->vertex.offset = offset;
-    this->vertex.size = size;
-    this->vertex.stride = stride;
+    vad.location = this->positions.location;
+    this->positions = vad;
 }
 /*
 Stores the details necessary for passing vertex normal attributes
-@param bufferObject The buffer object containing the attribute data
-@param offset The byte offset within the buffer that the data starts
-@param size The number of components per attribute (either 2, 3 or 4)
-@param stride The byte offset between consecutive attributes
+@param vad The VertexAttributeDetail object containing the attribute data
 */
-void Shaders::setNormalAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
+void Shaders::setNormalsAttributeDetail(VertexAttributeDetail vad)
 {
-    this->normal.bufferObject = bufferObject;
-    this->normal.offset = offset;
-    this->normal.size = size;
-    this->normal.stride = stride;
+    vad.location = this->normals.location;
+    this->normals = vad;
 }
 /*
 Stores the details necessary for passing vertex color attributes to the shader
-@param bufferObject The buffer object containing the attribute data
-@param offset The byte offset within the buffer that the data starts
-@param size The number of components per attribute (either 2, 3 or 4)
-@param stride The byte offset between consecutive attributes
+@param vad The VertexAttributeDetail object containing the attribute data
 */
-void Shaders::setColorAttributeDetail(GLuint bufferObject, unsigned int offset = 0, unsigned int size = 3, unsigned int stride = 0)
+void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad)
 {
-    this->color.bufferObject = bufferObject;
-    this->color.offset = offset;
-    this->color.size = size;
-    this->color.stride = stride;
+    vad.location = this->colors.location;
+    this->colors = vad;
 }
 /*
 Stores the details necessary for passing vertex texture attributes to the shader
-@param bufferObject The buffer object containing the attribute data
-@param offset The byte offset within the buffer that the data starts
-@param size The number of components per attribute (either 2, 3 or 4)
-@param stride The byte offset between consecutive attributes
+@param vad The VertexAttributeDetail object containing the attribute data
 */
-void Shaders::setTexCoordAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride)
+void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
 {
-    this->texcoord.bufferObject = bufferObject;
-    this->texcoord.offset = offset;
-    this->texcoord.size = size;
-    this->texcoord.stride = stride;
+    vad.location = this->texcoords.location;
+    this->texcoords = vad;
 }
 /*
 Adds a texture buffer to be loaded when useProgram() is called

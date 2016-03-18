@@ -85,7 +85,9 @@ Skybox::Skybox(const glm::mat4 *modelViewMat, const glm::mat4 *projectionMat, ch
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, 3 * 36 * sizeof(float), &points, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    shaders.setVertexAttributeDetail(vbo, 0, 3, 0);
+    Shaders::VertexAttributeDetail vad(GL_FLOAT, 3, sizeof(float));
+    vad.vbo = vbo;
+    shaders.setPositionsAttributeDetail(vad);
 }
 /*
 Loads a texture from the provided .png or .bmp file

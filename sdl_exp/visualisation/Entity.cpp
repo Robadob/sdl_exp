@@ -6,7 +6,6 @@
 #include <thread>
 #include <glm/gtx/component_wise.hpp>
 
-#define NORMALS_SIZE 3
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
 #define VN_PAIR std::pair<unsigned int, unsigned int>
@@ -24,10 +23,12 @@ Constructs an entity from the provided .obj model
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
 */
 Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders> shaders)
-    : vertices(0), normals(0), colors(0), texcoords(0), faces(0)
-    , vertices_vbo(0), normals_vbo(0), colors_vbo(0), texcoords_vbo(0), faces_vbo(0)
-    , v_count(0), n_count(0), c_count(0), t_count(0), f_count(0), vn_count(0)
-    , v_size(3), c_size(3), t_size(2)
+    : positions(GL_FLOAT, 3, sizeof(float))
+    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+    , colors(GL_FLOAT, 3, sizeof(float))
+    , texcoords(GL_FLOAT, 2, sizeof(float))
+    , faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
+    , vn_count(0)
     , SCALE(modelScale)
     , modelPath(modelPath)
     , material(0)
@@ -38,30 +39,24 @@ Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders>
 {
     loadModelFromFile();
     //If shaders have been provided, set them up
-    if (vertices&&this->shaders!=nullptr)
+    if (positions.data&&this->shaders != nullptr)
     {
-        this->shaders->setVertexAttributeDetail(vertices_vbo, 0, v_size, 0);
-        if (normals_vbo)
-            this->shaders->setNormalAttributeDetail(normals_vbo, 0, NORMALS_SIZE, 0);
-        if (colors_vbo)
-            this->shaders->setColorAttributeDetail(colors_vbo, 0, c_size, 0);
-        if (texcoords_vbo)
-            this->shaders->setTexCoordAttributeDetail(texcoords_vbo, 0, t_size, 0);
+        this->shaders->setPositionsAttributeDetail(positions);
+        this->shaders->setNormalsAttributeDetail(normals);
+        this->shaders->setColorsAttributeDetail(colors);
+        this->shaders->setTexCoordsAttributeDetail(texcoords);
     }
 }
 /*
 Destructor, free's memory allocated to store the model and its material
 */
 Entity::~Entity(){
-    deleteVertexBufferObject(&vertices_vbo);
-    if (normals_vbo)
-        deleteVertexBufferObject(&normals_vbo);
-    if (colors_vbo)
-        deleteVertexBufferObject(&colors_vbo);
-    if (texcoords_vbo)
-        deleteVertexBufferObject(&texcoords_vbo);
-    deleteVertexBufferObject(&faces_vbo);
-    freeModel();
+    //All attribs (except faces) share the same vbo, so delete once
+    deleteVertexBufferObject(&positions.vbo);
+    deleteVertexBufferObject(&faces.vbo);
+    //All attribs (except faces) share the same malloc, so delete once
+    free(positions.data);
+    free(faces.data);
     freeMaterial();
 }
 /*
@@ -73,14 +68,14 @@ void Entity::render(){
     if (this->shaders != nullptr)
         shaders->useProgram(this);
     //Bind the faces to be rendered
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
     glPushMatrix();
     //Translate the model according to it's location
     if (this->material)
         this->material->useMaterial();
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-    GL_CALL(glDrawElements(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0));
+    GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
     glPopMatrix();
     if (this->shaders != nullptr)
         shaders->clearProgram();
@@ -96,14 +91,14 @@ void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocati
     if (this->shaders != nullptr)
         shaders->useProgram(this);
     //Bind the faces to be rendered
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces_vbo));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
     glPushMatrix();
     //Set the color and material
     if (this->material)
         this->material->useMaterial();
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, f_count * 3, GL_UNSIGNED_INT, 0, count));
+    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
     glPopMatrix();
     if (this->shaders != nullptr)
         shaders->clearProgram();
@@ -189,16 +184,16 @@ void Entity::loadModelFromFile()
     }
 
     //Counters
-    unsigned int vertices_read = 0;
+    unsigned int positions_read = 0;
     unsigned int normals_read = 0;
     unsigned int colors_read = 0;
     unsigned int texcoords_read = 0;
     unsigned int faces_read = 0;
     unsigned int parameters_read = 0;
 
-    unsigned int vertices_size = 3;
-    unsigned int colors_size = 0;
-    unsigned int texcoords_size = 2;
+    unsigned int position_components_count = 3;
+    unsigned int faces_components_count = 0;
+    unsigned int texcoords_components_count = 2;
 
     bool face_hasNormals = false;
     bool face_hasTexcoords = false;
@@ -223,7 +218,7 @@ void Entity::loadModelFromFile()
             {
                 //Vertex found, increment count and check whether it also contains a colour value many elements it contains
             case ' ':
-                vertices_read++;
+                positions_read++;
                 dotCtr = 0;
                 //Count the number of '.', if >4 we assume there are colours
                 while ((c = fgetc(file)) != '\n')
@@ -239,14 +234,14 @@ void Entity::loadModelFromFile()
                 {
                 case 8:
                     colors_read++;
-                    colors_size = 4;
+                    faces_components_count = 4;
                 case 4:
-                    vertices_size = 4;
+                    position_components_count = 4;
                     break;
                 case 7:
-                    vertices_size = 4;
+                    position_components_count = 4;
                 case 6:
-                    colors_size = 3;
+                    faces_components_count = 3;
                     colors_read++;
                     break;
                 }
@@ -272,7 +267,7 @@ void Entity::loadModelFromFile()
                     else if (c == '.')
                         dotCtr++;
                 }
-                texcoords_size = dotCtr;
+                texcoords_components_count = dotCtr;
                 continue;//Skip to next iteration, otherwise we will miss a line
             }
             break;
@@ -320,55 +315,57 @@ exit_loop:;
     }
 
     //Set instance var counts
-    v_count = vertices_read;
-    c_count = colors_read;
-    n_count = normals_read;
-    t_count = texcoords_read;
-    f_count = faces_read;
-    if (v_count == 0 || f_count == 0)
+    positions.count = positions_read;
+    colors.count = colors_read;
+    normals.count = normals_read;
+    texcoords.count = texcoords_read;
+    faces.count = faces_read;
+    if (positions.count == 0 || faces.count == 0)
     {
         fprintf(stderr, "\nVertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n");
         fclose(file);
         return;
     }
-    if ((c_count != 0 && v_count != c_count))
+    if ((colors.count != 0 && positions.count != colors.count))
     {
         fprintf(stderr, "\nVertex color count does not match vertex count, vertex colors will be ignored.\n");
-        c_count = 0;
+        colors.count = 0;
     }
-    if (t_count != 0 && v_count != t_count)
+    if (texcoords.count != 0 && positions.count != texcoords.count)
     {
         fprintf(stderr, "\nVertex texture count does not match vertex count, vertex textures will be ignored.\n");
-        t_count = 0;
+        texcoords.count = 0;
     }
     //Set instance var sizes
-    v_size = vertices_size;//3-4
-    t_size = texcoords_size;//2-3
-    c_size = colors_size;//3-4
+    normals.components = NORMALS_SIZE;
+    faces.components = FACES_SIZE;
+    positions.components = position_components_count;//3-4
+    texcoords.components = texcoords_components_count;//2-3
+    colors.components = faces_components_count;//3-4
     //Allocate faces
-    faces = (unsigned int*)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
+    faces.data = malloc(faces.count*faces.components*faces.componentSize);
     //Reset file pointer
     clearerr(file);
     fseek(file, 0, SEEK_SET);
     //Allocate temporary buffers for components that may require aligning with relevant vertices
-    float *t_vertices = (float *)malloc(vertices_read * vertices_size * sizeof(float));
-    float *t_colors = (float *)malloc(colors_read * colors_size * sizeof(float));
-    float *t_normals = (float *)malloc(normals_read * NORMALS_SIZE * sizeof(float));
-    float *t_texcoords = (float *)malloc(texcoords_read*texcoords_size*sizeof(float));
+    float *t_vertices = (float *)malloc(positions.count * positions.components * positions.componentSize);
+    float *t_colors = (float *)malloc(colors.count * colors.components * colors.componentSize);
+    float *t_normals = (float *)malloc(normals.count * normals.components * normals.componentSize);
+    float *t_texcoords = (float *)malloc(texcoords.count * texcoords.components*texcoords.componentSize);
     //float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
     //3 parts to each face,store the relevant norm and tex indexes
     unsigned int *t_norm_pos = 0;
     if (face_hasNormals)
-        t_norm_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
+        t_norm_pos = (unsigned int *)malloc(faces.count*faces.components*faces.componentSize);
     else
-        n_count = 0;
+        normals.count = 0;
     unsigned int *t_tex_pos = 0;
     if (face_hasTexcoords)
-        t_tex_pos = (unsigned int *)malloc(f_count*FACES_SIZE*sizeof(unsigned int));
+        t_tex_pos = (unsigned int *)malloc(faces.count*faces.components*faces.componentSize);
     else
-        t_count = 0;
+        texcoords.count = 0;
     //Reset local counters
-    vertices_read = 0;
+    positions_read = 0;
     colors_read = 0;
     normals_read = 0;
     texcoords_read = 0;
@@ -416,20 +413,20 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the vert array
-                    t_vertices[(vertices_read * v_size) + componentsRead] = (float)atof(buffer);
+                    t_vertices[(positions_read * positions.components) + componentsRead] = (float)atof(buffer);
                     //Check for model min/max
-                    if (t_vertices[(vertices_read * v_size) + componentsRead] > modelMax[componentsRead])
-                        modelMax[componentsRead] = t_vertices[(vertices_read * v_size) + componentsRead];
-                    if (t_vertices[(vertices_read * v_size) + componentsRead] < modelMin[componentsRead])
-                        modelMin[componentsRead] = t_vertices[(vertices_read * v_size) + componentsRead];
+                    if (t_vertices[(positions_read * positions.components) + componentsRead] > modelMax[componentsRead])
+                        modelMax[componentsRead] = t_vertices[(positions_read * positions.components) + componentsRead];
+                    if (t_vertices[(positions_read * positions.components) + componentsRead] < modelMin[componentsRead])
+                        modelMin[componentsRead] = t_vertices[(positions_read * positions.components) + componentsRead];
                     componentsRead++;
-                } while (componentsRead<v_size);
-                vertices_read++;
+                } while (componentsRead<positions.components);
+                positions_read++;
                 if (c == '\n')
                     continue;
                 componentsRead = 0;
                 //Read all color components (if required)
-                while (componentsRead<c_size)
+                while (componentsRead<colors.components)
                 {
                     //Find the first char
                     while ((c = fgetc(file)) != EOF) {
@@ -448,7 +445,7 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the color array
-                    t_colors[(colors_read * c_size) + componentsRead] = (float)atof(buffer);//t_colors
+                    t_colors[(colors_read * colors.components) + componentsRead] = (float)atof(buffer);//t_colors
                     componentsRead++;
                 }
                 //If we read a color, increment count
@@ -486,9 +483,9 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary normal array
-                    t_normals[(normals_read * NORMALS_SIZE) + componentsRead] = (float)atof(buffer);
+                    t_normals[(normals_read * normals.components) + componentsRead] = (float)atof(buffer);
                     componentsRead++;
-                } while (componentsRead<NORMALS_SIZE);
+                } while (componentsRead<normals.components);
                 normals_read++;
                 if (c == '\n')
                     continue;
@@ -522,10 +519,10 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary textures array
-                    t_texcoords[(texcoords_read * t_size) + componentsRead] = (float)atof(buffer);
+                    t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
                 } while (componentsRead<DEFAULT_TEXCOORD_SIZE);
                 //Read the final texture element if provided (special case, enclosed in [])
-                if (componentsRead < t_size)//If 3 texture coords
+                if (componentsRead < texcoords.components)//If 3 texture coords
                 {
                     //Find the first char
                     while ((c = fgetc(file)) != EOF) {
@@ -546,7 +543,7 @@ exit_loop:;
                         //End component string
                         buffer[componentLength] = '\0';
                         //Load it into the temporary textures array
-                        t_texcoords[(texcoords_read * t_size) + componentsRead] = (float)atof(buffer);
+                        t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
                     }
                     componentsRead++;
                 }
@@ -590,15 +587,15 @@ exit_loop:;
                 {
                     //This is a vertex index
                 case 0: //Decrease value by 1, obj is 1-index, our arrays are 0-index
-                    faces[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    ((unsigned int *)faces.data)[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                     //This is a normal index
                 case 1:
-                    t_norm_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    t_norm_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                     //This is a texture index
                 case 2:
-                    t_tex_pos[(faces_read*FACES_SIZE) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    t_tex_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                 }
                 componentsRead++;
@@ -626,35 +623,46 @@ exit_loop2:;
         unsigned int,
         std::function<unsigned long(VN_PAIR)>,
         std::function < bool(VN_PAIR, VN_PAIR) >
-    >(f_count*FACES_SIZE, hashing_func, key_equal_fn);
+    >(faces.count*faces.components, hashing_func, key_equal_fn);
     //Calculate the number of unique vertex-normal pairs
-    for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
+    for (unsigned int i = 0; i < faces.count*faces.components; i++)
     {
         if (face_hasNormals)
-            (*vn_pairs)[std::pair<unsigned int, unsigned int>(faces[i], t_norm_pos[i])] = UINT_MAX;
+            (*vn_pairs)[std::pair<unsigned int, unsigned int>(((unsigned int *)faces.data)[i], t_norm_pos[i])] = UINT_MAX;
         else
-            (*vn_pairs)[std::pair<unsigned int, unsigned int>(faces[i], 0)] = UINT_MAX;
+            (*vn_pairs)[std::pair<unsigned int, unsigned int>(((unsigned int *)faces.data)[i], 0)] = UINT_MAX;
     }
     vn_count = (unsigned int)vn_pairs->size();
-
-
-    //Allocate instance vars
-    vertices = (float*)malloc(vn_count*v_size*sizeof(float));
-    v_count = vn_count;
-    if (face_hasNormals)//1 normal per vertex
+    
+    //Allocate instance vars from a single malloc
+    unsigned int bufferSize = 0;
+    bufferSize += vn_count*positions.components*positions.componentSize;
+    bufferSize += (normals.count>0)*vn_count*normals.components*normals.componentSize;
+    bufferSize += (colors.count>0)*vn_count*colors.components*colors.componentSize;
+    bufferSize += (texcoords.count>0)*vn_count*positions.components*positions.componentSize;
+    positions.data = malloc(bufferSize);
+    positions.count = vn_count;
+    bufferSize = vn_count*positions.components*positions.componentSize;
+    if (normals.count>0)
     {
-        normals = (float*)malloc(vn_count*NORMALS_SIZE*sizeof(float));
-        n_count = vn_count;
+        normals.data = (char*)positions.data + bufferSize;
+        normals.count = vn_count;
+        normals.offset = bufferSize;
+        bufferSize += vn_count*normals.components*normals.componentSize;
     }
-    if (c_count)//1 color per vertex
+    if (colors.count>0)
     {
-        colors = (float*)malloc(vn_count*c_size*sizeof(float));
-        c_count = vn_count;
+        colors.data = (char*)positions.data + bufferSize;
+        colors.count = vn_count;
+        colors.offset = bufferSize;
+        bufferSize += vn_count*colors.components*colors.componentSize;
     }
-    if (face_hasTexcoords)//1 texture per vertex
+    if (texcoords.count>0)
     {
-        texcoords = (float*)malloc(vn_count*t_size*sizeof(float));
-        t_count = vn_count;
+        texcoords.data = (char*)positions.data + bufferSize;
+        texcoords.count = vn_count;
+        texcoords.offset = bufferSize;
+        bufferSize += vn_count*texcoords.components*texcoords.componentSize;
     }
     //Calculate scale factor
     float scaleFactor = 1.0;
@@ -662,36 +670,36 @@ exit_loop2:;
         scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
     printf("\rLoading Model: %s [Assigning Elements]", modelPath);
     unsigned int vn_assigned = 0;
-    for (unsigned int i = 0; i < f_count*FACES_SIZE; i++)
+    for (unsigned int i = 0; i < faces.count*faces.components; i++)
     {
         int i_norm = face_hasNormals ? t_norm_pos[i] : 0;
-        int i_vert = faces[i];
+        int i_vert = ((unsigned int *)faces.data)[i];
         glm::vec3 t_normalised_norm;
         //If vn pair hasn't been assigned an id yet
         if ((*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] == UINT_MAX)
         {
             //Set all n components of vertices and attributes to that id
-            for (unsigned int k = 0; k < v_size; k++)
+            for (unsigned int k = 0; k < positions.components; k++)
             {
-                vertices[(vn_assigned*v_size) + k] = t_vertices[(i_vert*v_size) + k] * scaleFactor;
+                ((float*)positions.data)[(vn_assigned*positions.components) + k] = t_vertices[(i_vert*positions.components) + k] * scaleFactor;
             }
             if (face_hasNormals)
             {//Normalise normals
-                t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * NORMALS_SIZE)], t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 1, t_normals[(t_norm_pos[i] * NORMALS_SIZE)] + 2));
-                for (unsigned int k = 0; k < NORMALS_SIZE; k++)
-                    normals[(vn_assigned*NORMALS_SIZE) + k] = t_normalised_norm[k];
+                t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * normals.components)], t_normals[(t_norm_pos[i] * normals.components)] + 1, t_normals[(t_norm_pos[i] * normals.components)] + 2));
+                for (unsigned int k = 0; k < normals.components; k++)
+                    ((float*)normals.data)[(vn_assigned*normals.components) + k] = t_normalised_norm[k];
             }
-            if (c_count)
-                for (unsigned int k = 0; k < c_size; k++)
-                    colors[(vn_assigned*c_size) + k] = t_colors[(i_vert*c_size) + k];
+            if (colors.count)
+                for (unsigned int k = 0; k < colors.components; k++)
+                    ((float*)colors.data)[(vn_assigned*colors.components) + k] = t_colors[(i_vert*colors.components) + k];
             if (face_hasTexcoords)
-                for (unsigned int k = 0; k < t_size; k++)
-                    texcoords[(vn_assigned*t_size) + k] = t_texcoords[(t_tex_pos[i] * t_size) + k];
+                for (unsigned int k = 0; k < texcoords.components; k++)
+                    ((float*)texcoords.data)[(vn_assigned*texcoords.components) + k] = t_texcoords[(t_tex_pos[i] * texcoords.components) + k];
             //Assign it new lowest id
             (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] = vn_assigned++;
         }
         //Update index from face
-        faces[i] = (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
+        ((unsigned int *)faces.data)[i] = (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
     }
     ////Free temps
     printf("\rLwaiting              ");
@@ -860,20 +868,6 @@ glm::vec4 Entity::getRotation() const
     return this->rotation;
 }
 /*
-Frees the storage for the model's primitives
-@see allocateModel()
-*/
-void Entity::freeModel(){
-    free(vertices);
-    if (normals)
-        free(normals);
-    if (colors)
-        free(colors);
-    if (texcoords)
-        free(texcoords);
-    free(faces);
-}
-/*
 Public alias to freeMaterial() for backwards compatibility purposes
 @see freeMaterial()
 */
@@ -910,7 +904,7 @@ Models are stored in the following format;
 [1 bit]                 File contains (uint) faces of size 3
 [4 byte]                Reserved space for future expansion
 ##Data## (Per item marked true from the bit fields in the header)
-[1 uint]                Number of items
+[1 uint]                (faces only) Number of items
 [n x size float/uint]   Item data
 ##Footer##
 [1 byte]    File type flag
@@ -945,43 +939,39 @@ void Entity::exportModel() const
         sizeof(unsigned int),
         SCALE,
         vn_count,
-        v_count&&v_size == 3,
-        v_count&&v_size == 4,
-        n_count&&NORMALS_SIZE == 3,
-        c_count&&c_size == 3,
-        c_count&&c_size == 4,
-        t_count&&t_size == 2,
-        t_count&&t_size == 3,
-        f_count&&FACES_SIZE == 3,
+        positions.count&&positions.components == 3,
+        positions.count&&positions.components == 4,
+        normals.count&&normals.components == 3,
+        colors.count&&colors.components == 3,
+        colors.count&&colors.components == 4,
+        texcoords.count&&texcoords.components == 2,
+        texcoords.count&&texcoords.components == 3,
+        faces.count&&faces.components == 3,
         0
     };
     //Write out the export mask
     fwrite(&mask, sizeof(ExportMask), 1, file);
     //Write out each buffer in order
-    if (v_count && (v_size == 3 || v_size == 4))
+    if (positions.count && (positions.components == 3 || positions.components == 4))
     {
-        fwrite(&v_count, sizeof(unsigned int), 1, file);
-        fwrite(vertices, sizeof(float), v_count*v_size, file);
+        fwrite(positions.data, positions.componentSize, positions.count*positions.components, file);
     }
-    if (n_count && (NORMALS_SIZE == 3))
+    if (normals.count && (NORMALS_SIZE == 3))
     {
-        fwrite(&n_count, sizeof(unsigned int), 1, file);
-        fwrite(normals, sizeof(float), n_count*NORMALS_SIZE, file);
+        fwrite(positions.data, positions.componentSize, positions.count*positions.components, file);
     }
-    if (c_count && (c_size == 3 || c_size == 4))
+    if (colors.count && (colors.components == 3 || colors.components == 4))
     {
-        fwrite(&c_count, sizeof(unsigned int), 1, file);
-        fwrite(colors, sizeof(float), c_count*c_size, file);
+        fwrite(colors.data, colors.componentSize, colors.count*colors.components, file);
     }
-    if (t_count && (t_size == 2 || t_size == 3))
+    if (texcoords.count && (texcoords.components == 2 || texcoords.components == 3))
     {
-        fwrite(&t_count, sizeof(unsigned int), 1, file);
-        fwrite(texcoords, sizeof(float), t_count*t_size, file);
+        fwrite(texcoords.data, texcoords.componentSize, texcoords.count*texcoords.components, file);
     }
-    if (f_count && (FACES_SIZE == 3))
+    if (faces.count && (faces.components == 3))
     {
-        fwrite(&f_count, sizeof(unsigned int), 1, file);
-        fwrite(faces, sizeof(unsigned int), f_count*FACES_SIZE, file);
+        fwrite(&faces.count, sizeof(unsigned int), 1, file);
+        fwrite(faces.data, faces.componentSize, faces.count*faces.components, file);
     }
     //Finish by writing the file type flag again
     fwrite(&FILE_TYPE_FLAG, sizeof(char), 1, file);
@@ -1056,52 +1046,74 @@ void Entity::importModel(const char *path)
         fclose(file);
         return;
     }
-    vn_count = mask.VN_COUNT;
-    //Read in buffers
-    if (mask.FILE_HAS_VERTICES_3 || mask.FILE_HAS_VERTICES_4)
+    vn_count = mask.VN_COUNT;    
+    //Set components (sizes should be defaults)
+    positions.components = mask.FILE_HAS_VERTICES_3 ? 3 : 4;
+    normals.components = mask.FILE_HAS_NORMALS_3 ? 3 : NORMALS_SIZE;
+    colors.components = mask.FILE_HAS_COLORS_3 ? 3 : 4;
+    texcoords.components = mask.FILE_HAS_TEXCOORDS_2 ? 2 : 3;
+    //Allocate instance vars from a single malloc
+    unsigned int bufferSize = 0;
+    bufferSize += vn_count*positions.components*positions.componentSize;//Positions required
+    bufferSize += (mask.FILE_HAS_NORMALS_3)*vn_count*normals.components*normals.componentSize;
+    bufferSize += (mask.FILE_HAS_COLORS_3 || mask.FILE_HAS_COLORS_4)*vn_count*colors.components*colors.componentSize;
+    bufferSize += (mask.FILE_HAS_TEXCOORDS_2 || mask.FILE_HAS_TEXCOORDS_3)*vn_count*positions.components*positions.componentSize;
+    positions.data = malloc(bufferSize);
+    positions.count = vn_count;
+    bufferSize = vn_count*positions.components*positions.componentSize;
+    if (mask.FILE_HAS_NORMALS_3)
     {
-        v_size = mask.FILE_HAS_VERTICES_3 ? 3 : 4;
-        fread(&v_count, sizeof(unsigned int), 1, file);
-        vertices = (float *)malloc(sizeof(float)*v_size*v_count);
-        if (v_size*v_count != fread(vertices, sizeof(float), v_size*v_count, file))
+        normals.data = (char*)positions.data + bufferSize;
+        normals.count = vn_count;
+        bufferSize += vn_count*normals.components*normals.componentSize;
+    }
+    if (mask.FILE_HAS_COLORS_3 || mask.FILE_HAS_COLORS_4)
+    {
+        colors.data = (char*)positions.data + bufferSize;
+        colors.count = vn_count;
+        bufferSize += vn_count*colors.components*colors.componentSize;
+    }
+    if (mask.FILE_HAS_TEXCOORDS_2 || mask.FILE_HAS_TEXCOORDS_3)
+    {
+        texcoords.data = (char*)positions.data + bufferSize;
+        texcoords.count = vn_count;
+        bufferSize += vn_count*texcoords.components*texcoords.componentSize;
+    }
+
+    //Read in buffers
+    if (positions.count)
+    {
+        if (vn_count*positions.components != fread(positions.data, positions.componentSize, vn_count*positions.components, file))
         {
             fprintf(stderr, "fread err: vertices\n");
         };
     }
-    if (mask.FILE_HAS_NORMALS_3)
+    if (normals.count)
     {
-        fread(&n_count, sizeof(unsigned int), 1, file);
-        normals = (float *)malloc(sizeof(float)*NORMALS_SIZE*n_count);
-        if (NORMALS_SIZE*n_count != fread(normals, sizeof(float), NORMALS_SIZE*n_count, file))
+        if (vn_count*normals.components != fread(normals.data, normals.componentSize, vn_count*normals.components, file))
         {
             fprintf(stderr, "fread err: normals\n");
         };
     }
-    if (mask.FILE_HAS_COLORS_3 || mask.FILE_HAS_COLORS_4)
+    if (colors.count)
     {
-        c_size = mask.FILE_HAS_COLORS_3 ? 3 : 4;
-        fread(&c_count, sizeof(unsigned int), 1, file);
-        colors = (float *)malloc(sizeof(float)*c_size*c_count);
-        if (c_size*c_count != fread(colors, sizeof(float), c_size*c_count, file))
+        if (vn_count*colors.components != fread(colors.data, colors.componentSize, vn_count*colors.components, file))
         {
             fprintf(stderr, "fread err: colors\n");
         };
     }
-    if (mask.FILE_HAS_TEXCOORDS_2 || mask.FILE_HAS_TEXCOORDS_3)
+    if (texcoords.count)
     {
-        t_size = mask.FILE_HAS_TEXCOORDS_2 ? 2 : 3;
-        fread(&t_count, sizeof(unsigned int), 1, file);
-        texcoords = (float *)malloc(sizeof(float)*t_size*t_count);
-        if (t_size*t_count != fread(texcoords, sizeof(float), t_size*t_count, file))
+        if (vn_count*texcoords.components != fread(texcoords.data, texcoords.componentSize, vn_count*texcoords.components, file))
         {
             fprintf(stderr, "fread err: textures\n");
         };
     }
     if (mask.FILE_HAS_FACES_3)
     {
-        fread(&f_count, sizeof(unsigned int), 1, file);
-        faces = (unsigned int *)malloc(sizeof(unsigned int)*FACES_SIZE*f_count);
-        if (FACES_SIZE*f_count != fread(faces, sizeof(unsigned int), FACES_SIZE*f_count, file))
+        fread(&faces.count, sizeof(unsigned int), 1, file);
+        faces.data = malloc(faces.componentSize*faces.components*faces.count);
+        if (faces.count*faces.components != fread(faces.data, sizeof(unsigned int), faces.count*faces.components, file))
         {
             fprintf(stderr, "fread err: faces\n");
         };
@@ -1123,8 +1135,8 @@ void Entity::importModel(const char *path)
     else if (SCALE>0 && mask.SCALE != SCALE)
     {
         float scaleFactor = SCALE / mask.SCALE;
-        for (unsigned int i = 0; i < v_count*v_size; i++)
-            vertices[i] *= scaleFactor;
+        for (unsigned int i = 0; i < positions.count*positions.components; i++)
+            ((float*)positions.data)[i] *= scaleFactor;
     }
     //Allocate VBOs
     generateVertexBufferObjects();
@@ -1135,14 +1147,28 @@ Creates the necessary vertex buffer objects, and fills them with the relevant in
 */
 void Entity::generateVertexBufferObjects()
 {
-    createVertexBufferObject(&vertices_vbo, GL_ARRAY_BUFFER, vn_count*v_size*sizeof(float), (void*)vertices);
-    if (n_count)
-        createVertexBufferObject(&normals_vbo, GL_ARRAY_BUFFER, vn_count*NORMALS_SIZE*sizeof(float), (void*)normals);
-    if (c_count)
-        createVertexBufferObject(&colors_vbo, GL_ARRAY_BUFFER, vn_count*c_size*sizeof(float), (void*)colors);
-    if (t_count)
-        createVertexBufferObject(&texcoords_vbo, GL_ARRAY_BUFFER, vn_count*t_size*sizeof(float), (void*)texcoords);
-    createVertexBufferObject(&faces_vbo, GL_ELEMENT_ARRAY_BUFFER, f_count*FACES_SIZE*sizeof(unsigned int), (void*)faces);
+    unsigned int bufferSize = 0;
+    bufferSize += positions.count*positions.components*positions.componentSize;//Positions required
+    bufferSize += normals.count*normals.components*normals.componentSize;
+    bufferSize += colors.count*colors.components*colors.componentSize;
+    bufferSize += texcoords.count*texcoords.components*texcoords.componentSize;
+    createVertexBufferObject(&positions.vbo, GL_ARRAY_BUFFER, bufferSize, positions.data);
+    if (normals.count)
+    {
+        normals.vbo = positions.vbo;
+        normals.offset = vn_count*positions.components*positions.componentSize;
+    }
+    if (colors.count)
+    {
+        colors.vbo = positions.vbo;
+        colors.offset = normals.offset + (vn_count*positions.components*positions.componentSize);
+    }
+    if (texcoords.count)
+    {
+        texcoords.vbo = positions.vbo;
+        texcoords.offset = colors.offset + (vn_count*positions.components*positions.componentSize);
+    }
+    createVertexBufferObject(&faces.vbo, GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data);
 }
 /*
 Returns a shared pointer to this entities shaders

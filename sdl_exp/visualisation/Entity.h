@@ -49,13 +49,7 @@ protected:
     const char *modelPath;
     //Model vertex and face counts
     unsigned int vn_count;
-    unsigned int v_count, n_count, c_count, t_count, f_count;//Number of
-    unsigned int v_size, t_size, c_size;//Number of components
-
-    float *vertices, *normals, *colors, *texcoords;
-    unsigned int *faces;
-
-    GLuint vertices_vbo, normals_vbo, colors_vbo, texcoords_vbo, faces_vbo;
+    Shaders::VertexAttributeDetail positions, normals, colors, texcoords, faces;
 
     //Optional material (loaded automaically if detected within model file)
     Material *material;
@@ -63,11 +57,10 @@ protected:
     glm::vec3 location;
     glm::vec4 rotation;
 
-    void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size, void *data);
-    void deleteVertexBufferObject(GLuint *vbo);
+    static void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size, void *data);
+    static void deleteVertexBufferObject(GLuint *vbo);
     void loadModelFromFile();
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
-    void freeModel();
     void freeMaterial();
     void Entity::generateVertexBufferObjects();
 private:

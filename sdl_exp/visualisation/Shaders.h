@@ -9,6 +9,7 @@
 #include <regex>
 #include <vector>
 
+#define NORMALS_SIZE 3
 class Entity;
 
 namespace Stock
@@ -28,25 +29,6 @@ namespace Stock
 };
 class Shaders
 {
-    struct UniformMatrixDetail
-    {
-        int location=-1; //Uniform location within shader
-        glm::mat4 const *matrixPtr=0; //Pointer to the matrix to be loaded
-    };
-    struct VertexAttributeDetail
-    {
-        int location = -1;          //Modern: Attribute location within shader
-        GLuint bufferObject = 0;    //Both: Buffer object containing data
-        unsigned int offset = 0;    //Both: Specifies the offset within the buffer object
-        unsigned int size = 3;      //Both:   Number of vector elements per attribute (Must be 2, 3 or 4)
-        unsigned int stride = 0;    //Both:   Spacing between elements within the array
-    };
-    struct UniformTextureDetail
-    {
-        GLuint name;
-        GLint location;
-        GLenum type;
-    };
     //These constants are the names that will be searched for within the shaders
     const char *MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
     const char *PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
@@ -56,6 +38,44 @@ class Shaders
     const char *TEXCOORD_ATTRIBUTE_NAME = "_texture";
 
 public:
+    struct UniformMatrixDetail
+    {
+        int location = -1; //Uniform location within shader
+        glm::mat4 const *matrixPtr = 0; //Pointer to the matrix to be loaded
+    };
+    struct VertexAttributeDetail
+    {
+        VertexAttributeDetail(
+            GLenum componentType,
+            unsigned int components, 
+            unsigned int componentSize
+            )
+            : componentType(componentType)
+            , components(components)
+            , componentSize(componentSize)
+            , data(0)
+            , count(0)
+            , vbo(0)
+            , location(-1)
+            , offset(0)
+            , stride(0)
+        {}
+        GLenum componentType;   //Type
+        unsigned int components;          //Number of vector components per attribute (Must be 2, 3 or 4)
+        unsigned int componentSize; //Both:
+        void *data;                 //Pointer to the attribute data in memory
+        unsigned int count;        //Number of attributes contained
+        GLuint vbo;                     //Vertex buffer object used
+        int location;              //Attribute location within shader
+        unsigned int offset;        //Specifies the offset within the vbo
+        unsigned int stride;        //Spacing between elements within the array
+     };
+    struct UniformTextureDetail
+    {
+        GLuint name;
+        GLint location;
+        GLenum type;
+    };
     Shaders(Stock::Shaders::ShaderSet set);
     Shaders(const char *vertexShaderPath = 0, const char *fragmentShaderPath = 0, const char *geometryShaderPath = 0);
     ~Shaders();
@@ -73,10 +93,10 @@ public:
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
     void setProjectionMatPtr(glm::mat4 const *projectionMat);
 
-    void setVertexAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
-    void setNormalAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
-    void setColorAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
-    void setTexCoordAttributeDetail(GLuint bufferObject, unsigned int offset, unsigned int size, unsigned int stride);
+    void setPositionsAttributeDetail(VertexAttributeDetail vad);
+    void setNormalsAttributeDetail(VertexAttributeDetail vad);
+    void setColorsAttributeDetail(VertexAttributeDetail vad);
+    void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
 
     bool addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
@@ -84,10 +104,10 @@ private:
     //Matrix uniform pointers
     UniformMatrixDetail modelview;
     UniformMatrixDetail projection;
-    VertexAttributeDetail vertex;
-    VertexAttributeDetail normal;
-    VertexAttributeDetail color;
-    VertexAttributeDetail texcoord;
+    VertexAttributeDetail positions;
+    VertexAttributeDetail normals;
+    VertexAttributeDetail colors;
+    VertexAttributeDetail texcoords;
 
     //Texture tracking
     std::vector<UniformTextureDetail> textures;

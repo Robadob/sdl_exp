@@ -196,6 +196,78 @@ void Shaders::createShaders(){
         else
             this->texcoords.location = -1;
 
+        //Refresh dynamic uniforms
+        std::map<GLint, DynamicUniformDetail> t_dynamicUniforms;
+        for (std::map<GLint, DynamicUniformDetail>::iterator i = dynamicUniforms.begin(); i != dynamicUniforms.end(); i++)
+        {
+            DynamicUniformDetail d = i->second;
+            GLint location = GL_CALL(glGetUniformLocation(this->programId, i->second.uniformName));
+            if (location != -1)
+                t_dynamicUniforms[location] = d;
+            else//If the uniform isn't found again, assign it to a semi random location, in hopes of it not being lost from the map
+            {
+                lostDynamicUniforms.push_front(d);
+                printf("Dynamic uniform '%s' could not be located on shader reload.\n", d.uniformName);
+            }
+        }
+        //Check whether lost uniforms have reappeared
+        for (std::list<DynamicUniformDetail>::iterator i = lostDynamicUniforms.begin(); i != lostDynamicUniforms.end(); i++)
+        {
+            GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
+            if (location != -1)
+            {
+                t_dynamicUniforms[location] = *i;
+                lostDynamicUniforms.erase(i);
+            }
+            else//If the uniform isn't found again, remind the user
+            {
+                printf("Dynamic uniform '%s' remains not located on shader reload.\n", i->uniformName);
+            }
+        }
+        //Refresh static uniforms
+        for (std::forward_list<StaticUniformDetail>::iterator i = staticUniforms.begin(); i != staticUniforms.end(); i++)
+        {
+            GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
+            if (location != -1)
+            {
+                if (i->type == GL_FLOAT)
+                {
+                    if (sizeof(int) != sizeof(float))
+                        printf("Error: int and float sizes differ, static float uniforms may be corrupted.\n");
+                    if (i->count == 1){
+                        GL_CALL(glUniform1fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                    }
+                    else if (i->count == 2){
+                        GL_CALL(glUniform2fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                    }
+                    else if (i->count == 3){
+                        GL_CALL(glUniform3fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                    }
+                    else if (i->count == 4){
+                        GL_CALL(glUniform4fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                    }
+                }
+                else if (i->type == GL_INT)
+                {
+                    if (i->count == 1){
+                        GL_CALL(glUniform1iv(location, 1, glm::value_ptr(i->data)));
+                    }
+                    else if (i->count == 2){
+                        GL_CALL(glUniform2iv(location, 1, glm::value_ptr(i->data)));
+                    }
+                    else if (i->count == 3){
+                        GL_CALL(glUniform3iv(location, 1, glm::value_ptr(i->data)));
+                    }
+                    else if (i->count == 4){
+                        GL_CALL(glUniform4iv(location, 1, glm::value_ptr(i->data)));
+                    }
+                }
+            }
+            else//If the uniform isn't found again, remind the user
+            {
+                printf("Static uniform '%s' could not located on shader reload.\n", i->uniformName);
+            }
+        }
     }
 
     // Clean up any shaders
@@ -234,7 +306,7 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
     {//If projection matrix location and camera ptr are known
-        this->setUniformMatrix4fv(this->projection.location, glm::value_ptr(*this->projection.matrixPtr));//view frustrum
+        GL_CALL(glUniformMatrix4fv(this->projection.location, 1, false, glm::value_ptr(*this->projection.matrixPtr)));
     }
 
     //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
@@ -259,14 +331,14 @@ void Shaders::useProgram(Entity *e){
             glm::vec4 rot = e->getRotation();
             glm::vec3 tran = e->getLocation();
             //Do rotation & translatio;
-            this->setUniformMatrix4fv(
-                this->modelview.location,
+            GL_CALL(glUniformMatrix4fv(
+                this->modelview.location, 1, false, 
                 glm::value_ptr(glm::translate(glm::rotate(*this->modelview.matrixPtr, glm::radians(rot.w), glm::vec3(rot.x, rot.y, rot.z)), tran))
-                );
+                ));
         }
         else
         {
-            this->setUniformMatrix4fv(this->modelview.location, glm::value_ptr(*this->modelview.matrixPtr));
+            GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, false, glm::value_ptr(*this->modelview.matrixPtr)));
         }
     }
 
@@ -304,7 +376,7 @@ void Shaders::useProgram(Entity *e){
     if (this->normals.location >= 0 && this->normals.vbo > 0)
     {//If vertex attribute location and vbo are known
         glEnableVertexAttribArray(this->normals.location);
-        if (activeVBO!=this->normals.vbo)
+        if (activeVBO != this->normals.vbo)
         {
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normals.vbo));
             activeVBO = this->normals.vbo;
@@ -361,9 +433,45 @@ void Shaders::useProgram(Entity *e){
     //Set any Texture buffers
     for (unsigned int i = 0; i < textures.size(); i++)
     {
-        glActiveTexture(GL_TEXTURE0+i);
+        glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(textures[i].type, textures[i].name);
-        this->setUniformi(textures[i].location, i);
+        GL_CALL(glUniform1i(textures[i].location, i));
+    }
+
+    //Set any dynamic uniforms
+    for (std::map<GLint, DynamicUniformDetail>::iterator i = dynamicUniforms.begin(); i != dynamicUniforms.end(); i++)
+    {
+        if (i->second.type == GL_FLOAT)
+        {
+            if (i->second.count == 1)
+            {
+                GL_CALL(glUniform1fv(i->first, 1, (GLfloat *)i->second.data));
+            }
+            else if (i->second.count == 2){
+                GL_CALL(glUniform2fv(i->first, 1, (GLfloat *)i->second.data));
+            }
+            else if (i->second.count == 3){
+                GL_CALL(glUniform3fv(i->first, 1, (GLfloat *)i->second.data));
+            }
+            else if (i->second.count == 4){
+                GL_CALL(glUniform4fv(i->first, 1, (GLfloat *)i->second.data));
+            }
+        }
+        else if (i->second.type == GL_INT)
+        {
+            if (i->second.count == 1){
+                GL_CALL(glUniform1iv(i->first, 1, (GLint *)i->second.data));
+            }
+            else if (i->second.count == 2){
+                GL_CALL(glUniform2iv(i->first, 1, (GLint *)i->second.data));
+            }
+            else if (i->second.count == 3){
+                GL_CALL(glUniform3iv(i->first, 1, (GLint *)i->second.data));
+            }
+            else if (i->second.count == 4){
+                GL_CALL(glUniform4iv(i->first, 1, (GLint *)i->second.data));
+            }
+        }
     }
 }
 /*
@@ -408,29 +516,6 @@ void Shaders::clearProgram(){
         glDisableVertexAttribArray(this->texcoords.location);
     }
     GL_CALL(glUseProgram(0));
-}
-/*
-Sets a uniform integer value
-@param location The uniform location
-@param value The value to be set
-@see glUniform1i()
-*/
-void Shaders::setUniformi(const int location, const int value){
-    if (location >= 0){
-        glUniform1i(location, value);
-    }
-}
-/*
-Sets a uniform matrix value
-@param location The uniform location
-@param value The value to be set
-@see glUniformMatrix4fv()
-*/
-void Shaders::setUniformMatrix4fv(const int location, const GLfloat* value){
-    if (location >= 0){
-        // Must be false and length with most likely just be 1. Can add an extra parameter version if required.
-        glUniformMatrix4fv(location, 1, GL_FALSE, value);
-    }
 }
 /*
 Loads the text from the provided filepath
@@ -654,13 +739,117 @@ bool Shaders::addTextureUniform(GLuint texture, const char *uniformName, GLenum 
 {
     if (this->programId>=0)
     {
-        GLint location = glGetUniformLocation(this->programId, uniformName);
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location!=-1)
         {
             textures.push_back(UniformTextureDetail{ texture, location, type });
             return true;
         }
-        GL_CHECK();
+    }
+    return false;
+}
+/*
+Remembers a pointer to an array of upto 4 integers that will be updated everytime useProgram() is called on this Shaders object
+@param uniformName The name of the uniform within the shader
+@param array A pointer to the array of integers
+@param count The number of integers provided in the array (a maximum of 4)
+@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+*/
+bool Shaders::addDynamicUniform(char *uniformName, GLint *array, unsigned int count)
+{
+    if (this->programId >= 0 || count <= 0 || count>4)
+    {
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
+        if (location != -1)
+        {
+            dynamicUniforms[location] = DynamicUniformDetail{ GL_INT, (void*)array, count, uniformName };
+            return true;
+        }
+    }
+    return false;
+}
+/*
+Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
+@param uniformName The name of the uniform within the shader
+@param array A pointer to the array of floats
+@param count The number of floats provided in the array (a maximum of 4)
+@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+*/
+bool Shaders::addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count)
+{
+    if (this->programId >= 0 || count <= 0 || count>4)
+    {
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
+        if (location != -1)
+        {
+            dynamicUniforms[location] = DynamicUniformDetail{ GL_FLOAT, (void*)array, count, uniformName };
+            return true;
+        }
+    }
+    return false;
+}
+/*
+Sets the
+Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
+@param uniformName The name of the uniform within the shader
+@param array A pointer to the array of floats
+@param count The number of floats provided in the array (a maximum of 4)
+@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+*/
+bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int count)
+{
+    staticUniforms.push_front(StaticUniformDetail{ GL_FLOAT, *(glm::ivec4 *)array, count, uniformName });
+    if (this->programId >= 0 || count <= 0 || count > 4)
+    {
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
+        if (location != -1)
+        {
+            if (count == 1){
+                GL_CALL(glUniform1fv(location, 1, array));
+            }
+            else if (count == 2){
+                GL_CALL(glUniform2fv(location, 1, array));
+            }
+            else if (count == 3){
+                GL_CALL(glUniform3fv(location, 1, array));
+            }
+            else if (count == 4){
+                GL_CALL(glUniform4fv(location, 1, array));
+            }
+            return true;
+        }
+    }
+    return false;
+}
+/*
+Remembers a pointer to an array of upto 4 integers that will be updated everytime useProgram() is called on this Shaders object
+@param uniformName The name of the uniform within the shader
+@param array A pointer to the array of integers
+@param count The number of integers provided in the array (a maximum of 4)
+@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+*/
+bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int count)
+{
+    staticUniforms.push_front(StaticUniformDetail{ GL_INT, (glm::ivec4)*array, count, uniformName });
+    if (this->programId >= 0 || count <= 0 || count > 4)
+    {
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
+        if (location != -1)
+        {
+            if (count == 1){
+                GL_CALL(glUniform1iv(location, 1, array));
+            }
+            else if (count == 2){
+                GL_CALL(glUniform2iv(location, 1, array));
+            }
+            else if (count == 3){
+                GL_CALL(glUniform3iv(location, 1, array));
+            }
+            else if (count == 4){
+                GL_CALL(glUniform4iv(location, 1, array));
+            }
+            return true;
+        }
     }
     return false;
 }

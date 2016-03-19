@@ -8,6 +8,9 @@
 #include <glm/glm.hpp>
 #include <regex>
 #include <vector>
+#include <map>
+#include <list>
+#include <forward_list>
 
 #define NORMALS_SIZE 3
 class Entity;
@@ -100,7 +103,25 @@ public:
 
     bool addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
+    bool addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count=1);
+    bool addDynamicUniform(char *uniformName, GLint *array, unsigned int count=1);
+    bool addStaticUniform(char *uniformName, GLfloat *array, unsigned int count=1);
+    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count=1);
 private:
+    struct DynamicUniformDetail
+    {
+        GLenum type;
+        void *data;
+        unsigned int count;
+        char *uniformName;
+    };
+    struct StaticUniformDetail
+    {
+        GLenum type;
+        glm::ivec4 data;
+        unsigned int count;
+        char *uniformName;
+    };
     //Matrix uniform pointers
     UniformMatrixDetail modelview;
     UniformMatrixDetail projection;
@@ -111,7 +132,12 @@ private:
 
     //Texture tracking
     std::vector<UniformTextureDetail> textures;
-    
+
+    //Misc uniform tracking
+    std::map<GLint, DynamicUniformDetail> dynamicUniforms;
+    std::list<DynamicUniformDetail> lostDynamicUniforms;//Ones that went missing after a shader reload
+    std::forward_list<StaticUniformDetail> staticUniforms;
+
     //Shader file paths
     const char *vertexShaderPath;
     const char *fragmentShaderPath;
@@ -133,10 +159,6 @@ private:
     void destroyProgram();
     bool checkShaderCompileError(const int shaderId, const char *shaderPath);
     bool checkProgramCompileError(const int programId);
-
-    //Private because these must be called after useProgram()
-    void setUniformi(const int location, const int value);
-    void setUniformMatrix4fv(const int location, const GLfloat* value);
 
     std::regex versionRegex;
     unsigned int findShaderVersion(const char *shaderSource);

@@ -1128,18 +1128,18 @@ void Entity::importModel(const char *path)
 Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
 */
 void Entity::generateVertexBufferObjects()
-{
+{/*
     if (texcoords.count>0)
     {
         Shaders::VertexAttributeDetail t = colors;
         colors = texcoords;
         texcoords = t;
-    }
+    }*/
     unsigned int bufferSize = 0;
-    bufferSize += positions.count*positions.components*positions.componentSize;//Positions required
-    bufferSize += normals.count*normals.components*normals.componentSize;
-    bufferSize += colors.count*colors.components*colors.componentSize;
-    bufferSize += texcoords.count*texcoords.components*texcoords.componentSize;
+    bufferSize += positions.count * positions.components * positions.componentSize;//Positions required
+    bufferSize +=   normals.count *   normals.components *   normals.componentSize;
+    bufferSize +=    colors.count *    colors.components *    colors.componentSize;
+    bufferSize += texcoords.count * texcoords.components * texcoords.componentSize;
     createVertexBufferObject(&positions.vbo, GL_ARRAY_BUFFER, bufferSize, positions.data);
     unsigned int offset = vn_count*positions.components*positions.componentSize;
     if (normals.count)
@@ -1160,8 +1160,8 @@ void Entity::generateVertexBufferObjects()
     {
         texcoords.vbo = positions.vbo;
         //redundant
-        colors.offset = offset;
-        offset += colors.count*colors.components*colors.componentSize;
+        texcoords.offset = offset;
+        offset += texcoords.count*texcoords.components*texcoords.componentSize;
     }
     createVertexBufferObject(&faces.vbo, GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data);
 }

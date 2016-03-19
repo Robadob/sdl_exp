@@ -417,6 +417,7 @@ void Shaders::useProgram(Entity *e){
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
             activeVBO = this->texcoords.vbo;
         }
+        //glColorPointer(this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, ((char *)NULL + this->texcoords.offset));
         glTexCoordPointer(this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, ((char *)NULL + this->texcoords.offset));
     }
     if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)

@@ -17,7 +17,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
    // this->icosphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
     //this->colorModel->setRotation(glm::vec4(0.0, 0.0, 1.0, 90));
     this->colorModel->setColor(glm::vec3(0.0, 1.0, 1.0));
-    //this->colorModel->exportModel();
+    this->colorModel->exportModel();
 }
 /*
 Called once per frame when Scene animation calls should be executed

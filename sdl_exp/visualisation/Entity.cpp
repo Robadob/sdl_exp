@@ -16,7 +16,7 @@ const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
 Convenience constructor.
 */
 Entity::Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders)
-    :Entity(model.path, scale, shaders) { }
+    :Entity(model.modelPath, scale, shaders) { }
 /*
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
@@ -87,7 +87,7 @@ The index of the instance being rendered can be identified within the vertex sha
 @param vertLocation The shader attribute location to pass vertices
 @param normalLocation The shader attribute location to pass normals
 */
-void Entity::renderInstances(int count, GLuint vertLocation, GLuint normalLocation){
+void Entity::renderInstances(int count){
     if (this->shaders != nullptr)
         shaders->useProgram(this);
     //Bind the faces to be rendered
@@ -1070,18 +1070,21 @@ void Entity::importModel(const char *path)
     {
         normals.data = (char*)positions.data + bufferSize;
         normals.count = vn_count;
+        normals.offset = bufferSize;
         bufferSize += vn_count*normals.components*normals.componentSize;
     }
     if (mask.FILE_HAS_COLORS_3 || mask.FILE_HAS_COLORS_4)
     {
         colors.data = (char*)positions.data + bufferSize;
         colors.count = vn_count;
+        colors.offset = bufferSize;
         bufferSize += vn_count*colors.components*colors.componentSize;
     }
     if (mask.FILE_HAS_TEXCOORDS_2 || mask.FILE_HAS_TEXCOORDS_3)
     {
         texcoords.data = (char*)positions.data + bufferSize;
         texcoords.count = vn_count;
+        texcoords.offset = bufferSize;
         bufferSize += vn_count*texcoords.components*texcoords.componentSize;
     }
 
@@ -1152,26 +1155,39 @@ Creates the necessary vertex buffer objects, and fills them with the relevant in
 */
 void Entity::generateVertexBufferObjects()
 {
+    if (texcoords.count>0)
+    {
+        Shaders::VertexAttributeDetail t = colors;
+        colors = texcoords;
+        texcoords = t;
+    }
     unsigned int bufferSize = 0;
     bufferSize += positions.count*positions.components*positions.componentSize;//Positions required
     bufferSize += normals.count*normals.components*normals.componentSize;
     bufferSize += colors.count*colors.components*colors.componentSize;
     bufferSize += texcoords.count*texcoords.components*texcoords.componentSize;
     createVertexBufferObject(&positions.vbo, GL_ARRAY_BUFFER, bufferSize, positions.data);
+    unsigned int offset = vn_count*positions.components*positions.componentSize;
     if (normals.count)
     {
         normals.vbo = positions.vbo;
-        normals.offset = vn_count*positions.components*positions.componentSize;
+        //redundant
+        normals.offset = offset;
+        offset += normals.count*normals.components*normals.componentSize;
     }
     if (colors.count)
     {
         colors.vbo = positions.vbo;
-        colors.offset = normals.offset + (vn_count*positions.components*positions.componentSize);
+        //redundant
+        colors.offset = offset;
+        offset += colors.count*colors.components*colors.componentSize;
     }
     if (texcoords.count)
     {
         texcoords.vbo = positions.vbo;
-        texcoords.offset = colors.offset + (vn_count*positions.components*positions.componentSize);
+        //redundant
+        colors.offset = offset;
+        offset += colors.count*colors.components*colors.componentSize;
     }
     createVertexBufferObject(&faces.vbo, GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data);
 }

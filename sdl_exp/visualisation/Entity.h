@@ -15,13 +15,14 @@ namespace Stock
     {
         struct Model
         {
-            char *path;
+            char *modelPath;
+            char *texturePath;
         };
-        const Model ICOSPHERE{ "../models/icosphere.obj" };
-        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj" };
-        const Model CUBE{ "../models/cube.obj" };
-        const Model ROTHWELL{ "../models/rothwell-wy-1.obj" };
-        const Model DEER{ "../models/deer.obj" };
+        const Model ICOSPHERE{ "../models/icosphere.obj", 0 };
+        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", 0 };
+        const Model CUBE{ "../models/cube.obj", 0 };
+        const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0 };
+        const Model DEER{ "../models/deer.obj", "../textures/deer.tga" };
     };
 };
 /*
@@ -30,11 +31,11 @@ A renderable model loaded from a .obj file
 class Entity
 {
 public:
-    Entity::Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
+    Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
     Entity(const char *modelPath, float modelScale = 1.0, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
-    ~Entity();
-    void render();
-    void renderInstances(int count, GLuint vertLocation = 0, GLuint normalLocation = 1);
+    virtual ~Entity();
+    virtual void render();
+    virtual void renderInstances(int count);
     void setColor(glm::vec3 color);
     void setLocation(glm::vec3 location);
     void setRotation(glm::vec4 rotation);

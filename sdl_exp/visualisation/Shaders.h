@@ -28,6 +28,7 @@ namespace Stock
         const ShaderSet FLAT{ "../shaders/flat.v", "../shaders/flat.f", 0 };
         const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", 0 };
         const ShaderSet COLOR{ "../shaders/color.v", "../shaders/color.f", 0 };
+        const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", 0 };
     };
 };
 class Shaders
@@ -38,7 +39,7 @@ class Shaders
     const char *VERTEX_ATTRIBUTE_NAME = "_vertex";
     const char *NORMAL_ATTRIBUTE_NAME = "_normal";
     const char *COLOR_ATTRIBUTE_NAME = "_color";
-    const char *TEXCOORD_ATTRIBUTE_NAME = "_texture";
+    const char *TEXCOORD_ATTRIBUTE_NAME = "_texcoords";
 
 public:
     struct UniformMatrixDetail
@@ -76,7 +77,7 @@ public:
     struct UniformTextureDetail
     {
         GLuint name;
-        GLint location;
+        GLint bufferId;
         GLenum type;
     };
     Shaders(Stock::Shaders::ShaderSet set);
@@ -101,7 +102,7 @@ public:
     void setColorsAttributeDetail(VertexAttributeDetail vad);
     void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
 
-    bool addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
+    int addTextureUniform(GLuint texture, char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
     bool addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count=1);
     bool addDynamicUniform(char *uniformName, GLint *array, unsigned int count=1);

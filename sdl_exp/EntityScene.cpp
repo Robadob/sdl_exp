@@ -1,11 +1,11 @@
 #include "EntityScene.h"
 
-#include <glm/gtc/constants.hpp>
+#include "visualisation/TexturedEntity.h"
 
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation)
     , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::COLOR))))
-    , colorModel(new Entity(Stock::Models::DEER, 10.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::FLAT))))
+    , colorModel(new TexturedEntity(Stock::Models::DEER, 10.0f, std::shared_ptr<Shaders>(new Shaders("../shaders/t.vert", "../shaders/t.frag"))))
     , tick(0.0f)
 {
     registerEntity(icosphere);

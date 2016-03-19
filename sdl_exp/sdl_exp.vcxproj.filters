@@ -57,6 +57,9 @@
     <ClCompile Include="visualisation\Scene.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\TexturedEntity.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -98,6 +101,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Scene.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\TexturedEntity.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>

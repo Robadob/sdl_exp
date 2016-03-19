@@ -225,6 +225,7 @@ void Shaders::createShaders(){
             }
         }
         //Refresh static uniforms
+        glUseProgram(this->programId);
         for (std::forward_list<StaticUniformDetail>::iterator i = staticUniforms.begin(); i != staticUniforms.end(); i++)
         {
             GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
@@ -268,6 +269,7 @@ void Shaders::createShaders(){
                 printf("Static uniform '%s' could not located on shader reload.\n", i->uniformName);
             }
         }
+        glUseProgram(0);
     }
 
     // Clean up any shaders
@@ -299,7 +301,7 @@ void Shaders::useProgram(Entity *e){
     //glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 
     //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-    if (this->vertexShaderVersion <= 140 && this->projection.matrixPtr > 0)
+    if (this->vertexShaderVersion <= 120 && this->projection.matrixPtr > 0)
     {//If old shaders where gl_ModelViewProjectionMatrix is available
         glMatrixMode(GL_PROJECTION);
         GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
@@ -310,7 +312,7 @@ void Shaders::useProgram(Entity *e){
     }
 
     //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
-    if (this->vertexShaderVersion <= 140 && this->modelview.matrixPtr > 0)
+    if (this->vertexShaderVersion <= 120 && this->modelview.matrixPtr > 0)
     {//If old shaders where gl_ModelViewMatrix is available
         glMatrixMode(GL_MODELVIEW);
         GL_CALL(glLoadMatrixf(glm::value_ptr(*this->modelview.matrixPtr)));
@@ -347,7 +349,7 @@ void Shaders::useProgram(Entity *e){
 
     GLuint activeVBO = 0;
     //Set the vertex (location) attribute
-    if (this->vertexShaderVersion <= 140 && this->positions.vbo > 0)
+    if (this->vertexShaderVersion <= 120 && this->positions.vbo > 0)
     {//If old shaders where gl_Vertex is available
         glEnableClientState(GL_VERTEX_ARRAY);
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->positions.vbo));
@@ -363,7 +365,7 @@ void Shaders::useProgram(Entity *e){
     }
 
     //Set the vertex normal attribute
-    if (this->vertexShaderVersion <= 140 && this->normals.vbo > 0)
+    if (this->vertexShaderVersion <= 120 && this->normals.vbo > 0)
     {//If old shaders where gl_Vertex is available
         glEnableClientState(GL_NORMAL_ARRAY);
         if (activeVBO != this->normals.vbo)
@@ -385,7 +387,7 @@ void Shaders::useProgram(Entity *e){
     }
 
     //Set the vertex color attributes
-    if (this->vertexShaderVersion <= 140 && this->colors.vbo > 0)
+    if (this->vertexShaderVersion <= 120 && this->colors.vbo > 0)
     {//If old shaders where gl_Color is available
         glEnableClientState(GL_COLOR_ARRAY);
         if (activeVBO != this->colors.vbo)
@@ -415,8 +417,7 @@ void Shaders::useProgram(Entity *e){
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
             activeVBO = this->texcoords.vbo;
         }
-        glTexCoordPointer(this->texcoords.componentSize, this->texcoords.componentType, this->texcoords.stride, ((char *)NULL + this->texcoords.offset));
-        activeVBO = this->positions.vbo;
+        glTexCoordPointer(this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, ((char *)NULL + this->texcoords.offset));
     }
     if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
     {//If texture attribute location and vbo are known
@@ -427,15 +428,13 @@ void Shaders::useProgram(Entity *e){
             activeVBO = this->texcoords.vbo;
         }
         GL_CALL(glVertexAttribPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, GL_FALSE, this->texcoords.stride, ((char *)NULL + this->texcoords.offset)));
-        activeVBO = this->positions.vbo;
     }
 
     //Set any Texture buffers
     for (unsigned int i = 0; i < textures.size(); i++)
     {
-        glActiveTexture(GL_TEXTURE0 + i);
+        glActiveTexture(GL_TEXTURE0 + textures[i].bufferId);
         glBindTexture(textures[i].type, textures[i].name);
-        GL_CALL(glUniform1i(textures[i].location, i));
     }
 
     //Set any dynamic uniforms
@@ -730,23 +729,23 @@ void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
     this->texcoords = vad;
 }
 /*
-Adds a texture buffer to be loaded when useProgram() is called
+Permenently binds a texture buffer to be loaded when useProgram() is called
 @param texture The name of the texture (as returned by glGenTexture())
 @param uniformName The name of the uniform within the shader this texture should be bound to
 @param type The type of texture being bound
+@return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
 */
-bool Shaders::addTextureUniform(GLuint texture, const char *uniformName, GLenum type)
+int Shaders::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
 {
-    if (this->programId>=0)
+    GLint bufferId = textures.size();
+    GLint maxTex;
+    glGetIntegerv(GL_MAX_TEXTURE_UNITS, &maxTex);
+    if (bufferId<maxTex && addStaticUniform(uniformName, &bufferId))
     {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
-        if (location!=-1)
-        {
-            textures.push_back(UniformTextureDetail{ texture, location, type });
-            return true;
-        }
+        textures.push_back(UniformTextureDetail{ texture, bufferId, type });
+        return bufferId;
     }
-    return false;
+    return -1;
 }
 /*
 Remembers a pointer to an array of upto 4 integers that will be updated everytime useProgram() is called on this Shaders object
@@ -754,6 +753,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 @param array A pointer to the array of integers
 @param count The number of integers provided in the array (a maximum of 4)
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+@note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
 bool Shaders::addDynamicUniform(char *uniformName, GLint *array, unsigned int count)
 {
@@ -774,6 +774,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 @param array A pointer to the array of floats
 @param count The number of floats provided in the array (a maximum of 4)
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+@note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
 bool Shaders::addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count)
 {
@@ -795,6 +796,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 @param array A pointer to the array of floats
 @param count The number of floats provided in the array (a maximum of 4)
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+@note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
 bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int count)
 {
@@ -804,6 +806,7 @@ bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int c
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
         {
+            glUseProgram(this->programId);
             if (count == 1){
                 GL_CALL(glUniform1fv(location, 1, array));
             }
@@ -816,6 +819,7 @@ bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int c
             else if (count == 4){
                 GL_CALL(glUniform4fv(location, 1, array));
             }
+            glUseProgram(0);
             return true;
         }
     }
@@ -827,6 +831,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 @param array A pointer to the array of integers
 @param count The number of integers provided in the array (a maximum of 4)
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+@note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
 bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int count)
 {
@@ -836,6 +841,7 @@ bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int cou
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
         {
+            glUseProgram(this->programId);
             if (count == 1){
                 GL_CALL(glUniform1iv(location, 1, array));
             }
@@ -848,6 +854,7 @@ bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int cou
             else if (count == 4){
                 GL_CALL(glUniform4iv(location, 1, array));
             }
+            glUseProgram(0);
             return true;
         }
     }

@@ -8,7 +8,7 @@
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
-#define VN_PAIR std::pair<unsigned int, unsigned int>
+#define VN_PAIR std::tuple<unsigned int, unsigned int, unsigned int>
 
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
@@ -127,15 +127,17 @@ Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
 unsigned long hashing_func(VN_PAIR key)
 {
-    static int offset = (sizeof(long) - sizeof(int)) * 8;
-    return (key.first << offset) & key.second;
+    static int offset = sizeof(unsigned long) / 3;
+    return (std::get<2>(key) << offset * 2) & (std::get<1>(key) << offset) & std::get<0>(key);
 }
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
 bool key_equal_fn(VN_PAIR t1, VN_PAIR t2)
 {
-    return t1.first == t2.first&&t1.second == t2.second;
+    return std::get<0>(t1) == std::get<0>(t2) &&
+        std::get<1>(t1) == std::get<1>(t2) &&
+        std::get<2>(t1) == std::get<2>(t2);
 }
 /*
 Loads and scales the specified model into this classes primitive storage
@@ -192,7 +194,7 @@ void Entity::loadModelFromFile()
     unsigned int parameters_read = 0;
 
     unsigned int position_components_count = 3;
-    unsigned int faces_components_count = 0;
+    unsigned int color_components_count = 0;
     unsigned int texcoords_components_count = 2;
 
     bool face_hasNormals = false;
@@ -234,14 +236,14 @@ void Entity::loadModelFromFile()
                 {
                 case 8:
                     colors_read++;
-                    faces_components_count = 4;
+                    color_components_count = 4;
                 case 4:
                     position_components_count = 4;
                     break;
                 case 7:
                     position_components_count = 4;
                 case 6:
-                    faces_components_count = 3;
+                    color_components_count = 3;
                     colors_read++;
                     break;
                 }
@@ -331,18 +333,13 @@ exit_loop:;
     {
         fprintf(stderr, "\nVertex color count does not match vertex count, vertex colors will be ignored.\n");
         colors.count = 0;
-    }/*
-    if (texcoords.count != 0 && positions.count != texcoords.count)
-    {
-        fprintf(stderr, "\nVertex texture count does not match vertex count, vertex textures will be ignored.\n");
-        texcoords.count = 0;
-    }*/
+    }
     //Set instance var sizes
     normals.components = NORMALS_SIZE;
     faces.components = FACES_SIZE;
     positions.components = position_components_count;//3-4
     texcoords.components = texcoords_components_count;//2-3
-    colors.components = faces_components_count;//3-4
+    colors.components = color_components_count;//3-4
     //Allocate faces
     faces.data = malloc(faces.count*faces.components*faces.componentSize);
     //Reset file pointer
@@ -353,7 +350,6 @@ exit_loop:;
     float *t_colors = (float *)malloc(colors.count * colors.components * colors.componentSize);
     float *t_normals = (float *)malloc(normals.count * normals.components * normals.componentSize);
     float *t_texcoords = (float *)malloc(texcoords.count * texcoords.components*texcoords.componentSize);
-    //float *t_colors = (float *)malloc(colors_read*colors_size*sizeof(float));
     //3 parts to each face,store the relevant norm and tex indexes
     unsigned int *t_norm_pos = 0;
     if (face_hasNormals)
@@ -520,35 +516,9 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary textures array
-                    t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);   
+                    t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
                     componentsRead++;
                 } while (componentsRead<texcoords.components);
-                ////Read the final texture element if provided (special case, enclosed in [])
-                //if (componentsRead < texcoords.components)//If 3 texture coords
-                //{
-                //    //Find the first char
-                //    while ((c = fgetc(file)) != EOF) {
-                //        if (c != ' ')
-                //            break;
-                //    }
-                //    if (c == '[')
-                //    {
-                //        //Fill buffer with the components
-                //        componentLength = 0;
-                //        while ((c = fgetc(file)) != ']');
-                //        {
-                //            if (c == EOF)
-                //                goto exit_loop2;
-                //            buffer[componentLength] = c;
-                //            componentLength++;
-                //        }
-                //        //End component string
-                //        buffer[componentLength] = '\0';
-                //        //Load it into the temporary textures array
-                //        t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
-                //    }
-                //    componentsRead++;
-                //}
                 texcoords_read++;
                 if (c == '\n')
                 {
@@ -595,12 +565,15 @@ exit_loop:;
                     break;
                     //This is a normal index
                 case 1:
+                    if (face_hasTexcoords)
+                    {//Drop #2nd item onto texture if we have no normals
+                        t_tex_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                        break;
+                    }
+                case 2:
                     t_norm_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
                     break;
                     //This is a texture index
-                case 2:
-                    t_tex_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
-                    break;
                 }
                 componentsRead++;
             } while (componentsRead<(unsigned int)((1 + (int)face_hasNormals + (int)face_hasTexcoords))*FACES_SIZE);
@@ -632,10 +605,12 @@ exit_loop2:;
     //Calculate the number of unique vertex-normal pairs
     for (unsigned int i = 0; i < faces.count*faces.components; i++)
     {
-        if (face_hasNormals)
-            (*vn_pairs)[std::pair<unsigned int, unsigned int>(((unsigned int *)faces.data)[i], t_norm_pos[i])] = UINT_MAX;
+        if (face_hasTexcoords)
+            (*vn_pairs)[VN_PAIR(((unsigned int *)faces.data)[i], t_norm_pos[i], t_tex_pos[i])] = UINT_MAX;
+        else if (face_hasNormals)
+            (*vn_pairs)[VN_PAIR(((unsigned int *)faces.data)[i], t_norm_pos[i], 0)] = UINT_MAX;
         else
-            (*vn_pairs)[std::pair<unsigned int, unsigned int>(((unsigned int *)faces.data)[i], 0)] = UINT_MAX;
+            (*vn_pairs)[VN_PAIR(((unsigned int *)faces.data)[i], 0, 0)] = UINT_MAX;
     }
     vn_count = (unsigned int)vn_pairs->size();
     
@@ -677,17 +652,16 @@ exit_loop2:;
     unsigned int vn_assigned = 0;
     for (unsigned int i = 0; i < faces.count*faces.components; i++)
     {
+        int i_tex = face_hasTexcoords ? t_tex_pos[i] : 0;
         int i_norm = face_hasNormals ? t_norm_pos[i] : 0;
         int i_vert = ((unsigned int *)faces.data)[i];
         glm::vec3 t_normalised_norm;
         //If vn pair hasn't been assigned an id yet
-        if ((*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] == UINT_MAX)
+        if ((*vn_pairs)[VN_PAIR(i_vert, i_norm, i_tex)] == UINT_MAX)
         {
             //Set all n components of vertices and attributes to that id
             for (unsigned int k = 0; k < positions.components; k++)
-            {
                 ((float*)positions.data)[(vn_assigned*positions.components) + k] = t_vertices[(i_vert*positions.components) + k] * scaleFactor;
-            }
             if (face_hasNormals)
             {//Normalise normals
                 t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * normals.components)], t_normals[(t_norm_pos[i] * normals.components)] + 1, t_normals[(t_norm_pos[i] * normals.components)] + 2));
@@ -701,10 +675,10 @@ exit_loop2:;
                 for (unsigned int k = 0; k < texcoords.components; k++)
                     ((float*)texcoords.data)[(vn_assigned*texcoords.components) + k] = t_texcoords[(t_tex_pos[i] * texcoords.components) + k];
             //Assign it new lowest id
-            (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)] = vn_assigned++;
+            (*vn_pairs)[VN_PAIR(i_vert, i_norm, i_tex)] = vn_assigned++;
         }
         //Update index from face
-        ((unsigned int *)faces.data)[i] = (*vn_pairs)[std::pair<unsigned int, unsigned int>(i_vert, i_norm)];
+        ((unsigned int *)faces.data)[i] = (*vn_pairs)[VN_PAIR(i_vert, i_norm, i_tex)];
     }
     ////Free temps
     printf("\rLwaiting              ");
@@ -748,7 +722,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     //Open file
     FILE* file = fopen(materialPath.c_str(), "r");
     if (file == NULL){
-        printf("Could not open ,material '%s'!\n", materialPath.c_str());
+        printf("Could not open material: '%s'!\n", materialPath.c_str());
         return;
     }
     // Prep vars for storing mtl properties

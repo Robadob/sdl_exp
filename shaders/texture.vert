@@ -1,16 +1,12 @@
- #version 430
- 
-uniform mat4 _modelViewMat;
-uniform mat4 _projectionMat;
+#version 120
 
-layout(location = 0) in vec3 _vertex;
-layout(location = 1) in vec3 _texcoords;
+varying vec2 _coords;
 
-out vec2 texcoordsV;
-
-void main(){
-
-  texcoordsV = _texcoords.xy;
-  gl_Position =  _projectionMat * _modelViewMat * vec4(_vertex, 1.0f);
-
+void main()
+{
+  _coords = gl_Color.xy;//gl_TexCoord[0].xyz;
+  ////pass gl_Vertex to frag shader to calculate face normal
+  //u_normal = (_modelViewMat * vec4(_vertex,1.0f)).rgb;
+  //apply model view proj
+  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }

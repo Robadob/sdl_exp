@@ -13,26 +13,3 @@ TexturedEntity::TexturedEntity(const char *modelPath, const char *textureFile, f
 {
     tex.bindToShader(shaders.get());    
 }
-
-void TexturedEntity::render()
-{
-    glPushMatrix();
-    glPushAttrib(GL_ENABLE_BIT);
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_BLEND);
-    Entity::render();
-    glDisable(GL_TEXTURE_2D);
-    
-    // Restore enable bits and matrix
-    glPopAttrib();
-    glPopMatrix();
-}
-void TexturedEntity::renderInstances(int count)
-{
-
-    glPushMatrix();
-    glEnable(GL_TEXTURE_2D);
-    Entity::renderInstances(count);
-    glPopMatrix();
-}

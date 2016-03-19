@@ -1,12 +1,14 @@
-#version 120
+#version 430
 
-//varying vec2 _coords;
+uniform mat4 _modelViewProjectionMat;
+
+in vec3 _vertex;
+in vec3 _texCoords;
+
+out vec3 texCoords;
 
 void main()
 {
-  gl_TexCoord[0] = gl_MultiTexCoord0;
-  ////pass gl_Vertex to frag shader to calculate face normal
-  //u_normal = (_modelViewMat * vec4(_vertex,1.0f)).rgb;
-  //apply model view proj
-  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+  texCoords = _texCoords;
+  gl_Position =  _modelViewProjectionMat * vec4(_vertex,1.0f);
 }

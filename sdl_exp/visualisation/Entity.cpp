@@ -34,7 +34,7 @@ Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders>
     , material(0)
     , color(1, 0, 0)
     , location(0.0f)
-    , rotation(0.0f)
+    , rotation(0.0f, 0.0f, 1.0f, 0.0f)
     , shaders(shaders)
 {
     loadModelFromFile();

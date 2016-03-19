@@ -36,16 +36,19 @@ class Shaders
     //These constants are the names that will be searched for within the shaders
     const char *MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
     const char *PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
+    const char *MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
     const char *VERTEX_ATTRIBUTE_NAME = "_vertex";
     const char *NORMAL_ATTRIBUTE_NAME = "_normal";
     const char *COLOR_ATTRIBUTE_NAME = "_color";
-    const char *TEXCOORD_ATTRIBUTE_NAME = "_texcoords";
+    const char *TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
 
 public:
     struct UniformMatrixDetail
     {
-        int location = -1; //Uniform location within shader
-        glm::mat4 const *matrixPtr = 0; //Pointer to the matrix to be loaded
+        UniformMatrixDetail(int location = -1, glm::mat4 const *matrixPtr = 0)
+            :location(location), matrixPtr(matrixPtr) { }
+        int location; //Uniform location within shader
+        glm::mat4 const *matrixPtr; //Pointer to the matrix to be loaded
     };
     struct VertexAttributeDetail
     {
@@ -126,6 +129,7 @@ private:
     //Matrix uniform pointers
     UniformMatrixDetail modelview;
     UniformMatrixDetail projection;
+    int modelviewprojection;
     VertexAttributeDetail positions;
     VertexAttributeDetail normals;
     VertexAttributeDetail colors;

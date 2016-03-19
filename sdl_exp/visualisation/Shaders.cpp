@@ -33,8 +33,9 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , geometryShaderVersion(0)
     , compileSuccessFlag(true)
     , versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase)
-    , modelview{}
-    , projection{}
+    , modelview()
+    , projection()
+    , modelviewprojection(-1)
     , positions(GL_FLOAT, 3, sizeof(float))
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
     , colors(GL_FLOAT, 3, sizeof(float))
@@ -171,6 +172,12 @@ void Shaders::createShaders(){
             this->projection.location = u_PM.first;
         else
             this->projection.location = -1;
+        //Locate the modelViewProjection matrix uniform
+        std::pair<int, GLenum> u_MVP = findUniform(MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME, this->programId);
+        if (u_MVP.first >= 0 && u_MVP.second == GL_FLOAT_MAT4)
+            this->modelviewprojection = u_MVP.first;
+        else
+            this->modelviewprojection = -1;
         //Locate the vertexPosition attribute
         std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->programId);
         if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
@@ -308,42 +315,38 @@ void Shaders::useProgram(Entity *e){
     }
     if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
     {//If projection matrix location and camera ptr are known
-        GL_CALL(glUniformMatrix4fv(this->projection.location, 1, false, glm::value_ptr(*this->projection.matrixPtr)));
+        GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*this->projection.matrixPtr)));
     }
-
+    //Calculate modelview matrix
+    glm::mat4 mv;
+    if (this->modelview.matrixPtr)
+    {
+        mv = *this->modelview.matrixPtr;
+        if (e)
+        {
+            glm::vec4 rot = e->getRotation();
+            glm::vec3 tran = e->getLocation();
+            if ((rot.x != 0 || rot.y != 0 || rot.z != 0) && rot.w != 0)
+                mv = glm::rotate(mv, glm::radians(rot.w), glm::vec3(rot.x, rot.y, rot.z));
+            mv = glm::translate(mv, tran);
+        }
+    }
     //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
     if (this->vertexShaderVersion <= 120 && this->modelview.matrixPtr > 0)
     {//If old shaders where gl_ModelViewMatrix is available
         glMatrixMode(GL_MODELVIEW);
-        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->modelview.matrixPtr)));
-        if (e)
-        {
-            glm::vec4 rot = e->getRotation();
-            glm::vec3 tran = e->getLocation();
-            //Do rotation
-            GL_CALL(glRotatef(rot.w, rot.x, rot.y, rot.z));
-            //Do translation
-            GL_CALL(glTranslatef(tran.x, tran.y, tran.z));
-        }
+        GL_CALL(glLoadMatrixf(glm::value_ptr(mv)));
     }
     if (this->modelview.location >= 0 && this->modelview.matrixPtr > 0)
     {//If modeview matrix location and camera ptr are known
-        if (e)
-        {
-            glm::vec4 rot = e->getRotation();
-            glm::vec3 tran = e->getLocation();
-            //Do rotation & translatio;
-            GL_CALL(glUniformMatrix4fv(
-                this->modelview.location, 1, false, 
-                glm::value_ptr(glm::translate(glm::rotate(*this->modelview.matrixPtr, glm::radians(rot.w), glm::vec3(rot.x, rot.y, rot.z)), tran))
-                ));
-        }
-        else
-        {
-            GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, false, glm::value_ptr(*this->modelview.matrixPtr)));
-        }
+        GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(mv)));
     }
-
+    //Set the model view projection matrix (e.g. projection * modelview)
+    if (this->modelviewprojection >= 0 && this->modelview.matrixPtr && this->projection.matrixPtr)
+    {
+        glm::mat4 mvp = *this->projection.matrixPtr * mv;
+        GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
+    }
     //Don't think we need to use
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
 

@@ -1,7 +1,6 @@
-#version 130
+#version 430
 
-//in vec2 _coords;
-
+in vec3 texCoords;
 
 out vec3 fragColor;
 
@@ -9,5 +8,5 @@ uniform sampler2D _texture;
 
 void main()
 {
-  fragColor = texture( _texture, vec2(gl_TexCoord[0].x, -gl_TexCoord[0].y)).bgr;
+  fragColor = texture( _texture, vec2(texCoords.x, -texCoords.y)).bgr;
 }

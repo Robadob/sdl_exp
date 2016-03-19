@@ -3,33 +3,43 @@
 #include <string>
 
 Texture::Texture(const char *texturePath)
-    :texturePath(texturePath)
+    : texturePath(texturePath)
+    , texName(0)
 {
-    //init texture
-    glGenTextures(1, &texName);
-    glBindTexture(GL_TEXTURE_2D, texName); 
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glGenerateMipmap(GL_TEXTURE_2D);//Auto generate texture mipmaps
-    SDL_Surface *image = readTex(texturePath);
-    printf("\ntex: (%i, %i, %i)\n", image->format->Rshift, image->format->Gshift, image->format->Bshift);
-    glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
-    glPixelStorei(GL_PACK_SWAP_BYTES, GL_TRUE);
-    //glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    GLint format = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
-    glTexImage2D(GL_TEXTURE_2D, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
-    SDL_FreeSurface(image);
+    if (texturePath)
+    {
+        //init texture
+        glGenTextures(1, &texName);
+        glBindTexture(GL_TEXTURE_2D, texName); 
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        glGenerateMipmap(GL_TEXTURE_2D);//Auto generate texture mipmaps
+        SDL_Surface *image = readTex(texturePath);
+        printf("\ntex: (%i, %i, %i)\n", image->format->Rshift, image->format->Gshift, image->format->Bshift);
+        glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
+        glPixelStorei(GL_PACK_SWAP_BYTES, GL_TRUE);
+        //glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        GLint format = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
+        SDL_FreeSurface(image);
+    }
+    else
+    {
+        fprintf(stderr, "Cannot construct a texture object from a null path.\n");
+        getchar();
+    }
 }
 
 
 Texture::~Texture()
 {
-    glDeleteTextures(1, &texName);
+    if (texName)
+        glDeleteTextures(1, &texName);
 }
 
 /*
@@ -72,7 +82,7 @@ void Texture::deleteTextureBufferObject(GLuint *tbo){
 
 void Texture::bindToShader(Shaders *shaders, char *uniformName)
 {
-    if (uniformName)
+    if (uniformName&&texName)
         shaders->addTextureUniform(texName, uniformName, GL_TEXTURE_2D);
     else
         shaders->addTextureUniform(texName, TEXTURE_UNIFORM_NAME, GL_TEXTURE_2D);

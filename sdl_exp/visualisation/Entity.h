@@ -21,6 +21,7 @@ namespace Stock
         const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj" };
         const Model CUBE{ "../models/cube.obj" };
         const Model ROTHWELL{ "../models/rothwell-wy-1.obj" };
+        const Model DEER{ "../models/deer.obj" };
     };
 };
 /*

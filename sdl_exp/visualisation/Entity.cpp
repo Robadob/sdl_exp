@@ -298,11 +298,12 @@ void Entity::loadModelFromFile()
             break;
         }
         //Speed to the end of the line and begin next iteration
-        while ((c = fgetc(file)) != '\n')
+        while (c != '\n')
         {
             lnLen++;
             if (c == EOF)
                 goto exit_loop;
+            c = fgetc(file);
         }
         //printf("\rVert: %i:%i, Normal: %i, Face: %i, Tex: %i:%i, Color: %i:%i, Ln:%i", vertices_read, vertices_size, normals_read, faces_read, textures_read, textures_size, colors_read, colors_size, lnLenMax);
     }
@@ -330,12 +331,12 @@ exit_loop:;
     {
         fprintf(stderr, "\nVertex color count does not match vertex count, vertex colors will be ignored.\n");
         colors.count = 0;
-    }
+    }/*
     if (texcoords.count != 0 && positions.count != texcoords.count)
     {
         fprintf(stderr, "\nVertex texture count does not match vertex count, vertex textures will be ignored.\n");
         texcoords.count = 0;
-    }
+    }*/
     //Set instance var sizes
     normals.components = NORMALS_SIZE;
     faces.components = FACES_SIZE;
@@ -504,7 +505,7 @@ exit_loop:;
                 {
                     //Find the first char
                     while ((c = fgetc(file)) != EOF) {
-                        if (c != ' ')
+                        if (c >= '0'&&c<='9')
                             break;
                     }
                     //Fill buffer with the vert/tex/norm index components
@@ -519,37 +520,40 @@ exit_loop:;
                     //End component string
                     buffer[componentLength] = '\0';
                     //Load it into the temporary textures array
-                    t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
-                } while (componentsRead<DEFAULT_TEXCOORD_SIZE);
-                //Read the final texture element if provided (special case, enclosed in [])
-                if (componentsRead < texcoords.components)//If 3 texture coords
-                {
-                    //Find the first char
-                    while ((c = fgetc(file)) != EOF) {
-                        if (c != ' ')
-                            break;
-                    }
-                    if (c == '[')
-                    {
-                        //Fill buffer with the components
-                        componentLength = 0;
-                        while ((c = fgetc(file)) != ']');
-                        {
-                            if (c == EOF)
-                                goto exit_loop2;
-                            buffer[componentLength] = c;
-                            componentLength++;
-                        }
-                        //End component string
-                        buffer[componentLength] = '\0';
-                        //Load it into the temporary textures array
-                        t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
-                    }
+                    t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);   
                     componentsRead++;
-                }
+                } while (componentsRead<texcoords.components);
+                ////Read the final texture element if provided (special case, enclosed in [])
+                //if (componentsRead < texcoords.components)//If 3 texture coords
+                //{
+                //    //Find the first char
+                //    while ((c = fgetc(file)) != EOF) {
+                //        if (c != ' ')
+                //            break;
+                //    }
+                //    if (c == '[')
+                //    {
+                //        //Fill buffer with the components
+                //        componentLength = 0;
+                //        while ((c = fgetc(file)) != ']');
+                //        {
+                //            if (c == EOF)
+                //                goto exit_loop2;
+                //            buffer[componentLength] = c;
+                //            componentLength++;
+                //        }
+                //        //End component string
+                //        buffer[componentLength] = '\0';
+                //        //Load it into the temporary textures array
+                //        t_texcoords[(texcoords_read * texcoords.components) + componentsRead] = (float)atof(buffer);
+                //    }
+                //    componentsRead++;
+                //}
                 texcoords_read++;
                 if (c == '\n')
+                {
                     continue;
+                }
                 //Speed to the end of the texture line
                 while ((c = fgetc(file)) != '\n')
                 {
@@ -599,17 +603,18 @@ exit_loop:;
                     break;
                 }
                 componentsRead++;
-
-
             } while (componentsRead<(unsigned int)((1 + (int)face_hasNormals + (int)face_hasTexcoords))*FACES_SIZE);
             faces_read++;
             if (c == '\n')
+            {
                 continue;
+            }
         }
         //Speed to the end of the line and begin next iteration
-        while ((c = fgetc(file)) != '\n')
+        while (c!='\n')
         {
-            lnLen++;
+            lnLen++; 
+            c = fgetc(file);
             if (c == EOF)
                 goto exit_loop2;
         }

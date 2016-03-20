@@ -137,7 +137,6 @@ void Skybox::reloadTextures(){
     image = readTex(imagePath.c_str());
     GLint format = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
-    printf("\nskybox: (%i, %i, %i)\n", image->format->Rshift, image->format->Gshift, image->format->Bshift);
     SDL_FreeSurface(image);
     imagePath.assign(texturePath).append("right");
     image = readTex(imagePath.c_str());

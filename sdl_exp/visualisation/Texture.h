@@ -13,8 +13,8 @@ public:
     Texture(const char *texturePath);
     ~Texture();
 
-    void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
-    void deleteTextureBufferObject(GLuint *tbo); 
+    //void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
+    //void deleteTextureBufferObject(GLuint *tbo); 
     
     void bindToShader(Shaders *s, char *uniformName=0);
 private:

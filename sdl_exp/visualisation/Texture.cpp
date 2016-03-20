@@ -19,13 +19,28 @@ Texture::Texture(const char *texturePath)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         glGenerateMipmap(GL_TEXTURE_2D);//Auto generate texture mipmaps
         SDL_Surface *image = readTex(texturePath);
-        printf("\ntex: (%i, %i, %i)\n", image->format->Rshift, image->format->Gshift, image->format->Bshift);
-        glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_TRUE);
-        glPixelStorei(GL_PACK_SWAP_BYTES, GL_TRUE);
-        //glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        GLint format = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
+        GLint internalFormat = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
+        GLint format = internalFormat;
+        //Convert image to RGBA order if it is BGRA order
+        if (image->format->Rshift>image->format->Bshift)
+        {
+            SDL_PixelFormat desiredFormat;
+            memcpy(&desiredFormat, image->format, sizeof(SDL_PixelFormat));
+            desiredFormat.Bloss = image->format->Rloss;
+            desiredFormat.Bmask = image->format->Rmask;
+            desiredFormat.Bshift = image->format->Rshift;
+            desiredFormat.Rloss = image->format->Bloss;
+            desiredFormat.Rmask = image->format->Bmask;
+            desiredFormat.Rshift = image->format->Bshift;
+            if (internalFormat==GL_RGB)
+                desiredFormat.format = SDL_PIXELFORMAT_RGB888;
+            else
+                desiredFormat.format = SDL_PIXELFORMAT_RGBA8888;
+            SDL_Surface* old = image;
+            image = SDL_ConvertSurface(old, &desiredFormat, 0);
+            SDL_FreeSurface(old);
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
         SDL_FreeSurface(image);
     }
     else
@@ -60,25 +75,25 @@ SDL_Surface *Texture::readTex(const char *texturePath){
     return image;
 }
 
-void Texture::createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size){
-    glGenTextures(1, texture);
-    glGenBuffers(1, tbo);
-    
-    glBindBuffer(GL_TEXTURE_BUFFER, *tbo);
-    glBufferData(GL_TEXTURE_BUFFER, size, 0, GL_STATIC_DRAW);
-
-    glBindTexture(GL_TEXTURE_BUFFER, *texture);
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, *tbo);
-
-    glBindBuffer(GL_TEXTURE_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_BUFFER, 0);
-
-    GL_CHECK();
-}
-
-void Texture::deleteTextureBufferObject(GLuint *tbo){
-    glDeleteBuffers(1, tbo);
-}
+//void Texture::createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size){
+//    glGenTextures(1, texture);
+//    glGenBuffers(1, tbo);
+//    
+//    glBindBuffer(GL_TEXTURE_BUFFER, *tbo);
+//    glBufferData(GL_TEXTURE_BUFFER, size, 0, GL_STATIC_DRAW);
+//
+//    glBindTexture(GL_TEXTURE_BUFFER, *texture);
+//    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, *tbo);
+//
+//    glBindBuffer(GL_TEXTURE_BUFFER, 0);
+//    glBindTexture(GL_TEXTURE_BUFFER, 0);
+//
+//    GL_CHECK();
+//}
+//
+//void Texture::deleteTextureBufferObject(GLuint *tbo){
+//    glDeleteBuffers(1, tbo);
+//}
 
 void Texture::bindToShader(Shaders *shaders, char *uniformName)
 {

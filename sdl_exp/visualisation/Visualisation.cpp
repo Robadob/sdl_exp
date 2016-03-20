@@ -6,6 +6,7 @@
 
 #include "GLcheck.h"
 #include "Scene.h"
+#include "Skybox.h"
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.001f
@@ -57,8 +58,6 @@ Initialises SDL and creates the window
 @note This method doesn't begin the render loop, use run() for that
 */
 bool Visualisation::init(){
-    bool result = true;
-
     SDL_Init(SDL_INIT_VIDEO);
 
     // Enable MSAA (Must occur before SDL_CreateWindow)
@@ -103,7 +102,6 @@ bool Visualisation::init(){
         
         // Setup gl stuff
         glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         glShadeModel(GL_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -168,7 +166,7 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
         if (this->skybox)
             this->skybox->reload();
         if (this->scene)
-            this->scene->reload();
+            this->scene->_reload();
         break;
     default:
         // Do nothing?
@@ -261,7 +259,7 @@ void Visualisation::render()
     // render
     this->clearFrame();
     if (this->skybox)
-        this->skybox->render(&camera, this->frustum);
+        this->skybox->render();
     this->defaultProjection();
     if (this->renderAxisState)
         this->axis.render();
@@ -349,7 +347,12 @@ Toggles whether the skybox should be used or not
 */
 void Visualisation::setSkybox(bool state){
     if (state&&!this->skybox)
-        this->skybox = new Skybox(this->getCamera()->getSkyboxViewMatPtr(), this->getFrustrumPtr());
+    {
+        this->skybox = new Skybox();
+        this->skybox->setModelViewMatPtr(&this->camera);
+        this->skybox->setProjectionMatPtr(this);
+        this->skybox->setYOffset(-1.0f);
+    }
     else if (!state&&this->skybox)
     {
         delete this->skybox;

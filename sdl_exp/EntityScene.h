@@ -16,9 +16,9 @@ public:
     void reload() override;
     void update() override;
 private:
-    Entity icosphere;
+    std::shared_ptr<Entity> icosphere;
+    std::shared_ptr<Entity> colorModel;
     float tick;
-    ~EntityScene() override;//Private to prevent stack allocation
 };
 
 #endif

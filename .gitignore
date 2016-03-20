@@ -5,6 +5,7 @@
 *.suo
 *.user
 *.sln.docstates
+*.obj.sdl_export
 
 # Build results
 

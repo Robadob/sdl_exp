@@ -22,7 +22,7 @@ public:
     glm::mat4 view() const; 
     void gluLookAt();
     glm::mat4 skyboxView() const;
-    void skyboxGluLookAt();
+    void skyboxGluLookAt() const;
     glm::vec3 getEye() const;
     glm::vec3 getLook() const;
     glm::vec3 getUp() const;
@@ -32,10 +32,15 @@ public:
     const glm::mat4 *Camera::getSkyboxViewMatPtr() const;
 private:
     void updateViews();
+    //ModelView matrix
     glm::mat4 viewMat;
+    //Model view matrix without camera position taken into consideration
     glm::mat4 skyboxViewMat;
+    //Up vector used for stabilisation, only rotated when roll is called
     glm::vec3 pureUp;
+    //Eyelocation
     glm::vec3 eye;
+    //3 perpendicular vectors which represent the cameras direction and orientation
     glm::vec3 look;
     glm::vec3 right;
     glm::vec3 up;

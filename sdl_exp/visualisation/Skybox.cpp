@@ -2,10 +2,9 @@
 
 /*
 Constructs a skybox entity
-@param projectionMat Pointer to the projection matrix to be used during render
-@param modelViewMat Pointer to the model view matrix to be used during render
-@param texturePath Path to directory containing files named left/right/back/front/up/down.png (bmp is also suitable).
-@param texturePath The provided must end with a /
+@param texturePath The directory containing the textures for the cubemap
+@param yOffset The vertical offset to the skybox view (setting this further than around -2.0f-2.0f can make the corners visible of the skybox if it was not designed for off center)
+@note The directory should contain the /, and textures should be named in the form right/left/up/down/front/back,(png|tga|bmp)
 */
 Skybox::Skybox(const char *texturePath, float yOffset)
     : Entity(
@@ -21,7 +20,6 @@ Skybox::Skybox(const char *texturePath, float yOffset)
     flipVertexOrder();
     //Flip normals
 }
-
 /*
 Renders the skybox
 */
@@ -46,13 +44,19 @@ void Skybox::render()
     glPopAttrib();
     glPopMatrix();
 }
-
-
+/*
+Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
+*/
 void Skybox::setModelViewMatPtr(const Camera *camera)
 {
     if (shaders.get())
         shaders->setModelViewMatPtr(camera->getSkyboxViewMatPtr());
 }
+/*
+Adjusts the vertical offset of the skybox
+@param yOffset The desired offset
+@note Offsets large than -2.0f-2.0f can make the corners of the skybox visible
+*/
 void Skybox::setYOffset(float yOffset)
 {
     setLocation(glm::vec3(0, yOffset, 0));

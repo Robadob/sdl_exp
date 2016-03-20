@@ -151,9 +151,9 @@
     <ClCompile Include="visualisation\Material.cpp" />
     <ClCompile Include="visualisation\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
-    <ClCompile Include="visualisation\Texture.cpp" />
-    <ClCompile Include="visualisation\Texture2D.cpp" />
-    <ClCompile Include="visualisation\TextureCubeMap.cpp" />
+    <ClCompile Include="visualisation\texture\Texture.cpp" />
+    <ClCompile Include="visualisation\texture\Texture2D.cpp" />
+    <ClCompile Include="visualisation\texture\TextureCubeMap.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\Scene.cpp" />
   </ItemGroup>
@@ -170,9 +170,9 @@
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
-    <ClInclude Include="visualisation\Texture.h" />
-    <ClInclude Include="visualisation\Texture2D.h" />
-    <ClInclude Include="visualisation\TextureCubeMap.h" />
+    <ClInclude Include="visualisation\texture\Texture.h" />
+    <ClInclude Include="visualisation\texture\Texture2D.h" />
+    <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>

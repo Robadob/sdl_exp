@@ -1,11 +1,14 @@
 #ifndef __Texture_h__
 #define __Texture_h__
 
-#include "GLcheck.h"
-#include "Shaders.h"
+#include "../GLcheck.h"
+#include "../Shaders.h"
 
 #include <SDL/SDL_image.h>
-
+/*
+Shell texture class providing various utility methods for subclasses
+@note This class cannot be directly instantiated
+*/
 class Texture
 {
     static const char *IMAGE_EXTS[4];
@@ -22,9 +25,9 @@ protected:
     static SDL_Surface *readImage(const char *texturePath, bool printErr = true);
     void setTexture(SDL_Surface *image, GLuint target = 0, bool dontFreeImage = false);
     GLuint texName;
+    const GLenum texType;
 private:
     static SDL_Surface *Texture::findImage(const char *imagePath);
-    const GLenum texType;
     char *uniformName;
     void createGLTex();
     void deleteGLTex();

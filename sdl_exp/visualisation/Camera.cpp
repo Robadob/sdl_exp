@@ -149,10 +149,11 @@ glm::mat4 Camera::skyboxView() const{
 }
 /*
 Calls gluLookAt() from the perspective required for rendering a skybox (direction only) 
-For people using fixed function pipeline
+For people using fixed function pipeline, although manually setting the matrix with glLoadMatrixf() also works.
 @see skyboxView()
 */
-void Camera::skyboxGluLookAt(){
+void Camera::skyboxGluLookAt() const
+{
     GL_CALL(::gluLookAt(
         0, 0, 0,
         look.x, look.y, look.z,

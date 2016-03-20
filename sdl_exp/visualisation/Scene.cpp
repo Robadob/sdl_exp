@@ -1,8 +1,8 @@
 #include "Scene.h"
 
 /*
-Binds the ModelView and Projection matrices into the provided shaer
 Sets this scene within the visualisation
+@param visualisation The visualisation that is hosting the scene.
 */
 Scene::Scene(Visualisation &visualisation)
     : visualisation(visualisation)
@@ -16,7 +16,7 @@ void Scene::kill(){
     delete this;
 }
 /*
-Registers an entity, so the scene can manage it's matrices and shader reloads
+Registers an entity, so the scene can manage it's modelview and projection matrices and reloads
 */
 void Scene::registerEntity(std::shared_ptr<Entity> ent)
 {
@@ -31,6 +31,9 @@ void Scene::registerEntity(std::shared_ptr<Entity> ent)
     else
         fprintf(stderr, "Can't register a null entity!\n");
 }
+/*
+Reloads all registered entities, then calls reload on the subclassed scene
+*/
 void Scene::_reload()
 {
     printf("Reloading Shaders.\n");

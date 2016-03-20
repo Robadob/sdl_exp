@@ -1,5 +1,7 @@
 #include "EntityScene.h"
-
+/*
+Constructor, modify this to change what happens
+*/
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation)
     , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, Stock::Shaders::COLOR))
@@ -39,7 +41,6 @@ void EntityScene::render()
 }
 /*
 Called when the user requests a reload
-@note You should call functions such as shaders->reload() here
 */
 void EntityScene::reload()
 {

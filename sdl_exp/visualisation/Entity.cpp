@@ -27,6 +27,9 @@ Entity::Entity(
     shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
     texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
     ){ }
+/*
+Convenience constructor.
+*/
 Entity::Entity(
     Stock::Models::Model const model,
     float modelScale,
@@ -38,6 +41,9 @@ Entity::Entity(
     std::make_shared<Shaders>(ss.vertex,ss.fragment, ss.geometry),
     texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
     ) { }
+/*
+Convenience constructor.
+*/
 Entity::Entity(
     const char *modelPath,
     float modelScale,
@@ -53,6 +59,8 @@ Entity::Entity(
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
+@param shaderd Pointer to the shaders to be used
+@param texture Pointer to the texture to be used
 */
 Entity::Entity(
     const char *modelPath, 
@@ -1215,7 +1223,9 @@ std::shared_ptr<Shaders> Entity::getShaders() const
     else
         return std::shared_ptr<Shaders>(0);
 }
-
+/*
+Reloads the entities texture and shaders
+*/
 void Entity::reload()
 {
     if (shaders.get())
@@ -1223,26 +1233,46 @@ void Entity::reload()
     if (texture.get())
         texture->reload();
 }
-
-
+/*
+Sets the modelview matrix to be tracked by this entitiy (in the shader)
+@param camera The camera holding the modelview matrix
+@note This function exists so that subclasses of Entity can intercept the matrix
+*/
 void Entity::setModelViewMatPtr(const Camera *camera)
 {
     setModelViewMatPtr(camera->getViewMatPtr());
 }
+/*
+Sets the projection matrix to be tracked by this entitiy (in the shader)
+@param camera The visualisation holding the projection matrix
+@note This function exists so that subclasses of Entity can intercept the matrix
+*/
 void Entity::setProjectionMatPtr(const Visualisation *visualisation)
 {
     setProjectionMatPtr(visualisation->getFrustrumPtr());
 }
+/*
+Sets the pointer to the modelView matrix used by this entitiy (in the shader)
+@param modelViewMat A pointer to const of the modelView matrix to be tracked
+*/
 void Entity::setModelViewMatPtr(glm::mat4 const *modelViewMat)
 {
     if (shaders.get())
         shaders->setModelViewMatPtr(modelViewMat);
 }
+/*
+Sets the pointer to the projection matrix used by this entitiy (in the shader)
+@param modelViewMat A pointer to const of the projection matrix to be tracked
+*/
 void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
     if (shaders.get())
         shaders->setProjectionMatPtr(projectionMat);
 }
+/*
+Switches the vertex order of the model
+@note Exporting a model after calling this WILL reverse it in the export
+*/
 void Entity::flipVertexOrder()
 {
     unsigned int *faceData = reinterpret_cast<unsigned int *>(faces.data);

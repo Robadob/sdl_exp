@@ -22,6 +22,12 @@
     <Filter Include="Header Files\Visualisation\Util">
       <UniqueIdentifier>{9299d9cc-b5b0-460c-8abf-0fbd3b7a5ec0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Texture">
+      <UniqueIdentifier>{30fded43-cb7a-4e72-9e30-f5a18b61140c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Texture">
+      <UniqueIdentifier>{edfb27b4-a483-4369-a69b-d87b2b21eec6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -45,9 +51,6 @@
     <ClCompile Include="visualisation\Skybox.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\Texture.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Visualisation.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -57,11 +60,14 @@
     <ClCompile Include="visualisation\Scene.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\Texture2D.cpp">
-      <Filter>Source Files\Visualisation</Filter>
+    <ClCompile Include="visualisation\texture\Texture.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\TextureCubeMap.cpp">
-      <Filter>Source Files\Visualisation</Filter>
+    <ClCompile Include="visualisation\texture\Texture2D.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\texture\TextureCubeMap.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,9 +97,6 @@
     <ClInclude Include="visualisation\Skybox.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\Texture.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\Visualisation.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
@@ -106,11 +109,14 @@
     <ClInclude Include="visualisation\Scene.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\TextureCubeMap.h">
-      <Filter>Header Files\Visualisation</Filter>
+    <ClInclude Include="visualisation\texture\Texture2D.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\Texture2D.h">
-      <Filter>Header Files\Visualisation</Filter>
+    <ClInclude Include="visualisation\texture\TextureCubeMap.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\Texture.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

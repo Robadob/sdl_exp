@@ -1,11 +1,19 @@
 #include "Texture.h"
+
+/*
+Image extensions to be supported
+*/
 const char* Texture::IMAGE_EXTS[] = {
     "",
     ".tga",
     ".png",
     ".bmp"
 };
-
+/*
+@param type The type of texture, e.g. GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP
+@param texPath This value is only used to block null textures (to save generating unused textures), any value that evaluates to true will suffice
+@param uniformName The name of the uniform sampler within the sahder, this defaults to TEXTURE_UNIFORM_NAME from this classes header
+*/
 Texture::Texture(GLenum type, const char *texPath, char *uniformName)
     : texName(0)
     , texType(type)
@@ -14,34 +22,44 @@ Texture::Texture(GLenum type, const char *texPath, char *uniformName)
     if (texPath)
         createGLTex();
 }
+/*
+Deletes the GL texture
+@note This wraps deleteGLTex()
+*/
 Texture::~Texture()
 {
     deleteGLTex();
 }
- 
-
+/*
+Creates a GL texture and configures some of it's parameters
+@note This does not store an image in the texture
+*/
 void Texture::createGLTex()
 {
-    //init texture
     GL_CALL(glGenTextures(1, &texName));
     GL_CALL(glBindTexture(texType, texName));
-    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT));
-    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT));
-    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT));
+    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_BASE_LEVEL, 0));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));//Changing this kills textures (why?)
     //GL_CALL(glGenerateMipmap(texType));//Auto generate texture mipmap
-
 }
-
+/*
+Deletes the GL texture
+*/
 void Texture::deleteGLTex()
 {
     if (texName)
         GL_CALL(glDeleteTextures(1, &texName));
 }
-
+/*
+Returns the first image found at the provided path
+This method attempts all the suffices stored in Texture::IMAGE_EXTS
+@imagePath Path to search for images
+*/
 SDL_Surface *Texture::findImage(const char *imagePath)
 {
     if (!imagePath)
@@ -61,6 +79,7 @@ SDL_Surface *Texture::findImage(const char *imagePath)
 /*
 Loads a texture from the provided .png or .bmp file
 @param texturePath Path to the texture to be loaded
+@param printErr True if errors should be printed when an error is detected
 @note the SDL_Surface must be freed using SDL_FreeSurface()
 */
 SDL_Surface *Texture::readImage(const char *texturePath, bool printErr){
@@ -97,7 +116,12 @@ SDL_Surface *Texture::readImage(const char *texturePath, bool printErr){
     }
     return image;
 }
-
+/*
+Loads a texture from the provided .png or .bmp file
+@param image The image to be stored in the texture
+@param target The type of texture to be loaded, the instance variable 'texType' is probably the right value here and is used as a default.
+@param dontFreeImage If true the image pointer won't be freed
+*/
 void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
 {
     if (image == 0)
@@ -114,6 +138,23 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
     if (!dontFreeImage)
         SDL_FreeSurface(image);
 }
+/*
+Binds the texture to the passed shader so it will be used at render
+@param shaders The shader to bind to
+@param uniformName The uniform name within the shader to bind to (defaults to the value of TEXTURE_UNIFORM_NAME)
+*/
+bool Texture::bindToShader(Shaders *shaders, char *uniformName)
+{
+    if (!this->texName)
+        return false;
+    if (uniformName)
+        shaders->addTextureUniform(this->texName, uniformName, texType);
+    else
+        shaders->addTextureUniform(this->texName, this->uniformName, texType);
+    return true;
+}
+
+//Unused TBO methods, maybe use later if CUDA integration is supported
 //void Texture::createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size){
 //    glGenTextures(1, texture);
 //    glGenBuffers(1, tbo);
@@ -133,14 +174,3 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
 //void Texture::deleteTextureBufferObject(GLuint *tbo){
 //    glDeleteBuffers(1, tbo);
 //}
-
-bool Texture::bindToShader(Shaders *shaders, char *uniformName)
-{
-    if (!this->texName)
-        return false;
-    if (uniformName)
-        shaders->addTextureUniform(this->texName, uniformName, texType);
-    else
-        shaders->addTextureUniform(this->texName, this->uniformName, texType);
-    return true;
-}

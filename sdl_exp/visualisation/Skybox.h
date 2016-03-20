@@ -2,7 +2,7 @@
 #define __Skybox_h__
 
 #include "Entity.h"
-#include "TextureCubeMap.h"
+#include "texture/TextureCubeMap.h"
 
 class Skybox : public Entity
 {

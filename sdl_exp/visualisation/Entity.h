@@ -8,7 +8,7 @@
 
 #include "Material.h"
 #include "Shaders.h"
-#include "Texture2D.h"
+#include "texture/Texture2D.h"
 #include "Camera.h"
 #include "Visualisation.h"
 

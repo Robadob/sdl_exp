@@ -12,7 +12,8 @@
 #include "Entity.h"
 
 /*
-Convenience constructor
+Constructs a shader object from one of the stock shader sets
+@param set The shader set to create
 */
 Shaders::Shaders(Stock::Shaders::ShaderSet set)
     :Shaders(set.vertex, set.fragment, set.geometry){}

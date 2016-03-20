@@ -26,6 +26,7 @@ namespace Stock
             char *fragment;
             char *geometry;
         };
+        const ShaderSet FIXED_FUNCTION{0, 0, 0 };
         const ShaderSet FLAT{ "../shaders/flat.v", "../shaders/flat.f", 0 };
         const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", 0 };
         const ShaderSet COLOR{ "../shaders/color.v", "../shaders/color.f", 0 };

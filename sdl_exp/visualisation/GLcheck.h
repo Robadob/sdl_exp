@@ -32,6 +32,8 @@ inline static void HandleGLError(const char *file, int line) {
 #endif //ifdef  _DEBUG
 
 inline static void InitGlew() {
+    //https://www.opengl.org/wiki/OpenGL_Loading_Library#GLEW_.28OpenGL_Extension_Wrangler.29
+    glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (GLEW_OK != err)
     {

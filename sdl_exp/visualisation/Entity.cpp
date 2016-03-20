@@ -10,9 +10,6 @@
 #define FACES_SIZE 3
 #define VN_PAIR std::tuple<unsigned int, unsigned int, unsigned int>
 
-
-const char *Entity::OBJ_TYPE = ".obj";
-const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
 /*
 Convenience constructor.
 */
@@ -26,7 +23,7 @@ Entity::Entity(
     model.modelPath,
     modelScale,
     shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
-    texture.get() ? texture : std::make_shared<Texture>(model.texturePath)
+    texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
 ) { }
 template<class T>
 Entity::Entity(
@@ -38,7 +35,7 @@ Entity::Entity(
     model.modelPath,
     modelScale,
     shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
-    texture.get() ? texture : std::make_shared<Texture>(model.texturePath)
+    texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
 ) { }
 template<class T>
 Entity::Entity(
@@ -79,12 +76,17 @@ Entity::Entity(
     , shaders(shaders)
     , texture(texture)
 {
+    GL_CHECK();
     loadModelFromFile();
+
+    GL_CHECK();
     //If texture has been provied, set up
     if (texture.get())
     {
         texture->bindToShader(shaders.get());
     }
+
+    GL_CHECK();
     //If shaders have been provided, set them up
     if (positions.data&&this->shaders != nullptr)
     {
@@ -94,6 +96,12 @@ Entity::Entity(
         this->shaders->setTexCoordsAttributeDetail(texcoords);
     }
 }
+//Don't repeat the non template items when Entity-impl.cpp is compiled
+#ifndef __Entity_impl_cpp__
+
+const char *Entity::OBJ_TYPE = ".obj";
+const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
+
 /*
 Destructor, free's memory allocated to store the model and its material
 */
@@ -1217,33 +1225,9 @@ Returns a shared pointer to this entities shaders
 */
 std::shared_ptr<Shaders> Entity::getShaders() const
 {
-    return shaders;
+    if (shaders.get())
+        return shaders;
+    else
+        return std::shared_ptr<Shaders>(0);
 }
-
-template Entity::Entity(
-    Stock::Models::Model const model,
-    float scale,
-    std::shared_ptr<Shaders> shaders,
-    std::shared_ptr<Texture> texture
-    );
-template
-Entity::Entity(
-    Stock::Models::Model const model,
-    float scale,
-    Stock::Shaders::ShaderSet const ss,
-    std::shared_ptr<Texture> texture
-    );
-template
-Entity::Entity(
-    const char *modelPath,
-    float modelScale,
-    Stock::Shaders::ShaderSet const ss,
-    std::shared_ptr<Texture> texture
-    );
-template
-Entity::Entity(
-    const char *modelPath,
-    float modelScale,
-    std::shared_ptr<Shaders> shaders,
-    std::shared_ptr<Texture> texture
-    );
+#endif //ifdef __Entity_impl_cpp__

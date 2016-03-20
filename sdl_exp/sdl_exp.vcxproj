@@ -90,7 +90,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -147,11 +147,15 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
+    <ClCompile Include="visualisation\Entity-impl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
     <ClCompile Include="visualisation\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
     <ClCompile Include="visualisation\Texture.cpp" />
+    <ClCompile Include="visualisation\Texture2D.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\Scene.cpp" />
   </ItemGroup>
@@ -169,6 +173,8 @@
     <ClInclude Include="visualisation\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
     <ClInclude Include="visualisation\Texture.h" />
+    <ClInclude Include="visualisation\Texture2D.h" />
+    <ClInclude Include="visualisation\TextureCubeMap.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>

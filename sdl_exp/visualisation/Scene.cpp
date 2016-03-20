@@ -20,11 +20,16 @@ Registers an entity, so the scene can manage it's matrices and shader reloads
 */
 void Scene::registerEntity(std::shared_ptr<Entity> ent)
 {
-    //Store value for later
-    entities.push_back(ent);
-    //Setup matrices
-    ent->getShaders()->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
-    ent->getShaders()->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+    if (ent.get())
+    {
+        //Store value for later
+        entities.push_back(ent);
+        //Setup matrices
+        ent->getShaders()->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
+        ent->getShaders()->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+    }
+    else
+        fprintf(stderr, "Can't register a null entity!\n");
 }
 void Scene::_reload()
 {

@@ -8,7 +8,7 @@
 
 #include "Material.h"
 #include "Shaders.h"
-#include "Texture.h"
+#include "Texture2D.h"
 
 namespace Stock
 {
@@ -34,28 +34,28 @@ A renderable model loaded from a .obj file
 class Entity
 {
 public:
-    template<class T = Texture>
+    template<class T = Texture2D>
     Entity(
         Stock::Models::Model const model,
         float scale = 1.0f,
         std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
         std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
         );
-    template<class T = Texture>
+    template<class T = Texture2D>
     Entity(
         Stock::Models::Model const model,
         float scale,
         Stock::Shaders::ShaderSet const ss,
         std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
         );
-    template<class T = Texture>
+    template<class T = Texture2D>
     Entity(
         const char *modelPath,
         float modelScale = 1.0f,
         Stock::Shaders::ShaderSet const ss = Stock::Shaders::FLAT,
         std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
         );
-    template<class T = Texture>
+    template<class T = Texture2D>
     Entity(
         const char *modelPath,
         float modelScale,

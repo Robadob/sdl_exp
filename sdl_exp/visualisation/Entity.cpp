@@ -268,6 +268,11 @@ void Entity::loadModelFromFile()
     bool face_hasTexcoords = false;
 
     printf("\rLoading Model: %s [Counting Elements]", modelPath);
+    //MTL details
+    char mtllib_tag[7] = "mtllib";
+    char usemtl_tag[7] = "usemtl";
+    char *mtllib = 0;
+    char *usemtl = 0;
     //Count vertices/faces, attributes
     char c;
     int dotCtr;
@@ -649,6 +654,82 @@ exit_loop:;
             {
                 continue;
             }
+        case 'm':
+            //Only do first material found
+            if (mtllib)
+                break;
+            //Check for mtllib tag
+            for (int i = 1; i < (sizeof(mtllib_tag) / sizeof(c))-1; i++)
+            {
+                if ((c = fgetc(file)) != mtllib_tag[i])
+                {
+                    //Break if tag ends early
+                    break;
+                }
+                if (c == EOF)
+                    goto exit_loop;
+                if (c == mtllib_tag[(sizeof(mtllib_tag) / sizeof(c)) - 2])
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    //Fill buffer with the vert/tex/norm index components
+                    componentLength = 0;
+                    do
+                    {
+                        if (c == EOF)
+                            goto exit_loop2;
+                        buffer[componentLength] = c;
+                        componentLength++;
+                    } while ((c = fgetc(file)) != ' ' && c != '\r' && c != '\n');
+                    buffer[componentLength] = '\0';
+                    componentLength++;
+                    //Memcpy buffer to local storage
+                    mtllib = (char*)malloc(componentLength*sizeof(char));
+                    memcpy(mtllib, buffer, componentLength*sizeof(char));
+                }
+            }
+            break;
+        case 'u':
+            //Only do first material found
+            if (usemtl)
+                break;
+            //Check for usemtl tag
+            for (int i = 1; i < (sizeof(usemtl_tag) / sizeof(c))-1; i++)
+            {
+                if ((c = fgetc(file)) != usemtl_tag[i])
+                {
+                    //Break if tag ends early
+                    break;
+                }
+                if (c == EOF)
+                    goto exit_loop;
+                if (c == usemtl_tag[(sizeof(usemtl_tag) / sizeof(c)) - 2])
+                {
+                    //Find the first char
+                    while ((c = fgetc(file)) != EOF) {
+                        if (c != ' ')
+                            break;
+                    }
+                    //Fill buffer with the vert/tex/norm index components
+                    componentLength = 0;
+                    do
+                    {
+                        if (c == EOF)
+                            goto exit_loop2;
+                        buffer[componentLength] = c;
+                        componentLength++;
+                    } while ((c = fgetc(file)) != ' ' && c != '\r' && c != '\n');
+                    buffer[componentLength] = '\0';
+                    componentLength++;
+                    //Memcpy buffer to local storage
+                    usemtl = (char*)malloc(componentLength*sizeof(char));
+                    memcpy(usemtl, buffer, componentLength*sizeof(char));
+                }
+            }
+            break;
         }
         //Speed to the end of the line and begin next iteration
         while (c!='\n')
@@ -773,6 +854,12 @@ exit_loop2:;
     //free(faces);
     fclose(file);
     printf("\rLoading Model: %s [Complete!]                 \n", modelPath);
+    if (mtllib&&usemtl)
+    {
+        loadMaterialFromFile(modelPath, mtllib, usemtl);
+    }
+    free(mtllib);
+    free(usemtl);
 }
 /*
 Loads a single material from a .mtl file
@@ -790,12 +877,12 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     //Open file
     FILE* file = fopen(materialPath.c_str(), "r");
     if (file == NULL){
-        printf("Could not open material: '%s'!\n", materialPath.c_str());
+        fprintf(stderr, "Could not open material: '%s'!\n", materialPath.c_str());
         return;
     }
     // Prep vars for storing mtl properties
-    char buffer[100];
-    char temp[100];
+    char buffer[1024];
+    char temp[1024];
     float r, g, b;
     int i;
 
@@ -876,7 +963,8 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 
         }
     }
-
+    fclose(file);
+    printf("Material file loaded: '%s'!\n", materialPath.c_str());
 }
 /*
 Set the color of the model

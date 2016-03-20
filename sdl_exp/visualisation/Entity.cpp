@@ -63,9 +63,9 @@ Constructs an entity from the provided .obj model
 @param texture Pointer to the texture to be used
 */
 Entity::Entity(
-    const char *modelPath, 
-    float modelScale, 
-    std::shared_ptr<Shaders> shaders, 
+    const char *modelPath,
+    float modelScale,
+    std::shared_ptr<Shaders> shaders,
     std::shared_ptr<Texture> texture
     )
     : positions(GL_FLOAT, 3, sizeof(float))
@@ -82,6 +82,7 @@ Entity::Entity(
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
     , shaders(shaders)
     , texture(texture)
+    , cullFace(true)
 {
     GL_CHECK();
     loadModelFromFile();
@@ -97,6 +98,11 @@ Entity::Entity(
         this->shaders->setNormalsAttributeDetail(normals);
         this->shaders->setColorsAttributeDetail(colors);
         this->shaders->setTexCoordsAttributeDetail(texcoords);
+    }
+    if (needsExport)
+    {
+        exportModel();
+        printf("Model '%s' export was updated.\n", modelPath);
     }
 }
 
@@ -124,11 +130,15 @@ void Entity::render(){
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
     glPushMatrix();
+    if (!cullFace)
+        glDisable(GL_CULL_FACE);
     //Translate the model according to it's location
     if (this->material)
         this->material->useMaterial();
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
     GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
+    if (!cullFace)
+        glEnable(GL_CULL_FACE);
     glPopMatrix();
     if (this->shaders != nullptr)
         shaders->clearProgram();
@@ -147,11 +157,15 @@ void Entity::renderInstances(int count){
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
     glPushMatrix();
+    if (!cullFace)
+        glEnable(GL_CULL_FACE);
     //Set the color and material
     if (this->material)
         this->material->useMaterial();
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
     GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
+    if (!cullFace)
+        glDisable(GL_CULL_FACE);
     glPopMatrix();
     if (this->shaders != nullptr)
         shaders->clearProgram();
@@ -951,7 +965,8 @@ void Entity::exportModel() const
         exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
     }
     FILE * file;
-    if ((file = fopen(exportPath.c_str(), "r")))
+    //Only check if file already exists if we're not upgrading its version
+    if (!needsExport&&(file = fopen(exportPath.c_str(), "r")))
     {
         fprintf(stderr, "Cannot export model, file already exists.\n");
         fclose(file);
@@ -1065,6 +1080,12 @@ void Entity::importModel(const char *path)
         fprintf(stderr, "File %s is of newer version %i, this software supports a maximum version of %i. Aborting import\n", importPath.c_str(), (unsigned int)mask.VERSION_FLAG, (unsigned int)FILE_TYPE_VERSION);
         fclose(file);
         return;
+    }
+    else if (mask.VERSION_FLAG < FILE_TYPE_VERSION)
+    {
+        fprintf(stderr, "File %s is of an older version %i, it will automatically be upgraded to version %i.\n", importPath.c_str(), (unsigned int)mask.VERSION_FLAG, (unsigned int)FILE_TYPE_VERSION);
+
+        needsExport = true;
     }
     //Check float/uint lengths aren't too short
     if (sizeof(float) != mask.SIZE_OF_FLOAT)
@@ -1294,4 +1315,12 @@ void Entity::flipVertexOrder()
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
     GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+}
+/*
+Disables or enables face culling
+@param cullFace The setting to be used, A value of false will make both sides of faces render
+*/
+void Entity::setCullFace(const bool cullFace)
+{
+    this->cullFace = cullFace;
 }

@@ -76,6 +76,7 @@ public:
     virtual void setModelViewMatPtr(const Camera *modelViewMat);
     virtual void setProjectionMatPtr(const Visualisation *visualisation);
     void flipVertexOrder();
+    void setCullFace(const bool cullFace);
 protected:
     std::shared_ptr<Shaders> shaders;
     std::shared_ptr<Texture> texture;
@@ -99,6 +100,9 @@ protected:
     void freeMaterial();
     void generateVertexBufferObjects();
 private:
+    //Set by importModel if the imported model was of an older version.
+    bool needsExport;
+    bool cullFace;
     const static char *OBJ_TYPE;
     const static char *EXPORT_TYPE;
     inline static bool endsWith(const char *candidate, const char *suffix);

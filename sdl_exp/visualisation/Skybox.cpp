@@ -31,7 +31,6 @@ void Skybox::render()
     // Enable/Disable features
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_TEXTURE_CUBE_MAP);
-    //glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_BLEND);

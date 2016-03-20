@@ -102,7 +102,6 @@ bool Visualisation::init(){
         
         // Setup gl stuff
         glEnable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         glShadeModel(GL_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

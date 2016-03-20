@@ -1,7 +1,5 @@
 #include "Texture.h"
 
-#include <string>
-
 Texture::Texture(const char *texturePath)
     : texturePath(texturePath)
     , texName(0)

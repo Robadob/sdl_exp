@@ -57,8 +57,6 @@ Initialises SDL and creates the window
 @note This method doesn't begin the render loop, use run() for that
 */
 bool Visualisation::init(){
-    bool result = true;
-
     SDL_Init(SDL_INIT_VIDEO);
 
     // Enable MSAA (Must occur before SDL_CreateWindow)

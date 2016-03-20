@@ -325,7 +325,7 @@ exit_loop:;
     faces.count = faces_read;
     if (positions.count == 0 || faces.count == 0)
     {
-        fprintf(stderr, "\nVertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n");
+        fprintf(stderr, "\nVertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n", modelPath);
         fclose(file);
         return;
     }
@@ -1059,7 +1059,7 @@ void Entity::importModel(const char *path)
         texcoords.data = (char*)positions.data + bufferSize;
         texcoords.count = vn_count;
         texcoords.offset = bufferSize;
-        bufferSize += vn_count*texcoords.components*texcoords.componentSize;
+        //bufferSize += vn_count*texcoords.components*texcoords.componentSize;
     }
 
     //Read in buffers
@@ -1111,7 +1111,7 @@ void Entity::importModel(const char *path)
     //Check model scale
     if (SCALE>0 && mask.SCALE <= 0)
     {
-        fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE, SCALE);
+        fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE);
     }
     //Scale the model
     else if (SCALE>0 && mask.SCALE != SCALE)
@@ -1161,7 +1161,7 @@ void Entity::generateVertexBufferObjects()
         texcoords.vbo = positions.vbo;
         //redundant
         texcoords.offset = offset;
-        offset += texcoords.count*texcoords.components*texcoords.componentSize;
+        //offset += texcoords.count*texcoords.components*texcoords.componentSize;
     }
     createVertexBufferObject(&faces.vbo, GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data);
 }

@@ -6,7 +6,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
 
@@ -243,16 +242,16 @@ void Shaders::createShaders(){
                     if (sizeof(int) != sizeof(float))
                         printf("Error: int and float sizes differ, static float uniforms may be corrupted.\n");
                     if (i->count == 1){
-                        GL_CALL(glUniform1fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                        GL_CALL(glUniform1fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
                     }
                     else if (i->count == 2){
-                        GL_CALL(glUniform2fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                        GL_CALL(glUniform2fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
                     }
                     else if (i->count == 3){
-                        GL_CALL(glUniform3fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                        GL_CALL(glUniform3fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
                     }
                     else if (i->count == 4){
-                        GL_CALL(glUniform4fv(location, 1, (GLfloat *)glm::value_ptr(i->data)));
+                        GL_CALL(glUniform4fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
                     }
                 }
                 else if (i->type == GL_INT)
@@ -429,7 +428,7 @@ void Shaders::useProgram(Entity *e){
         if (activeVBO != this->texcoords.vbo)
         {
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
-            activeVBO = this->texcoords.vbo;
+            //activeVBO = this->texcoords.vbo;
         }
         GL_CALL(glVertexAttribPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, GL_FALSE, this->texcoords.stride, ((char *)NULL + this->texcoords.offset)));
     }

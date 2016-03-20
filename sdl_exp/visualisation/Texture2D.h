@@ -6,7 +6,8 @@
 class Texture2D : public Texture
 {
 public:
-    Texture2D(const char *texturePath);
+    Texture2D(const char *texturePath, char *uniformName = 0);
+    void reload() override;
 
 private:
     const char *texturePath;

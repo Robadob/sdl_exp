@@ -78,15 +78,11 @@ Entity::Entity(
 {
     GL_CHECK();
     loadModelFromFile();
-
-    GL_CHECK();
     //If texture has been provied, set up
     if (texture.get())
     {
         texture->bindToShader(shaders.get());
     }
-
-    GL_CHECK();
     //If shaders have been provided, set them up
     if (positions.data&&this->shaders != nullptr)
     {
@@ -1229,5 +1225,13 @@ std::shared_ptr<Shaders> Entity::getShaders() const
         return shaders;
     else
         return std::shared_ptr<Shaders>(0);
+}
+
+void Entity::reload()
+{
+    if (shaders.get())
+        shaders->reload(true);
+    if (texture.get())
+        texture->reload();
 }
 #endif //ifdef __Entity_impl_cpp__

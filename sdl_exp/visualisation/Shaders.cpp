@@ -42,8 +42,8 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , textures()
     , programId(0)
 {
-    this->createShaders();
     GL_CHECK();
+    this->createShaders();
 }
 /*
 Destructor, free's the shader program

@@ -36,7 +36,7 @@ void Scene::_reload()
     printf("Reloading Shaders.\n");
     for (std::vector<std::shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
     {
-        (*i)->getShaders()->reload(true);
+        (*i)->reload();
     }
     reload();
 }

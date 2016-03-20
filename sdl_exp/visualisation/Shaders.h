@@ -30,6 +30,7 @@ namespace Stock
         const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", 0 };
         const ShaderSet COLOR{ "../shaders/color.v", "../shaders/color.f", 0 };
         const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", 0 };
+        const ShaderSet SKYBOX{ "../shaders/skybox.v", "../shaders/skybox.f", 0 };
     };
 };
 class Shaders

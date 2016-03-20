@@ -72,6 +72,7 @@ public:
     glm::vec4 getRotation() const;
     inline void clearMaterial();
     void exportModel() const;
+    void reload();
     std::shared_ptr<Shaders> getShaders() const;
 protected:
     std::shared_ptr<Shaders> shaders;
@@ -94,7 +95,7 @@ protected:
     void loadModelFromFile();
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
     void freeMaterial();
-    void Entity::generateVertexBufferObjects();
+    void generateVertexBufferObjects();
 private:
     const static char *OBJ_TYPE;
     const static char *EXPORT_TYPE;

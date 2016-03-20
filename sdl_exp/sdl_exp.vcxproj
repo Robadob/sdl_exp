@@ -156,6 +156,7 @@
     <ClCompile Include="visualisation\Skybox.cpp" />
     <ClCompile Include="visualisation\Texture.cpp" />
     <ClCompile Include="visualisation\Texture2D.cpp" />
+    <ClCompile Include="visualisation\TextureCubeMap.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\Scene.cpp" />
   </ItemGroup>

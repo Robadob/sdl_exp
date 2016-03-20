@@ -1,8 +1,16 @@
 #include "Texture.h"
+#include "TextureCubeMap.h"
+const char* IMAGE_EXTS[] = {
+    "",
+    ".tga",
+    ".png",
+    ".bmp"
+};
 
-Texture::Texture(GLenum type)
-: texName(0)
-, texType(type)
+Texture::Texture(GLenum type, char *uniformName)
+    : texName(0)
+    , texType(type)
+    , uniformName(uniformName == 0 ? TEXTURE_UNIFORM_NAME : uniformName)
 {
     createGLTex();
 }
@@ -33,17 +41,28 @@ void Texture::deleteGLTex()
         GL_CALL(glDeleteTextures(1, &texName));
 }
 
+SDL_Surface *Texture::findImage(const char *imagePath)
+{
+    SDL_Surface *image=0;
+    for (int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*);i++)
+    {
+        image = IMG_Load(imagePath);
+        if (image)
+            break;
+    }
+    return image;
+}
 /*
 Loads a texture from the provided .png or .bmp file
 @param texturePath Path to the texture to be loaded
 @note the SDL_Surface must be freed using SDL_FreeSurface()
 */
 SDL_Surface *Texture::readImage(const char *texturePath, bool printErr){
-    SDL_Surface *image = IMG_Load(texturePath);
+    SDL_Surface *image = findImage(texturePath);
     if (!image)
     {
         if (printErr)
-            fprintf(stderr, "Couldn't read texure file '%s': %s\n", texturePath, IMG_GetError());
+            fprintf(stderr, "Couldn't find texture at path '%s(.png/.bmp/.tga)': %s\n", texturePath, IMG_GetError());
     }
     else if (image->format->BytesPerPixel != 3 && image->format->BytesPerPixel != 4)
     {
@@ -110,10 +129,13 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
 //    glDeleteBuffers(1, tbo);
 //}
 
-void Texture::bindToShader(Shaders *shaders, char *uniformName)
+bool Texture::bindToShader(Shaders *shaders, char *uniformName)
 {
-    if (uniformName&&texName)
-        shaders->addTextureUniform(texName, uniformName, GL_TEXTURE_2D);
+    if (!this->texName)
+        return false;
+    if (uniformName)
+        shaders->addTextureUniform(this->texName, uniformName, GL_TEXTURE_2D);
     else
-        shaders->addTextureUniform(texName, TEXTURE_UNIFORM_NAME, GL_TEXTURE_2D);
+        shaders->addTextureUniform(this->texName, this->uniformName, GL_TEXTURE_2D);
+    return true;
 }

@@ -147,9 +147,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
-    <ClCompile Include="visualisation\Entity-impl.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
     <ClCompile Include="visualisation\Shaders.cpp" />

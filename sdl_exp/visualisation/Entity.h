@@ -9,6 +9,8 @@
 #include "Material.h"
 #include "Shaders.h"
 #include "Texture2D.h"
+#include "Camera.h"
+#include "Visualisation.h"
 
 namespace Stock
 {
@@ -21,7 +23,7 @@ namespace Stock
             Stock::Shaders::ShaderSet defaultShaders;;
         };
         const Model ICOSPHERE{ "../models/icosphere.obj", 0, Stock::Shaders::FLAT };
-        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", "../textures/deer.tga", Stock::Shaders::COLOR };//Remove texture?
+        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", 0, Stock::Shaders::COLOR };//Remove texture?
         const Model CUBE{ "../models/cube.obj", 0, Stock::Shaders::COLOR };
         const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0, Stock::Shaders::PHONG };
         const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::TEXTURE };
@@ -30,40 +32,35 @@ namespace Stock
 /*
 A renderable model loaded from a .obj file
 */
-//template<class T>
 class Entity
 {
 public:
-    template<class T = Texture2D>
-    Entity(
+    explicit Entity(
         Stock::Models::Model const model,
         float scale = 1.0f,
         std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
-        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
-    template<class T = Texture2D>
     Entity(
         Stock::Models::Model const model,
         float scale,
         Stock::Shaders::ShaderSet const ss,
-        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
-    template<class T = Texture2D>
-    Entity(
+    explicit Entity(
         const char *modelPath,
         float modelScale = 1.0f,
         Stock::Shaders::ShaderSet const ss = Stock::Shaders::FLAT,
-        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
-    template<class T = Texture2D>
-    Entity(
+    explicit Entity(
         const char *modelPath,
         float modelScale,
         std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
-        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         ); 
     virtual ~Entity();
-    void render();
+    virtual void render();
     void renderInstances(int count);
     void setColor(glm::vec3 color);
     void setLocation(glm::vec3 location);
@@ -72,8 +69,13 @@ public:
     glm::vec4 getRotation() const;
     inline void clearMaterial();
     void exportModel() const;
-    void reload();
+    virtual void reload();
     std::shared_ptr<Shaders> getShaders() const;
+    virtual void setModelViewMatPtr(glm::mat4 const *modelViewMat);
+    virtual void setProjectionMatPtr(glm::mat4 const *projectionMat);
+    virtual void setModelViewMatPtr(const Camera *modelViewMat);
+    virtual void setProjectionMatPtr(const Visualisation *visualisation);
+    void flipVertexOrder();
 protected:
     std::shared_ptr<Shaders> shaders;
     std::shared_ptr<Texture> texture;

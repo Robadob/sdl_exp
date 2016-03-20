@@ -60,9 +60,6 @@
     <ClCompile Include="visualisation\Texture2D.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\Entity-impl.cpp">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\TextureCubeMap.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>

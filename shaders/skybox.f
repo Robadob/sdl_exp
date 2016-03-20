@@ -1,11 +1,11 @@
 #version 430
 
-layout(location = 2) in vec3 tex_coords;
+in vec3 tex_coords;
 
-layout(location = 3) uniform samplerCube cube_texture;
+uniform samplerCube _texture;
 
 out vec4 frag_colour;
 
 void main () {
-  frag_colour = texture(cube_texture, tex_coords);
+  frag_colour = texture(_texture, tex_coords);//vec4(tex_coords,1.0);//
 }

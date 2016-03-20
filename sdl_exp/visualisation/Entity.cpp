@@ -10,39 +10,39 @@
 #define FACES_SIZE 3
 #define VN_PAIR std::tuple<unsigned int, unsigned int, unsigned int>
 
+const char *Entity::OBJ_TYPE = ".obj";
+const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
+
 /*
 Convenience constructor.
 */
-template<class T>
 Entity::Entity(
     Stock::Models::Model const model,
     float modelScale,
     std::shared_ptr<Shaders> shaders,
-    std::shared_ptr<T> texture
+    std::shared_ptr<Texture> texture
     ) : Entity(
     model.modelPath,
     modelScale,
     shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
     texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
-) { }
-template<class T>
+    ){ }
 Entity::Entity(
     Stock::Models::Model const model,
     float modelScale,
     Stock::Shaders::ShaderSet const ss,
-    std::shared_ptr<T> texture
+    std::shared_ptr<Texture> texture
     ) : Entity(
     model.modelPath,
     modelScale,
-    shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
+    std::make_shared<Shaders>(ss.vertex,ss.fragment, ss.geometry),
     texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
-) { }
-template<class T>
+    ) { }
 Entity::Entity(
     const char *modelPath,
     float modelScale,
     Stock::Shaders::ShaderSet const ss,
-    std::shared_ptr<T> texture
+    std::shared_ptr<Texture> texture
     ): Entity(
     modelPath,
     modelScale,
@@ -54,12 +54,11 @@ Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
 */
-template<class T>
 Entity::Entity(
     const char *modelPath, 
     float modelScale, 
     std::shared_ptr<Shaders> shaders, 
-    std::shared_ptr<T> texture
+    std::shared_ptr<Texture> texture
     )
     : positions(GL_FLOAT, 3, sizeof(float))
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
@@ -78,7 +77,7 @@ Entity::Entity(
 {
     GL_CHECK();
     loadModelFromFile();
-    //If texture has been provied, set up
+    //If texture has been provided, set up
     if (texture.get())
     {
         texture->bindToShader(shaders.get());
@@ -92,11 +91,6 @@ Entity::Entity(
         this->shaders->setTexCoordsAttributeDetail(texcoords);
     }
 }
-//Don't repeat the non template items when Entity-impl.cpp is compiled
-#ifndef __Entity_impl_cpp__
-
-const char *Entity::OBJ_TYPE = ".obj";
-const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
 
 /*
 Destructor, free's memory allocated to store the model and its material
@@ -746,6 +740,7 @@ exit_loop2:;
     printf("\rLoading Model: %s [Generating VBOs!]              ", modelPath);
     generateVertexBufferObjects();
     //Can the host copies be freed after a bind?
+    //No, we want to keep faces around as a minimum for easier vertex order switching
     //free(vertices);
     //if (normals)
     //    free(normals);
@@ -1155,17 +1150,17 @@ void Entity::importModel(const char *path)
     fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG)
     {
-        fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
-        return;
+fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
+return;
     }
     fclose(file);
     //Check model scale
-    if (SCALE>0 && mask.SCALE <= 0)
+    if (SCALE > 0 && mask.SCALE <= 0)
     {
         fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE);
     }
     //Scale the model
-    else if (SCALE>0 && mask.SCALE != SCALE)
+    else if (SCALE > 0 && mask.SCALE != SCALE)
     {
         float scaleFactor = SCALE / mask.SCALE;
         for (unsigned int i = 0; i < positions.count*positions.components; i++)
@@ -1179,17 +1174,11 @@ void Entity::importModel(const char *path)
 Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
 */
 void Entity::generateVertexBufferObjects()
-{/*
-    if (texcoords.count>0)
-    {
-        Shaders::VertexAttributeDetail t = colors;
-        colors = texcoords;
-        texcoords = t;
-    }*/
+{
     unsigned int bufferSize = 0;
     bufferSize += positions.count * positions.components * positions.componentSize;//Positions required
-    bufferSize +=   normals.count *   normals.components *   normals.componentSize;
-    bufferSize +=    colors.count *    colors.components *    colors.componentSize;
+    bufferSize += normals.count *   normals.components *   normals.componentSize;
+    bufferSize += colors.count *    colors.components *    colors.componentSize;
     bufferSize += texcoords.count * texcoords.components * texcoords.componentSize;
     createVertexBufferObject(&positions.vbo, GL_ARRAY_BUFFER, bufferSize, positions.data);
     unsigned int offset = vn_count*positions.components*positions.componentSize;
@@ -1234,4 +1223,45 @@ void Entity::reload()
     if (texture.get())
         texture->reload();
 }
-#endif //ifdef __Entity_impl_cpp__
+
+
+void Entity::setModelViewMatPtr(const Camera *camera)
+{
+    setModelViewMatPtr(camera->getViewMatPtr());
+}
+void Entity::setProjectionMatPtr(const Visualisation *visualisation)
+{
+    setProjectionMatPtr(visualisation->getFrustrumPtr());
+}
+void Entity::setModelViewMatPtr(glm::mat4 const *modelViewMat)
+{
+    if (shaders.get())
+        shaders->setModelViewMatPtr(modelViewMat);
+}
+void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
+{
+    if (shaders.get())
+        shaders->setProjectionMatPtr(projectionMat);
+}
+void Entity::flipVertexOrder()
+{
+    unsigned int *faceData = reinterpret_cast<unsigned int *>(faces.data);
+    unsigned int temp;
+    for (unsigned int i = 0; i < faces.count; i++)
+    {
+        //Swap components, counting in from either side
+        for (unsigned int j = 0; j < faces.components / 2; j++)
+        {
+            //Left side -> temp
+            temp = faceData[(i*faces.components) + j];
+            //Right side -> left side
+            faceData[(i*faces.components) + j] = faceData[((i + 1)*faces.components) - j - 1];
+            //Temp -> left side
+            faceData[((i + 1)*faces.components) - j - 1] = temp;
+        }
+    }
+    //Copy the new face order to the vbo
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+}

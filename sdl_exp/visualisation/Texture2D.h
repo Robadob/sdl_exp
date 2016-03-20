@@ -10,6 +10,7 @@ public:
     void reload() override;
 
 private:
+    void _reload();//Used so we don't call a virtual fn from the constructor
     const char *texturePath;
 };
 #endif //ifndef __Texture2D_h__

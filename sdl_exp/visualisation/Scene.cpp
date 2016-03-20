@@ -25,8 +25,8 @@ void Scene::registerEntity(std::shared_ptr<Entity> ent)
         //Store value for later
         entities.push_back(ent);
         //Setup matrices
-        ent->getShaders()->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
-        ent->getShaders()->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+        ent->setModelViewMatPtr(this->visualisation.getCamera());
+        ent->setProjectionMatPtr(&this->visualisation);
     }
     else
         fprintf(stderr, "Can't register a null entity!\n");

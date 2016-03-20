@@ -108,11 +108,19 @@ void Shaders::createShaders(){
         GL_CALL(glCompileShader(this->vertexShaderId));
         this->checkShaderCompileError(this->vertexShaderId, this->vertexShaderPath);
     }
+    else
+    {
+        this->vertexShaderId = -1;        
+    }
     if (hasFragmentShader()){
         this->fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
         GL_CALL(glShaderSource(this->fragmentShaderId, 1, &fragmentSource, 0));
         GL_CALL(glCompileShader(this->fragmentShaderId));
         this->checkShaderCompileError(this->fragmentShaderId, this->fragmentShaderPath);
+    }
+    else
+    {
+        this->fragmentShaderId = -1;        
     }
     if (hasGeometryShader()){
         this->geometryShaderId = glCreateShader(GL_GEOMETRY_SHADER);
@@ -120,7 +128,10 @@ void Shaders::createShaders(){
         GL_CALL(glCompileShader(this->geometryShaderId));
         this->checkShaderCompileError(this->geometryShaderId, this->geometryShaderPath);
     }
-
+    else
+    {
+        this->geometryShaderId = -1;        
+    }
     // Only attempt to link the program if the compilation of each individual shader was successful.
     if (this->compileSuccessFlag){
 
@@ -760,13 +771,17 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 */
 bool Shaders::addDynamicUniform(char *uniformName, GLint *array, unsigned int count)
 {
-    if (this->programId >= 0 || count <= 0 || count>4)
+    if (this->programId >= 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
         {
             dynamicUniforms[location] = DynamicUniformDetail{ GL_INT, (void*)array, count, uniformName };
             return true;
+        }
+        else
+        {
+            fprintf(stderr, "Dynamic uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath : ""));
         }
     }
     return false;
@@ -781,13 +796,17 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 */
 bool Shaders::addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count)
 {
-    if (this->programId >= 0 || count <= 0 || count>4)
+    if (this->programId >= 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
         {
             dynamicUniforms[location] = DynamicUniformDetail{ GL_FLOAT, (void*)array, count, uniformName };
             return true;
+        }
+        else
+        {
+            fprintf(stderr, "Dynamic uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath : ""));
         }
     }
     return false;
@@ -804,7 +823,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int count)
 {
     staticUniforms.push_front(StaticUniformDetail{ GL_FLOAT, *(glm::ivec4 *)array, count, uniformName });
-    if (this->programId >= 0 || count <= 0 || count > 4)
+    if (this->programId >= 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
@@ -825,6 +844,10 @@ bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int c
             glUseProgram(0);
             return true;
         }
+        else
+        {
+            fprintf(stderr, "Static uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath : ""));
+        }
     }
     return false;
 }
@@ -839,7 +862,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int count)
 {
     staticUniforms.push_front(StaticUniformDetail{ GL_INT, (glm::ivec4)*array, count, uniformName });
-    if (this->programId >= 0 || count <= 0 || count > 4)
+    if (this->programId >= 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
@@ -859,6 +882,10 @@ bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int cou
             }
             glUseProgram(0);
             return true;
+        }
+        else
+        {
+            fprintf(stderr, "Static uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath:""));
         }
     }
     return false;

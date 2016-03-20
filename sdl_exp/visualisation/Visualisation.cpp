@@ -6,6 +6,7 @@
 
 #include "GLcheck.h"
 #include "Scene.h"
+#include "Skybox.h"
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.001f
@@ -259,7 +260,7 @@ void Visualisation::render()
     // render
     this->clearFrame();
     if (this->skybox)
-        this->skybox->render(&camera, this->frustum);
+        this->skybox->render();
     this->defaultProjection();
     if (this->renderAxisState)
         this->axis.render();
@@ -347,7 +348,12 @@ Toggles whether the skybox should be used or not
 */
 void Visualisation::setSkybox(bool state){
     if (state&&!this->skybox)
-        this->skybox = new Skybox(this->getCamera()->getSkyboxViewMatPtr(), this->getFrustrumPtr());
+    {
+        this->skybox = new Skybox();
+        this->skybox->setModelViewMatPtr(&this->camera);
+        this->skybox->setProjectionMatPtr(this);
+        this->skybox->setYOffset(-1.0f);
+    }
     else if (!state&&this->skybox)
     {
         delete this->skybox;

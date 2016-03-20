@@ -1,18 +1,18 @@
 #include "Texture.h"
-#include "TextureCubeMap.h"
-const char* IMAGE_EXTS[] = {
+const char* Texture::IMAGE_EXTS[] = {
     "",
     ".tga",
     ".png",
     ".bmp"
 };
 
-Texture::Texture(GLenum type, char *uniformName)
+Texture::Texture(GLenum type, const char *texPath, char *uniformName)
     : texName(0)
     , texType(type)
     , uniformName(uniformName == 0 ? TEXTURE_UNIFORM_NAME : uniformName)
 {
-    createGLTex();
+    if (texPath)
+        createGLTex();
 }
 Texture::~Texture()
 {
@@ -25,13 +25,14 @@ void Texture::createGLTex()
     //init texture
     GL_CALL(glGenTextures(1, &texName));
     GL_CALL(glBindTexture(texType, texName));
-    //glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT));
+    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_BASE_LEVEL, 0));
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));
-    GL_CALL(glGenerateMipmap(texType));//Auto generate texture mipmap
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));//Changing this kills textures (why?)
+    //GL_CALL(glGenerateMipmap(texType));//Auto generate texture mipmap
 
 }
 
@@ -43,12 +44,17 @@ void Texture::deleteGLTex()
 
 SDL_Surface *Texture::findImage(const char *imagePath)
 {
+    if (!imagePath)
+        return 0;
     SDL_Surface *image=0;
     for (int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*);i++)
     {
-        image = IMG_Load(imagePath);
+        image = IMG_Load(std::string(imagePath).append(IMAGE_EXTS[i]).c_str());
         if (image)
-            break;
+        {
+            SDL_ClearError();//Clear the img errorS  
+            break;          
+        }
     }
     return image;
 }
@@ -62,7 +68,7 @@ SDL_Surface *Texture::readImage(const char *texturePath, bool printErr){
     if (!image)
     {
         if (printErr)
-            fprintf(stderr, "Couldn't find texture at path '%s(.png/.bmp/.tga)': %s\n", texturePath, IMG_GetError());
+            fprintf(stderr, "%s\n", IMG_GetError());
     }
     else if (image->format->BytesPerPixel != 3 && image->format->BytesPerPixel != 4)
     {
@@ -71,9 +77,8 @@ SDL_Surface *Texture::readImage(const char *texturePath, bool printErr){
         SDL_FreeSurface(image);
         return 0;
     }
-    //If the teture is BGR order rathern than RGB order, switch bytes
-    if (image->format->Rshift>image->format->Bshift)
-    {
+    else if (image->format->Rshift>image->format->Bshift)
+    {   //If the teture is BGR order rathern than RGB order, switch bytes
         SDL_PixelFormat desiredFormat;
         memcpy(&desiredFormat, image->format, sizeof(SDL_PixelFormat));
         desiredFormat.Bloss = image->format->Rloss;
@@ -134,8 +139,8 @@ bool Texture::bindToShader(Shaders *shaders, char *uniformName)
     if (!this->texName)
         return false;
     if (uniformName)
-        shaders->addTextureUniform(this->texName, uniformName, GL_TEXTURE_2D);
+        shaders->addTextureUniform(this->texName, uniformName, texType);
     else
-        shaders->addTextureUniform(this->texName, this->uniformName, GL_TEXTURE_2D);
+        shaders->addTextureUniform(this->texName, this->uniformName, texType);
     return true;
 }

@@ -1,11 +1,9 @@
 #include "EntityScene.h"
 
-#include "visualisation/TexturedEntity.h"
-
 EntityScene::EntityScene(Visualisation &visualisation)
     : Scene(visualisation)
-    , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::COLOR))))
-    , colorModel(new TexturedEntity(Stock::Models::DEER, 10.0f, std::shared_ptr<Shaders>(new Shaders(Stock::Shaders::TEXTURE))))
+    , icosphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 5.0f, Stock::Shaders::COLOR))
+    , colorModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
     , tick(0.0f)
 {
     registerEntity(icosphere);

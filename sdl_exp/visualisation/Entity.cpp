@@ -10,19 +10,60 @@
 #define FACES_SIZE 3
 #define VN_PAIR std::tuple<unsigned int, unsigned int, unsigned int>
 
+
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
 /*
 Convenience constructor.
 */
-Entity::Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders)
-    :Entity(model.modelPath, scale, shaders) { }
+template<class T>
+Entity::Entity(
+    Stock::Models::Model const model,
+    float modelScale,
+    std::shared_ptr<Shaders> shaders,
+    std::shared_ptr<T> texture
+    ) : Entity(
+    model.modelPath,
+    modelScale,
+    shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
+    texture.get() ? texture : std::make_shared<Texture>(model.texturePath)
+) { }
+template<class T>
+Entity::Entity(
+    Stock::Models::Model const model,
+    float modelScale,
+    Stock::Shaders::ShaderSet const ss,
+    std::shared_ptr<T> texture
+    ) : Entity(
+    model.modelPath,
+    modelScale,
+    shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
+    texture.get() ? texture : std::make_shared<Texture>(model.texturePath)
+) { }
+template<class T>
+Entity::Entity(
+    const char *modelPath,
+    float modelScale,
+    Stock::Shaders::ShaderSet const ss,
+    std::shared_ptr<T> texture
+    ): Entity(
+    modelPath,
+    modelScale,
+    std::make_shared<Shaders>(ss.vertex, ss.fragment, ss.geometry),
+    texture
+    ) { }
 /*
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
 @param modelScale World size to scale the longest direction (in the x, y or z) axis of the model to fit
 */
-Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders> shaders)
+template<class T>
+Entity::Entity(
+    const char *modelPath, 
+    float modelScale, 
+    std::shared_ptr<Shaders> shaders, 
+    std::shared_ptr<T> texture
+    )
     : positions(GL_FLOAT, 3, sizeof(float))
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
     , colors(GL_FLOAT, 3, sizeof(float))
@@ -36,8 +77,14 @@ Entity::Entity(const char *modelPath, float modelScale, std::shared_ptr<Shaders>
     , location(0.0f)
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
     , shaders(shaders)
+    , texture(texture)
 {
     loadModelFromFile();
+    //If texture has been provied, set up
+    if (texture.get())
+    {
+        texture->bindToShader(shaders.get());
+    }
     //If shaders have been provided, set them up
     if (positions.data&&this->shaders != nullptr)
     {
@@ -1172,3 +1219,31 @@ std::shared_ptr<Shaders> Entity::getShaders() const
 {
     return shaders;
 }
+
+template Entity::Entity(
+    Stock::Models::Model const model,
+    float scale,
+    std::shared_ptr<Shaders> shaders,
+    std::shared_ptr<Texture> texture
+    );
+template
+Entity::Entity(
+    Stock::Models::Model const model,
+    float scale,
+    Stock::Shaders::ShaderSet const ss,
+    std::shared_ptr<Texture> texture
+    );
+template
+Entity::Entity(
+    const char *modelPath,
+    float modelScale,
+    Stock::Shaders::ShaderSet const ss,
+    std::shared_ptr<Texture> texture
+    );
+template
+Entity::Entity(
+    const char *modelPath,
+    float modelScale,
+    std::shared_ptr<Shaders> shaders,
+    std::shared_ptr<Texture> texture
+    );

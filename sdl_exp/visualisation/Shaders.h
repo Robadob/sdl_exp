@@ -13,6 +13,7 @@
 #include <forward_list>
 
 #define NORMALS_SIZE 3
+
 class Entity;
 
 namespace Stock

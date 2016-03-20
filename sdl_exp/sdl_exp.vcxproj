@@ -152,7 +152,6 @@
     <ClCompile Include="visualisation\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
     <ClCompile Include="visualisation\Texture.cpp" />
-    <ClCompile Include="visualisation\TexturedEntity.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\Scene.cpp" />
   </ItemGroup>
@@ -170,7 +169,6 @@
     <ClInclude Include="visualisation\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
     <ClInclude Include="visualisation\Texture.h" />
-    <ClInclude Include="visualisation\TexturedEntity.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>

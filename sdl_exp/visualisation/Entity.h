@@ -8,6 +8,7 @@
 
 #include "Material.h"
 #include "Shaders.h"
+#include "Texture.h"
 
 namespace Stock
 {
@@ -17,22 +18,50 @@ namespace Stock
         {
             char *modelPath;
             char *texturePath;
+            Stock::Shaders::ShaderSet defaultShaders;;
         };
-        const Model ICOSPHERE{ "../models/icosphere.obj", 0 };
-        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", "../textures/deer.tga" };
-        const Model CUBE{ "../models/cube.obj", 0 };
-        const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0 };
-        const Model DEER{ "../models/deer.obj", "../textures/deer.tga" };
+        const Model ICOSPHERE{ "../models/icosphere.obj", 0, Stock::Shaders::FLAT };
+        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", "../textures/deer.tga", Stock::Shaders::COLOR };//Remove texture?
+        const Model CUBE{ "../models/cube.obj", 0, Stock::Shaders::COLOR };
+        const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0, Stock::Shaders::PHONG };
+        const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::TEXTURE };
     };
 };
 /*
 A renderable model loaded from a .obj file
 */
+//template<class T>
 class Entity
 {
 public:
-    Entity(Stock::Models::Model model, float scale, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
-    Entity(const char *modelPath, float modelScale = 1.0, std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr));
+    template<class T = Texture>
+    Entity(
+        Stock::Models::Model const model,
+        float scale = 1.0f,
+        std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
+        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        );
+    template<class T = Texture>
+    Entity(
+        Stock::Models::Model const model,
+        float scale,
+        Stock::Shaders::ShaderSet const ss,
+        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        );
+    template<class T = Texture>
+    Entity(
+        const char *modelPath,
+        float modelScale = 1.0f,
+        Stock::Shaders::ShaderSet const ss = Stock::Shaders::FLAT,
+        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        );
+    template<class T = Texture>
+    Entity(
+        const char *modelPath,
+        float modelScale,
+        std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
+        std::shared_ptr<T> texture = std::shared_ptr<T>(nullptr)
+        ); 
     virtual ~Entity();
     void render();
     void renderInstances(int count);
@@ -46,6 +75,7 @@ public:
     std::shared_ptr<Shaders> getShaders() const;
 protected:
     std::shared_ptr<Shaders> shaders;
+    std::shared_ptr<Texture> texture;
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
     const char *modelPath;

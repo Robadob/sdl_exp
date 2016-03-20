@@ -50,7 +50,7 @@ public:
     explicit Entity(
         const char *modelPath,
         float modelScale = 1.0f,
-        Stock::Shaders::ShaderSet const ss = Stock::Shaders::FLAT,
+        Stock::Shaders::ShaderSet const ss = Stock::Shaders::FIXED_FUNCTION,
         std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
     explicit Entity(

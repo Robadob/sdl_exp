@@ -25,12 +25,18 @@ The easiest way to utilise this library appears to be;
 ```
 
 ##Note
-The `Shaders` and `Entity` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your matrix uniforms and virtex attributes.
-* `_modelViewMat` - ModelView Matrix[Mat4]
-* `_projectionMat` - Projection Matrix[Mat4]
-* `_vertex` - Vertex Position[Vec3/Vec4]
-* `_normal` - Vertex Normal[Vec3/Vec4]
-* `_color` - Vertex Color[Vec3/Vec4]
+The `Shaders` and `Entity` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your uniforms and vertex attributes. You can also configure your own static and dynamic uniform floats and ints by calling `addStaticUniform()` and `addDynamicUniform()` on the relevant `Shaders` object.
+
+* Uniforms:
+  * `_modelViewMat` - ModelView Matrix[Mat4]
+  * `_projectionMat` - Projection Matrix[Mat4]
+  * `_modelViewProjectionMat` - ModelViewProjection Matrix[Mat4]
+  * `_texture` - Texture Sampler[sampler2D/samplerCube]
+* Atributes:
+  * `_vertex` - Vertex Position[Vec3/Vec4]
+  * `_normal` - Vertex Normal[Vec3/Vec4]
+  * `_color` - Vertex Color[Vec3/Vec4]
+  * `_texCoords` - Texture Coordinates[Vec2/Vec3]
 
 ##Dependencies
 All dependent libraries are included within the repo, licenses are available on their relevant websites.

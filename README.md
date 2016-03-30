@@ -39,14 +39,14 @@ The `Shaders` and `Entity` objects attempt to automatically manage uniforms and 
   * `_texCoords` - Texture Coordinates[Vec2/Vec3]
 
 ###CUDA-GL interop
-The header `visualisation/util/cuda.cuh` provides functionality for allocating and freeing OpenGL texture buffers that can be written to by CUDA. 
+The header `visualisation/util/cuda.cuh` provides functionality for allocating and freeing OpenGL texture buffers that can be accessed by CUDA. 
 If you wish to write to these textures asynchronously of their accesses by shaders it is recommended you use some form of locking.
-This header was initially written for use with CUDA 7.5.
+The header was initially written for use with the CUDA 7.5 API.
 
 Usage:
 * Create a `CUDATextureBuffer` using `mallocGLInteropTextureBuffer()`
 * You can now access the texture buffer using CUDA:
-  * From the host code you can call functions such as `cudaMemcpy()` and `cudaMemset()` using the `d_mappedPointer` member variable.
+  * You can use the `d_mappedPointer` member variable to read/write from the buffer as you would with any normal device pointer.
   * Within CUDA kernels you can read the texture buffers using  the [texture object API texture fetch functions](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#texture-object-api-appendix) (e.g. `tex1Dfetch<float>()`) passing the `cuTextureObj` member variable as the first argument.
     * Copy the `cuTextureObj` member variable to a device constant for convenience!
   * Write a vertex shader:
@@ -71,7 +71,7 @@ Usage:
 Additional Usage:
 * To access the texture buffer using OpenGL:
   * Before doing anything with the texture buffer in OpenGL you should bind the buffer using [`glBindBuffer()`](https://www.opengl.org/sdk/docs/man/html/glBindBuffer.xhtml) passing the `glTBO` member variable as the argument.
-    * The `glTBO` member variable is the buffers 'name' you can use this with various OpenGL buffer methods.
+    * The `glTBO` member variable is the buffers 'name', you can use this with various OpenGL buffer methods.
   * To copy data to the texture buffer using OpenGL you can use [`glBufferData()`](https://www.opengl.org/sdk/docs/man/html/glBufferData.xhtml) passing `GL_TEXTURE_BUFFER` as the first argument.
   * It is not possible to copy data back from a texture buffer using OpenGL.
   * You can clear the active buffer by calling `glBindBuffer(0)`.

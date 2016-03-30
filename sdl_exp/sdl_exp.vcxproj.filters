@@ -77,6 +77,9 @@
     <None Include="glsl\main.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="visualisation\util\cuda.cuh">
+      <Filter>Header Files\Visualisation\Util</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="visualisation\Axis.h">

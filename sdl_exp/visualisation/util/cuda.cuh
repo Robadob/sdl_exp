@@ -13,14 +13,22 @@
 #endif
 struct CUDATextureBuffer
 {
-    CUDATextureBuffer(const GLuint glTexName, const GLuint glTBO, const cudaGraphicsResource_t cuGraphicsRes, cudaTextureObject_t cuTextureObj)
+    CUDATextureBuffer(
+        const GLuint glTexName, 
+        const GLuint glTBO,
+        const void *d_mappedPointer, 
+        const cudaGraphicsResource_t cuGraphicsRes, 
+        cudaTextureObject_t cuTextureObj
+        )
         : glTexName(glTexName)
         , glTBO(glTBO)
+        , d_mappedPointer(d_mappedPointer)
         , cuGraphicsRes(cuGraphicsRes)
         , cuTextureObj(cuTextureObj)
     { }
     const GLuint glTexName;
     const GLuint glTBO;
+    const void *d_mappedPointer;
     const cudaGraphicsResource_t cuGraphicsRes;//These are typedefs over pointers, need to store the actual struct?
     const cudaTextureObject_t cuTextureObj;
 };
@@ -157,9 +165,9 @@ CUDATextureBuffer *mallocGLInteropTextureBuffer(const unsigned int elementCount,
     //Temporary storage of return values
     GLuint glTexName;
     GLuint glTBO;
+    void *d_MappedPointer;
     cudaGraphicsResource_t cuGraphicsRes;
     cudaTextureObject_t cuTextureObj;
-    void *texLocationPtr;
 
     //Interpretation of buffer type/component details
     const unsigned int componentSize = _getComponentSize(componentType);
@@ -185,10 +193,10 @@ CUDATextureBuffer *mallocGLInteropTextureBuffer(const unsigned int elementCount,
     CUDA_CALL(cudaGraphicsGLRegisterBuffer(&cuGraphicsRes, glTBO, cudaGraphicsMapFlagsNone));
     //Map/convert this to something cuGraphicsRes
     CUDA_CALL(cudaGraphicsMapResources(1, &cuGraphicsRes));
-    CUDA_CALL(cudaGraphicsResourceGetMappedPointer((void**)&texLocationPtr, 0, cuGraphicsRes));
+    CUDA_CALL(cudaGraphicsResourceGetMappedPointer((void**)&d_MappedPointer, 0, cuGraphicsRes));
     CUDA_CALL(cudaGraphicsUnmapResources(1, &cuGraphicsRes, 0));
     //Create a texture object from the cuGraphicsRes
-    cudaResourceDesc resDesc = _getCUDAResourceDesc(componentCount, componentType, bufferSize, texLocationPtr);
+    cudaResourceDesc resDesc = _getCUDAResourceDesc(componentCount, componentType, bufferSize, d_MappedPointer);
     cudaTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(cudaTextureDesc));
     texDesc.readMode = cudaReadModeElementType;//Read as actual type, other option is normalised float
@@ -196,7 +204,7 @@ CUDATextureBuffer *mallocGLInteropTextureBuffer(const unsigned int elementCount,
     CUDA_CALL(cudaCreateTextureObject(&cuTextureObj, &resDesc, &texDesc, nullptr));
 
     //Copy the generated data
-    return new CUDATextureBuffer(glTexName, glTBO, cuGraphicsRes, cuTextureObj);
+    return new CUDATextureBuffer(glTexName, glTBO, d_MappedPointer, cuGraphicsRes, cuTextureObj);
 }
 /*
 Deallocates all data allocated by the matching call to mallocGLInteropTextureBuffer()

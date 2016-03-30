@@ -160,6 +160,7 @@
   <ItemGroup>
     <None Include="glsl\main.frag" />
     <None Include="glsl\main.vert" />
+    <None Include="visualisation\util\cuda.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EntityScene.h" />

@@ -51,9 +51,10 @@ Usage:
     * Copy the `cuTextureObj` member variable to a device constant for convenience!
   * Write a vertex shader:
     * *The existing shader file `instanced.vert` provides an example.*
-	* *`i` and `u` can be prepended to `samplerBuffer` and `texelFetch()` in the following steps to work with `int` and `unsigned int` data instead of the defaults of `float`.*
+	* *`i` and `u` can be prepended to `samplerBuffer`, `texelFetch()` and `vec4` in the following steps to work with `int` and `unsigned int` data instead of the defaults of `float`.*
 	* Declare a `uniform samplerBuffer` sampler inside your shader.
 	* To access an element of the texture buffer use `texelFetch()`, passing the identifer of your `samplerBuffer` as the first argument, and the desired index as the second argument.
+	  * This returns a `vec4`, if your element has less than 4 components ignore those you do not require.
 	  * If you are performing instanced rendering, the second argument is likely `gl_InstanceID`.  
     * If you are writing a vertex shader using a version earlier than 140 you must follow some additional steps:
 	  * Add `#extension GL_EXT_gpu_shader4 : require` to the shader on the line directly after `#version`.

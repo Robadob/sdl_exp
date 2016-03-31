@@ -51,15 +51,14 @@ Usage:
     * Copy the `cuTextureObj` member variable to a device constant for convenience!
   * Write a vertex shader:
     * *The existing shader file `instanced.vert` provides an example.*
-    * Add `#extension GL_EXT_gpu_shader4 : require` to the shader on the line after `#version`.
-      * This enables the extension for reading data from the texture buffer.
-    * Declare a `uniform samplerBuffer` to represent the texture buffer.
-    * To access an element of the texture buffer use `texelFetchBuffer()`, passing the identifer of your `samplerBuffer` as the first argument, and the desired index as the second argument.
-      * If you are performing instanced rendering, the second argument is likely `gl_InstanceID`.
-      * This method returns a `vec4`:
-        * If your element has less than 4 components, just ignore those you do not require.
-        * If your element has integer components, you should convert it to an `ivec` or `uvec` using [`floatBitsToInt()`](https://www.opengl.org/sdk/docs/man/html/floatBitsToInt.xhtml) or [`floatBitsToUint()`](https://www.opengl.org/sdk/docs/man/html/floatBitsToInt.xhtml) respectively.
-    * Alternatively this should be possible using a `uniform gsamplerBuffer` and [`texelFetch()`](https://www.opengl.org/wiki/Sampler_(GLSL)#Direct_texel_fetches), however last time I tried this I couldn't get it to work (I may used the normal texture functions rather than texelFetch though).
+	* *`i` and `u` can be prepended to `samplerBuffer` and `texelFetch()` in the following steps to work with `int` and `unsigned int` data instead of the defaults of `float`.*
+	* Declare a `uniform samplerBuffer` sampler inside your shader.
+	* To access an element of the texture buffer use `texelFetch()`, passing the identifer of your `samplerBuffer` as the first argument, and the desired index as the second argument.
+	  * If you are performing instanced rendering, the second argument is likely `gl_InstanceID`.  
+    * If you are writing a vertex shader using a version earlier than 140 you must follow some additional steps:
+	  * Add `#extension GL_EXT_gpu_shader4 : require` to the shader on the line directly after `#version`.
+        * This enables the extension for reading data from the texture buffer.
+      * Replace all call calls to `texelFetch()`, `itexelFetch()` and `utexelFetch()` with calls to `texelFetchBuffer()`. This function returns the right type of `vec4`, based on the `samplerBuffer` type.
   * Create a `Shaders` object from your vertex shader source:
     * Call `addTextureUniform()` on your `Shaders` object:
         * The first argument should be the `glTexName` member variable.

@@ -1056,16 +1056,15 @@ void Entity::exportModel() const
     //Only check if file already exists if we're not upgrading its version
     if (!needsExport&&(file = fopen(exportPath.c_str(), "r")))
     {
-        fprintf(stderr, "Cannot export model, file already exists.\n");
+        fprintf(stderr, "Cannot export model %s, file already exists.\n", exportPath.c_str());
         fclose(file);
         return;
     }
     file = fopen(exportPath.c_str(), "wb");
     if (!file)
     {
-        fprintf(stderr, "Could not open file for writing: %s\n", exportPath.c_str());
+        fprintf(stderr, "Could not open file for writing %s\n", exportPath.c_str());
     }
-    printf("Exporting model: %s\n", exportPath.c_str());
     //Generate export mask
     ExportMask mask
     {
@@ -1112,6 +1111,7 @@ void Entity::exportModel() const
     //Finish by writing the file type flag again
     fwrite(&FILE_TYPE_FLAG, sizeof(char), 1, file);
     fclose(file);
+    printf("Exported model %s\n", exportPath.c_str());
 }
 /*
 Util method used to check whether the candidate string ends with the suffix

@@ -7,6 +7,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , icosphere(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
     , tick(0.0f)
+    , polarity(false)
 {
     registerEntity(icosphere);
     registerEntity(colorModel);
@@ -27,7 +28,7 @@ Called once per frame when Scene animation calls should be
 */
 void EntityScene::update(unsigned int frameTime)
 {
-    this->tick += ((frameTime*60)/1000.0f)*0.01f;
+    this->tick += (this->polarity?1:-1)*((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);
     this->icosphere->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
     this->icosphere->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
@@ -48,3 +49,19 @@ void EntityScene::reload()
     //this->icosphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
 }
 
+bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
+{
+    switch (keycode)
+    {
+    case SDLK_p:
+        this->polarity = !this->polarity;
+        break;
+    case SDLK_HASH:
+        this->colorModel->exportModel();
+        this->icosphere->exportModel();
+    default:
+        //Only permit the keycode to be processed if we haven't handled personally
+        return true;
+    }
+    return false;
+}

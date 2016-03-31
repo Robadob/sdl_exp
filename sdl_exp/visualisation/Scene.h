@@ -31,6 +31,14 @@ public:
     @note You should call functions such as shaders->reload() here
     */
     virtual void reload() = 0;
+    /*
+    Called when the user presses a keyboard key
+    @param keycode The SDL_Keycode representing the pressed key (defined in the form SDLK_<key>)
+    @param x The mouse's current x coordinate relative to the window
+    @param y The mouse's current y coordinate relative to the window
+    @return Returning true permits the visualisation to also handle the keypress
+    */
+    virtual bool keypress(SDL_Keycode keycode, int x, int y) = 0;
 protected:
     Scene(Visualisation &vis);
     Visualisation &visualisation;

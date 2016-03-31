@@ -15,8 +15,9 @@ public:
 
     /*
     Called once per frame when Scene animation calls should be executed
+    @param frameTime The number of miliseconds since update was last called
     */
-    virtual void update() = 0;
+    virtual void update(unsigned int frameTime) = 0;
     /*
     Called once per frame when Scene render calls should be executed
     */

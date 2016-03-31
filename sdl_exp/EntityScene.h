@@ -14,7 +14,7 @@ public:
 
     void render() override;
     void reload() override;
-    void update() override;
+    void update(unsigned int frameTime) override;
 private:
     std::shared_ptr<Entity> icosphere;
     std::shared_ptr<Entity> colorModel;

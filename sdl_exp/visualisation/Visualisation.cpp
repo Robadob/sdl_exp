@@ -199,6 +199,8 @@ Renders a single frame
 */
 void Visualisation::render()
 {
+    //Static fn var for tracking the time to send to scene->update()
+    static unsigned int updateTime = 0;
     SDL_Event e;
     // Handle continuous key presses (movement)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -255,7 +257,18 @@ void Visualisation::render()
     }
 
     // update
-    this->scene->update();
+    unsigned int t_updateTime = SDL_GetTicks();
+    //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
+    if (t_updateTime < updateTime)
+    {
+
+        this->scene->update(t_updateTime + (UINT_MAX - updateTime));
+    }
+    else
+    {
+        this->scene->update(t_updateTime - updateTime);
+    }
+    updateTime = t_updateTime;
     // render
     this->clearFrame();
     if (this->skybox)

@@ -22,11 +22,12 @@ EntityScene::EntityScene(Visualisation &visualisation)
     this->icosphere->flipVertexOrder();
 }
 /*
-Called once per frame when Scene animation calls should be executed
+Called once per frame when Scene animation calls should be 
+@param Milliseconds since last time this method was called
 */
-void EntityScene::update()
+void EntityScene::update(unsigned int frameTime)
 {
-    this->tick+=0.01f;
+    this->tick += ((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);
     this->icosphere->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
     this->icosphere->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));

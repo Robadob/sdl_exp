@@ -30,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Axis.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -54,9 +51,6 @@
     <ClCompile Include="visualisation\Visualisation.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="EntityScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Scene.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -68,6 +62,15 @@
     </ClCompile>
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp">
       <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\texture\TextureBuffer.cu.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityScene.cu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,9 +109,6 @@
     <ClInclude Include="visualisation\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
     </ClInclude>
-    <ClInclude Include="EntityScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\Scene.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
@@ -121,5 +121,16 @@
     <ClInclude Include="visualisation\texture\Texture.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
+    <ClInclude Include="EntityScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\TextureBuffer.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="EntityScene.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

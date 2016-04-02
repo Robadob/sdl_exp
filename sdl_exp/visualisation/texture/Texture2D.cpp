@@ -3,7 +3,7 @@
 /*
 Loads the 2D texture
 @param texturePath The path to the image to be used as the texture
-@para, uniformName Name of the uniform to be used, defaults to the value of Texture::TEXTURE_UNIFORM_NAME
+@param uniformName Name of the uniform to be used, defaults to the value of Texture::TEXTURE_UNIFORM_NAME
 */
 Texture2D::Texture2D(const char *texturePath, char *uniformName)
     : Texture(GL_TEXTURE_2D, texturePath, uniformName)

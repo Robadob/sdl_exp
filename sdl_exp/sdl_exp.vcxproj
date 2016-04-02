@@ -50,8 +50,7 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -66,8 +65,6 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -92,6 +89,10 @@
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -106,6 +107,10 @@
       <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -116,6 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>"$(SolutionDir)include"</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -124,6 +130,10 @@
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -141,9 +151,13 @@
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EntityScene.cpp" />
+    <ClCompile Include="EntityScene.cu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
@@ -153,11 +167,15 @@
     <ClCompile Include="visualisation\Skybox.cpp" />
     <ClCompile Include="visualisation\texture\Texture.cpp" />
     <ClCompile Include="visualisation\texture\Texture2D.cpp" />
+    <ClCompile Include="visualisation\texture\TextureBuffer.cu.cpp" />
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="EntityScene.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <None Include="glsl\main.frag" />
     <None Include="glsl\main.vert" />
     <None Include="visualisation\util\cuda.cuh" />
@@ -173,11 +191,11 @@
     <ClInclude Include="visualisation\Skybox.h" />
     <ClInclude Include="visualisation\texture\Texture.h" />
     <ClInclude Include="visualisation\texture\Texture2D.h" />
+    <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

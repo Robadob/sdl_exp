@@ -26,12 +26,13 @@ namespace Stock
             char *fragment;
             char *geometry;
         };
-        const ShaderSet FIXED_FUNCTION{0, 0, 0 };
-        const ShaderSet FLAT{ "../shaders/flat.v", "../shaders/flat.f", 0 };
+        const ShaderSet FIXED_FUNCTION{ 0, 0, 0 };
+        const ShaderSet FLAT{ "../shaders/flat.vert", "../shaders/flat.frag", 0 };
         const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", 0 };
-        const ShaderSet COLOR{ "../shaders/color.v", "../shaders/color.f", 0 };
+        const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", 0 };
         const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", 0 };
-        const ShaderSet SKYBOX{ "../shaders/skybox.v", "../shaders/skybox.f", 0 };
+        const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", 0 };
+        const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
     };
 };
 class Shaders

@@ -44,6 +44,12 @@ The header `visualisation/util/cuda.cuh` provides functionality for allocating a
 If you wish to write to these textures asynchronously of their accesses by shaders it is recommended you use some form of locking.
 The header was initially written for use with the CUDA 7.5 API.
 
+In order to enable CUDA compilation/support in the project you must follow these steps:
+* Enable the CUDA build customisation
+* Rename all the `.cu.cpp` files to `.cu`. *(Without this the `.cu.cpp` files will not CUDA compiled correctly.)*
+* Configure all `.cu` files to build with the CUDA compiler
+* Add `cuda.lib` and `cudart.lib` dependencies to the linker settings
+
 Usage:
 * Create a `CUDATextureBuffer` using `mallocGLInteropTextureBuffer<float>()`
   * Alternatively `float` can be replaced with `int` or `unsigned int`

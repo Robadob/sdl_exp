@@ -32,6 +32,7 @@ The `Shaders` and `Entity` objects attempt to automatically manage uniforms and 
   * `_projectionMat` - Projection Matrix[Mat4]
   * `_modelViewProjectionMat` - ModelViewProjection Matrix[Mat4]
   * `_texture` - Texture Sampler[sampler2D/samplerCube]
+  * `_color` - gl_Color equivalent[Vec3/Vec4]
 * Atributes:
   * `_vertex` - Vertex Position[Vec3/Vec4]
   * `_normal` - Vertex Normal[Vec3/Vec4]

@@ -77,7 +77,7 @@ Entity::Entity(
     , SCALE(modelScale)
     , modelPath(modelPath)
     , material(0)
-    , color(1, 0, 0)
+    , color(1, 0, 0, 1)
     , location(0.0f)
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
     , shaders(shaders)
@@ -971,7 +971,11 @@ Set the color of the model
 If the model has an associated material this value will be ignored
 */
 void Entity::setColor(glm::vec3 color){
-    this->color = color;
+    this->color = glm::vec4(color,1.0f);
+    if (this->shaders.get())
+    {
+        this->shaders->setColor(this->color);
+    }
 }
 /*
 Set the location of the model in world space

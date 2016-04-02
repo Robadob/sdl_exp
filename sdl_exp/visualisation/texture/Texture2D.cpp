@@ -9,19 +9,21 @@ Texture2D::Texture2D(const char *texturePath, char *uniformName)
     : Texture(GL_TEXTURE_2D, texturePath, uniformName)
     , texturePath(texturePath)
 {
-    if (texturePath)
-        _reload();
+    _reload();
 }
 /*
 Loads the 2D texture
 @overrides Texture::reload()
 */
-void Texture2D::reload() { _reload(); }
+void Texture2D::reload() {
+    _reload();
+}
 /*
 Loads the 2D texture
 @note this method is required, so that the constructor doesn't call a virtual function
 */
 void Texture2D::_reload()
 {
-    setTexture(readImage(texturePath));
+    if (texturePath)
+        setTexture(readImage(texturePath));
 }

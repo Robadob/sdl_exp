@@ -213,6 +213,13 @@ void Shaders::createShaders(){
             this->texcoords.location = a_T.first;
         else
             this->texcoords.location = -1;
+        //Locate the color uniform   
+        std::pair<int, GLenum> u_C = findUniform(COLOR_ATTRIBUTE_NAME, this->programId);
+        if (u_C.first >= 0 && (u_C.second == GL_FLOAT_VEC3 || u_C.second == GL_FLOAT_VEC4))
+            this->colorUniformLocation = u_C.first;
+        else
+            this->colorUniformLocation = -1;
+        this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
 
         //Refresh dynamic uniforms
         std::map<GLint, DynamicUniformDetail> t_dynamicUniforms;
@@ -358,6 +365,7 @@ void Shaders::useProgram(Entity *e){
         glm::mat4 mvp = *this->projection.matrixPtr * mv;
         GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
     }
+
     //Don't think we need to use
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
 
@@ -772,7 +780,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 */
 bool Shaders::addDynamicUniform(char *uniformName, GLint *array, unsigned int count)
 {
-    if (this->programId >= 0 && count > 0 && count <= 4)
+    if (this->programId > 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
@@ -797,7 +805,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 */
 bool Shaders::addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count)
 {
-    if (this->programId >= 0 && count > 0 && count <= 4)
+    if (this->programId > 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
@@ -824,7 +832,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int count)
 {
     staticUniforms.push_front(StaticUniformDetail{ GL_FLOAT, *(glm::ivec4 *)array, count, uniformName });
-    if (this->programId >= 0 && count > 0 && count <= 4)
+    if (this->programId > 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
@@ -863,7 +871,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int count)
 {
     staticUniforms.push_front(StaticUniformDetail{ GL_INT, (glm::ivec4)*array, count, uniformName });
-    if (this->programId >= 0 && count > 0 && count <= 4)
+    if (this->programId > 0 && count > 0 && count <= 4)
     {
         GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
         if (location != -1)
@@ -890,4 +898,33 @@ bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int cou
         }
     }
     return false;
+}
+/*
+Sets the color uniform
+@param color The RGB value of the color
+*/
+void Shaders::setColor(glm::vec3 color)
+{
+    setColor(glm::vec4(color, 1.0f));
+}
+/*
+Sets the color uniform
+@param color The RGBA value of the color
+*/
+void Shaders::setColor(glm::vec4 color)
+{
+    //Set the color uniform is present
+    if (this->programId>0 && this->colorUniformLocation >= 0)
+    {//If projection matrix location and camera ptr are known
+        glUseProgram(this->programId);
+        if (this->colorUniformSize == 3)
+        {
+            GL_CALL(glUniform3fv(this->colorUniformLocation, 1, glm::value_ptr(color)));
+        }
+        else
+        {
+            GL_CALL(glUniform4fv(this->colorUniformLocation, 1, glm::value_ptr(color)));
+        }
+        glUseProgram(0);
+    }
 }

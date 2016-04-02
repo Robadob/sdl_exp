@@ -34,6 +34,7 @@ A renderable model loaded from a .obj file
 */
 class Entity
 {
+    friend class Shaders;
 public:
     explicit Entity(
         Stock::Models::Model const model,
@@ -89,7 +90,7 @@ protected:
 
     //Optional material (loaded automaically if detected within model file)
     Material *material;
-    glm::vec3 color;
+    glm::vec4 color;
     glm::vec3 location;
     glm::vec4 rotation;
 

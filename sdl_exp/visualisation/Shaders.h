@@ -35,6 +35,10 @@ namespace Stock
         const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
     };
 };
+/*
+Abstracts compilation of Shaders, and attempts to automatically bind uniforms and attributes.
+Each Shaders object is 'bound' to a single entity, so create a 2nd if you wish to use the same shaders with a seperate entity.
+*/
 class Shaders
 {
     //These constants are the names that will be searched for within the shaders
@@ -114,7 +118,11 @@ public:
     bool addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count=1);
     bool addDynamicUniform(char *uniformName, GLint *array, unsigned int count=1);
     bool addStaticUniform(char *uniformName, GLfloat *array, unsigned int count=1);
-    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count=1);
+    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count = 1);    
+    
+    void setColor(glm::vec3 color);
+    void setColor(glm::vec4 color);
+
 private:
     struct DynamicUniformDetail
     {
@@ -138,6 +146,8 @@ private:
     VertexAttributeDetail normals;
     VertexAttributeDetail colors;
     VertexAttributeDetail texcoords;
+    int colorUniformLocation;
+    int colorUniformSize;
 
     //Texture tracking
     std::vector<UniformTextureDetail> textures;

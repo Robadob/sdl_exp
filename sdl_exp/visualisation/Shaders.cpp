@@ -754,7 +754,7 @@ int Shaders::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
 {
     GLint bufferId = textures.size();
     GLint maxTex;
-    glGetIntegerv(GL_MAX_TEXTURE_UNITS, &maxTex);
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex);
     if (bufferId<maxTex && addStaticUniform(uniformName, &bufferId))
     {
         textures.push_back(UniformTextureDetail{ texture, bufferId, type });

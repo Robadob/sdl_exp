@@ -20,7 +20,7 @@ namespace Stock
         {
             char *modelPath;
             char *texturePath;
-            Stock::Shaders::ShaderSet defaultShaders;;
+            Stock::Shaders::ShaderSet defaultShaders;
         };
         const Model ICOSPHERE{ "../models/icosphere.obj", 0, Stock::Shaders::FLAT };
         const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", 0, Stock::Shaders::COLOR };//Remove texture?

@@ -38,9 +38,9 @@ void Texture::createGLTex()
 {
     GL_CALL(glGenTextures(1, &texName));
     GL_CALL(glBindTexture(texType, texName));
-    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    GL_CALL(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT));
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_R, GL_REPEAT));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_BASE_LEVEL, 0));
@@ -53,7 +53,10 @@ Deletes the GL texture
 void Texture::deleteGLTex()
 {
     if (texName)
+    {
         GL_CALL(glDeleteTextures(1, &texName));
+        texName = 0;        
+    }
 }
 /*
 Returns the first image found at the provided path

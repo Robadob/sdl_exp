@@ -72,6 +72,12 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\texture\TextureFont.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Text.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -126,6 +132,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\texture\TextureBuffer.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\TextureFont.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Text.h">
+      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

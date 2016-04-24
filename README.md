@@ -4,14 +4,15 @@ A simple template implementation using SDL for quickly applying the modern OpenG
 ## Usage
 The easiest way to utilise this library appears to be:
 * Clone the contents of the `include` directory into your own include directory's root.
-* Clone the contents of the platform relevant `lib\Win32` or `lib\x64` directory into your relevant lib directories.
-* Clone the platform relevant runtime libraries (.dll) from `Debug\Win32` or `Debug\x64` ino your relevant build directories.
+* Clone the contents of the platform relevant `lib\<architecture>` directory into your relevant lib directories.
+* Clone the platform relevant runtime libraries (.dll) from `<configuration>\<architecture>` into your relevant build directories.
 * Update the linker to link against:
   * `SDL2.lib`
   * `SDL2_image.lib`
   * `glew32.lib`
   * `OpenGL32.lib`
   * `glu32.lib`
+  * `freetype263.lib`
 * Delete the sample `main.cpp`, to remove the duplicate entry point.
 * Copy the `sdl_exp/visualisation` directory into your own source directory.
 * Create a new class which extends `Scene` and overrides all of its virtual methods 
@@ -103,3 +104,4 @@ All dependent libraries are included within the repo, licenses are available on 
 * [SDL_image](https://www.libsdl.org/projects/SDL_image/) 2.0.1 *(for texture loading)*
 * [GLM](http://glm.g-truc.net/) 0.9.7.3 *(for consistent C/GLS vector maths functionality)*
 * [GLEW](http://glew.sourceforge.net/) 1.13.0
+* [FreeType](http://www.freetype.org/) 2.6.3

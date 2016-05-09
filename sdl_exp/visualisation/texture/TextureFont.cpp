@@ -2,13 +2,14 @@
 
 
 TextureFont::TextureFont(unsigned int width, unsigned int height)
-    : width(width)
+    : tex(0)
+    , width(width)
     , height(height)
 {
     tex = (unsigned char**)malloc(sizeof(char*)*height);
     tex[0] = (unsigned char*)malloc(sizeof(char)*width*height);
     memset(tex[0], 0, sizeof(char)*width*height);
-    for (int i = 1; i < height;i++)
+    for (unsigned int i = 1; i < height;i++)
     {
         tex[i] = tex[i*width];
     }
@@ -20,7 +21,7 @@ TextureFont::~TextureFont()
 }
 void TextureFont::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsigned int penY)
 {
-    for (int y = 0; y<glyph->bitmap.rows; y++)
+    for (unsigned int y = 0; y<glyph->bitmap.rows; y++)
     {
         //src ptr maps to the start of the current row in the glyph
         unsigned char *src_ptr = glyph->bitmap.buffer + y*glyph->bitmap.pitch;

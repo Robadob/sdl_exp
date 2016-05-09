@@ -12,7 +12,7 @@ const char* Texture::IMAGE_EXTS[] = {
 /*
 @param type The type of texture, e.g. GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP
 @param texPath This value is only used to block null textures (to save generating unused textures), any value that evaluates to true will suffice
-@param uniformName The name of the uniform sampler within the sahder, this defaults to TEXTURE_UNIFORM_NAME from this classes header
+@param uniformName The name of the uniform sampler within the shader, this defaults to TEXTURE_UNIFORM_NAME from this classes header
 */
 Texture::Texture(GLenum type, const char *texPath, char *uniformName)
     : texName(0)

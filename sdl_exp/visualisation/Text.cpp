@@ -181,15 +181,6 @@ void Text::recomputeTex()
         /* increment pen position */
         if (!(string[i] == ' '&&pen_x == 0))
             pen_x += font->glyph->advance.x >> 6;
-
-        /*Once you have a bitmapped glyph image, you can access it directly through glyph->bitmap (a simple descriptor for bitmaps or pixmaps), 
-        and position it through glyph->bitmap_left and glyph->bitmap_top. 
-        For optimal rendering on a screen the bitmap should be used as an alpha channel in linear blending with gamma correction.
-
-        Note that bitmap_left is the horizontal distance from the current pen position to the leftmost border of the glyph bitmap, 
-        while bitmap_top is the vertical distance from the pen position (on the baseline) to the topmost border of the glyph bitmap. 
-        It is positive to indicate an upwards distance.
-        */
     }
 }
 void Text::setStringLen()

@@ -38,6 +38,7 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
+	, hud(windowWidth, windowHeight)
     , camera(glm::vec3(50,50,50))
     , renderAxisState(false)
     , axis(25)
@@ -280,6 +281,7 @@ void Visualisation::render()
         this->axis.render();
     this->defaultLighting();
     this->scene->render();
+	this->hud.render();
 
     GL_CHECK();
 
@@ -464,6 +466,7 @@ void Visualisation::resizeWindow(){
     float left = fAspect * bottom;
     float right = fAspect * top;
     this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	hud.resizeWindow(this->windowWidth, this->windowHeight);
 }
 /*
 @return True if the window is currently full screen
@@ -517,4 +520,8 @@ This pointer can be used to continuously track the visualisations projection mat
 */
 const glm::mat4 *Visualisation::getFrustrumPtr() const{
     return &this->frustum;
+}
+
+HUD* Visualisation::getHUD(){
+	return &hud;
 }

@@ -6,6 +6,7 @@
 
 #include "Camera.h"
 #include "Axis.h"
+#include "HUD.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -42,7 +43,7 @@ public:
     const Camera *getCamera() const;
     const Scene *getScene() const;
     const glm::mat4 *getFrustrumPtr() const;
-
+	HUD* getHUD();
 private:
     void clearFrame();
     void handleKeypress(SDL_Keycode keycode, int x, int y);
@@ -55,6 +56,7 @@ private:
     SDL_Rect windowedBounds;
     SDL_GLContext context;
 
+	HUD hud;
     Camera camera;
     Scene* scene;
     glm::mat4 frustum;

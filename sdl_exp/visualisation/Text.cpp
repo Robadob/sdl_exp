@@ -86,6 +86,15 @@ void Text::setFontHeight(unsigned int pixels)
     }
     recomputeTex();
 }
+
+void Text::reload()
+{
+}
+
+void Text::_render()
+{
+}
+
 void Text::recomputeTex()
 {
     FT_Error error;

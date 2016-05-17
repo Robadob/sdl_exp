@@ -78,6 +78,12 @@
     <ClCompile Include="visualisation\Text.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\Overlay.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\HUD.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -137,6 +143,12 @@
       <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Text.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Overlay.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\HUD.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>

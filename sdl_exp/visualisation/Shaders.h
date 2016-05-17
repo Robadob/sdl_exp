@@ -103,6 +103,7 @@ public:
     void createShaders();
     bool reload(bool silent = false);
     void useProgram(Entity *e = 0);
+	void useProgram(const glm::mat4 *mv, const glm::mat4 *proj);
     void clearProgram();
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
@@ -124,6 +125,7 @@ public:
     void setColor(glm::vec4 color);
 
 private:
+	void _useProgram();
     struct DynamicUniformDetail
     {
         GLenum type;

@@ -1,33 +1,39 @@
 #include "HUD.h"
 
+#include "Overlay.h"
 #include <glm/gtc/matrix_transform.inl>
 
 HUD::HUD(unsigned int width, unsigned int height)
 	: modelViewMat()
 	, projectionMat()
+	, width(width)
+	, height(height)
 {
 	resizeWindow(width, height);
 }
 void HUD::add(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV, HUDAnchorH anchorH, int zIndex)
 {
-	std::list<Item>::iterator it = stack.begin();
+	std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
 	for (; it != stack.end(); ++it)
 	{
 		//Find first element with a lower z-index
-		if ((*it).zIndex < zIndex)
+		if ((*it)->zIndex < zIndex)
 		{
 			break;
 		}
 	}
-	stack.insert(it, Item(overlay, x, y, anchorV, anchorH, zIndex));
+	
+	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, anchorV, anchorH, zIndex));
+	(*item)->resizeWindow(width, height);
+	overlay->setHUDItem(*item);
 }
 unsigned int HUD::removeAll(std::shared_ptr<Overlay> overlay)
 {
 	unsigned int removed = 0;
-	std::list<Item>::iterator it = stack.begin();
+	std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
 	while(it != stack.end())
 	{
-		if((*it).overlay==overlay)
+		if((*it)->overlay==overlay)
 		{
 			stack.erase(it++);
 			removed++;
@@ -59,12 +65,14 @@ void HUD::render()
 	std::list<Item>::iterator it = stack.end();
 	do
 	{
-		(*it).overlay->render(&modelViewMat, &projectionMat, &(*it).vbo);
+		(*it).overlay->render(&modelViewMat, &projectionMat, (*it).vbo);
 		--it;
 	} while (it != stack.begin());
 }
-void HUD::resizeWindow(const unsigned int width, const unsigned int height)
+void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 {
+	this->width = w;
+	this->height = h;
 	//Camera at origin looking down y axis, with up vector looking up z axis
 	projectionMat = 
 		glm::lookAt<float>(
@@ -74,12 +82,12 @@ void HUD::resizeWindow(const unsigned int width, const unsigned int height)
 		) 
 		* 
 		glm::ortho<float>(
-			0.0f, width, 
+			0.0f, this->width,
 			0.0f, 1.0f, 
-			-height, 0.0f
+			-this->height, 0.0f
 		);
 	for (std::list<Item>::iterator it = stack.begin(); it != stack.end(); ++it)
-		(*it).resizeWindow(width, height);
+		(*it).resizeWindow(this->width, this->height);
 }
 
 HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV, HUDAnchorH anchorH, int zIndex)
@@ -134,6 +142,13 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV ancho
 /*Update the overlays quad, based on new window size, anchors and overlay dimensions*/
 void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 {
+	//Track parameters, so when called from overlay we can reuse previous
+	static unsigned int width, height;
+	if (w>0 && h>0)
+	{
+		width = w;
+		height = h;
+	}
 	const float depth = 0.5f;
 	glm::vec3 *topLeft		= static_cast<glm::vec3*>(data);
 	glm::vec3 *bottomLeft	= topLeft + 1;
@@ -144,16 +159,16 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	if (anchorH == HUDAnchorH::West)
 		topLeft->x = 0;
 	else if (anchorH == HUDAnchorH::Center)
-		topLeft->x = (int)((w / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
+		topLeft->x = (int)((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorH == HUDAnchorH::East)
-		topLeft->x = w - overlay->getWidth();
+		topLeft->x = width - overlay->getWidth();
 	//Anchor vertical
 	if (anchorV == HUDAnchorV::North)
 		topLeft->z = 0;
 	else if (anchorV==HUDAnchorV::Center)
-		topLeft->z = (int)-((h / 2) - (overlay->getHeight() / 2));//Cast back to int to prevent tearing
+		topLeft->z = (int)-((height / 2) - (overlay->getHeight() / 2));//Cast back to int to prevent tearing
 	else if (anchorV==HUDAnchorV::South)
-		topLeft->z = -(h - overlay->getHeight());
+		topLeft->z = -(height - overlay->getHeight());
 	//Adjust other corners relative to topLeft & overlay size
 	*bottomLeft	 = glm::vec3(topLeft->x, depth, topLeft->z);
 	*bottomRight = glm::vec3(topLeft->x, depth, topLeft->z);

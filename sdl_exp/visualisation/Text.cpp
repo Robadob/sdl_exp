@@ -89,11 +89,9 @@ void Text::setFontHeight(unsigned int pixels)
 
 void Text::reload()
 {
+	recomputeTex();
 }
 
-void Text::_render()
-{
-}
 
 void Text::recomputeTex()
 {
@@ -171,7 +169,7 @@ void Text::recomputeTex()
         {
             lastSpace = currentLineWidth;
         }
-        //handle carraige return and newline
+        //handle carriage return and newline
         if (string[i] == '\r')
         {
             texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
@@ -191,6 +189,10 @@ void Text::recomputeTex()
         if (!(string[i] == ' '&&pen_x == 0))
             pen_x += font->glyph->advance.x >> 6;
     }
+	//link tex to shader
+	//Set width
+	//Set height
+	//Trigger HUD window resize method, (if?) as overlay size may have changed?
 }
 void Text::setStringLen()
 {

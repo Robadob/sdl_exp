@@ -4,16 +4,33 @@
 void Overlay::setWidth(unsigned int w)
 {
 	width = w;
+	if (auto t = hudItem.lock())
+		t->resizeWindow();
 }
 void Overlay::setHeight(unsigned int h)
 {
 	height = h;
+	if (auto t = hudItem.lock())
+		t->resizeWindow();
 }
 void Overlay::setDimensions(unsigned int w, unsigned int h)
 {
 	width = w;
 	height = h;
+	if (auto t = hudItem.lock())
+		t->resizeWindow();
 }
+
+void Overlay::setHUDItem(std::shared_ptr<HUD::Item> ptr)
+{
+	hudItem = std::weak_ptr<HUD::Item>(ptr);
+}
+
+Overlay::Overlay():
+shaders(new Shaders()), width(0), height(0), hudItem()
+{
+}
+
 void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint vbo)
 {
 	if (this->shaders != nullptr)

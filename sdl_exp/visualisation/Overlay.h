@@ -1,12 +1,15 @@
 #ifndef __Overlay_h__
 #define __Overlay_h__
 #include "texture/Texture2D.h"
+#include <memory>
+#include "HUD.h"
 
 /*
 Represents a 2d quad rendered in orthographic over the screen.
 */
-class Overlay : Texture2D
+class Overlay
 {
+	friend class HUD;
 public:
 	Overlay();
 	virtual void reload() = 0;
@@ -22,6 +25,8 @@ protected:
 	void setHeight(unsigned int h);
 	void setDimensions(unsigned int w, unsigned int h);
 private:
+	std::weak_ptr<HUD::Item> hudItem;
+	void setHUDItem(std::shared_ptr<HUD::Item> ptr);
 	Shaders *shaders;
 	unsigned int width;
 	unsigned int height;

@@ -4,8 +4,10 @@
 #include <list>
 #include <tuple>
 #include <memory>
+#include "GLcheck.h"
+#include <glm/glm.hpp>
 
-#include "Overlay.h"
+class Overlay;
 
 /*
 Represents the orthographic plane covering the screen
@@ -15,11 +17,12 @@ class HUD
 {
 	enum class HUDAnchorV { North, Center, South };
 	enum class HUDAnchorH { West, Center, East };
+public:
 	class Item
 	{
 	public:
 		Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV = HUDAnchorV::Center, HUDAnchorH anchorH = HUDAnchorH::Center, int zIndex = 0);
-		void resizeWindow(const unsigned int w, const unsigned int h);
+		void resizeWindow(const unsigned int w=0, const unsigned int h=0);
 		std::shared_ptr<Overlay> overlay;
 		const int x;
 		const int y;
@@ -31,7 +34,6 @@ class HUD
 		void *data;
 		const int faces[] = { 0, 1, 2, 3 };
 	};
-public:
 	HUD(unsigned int width, unsigned int height);
 	/*
 	Adds an overlay to the stack at the specified z-index
@@ -55,7 +57,8 @@ private:
 	const glm::mat4 modelViewMat;
 	glm::mat4 projectionMat;
 	//Holds the overlay elements to be rendered inr evers z-index order
-	std::list<Item> stack;
+	std::list<std::shared_ptr<Item>> stack;
+	unsigned int width, height;
 };
 
 #endif //ifndef __Scene_h__

@@ -123,10 +123,10 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	pos.offset = 0;
 	pos.stride = 0;
 	overlay->getShaders()->setPositionsAttributeDetail(pos);
-	Shaders::VertexAttributeDetail texCo(GL_FLOAT, 3, sizeof(float));
+	Shaders::VertexAttributeDetail texCo(GL_FLOAT, 2, sizeof(float));
 	texCo.vbo = vbo;
 	texCo.count = 4;
-	texCo.data = static_cast<glm::vec2*>(static_cast<void*>(static_cast<glm::vec3*>(data)+4));
+    texCo.data = texCoords;
 	texCo.offset = 4*sizeof(glm::vec3);
 	texCo.stride = 0;
 	overlay->getShaders()->setTexCoordsAttributeDetail(texCo);

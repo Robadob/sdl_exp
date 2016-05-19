@@ -25,7 +25,7 @@ class Text : public Overlay
 	};
 public:
 	static const char *FONT_ARIAL;
-    Text(char *string, char const *fontFile = 0, unsigned int faceIndex = 0);
+    Text(char *string, unsigned int fontHeight=20, char const *fontFile = 0, unsigned int faceIndex = 0);
     virtual ~Text(); 
     void setFontHeight(unsigned int pixels);
 	void reload() override;

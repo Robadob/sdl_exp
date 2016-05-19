@@ -50,17 +50,17 @@ void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint vbo)
 		//Update Model View Matrix
 		glMatrixMode(GL_MODELVIEW);
 		GL_CALL(glLoadMatrixf(glm::value_ptr(*mv)));
-	}
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
+    }
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//Bind the faces to be rendered
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo));
 
 	glPushMatrix(); 
 	GL_CALL(glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0));
 	glPopMatrix();
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 	if (this->shaders != nullptr)
 		shaders->clearProgram();
 	//Do something, setup projection/quad

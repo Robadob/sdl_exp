@@ -3,12 +3,12 @@
 const char* Text::FONT_ARIAL = "C:/Windows/Fonts/Arial.ttf";
 //http://www.freetype.org/freetype2/docs/tutorial/step1.html
 //http://www.freetype.org/freetype2/docs/tutorial/step2.html
-Text::Text(char *string, char const *fontFile, unsigned int faceIndex)
+Text::Text(char *string, unsigned int fontHeight, char const *fontFile, unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
 	, library()
     , font()
     , string(string)
-    , fontHeight(20)
+    , fontHeight(fontHeight)
     , wrapDistance(800)
 {
     if (!fontFile)
@@ -221,7 +221,7 @@ Text::TextureString::TextureString(unsigned int width, unsigned int height)
 void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders)
 {
 	GL_CALL(glBindTexture(texType, texName));
-	GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture));
+	GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture[0]));
 	GL_CALL(glBindTexture(texType, 0));
 	bindToShader(shaders.get(), 0);
 }

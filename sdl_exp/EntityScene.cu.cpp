@@ -46,7 +46,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #endif
     texBuf.bindToShader(this->instancedSphere->getShaders().get());
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
-	this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World")), 0, 0);
+	this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World",20)), 0, 0);
 }
 /*
 Called once per frame when Scene animation calls should be 

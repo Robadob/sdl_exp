@@ -168,8 +168,8 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	else if (anchorV==HUDAnchorV::North)
 		bottomLeft->y = ((float)height - (float)overlay->getHeight());
 	//Apply offsets
-	topLeft->x += x;
-	topLeft->y += y;
+    bottomLeft->x += x;
+    bottomLeft->y += y;
 	//Adjust other corners relative to topLeft & overlay size
 	*topLeft     = glm::vec3(*bottomLeft);
 	*bottomRight = glm::vec3(*bottomLeft);

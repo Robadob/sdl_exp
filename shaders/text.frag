@@ -10,5 +10,5 @@ void main()
 {
   //Grab outColor from a uniform eventually
   vec4 outColor = vec4(0.0f,0.5f,0.0f,1.0f);
-  fragColor = outColor*texture(_texture, texCoords.xy).r;
+  fragColor = outColor*texture(_texture, vec2(texCoords.x,-texCoords.y)).r;
 }

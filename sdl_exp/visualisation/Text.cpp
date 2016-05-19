@@ -100,7 +100,7 @@ void Text::recomputeTex()
     FT_Error error;
     //Measure tex width and height
     unsigned int texWidth = 0;
-    unsigned int texHeight = fontHeight;
+    unsigned int texHeight = fontHeight*2;
     unsigned int lastSpace = 0;
     unsigned int currentLineWidth = 0;
     std::vector<int> lineStarts = {0};
@@ -162,7 +162,7 @@ void Text::recomputeTex()
     {
         FT_UInt glyph_index = FT_Get_Char_Index(font, string[i]);
         //Defaults to unicode charmap
-		error = FT_Load_Char(font, glyph_index, FT_LOAD_RENDER);
+        error = FT_Load_Char(font, string[i], FT_LOAD_RENDER);
         if (error)
         {
             fprintf(stderr, "An unexpected error occured whilst loading glyph '%c': %i\n", string[i], error);
@@ -202,6 +202,7 @@ void Text::setStringLen()
 {
     stringLen = 0;
     while (string[stringLen++] != '\0');
+    stringLen--;
 }
 
 Text::TextureString::TextureString(unsigned int width, unsigned int height)
@@ -232,6 +233,8 @@ Text::TextureString::~TextureString()
 }
 void Text::TextureString::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsigned int penY)
 {
+    penY -= glyph->bitmap_top;
+    //penX -= glyph->bitmap_left;
 	for (unsigned int y = 0; y<glyph->bitmap.rows; y++)
 	{
 		//src ptr maps to the start of the current row in the glyph

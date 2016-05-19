@@ -11,7 +11,7 @@ HUD::HUD(unsigned int width, unsigned int height)
 {
 	resizeWindow(width, height);
 }
-void HUD::add(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV, HUDAnchorH anchorH, int zIndex)
+void HUD::add(std::shared_ptr<Overlay> overlay, int x, int y, AnchorV anchorV, AnchorH anchorH, int zIndex)
 {
 	std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
 	for (; it != stack.end(); ++it)
@@ -87,7 +87,7 @@ void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 		(*it)->resizeWindow(this->width, this->height);
 }
 
-HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, HUDAnchorV anchorV, HUDAnchorH anchorH, int zIndex)
+HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, AnchorV anchorV, AnchorH anchorH, int zIndex)
 	: overlay(overlay)
 	, x(x)
 	, y(y)
@@ -154,18 +154,18 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	glm::vec3 *bottomRight  = topRight + 1;
 	*bottomLeft = glm::vec3(0, 0, depth);
 	//Anchor horizontal
-	if (anchorH == HUDAnchorH::West)
+	if (anchorH == AnchorH::West)
 		bottomLeft->x = 0;
-	else if (anchorH == HUDAnchorH::Center)
+	else if (anchorH == AnchorH::Center)
 		bottomLeft->x = (float)(int)((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
-	else if (anchorH == HUDAnchorH::East)
+	else if (anchorH == AnchorH::East)
 		bottomLeft->x = (float)width - (float)overlay->getWidth();
 	//Anchor vertical
-	if (anchorV == HUDAnchorV::South)
+	if (anchorV == AnchorV::South)
 		bottomLeft->y = 0;
-	else if (anchorV==HUDAnchorV::Center)
+	else if (anchorV==AnchorV::Center)
 		bottomLeft->y = (float)(int)((height / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
-	else if (anchorV==HUDAnchorV::North)
+	else if (anchorV==AnchorV::North)
 		bottomLeft->y = ((float)height - (float)overlay->getHeight());
 	//Apply offsets
     bottomLeft->x += x;

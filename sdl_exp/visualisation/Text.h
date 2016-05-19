@@ -3,6 +3,19 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include "Overlay.h"
+
+namespace Stock
+{
+    namespace Font
+    {
+        extern const char* ARIAL;
+        extern const char* LUCIDIA_CONSOLE;
+        extern const char* SEGOE_UI;
+        extern const char* JOKERMAN;
+        extern const char* TIMES_NEW_ROMAN;
+        extern const char* VIVALDI;
+    };
+};
 /*
 Class for rendering strings to screen.
 Windows stores font name-file name mappings in HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts
@@ -24,7 +37,6 @@ class Text : public Overlay
 		unsigned int height;
 	};
 public:
-	static const char *FONT_ARIAL;
     Text(char *string, unsigned int fontHeight=20, char const *fontFile = 0, unsigned int faceIndex = 0);
     virtual ~Text(); 
     void setFontHeight(unsigned int pixels);

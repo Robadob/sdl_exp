@@ -1,6 +1,17 @@
 #include "Text.h"
 #include <vector>
-const char* Text::FONT_ARIAL = "C:/Windows/Fonts/Arial.ttf";
+namespace Stock
+{
+    namespace Font
+    {
+        const char* ARIAL = "C:/Windows/Fonts/Arial.ttf";
+        const char* LUCIDIA_CONSOLE = "C:/Windows/Fonts/lucon.TTF.ttf";
+        const char* SEGOE_UI = "C:/Windows/Fonts/segoeui.ttf";
+        const char* JOKERMAN = "C:/Windows/Fonts/JOKERMAN.TTF";
+        const char* TIMES_NEW_ROMAN = "C:/Windows/Fonts/times.ttf";
+        const char* VIVALDI = "C:/Windows/Fonts/VIVALDII.TTF";
+    };
+};
 //http://www.freetype.org/freetype2/docs/tutorial/step1.html
 //http://www.freetype.org/freetype2/docs/tutorial/step2.html
 Text::Text(char *string, unsigned int fontHeight, char const *fontFile, unsigned int faceIndex)
@@ -12,7 +23,7 @@ Text::Text(char *string, unsigned int fontHeight, char const *fontFile, unsigned
     , wrapDistance(800)
 {
     if (!fontFile)
-        fontFile = FONT_ARIAL;
+        fontFile = Stock::Font::ARIAL;
     FT_Error error = FT_Init_FreeType(&library);
     if (error)
     {
@@ -26,7 +37,7 @@ Text::Text(char *string, unsigned int fontHeight, char const *fontFile, unsigned
     if (error == FT_Err_Unknown_File_Format)
     {
         fprintf(stderr, "The font file %s is of an unsupport format, default to Arial\n", fontFile);
-        fontFile = FONT_ARIAL;
+        fontFile = Stock::Font::ARIAL;
         error = FT_New_Face(library,
             fontFile,
             0,

@@ -19,7 +19,7 @@ class Text : public Overlay
 		void updateTex(std::shared_ptr<Shaders> shaders);
 		void reload() override;
 	private:
-		unsigned char **tex;
+		unsigned char **texture;
 		unsigned int width;
 		unsigned int height;
 	};

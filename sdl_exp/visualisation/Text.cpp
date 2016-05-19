@@ -96,6 +96,7 @@ void Text::reload()
 
 void Text::recomputeTex()
 {
+	setStringLen();
     FT_Error error;
     //Measure tex width and height
     unsigned int texWidth = 0;
@@ -146,7 +147,9 @@ void Text::recomputeTex()
             texHeight += fontHeight;
             lineStarts.push_back(i + 1);
         }
-    }
+	}
+	//Consider line if no wrap was applied
+	texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
     //Allocate tex/Deallocate old tex
 	tex = std::make_unique<TextureString>(texWidth, texHeight);
 
@@ -159,7 +162,7 @@ void Text::recomputeTex()
     {
         FT_UInt glyph_index = FT_Get_Char_Index(font, string[i]);
         //Defaults to unicode charmap
-        error = FT_Load_Char(font, string[i], FT_LOAD_RENDER);
+		error = FT_Load_Char(font, glyph_index, FT_LOAD_RENDER);
         if (error)
         {
             fprintf(stderr, "An unexpected error occured whilst loading glyph '%c': %i\n", string[i], error);
@@ -203,29 +206,29 @@ void Text::setStringLen()
 
 Text::TextureString::TextureString(unsigned int width, unsigned int height)
 	: Texture(GL_TEXTURE_2D, "")//_texture as default
-	, tex(0)
+	, texture(0)
 	, width(width)
 	, height(height)
 {
-	tex = (unsigned char**)malloc(sizeof(char*)*height);
-	tex[0] = (unsigned char*)malloc(sizeof(char)*width*height);
-	memset(tex[0], 0, sizeof(char)*width*height);
+	texture = (unsigned char**)malloc(sizeof(char*)*height);
+	texture[0] = (unsigned char*)malloc(sizeof(char)*width*height);
+	memset(texture[0], 0, sizeof(char)*width*height);
 	for (unsigned int i = 1; i < height; i++)
 	{
-		tex[i] = tex[i*width];
+		texture[i] = texture[i - 1] + width;
 	}
 }
 void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders)
 {
 	GL_CALL(glBindTexture(texType, texName));
-	GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, tex));
+	GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture));
 	GL_CALL(glBindTexture(texType, 0));
 	bindToShader(shaders.get(), 0);
 }
 Text::TextureString::~TextureString()
 {
-	free(tex[0]);
-	free(tex);
+	free(texture[0]);
+	free(texture);
 }
 void Text::TextureString::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsigned int penY)
 {
@@ -234,12 +237,14 @@ void Text::TextureString::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsi
 		//src ptr maps to the start of the current row in the glyph
 		unsigned char *src_ptr = glyph->bitmap.buffer + y*glyph->bitmap.pitch;
 		//dst ptr maps to the pens current Y pos, adjusted for the current glyph row
-		unsigned char *dst_ptr = tex[penY + (glyph->bitmap.rows - y - 1)] + penX;
+		//unsigned char *dst_ptr = tex[penY + (glyph->bitmap.rows - y - 1)] + penX;
+		unsigned char *dst_ptr = texture[penY + y] + penX;
 		//copy entire row
-		for (int x = 0; x<glyph->bitmap.pitch; x++)
-		{
-			dst_ptr[x] = src_ptr[x];
-		}
+		memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph->bitmap.pitch);
+		//for (int x = 0; x<glyph->bitmap.pitch; x++)
+		//{
+		//	dst_ptr[x] = src_ptr[x];
+		//}
 	}
 }
 void Text::TextureString::reload() {

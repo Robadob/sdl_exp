@@ -169,7 +169,8 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
         if (this->skybox)
             this->skybox->reload();
         if (this->scene)
-            this->scene->_reload();
+			this->scene->_reload();
+		this->hud.reload();
         break;
     default:
         // Do nothing?

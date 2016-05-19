@@ -13,7 +13,8 @@ class Overlay
 public:
 	Overlay(std::shared_ptr<Shaders> shaders, unsigned int width=0, unsigned int height=0);
 	virtual ~Overlay(){};
-	virtual void reload() {};
+	void _reload() { shaders->reload(); reload(); };
+	virtual void reload()=0;
 	void render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint vbo);
 	unsigned int getWidth() const
 	{ return width; };

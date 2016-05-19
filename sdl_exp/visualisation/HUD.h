@@ -21,7 +21,11 @@ public:
 	class Item
 	{
 	public:
-		Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV = HUDAnchorV::Center, HUDAnchorH anchorH = HUDAnchorH::Center, int zIndex = 0);
+		/*
+		@param overlay Pointer to the overlay to be placed within the HUD
+		@param x 
+		*/
+		Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, HUDAnchorV anchorV = HUDAnchorV::Center, HUDAnchorH anchorH = HUDAnchorH::Center, int zIndex = 0);
 		void resizeWindow(const unsigned int w=0, const unsigned int h=0);
 		std::shared_ptr<Overlay> overlay;
 		const int x;
@@ -32,7 +36,6 @@ public:
 		GLuint vbo;
 		GLuint fvbo;
 		void *data;
-		const int faces[] = { 0, 1, 2, 3 };
 	};
 	HUD(unsigned int width, unsigned int height);
 	/*

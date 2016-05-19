@@ -378,22 +378,22 @@ void Shaders::useProgram(const glm::mat4 *mv, const glm::mat4 *proj)
 	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 
 	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-	if (this->vertexShaderVersion <= 120 && proj > 0)
+	if (this->vertexShaderVersion <= 120 && proj)
 	{//If old shaders where gl_ModelViewProjectionMatrix is available
 		glMatrixMode(GL_PROJECTION);
 		GL_CALL(glLoadMatrixf(glm::value_ptr(*proj)));
 	}
-	if (this->projection.location >= 0 && proj > 0)
+	if (this->projection.location >= 0 && proj )
 	{//If projection matrix location and camera ptr are known
 		GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*proj)));
 	}
 	//Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
-	if (this->vertexShaderVersion <= 120 && mv > 0)
+	if (this->vertexShaderVersion <= 120 && mv )
 	{//If old shaders where gl_ModelViewMatrix is available
 		glMatrixMode(GL_MODELVIEW);
 		GL_CALL(glLoadMatrixf(glm::value_ptr(*mv)));
 	}
-	if (this->modelview.location >= 0 && mv > 0)
+	if (this->modelview.location >= 0 && mv)
 	{//If modeview matrix location and camera ptr are known
 		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(*mv)));
 	}
@@ -807,7 +807,7 @@ Permenently binds a texture buffer to be loaded when useProgram() is called
 */
 int Shaders::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
 {
-    GLint bufferId = textures.size();
+    GLint bufferId = (GLint)textures.size();
     GLint maxTex;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex);
     if (bufferId<maxTex && addStaticUniform(uniformName, &bufferId))

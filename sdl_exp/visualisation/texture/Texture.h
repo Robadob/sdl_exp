@@ -21,7 +21,7 @@ public:
     bool bindToShader(Shaders *s, char *uniformName = 0);
 protected:
     Texture(GLenum type, const char *texPath = 0, char *uniformName = 0);
-    ~Texture();
+    virtual ~Texture();
     static SDL_Surface *readImage(const char *texturePath, bool printErr = true);
     void setTexture(SDL_Surface *image, GLuint target = 0, bool dontFreeImage = false);
     GLuint texName;

@@ -32,7 +32,9 @@ namespace Stock
         const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", 0 };
         const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", 0 };
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", 0 };
-        const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
+		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
+		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", 0 };
+		const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", 0 };
     };
 };
 /*

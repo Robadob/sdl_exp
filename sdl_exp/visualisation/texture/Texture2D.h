@@ -7,7 +7,6 @@ class Texture2D : public Texture
 public:
     Texture2D(const char *texturePath, char *uniformName = 0);
     Texture2D(char *uniformName, void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type);
-    virtual ~Texture2D(){}
     void reload() override;
     void setTexture(void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type);
 

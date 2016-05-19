@@ -1,10 +1,11 @@
 #include "Text.h"
 #include <vector>
-
+const char* Text::FONT_ARIAL = "C:/Windows/Fonts/Arial.ttf";
 //http://www.freetype.org/freetype2/docs/tutorial/step1.html
 //http://www.freetype.org/freetype2/docs/tutorial/step2.html
 Text::Text(char *string, char const *fontFile, unsigned int faceIndex)
-    : library()
+	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
+	, library()
     , font()
     , string(string)
     , fontHeight(20)
@@ -146,8 +147,8 @@ void Text::recomputeTex()
             lineStarts.push_back(i + 1);
         }
     }
-    //Allocate tex
-    TextureFont tex(texWidth, texHeight);
+    //Allocate tex/Deallocate old tex
+	tex = std::make_unique<TextureString>(texWidth, texHeight);
 
     int pen_x = 0;
     int pen_y = texHeight;
@@ -183,19 +184,64 @@ void Text::recomputeTex()
             pen_y -= fontHeight;
         }
         //Add glyph to tex
-        tex.paintGlyph(font->glyph, pen_x, pen_y);
+        tex->paintGlyph(font->glyph, pen_x, pen_y);
 
         /* increment pen position */
         if (!(string[i] == ' '&&pen_x == 0))
             pen_x += font->glyph->advance.x >> 6;
     }
 	//link tex to shader
+	tex->updateTex(getShaders());
 	//Set width
-	//Set height
-	//Trigger HUD window resize method, (if?) as overlay size may have changed?
+	setDimensions(texWidth, texHeight);
 }
 void Text::setStringLen()
 {
     stringLen = 0;
     while (string[stringLen++] != '\0');
+}
+
+Text::TextureString::TextureString(unsigned int width, unsigned int height)
+	: Texture(GL_TEXTURE_2D, "")//_texture as default
+	, tex(0)
+	, width(width)
+	, height(height)
+{
+	tex = (unsigned char**)malloc(sizeof(char*)*height);
+	tex[0] = (unsigned char*)malloc(sizeof(char)*width*height);
+	memset(tex[0], 0, sizeof(char)*width*height);
+	for (unsigned int i = 1; i < height; i++)
+	{
+		tex[i] = tex[i*width];
+	}
+}
+void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders)
+{
+	GL_CALL(glBindTexture(texType, texName));
+	GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, tex));
+	GL_CALL(glBindTexture(texType, 0));
+	bindToShader(shaders.get(), 0);
+}
+Text::TextureString::~TextureString()
+{
+	free(tex[0]);
+	free(tex);
+}
+void Text::TextureString::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsigned int penY)
+{
+	for (unsigned int y = 0; y<glyph->bitmap.rows; y++)
+	{
+		//src ptr maps to the start of the current row in the glyph
+		unsigned char *src_ptr = glyph->bitmap.buffer + y*glyph->bitmap.pitch;
+		//dst ptr maps to the pens current Y pos, adjusted for the current glyph row
+		unsigned char *dst_ptr = tex[penY + (glyph->bitmap.rows - y - 1)] + penX;
+		//copy entire row
+		for (int x = 0; x<glyph->bitmap.pitch; x++)
+		{
+			dst_ptr[x] = src_ptr[x];
+		}
+	}
+}
+void Text::TextureString::reload() {
+	//Nothing
 }

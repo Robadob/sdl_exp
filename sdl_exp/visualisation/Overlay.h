@@ -11,23 +11,24 @@ class Overlay
 {
 	friend class HUD;
 public:
-	Overlay();
-	virtual void reload() = 0;
+	Overlay(std::shared_ptr<Shaders> shaders, unsigned int width=0, unsigned int height=0);
+	virtual ~Overlay(){};
+	virtual void reload() {};
 	void render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint vbo);
 	unsigned int getWidth() const
 	{ return width; };
 	unsigned int getHeight() const
 	{ return height; }; 
-	Shaders *Overlay::getShaders() const
+	std::shared_ptr<Shaders> Overlay::getShaders() const
 	{ return shaders; }
 protected:
 	void setWidth(unsigned int w);
 	void setHeight(unsigned int h);
 	void setDimensions(unsigned int w, unsigned int h);
-private:
 	std::weak_ptr<HUD::Item> hudItem;
+private:
 	void setHUDItem(std::shared_ptr<HUD::Item> ptr);
-	Shaders *shaders;
+	std::shared_ptr<Shaders> shaders;
 	unsigned int width;
 	unsigned int height;
 };

@@ -72,9 +72,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\texture\TextureFont.cpp">
-      <Filter>Source Files\Visualisation\Texture</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Text.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -137,9 +134,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\texture\TextureBuffer.h">
-      <Filter>Header Files\Visualisation\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\texture\TextureFont.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Text.h">

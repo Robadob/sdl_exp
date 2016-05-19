@@ -23,8 +23,7 @@ void HUD::add(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV
 		}
 	}
 	
-	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, anchorV, anchorH, zIndex));
-	(*item)->resizeWindow(width, height);
+	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, this->width, this->height, anchorV, anchorH, zIndex));
 	overlay->setHUDItem(*item);
 }
 unsigned int HUD::removeAll(std::shared_ptr<Overlay> overlay)
@@ -49,31 +48,32 @@ void HUD::clear()
 }
 unsigned int HUD::getCount()
 {
-	return stack.size();
+	return (unsigned int)stack.size();
 }
 /*
 Calls reload on all held overlay elements
 */
 void HUD::reload()
 {
-	for (std::list<Item>::iterator it = stack.begin(); it != stack.end(); ++it)
-		(*it).overlay->reload();
+	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
+		(*it)->overlay->reload();
 }
 void HUD::render()
 {
 	//Iterate stack from lowest z-index to highest
-	std::list<Item>::iterator it = stack.end();
-	do
+	std::list<std::shared_ptr<Item>>::reverse_iterator it = stack.rbegin();
+	while (it != stack.rend())
 	{
-		(*it).overlay->render(&modelViewMat, &projectionMat, (*it).vbo);
-		--it;
-	} while (it != stack.begin());
+		(*it)->overlay->render(&modelViewMat, &projectionMat, (*it)->vbo);
+		++it;
+	}
 }
 void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 {
 	this->width = w;
 	this->height = h;
 	//Camera at origin looking down y axis, with up vector looking up z axis
+	//Top left is origin, bottom right is (width, -height)
 	projectionMat = 
 		glm::lookAt<float>(
 			glm::vec3(0, 0, 0),
@@ -82,15 +82,15 @@ void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 		) 
 		* 
 		glm::ortho<float>(
-			0.0f, this->width,
+			0.0f, (float)this->width,
 			0.0f, 1.0f, 
-			-this->height, 0.0f
+			0.0f-this->height, 0.0f
 		);
-	for (std::list<Item>::iterator it = stack.begin(); it != stack.end(); ++it)
-		(*it).resizeWindow(this->width, this->height);
+	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
+		(*it)->resizeWindow(this->width, this->height);
 }
 
-HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV anchorV, HUDAnchorH anchorH, int zIndex)
+HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, HUDAnchorV anchorV, HUDAnchorH anchorH, int zIndex)
 	: overlay(overlay)
 	, x(x)
 	, y(y)
@@ -117,7 +117,7 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV ancho
 	GL_CALL(glBufferData(GL_ARRAY_BUFFER, bufferSize, data, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	//Setup vertices
-	resizeWindow(overlay->getWidth(), overlay->getHeight());
+	resizeWindow(window_w, window_h);
 	//Link Vertex Attributes TO SHADER??!?!??!?
 	Shaders::VertexAttributeDetail pos(GL_FLOAT, 3, sizeof(float));
 	pos.vbo = vbo;
@@ -136,6 +136,7 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, HUDAnchorV ancho
 	//Setup faces
 	GL_CALL(glGenBuffers(1, &fvbo));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
+	const int faces[] = { 0, 1, 2, 3 };
 	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
@@ -159,16 +160,16 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	if (anchorH == HUDAnchorH::West)
 		topLeft->x = 0;
 	else if (anchorH == HUDAnchorH::Center)
-		topLeft->x = (int)((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
+		topLeft->x = (float)(int)((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorH == HUDAnchorH::East)
-		topLeft->x = width - overlay->getWidth();
+		topLeft->x = (float)width - (float)overlay->getWidth();
 	//Anchor vertical
 	if (anchorV == HUDAnchorV::North)
 		topLeft->z = 0;
 	else if (anchorV==HUDAnchorV::Center)
-		topLeft->z = (int)-((height / 2) - (overlay->getHeight() / 2));//Cast back to int to prevent tearing
+		topLeft->z = (float)(int)-((height / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorV==HUDAnchorV::South)
-		topLeft->z = -(height - overlay->getHeight());
+		topLeft->z = -((float)height - (float)overlay->getHeight());
 	//Adjust other corners relative to topLeft & overlay size
 	*bottomLeft	 = glm::vec3(topLeft->x, depth, topLeft->z);
 	*bottomRight = glm::vec3(topLeft->x, depth, topLeft->z);

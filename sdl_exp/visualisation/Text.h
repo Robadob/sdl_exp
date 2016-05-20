@@ -37,11 +37,20 @@ class Text : public Overlay
 		unsigned int height;
 	};
 public:
-    Text(char *string, unsigned int fontHeight=20, char const *fontFile = 0, unsigned int faceIndex = 0);
+    Text(char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile = 0, unsigned int faceIndex = 0);
+    Text(char *string, unsigned int fontHeight = 20, glm::vec4 color = glm::vec4(0.0f,0.0f,0.0f,1.0f), char const *fontFile = 0, unsigned int faceIndex = 0);
     virtual ~Text(); 
     void setFontHeight(unsigned int pixels);
 	void reload() override;
+    void setColor(glm::vec3 color);
+    void setColor(glm::vec4 color);
+    void setBackgroundColor(glm::vec3 color);
+    void setBackgroundColor(glm::vec4 color);
+    glm::vec4 getColor();
+    glm::vec4 getBackgroundColor();
 private:
+    glm::vec4 color;
+    glm::vec4 backgroundColor;
     void recomputeTex();
     void setStringLen();
     FT_Library  library;

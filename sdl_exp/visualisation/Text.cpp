@@ -1,5 +1,7 @@
 #include "Text.h"
 #include <vector>
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Stock
 {
     namespace Font
@@ -14,14 +16,21 @@ namespace Stock
 };
 //http://www.freetype.org/freetype2/docs/tutorial/step1.html
 //http://www.freetype.org/freetype2/docs/tutorial/step2.html
-Text::Text(char *string, unsigned int fontHeight, char const *fontFile, unsigned int faceIndex)
+Text::Text(char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile,unsigned int faceIndex)
+    :Text(string, fontHeight, glm::vec4(color,1.0f),fontFile, faceIndex)
+{}
+Text::Text(char *string, unsigned int fontHeight, glm::vec4 color, char const *fontFile,unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
 	, library()
     , font()
     , string(string)
     , fontHeight(fontHeight)
     , wrapDistance(800)
+    , color(color)
+    , backgroundColor(0.0f)
 {
+    getShaders()->addDynamicUniform("_col", glm::value_ptr(this->color), 4);
+    getShaders()->addDynamicUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
     if (!fontFile)
         fontFile = Stock::Font::ARIAL;
     FT_Error error = FT_Init_FreeType(&library);
@@ -265,4 +274,28 @@ void Text::TextureString::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsi
 }
 void Text::TextureString::reload() {
 	//Nothing
+}
+void Text::setColor(glm::vec3 color)
+{
+    this->color = glm::vec4(color, 1.0f);
+}
+void Text::setColor(glm::vec4 color)
+{
+    this->color = color;
+}
+void Text::setBackgroundColor(glm::vec3 color)
+{
+    this->backgroundColor = glm::vec4(color, 1.0f);
+}
+void Text::setBackgroundColor(glm::vec4 color)
+{
+    this->backgroundColor = color;
+}
+glm::vec4 Text::getColor()
+{
+    return color;
+}
+glm::vec4 Text::getBackgroundColor()
+{
+    return backgroundColor;
 }

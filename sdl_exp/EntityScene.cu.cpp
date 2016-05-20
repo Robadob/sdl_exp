@@ -50,7 +50,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     //this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello", 50)), 0, -50);
     //this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello W", 50)), 0, 0);
     //this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello Wo", 50)), 0, 50);
-    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World!", 50, Stock::Font::JOKERMAN)), 0, 0);
+    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World!", 50, glm::vec3(1.0f), Stock::Font::JOKERMAN)), 0, 0);
 }
 /*
 Called once per frame when Scene animation calls should be 

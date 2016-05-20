@@ -170,11 +170,15 @@ void Text::recomputeTex()
 	}
 	//Consider line if no wrap was applied
 	texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
+    texWidth += 10;
+    texHeight += 10;
     //Allocate tex/Deallocate old tex
 	tex = std::make_unique<TextureString>(texWidth, texHeight);
 
-    int pen_x = 0;
-    int pen_y = texHeight;
+    error = FT_Load_Char(font, *"H", FT_LOAD_RENDER);
+    int offset = fontHeight-font->glyph->bitmap_top;
+    int pen_x = 5;
+    int pen_y = texHeight - offset;
     lastSpace = 0;
     currentLineWidth = 0;
     unsigned int nextLineStart = 0;
@@ -203,14 +207,14 @@ void Text::recomputeTex()
         //If we wrap at this char, update pen position
         if (i<lineStarts.size() && lineStarts[nextLineStart] == i)
         {
-            pen_x = 0;
+            pen_x = 5;
             pen_y -= fontHeight;
         }
         //Add glyph to tex
         tex->paintGlyph(font->glyph, pen_x, pen_y);
 
         /* increment pen position */
-        if (!(string[i] == ' '&&pen_x == 0))
+        if (!(string[i] == ' '&&pen_x == 5))
             pen_x += font->glyph->advance.x >> 6;
     }
 	//link tex to shader

@@ -169,6 +169,7 @@
     <ClCompile Include="visualisation\Overlay.cpp" />
     <ClCompile Include="visualisation\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
+    <ClCompile Include="visualisation\Sprite2D.cpp" />
     <ClCompile Include="visualisation\Text.cpp" />
     <ClCompile Include="visualisation\texture\Texture.cpp" />
     <ClCompile Include="visualisation\texture\Texture2D.cpp" />
@@ -196,6 +197,7 @@
     <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
+    <ClInclude Include="visualisation\Sprite2D.h" />
     <ClInclude Include="visualisation\Text.h" />
     <ClInclude Include="visualisation\texture\Texture.h" />
     <ClInclude Include="visualisation\texture\Texture2D.h" />

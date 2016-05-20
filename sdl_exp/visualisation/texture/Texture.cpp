@@ -7,7 +7,9 @@ const char* Texture::IMAGE_EXTS[] = {
     "",
     ".tga",
     ".png",
-    ".bmp"
+    ".bmp",
+    ".jpg",
+    ".webp"
 };
 /*
 @param type The type of texture, e.g. GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP
@@ -135,7 +137,17 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
     GLint internalFormat = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
 
     GL_CALL(glBindTexture(texType, texName));
-    GL_CALL(glTexImage2D(target, 0, internalFormat, image->w, image->h, 0, internalFormat, GL_UNSIGNED_BYTE, image->pixels));
+    //If the image is stored with a pitch different to width*bytes per pixel, temp change setting
+    if (image->pitch / image->format->BytesPerPixel != image->w)
+    {
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel);
+    }
+    GL_CALL(glTexImage2D(target, 0, internalFormat, image->w, image->h, 0, internalFormat, GL_UNSIGNED_BYTE, image->pixels)); 
+    //Disable custom pitch
+    if (image->pitch / image->format->BytesPerPixel != image->w)
+    {
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    }
     GL_CALL(glBindTexture(texType, 0));
 
     if (!dontFreeImage)

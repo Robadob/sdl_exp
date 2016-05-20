@@ -11,7 +11,7 @@ Shell texture class providing various utility methods for subclasses
 */
 class Texture
 {
-    static const char *IMAGE_EXTS[4];
+    static const char *IMAGE_EXTS[6];
     char *TEXTURE_UNIFORM_NAME = "_texture";//cant make const because of where it gets passed
 public:
     virtual void reload() = 0;

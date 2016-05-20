@@ -61,4 +61,4 @@ private:
     unsigned int wrapDistance;
 	std::unique_ptr<TextureString> tex;
 };
-#endif
+#endif //__Text_h__

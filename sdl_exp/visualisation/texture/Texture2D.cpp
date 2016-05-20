@@ -8,6 +8,7 @@ Loads the 2D texture
 Texture2D::Texture2D(const char *texturePath, char *uniformName)
     : Texture(GL_TEXTURE_2D, texturePath, uniformName)
     , texturePath(texturePath)
+    , dimensions(0)
 {
     _reload();
 }
@@ -41,6 +42,10 @@ void Texture2D::setTexture(void *image, size_t imageSize, unsigned int width, un
         return;
 
     GL_CALL(glBindTexture(texType, texName));
+    if (width%4!=0)
+    {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
     GL_CALL(glTexImage2D(texType, 0, internalFormat, width, height, 0, format, type, image));
     GL_CALL(glBindTexture(texType, 0));
 }
@@ -58,5 +63,11 @@ Loads the 2D texture
 void Texture2D::_reload()
 {
     if (texturePath)
-        Texture::setTexture(readImage(texturePath));
+    {
+        SDL_Surface *img = readImage(texturePath);
+        if (!img)
+            return;
+        dimensions = glm::uvec2((unsigned int)img->w, (unsigned int)img->h);
+        Texture::setTexture(img);
+    }
 }

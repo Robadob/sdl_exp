@@ -20,6 +20,7 @@ Texture::Texture(GLenum type, const char *texPath, char *uniformName)
     : texName(0)
     , texType(type)
     , uniformName(uniformName == 0 ? TEXTURE_UNIFORM_NAME : uniformName)
+    , storageAllocated(false)
 {
     if (texPath)
         createGLTex();
@@ -43,14 +44,6 @@ void Texture::createGLTex()
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_R, GL_REPEAT));
-    if (texType == GL_TEXTURE_2D)
-    {
-        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-        GL_CALL(glTexParameteri(texType, GL_TEXTURE_BASE_LEVEL, 0));
-        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 4)); 
-        GL_CALL(glTexParameteri(texType, GL_GENERATE_MIPMAP, GL_TRUE));
-    }
 }
 /*
 Deletes the GL texture
@@ -143,13 +136,30 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
     //If the image is stored with a pitch different to width*bytes per pixel, temp change setting
     if (image->pitch / image->format->BytesPerPixel != image->w)
     {
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel);
+        GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel));
     }
-    GL_CALL(glTexImage2D(target, 0, internalFormat, image->w, image->h, 0, internalFormat, GL_UNSIGNED_BYTE, image->pixels)); 
+    if (texType == GL_TEXTURE_2D)
+    {
+        GLint sizedIF = image->format->BytesPerPixel == 3 ? GL_RGB8 : GL_RGBA8;
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+        //Only call glTexStorage2D once.
+        if (!storageAllocated)
+        {
+            GL_CALL(glTexStorage2D(texType, 4, sizedIF, image->w, image->h));
+            storageAllocated = true;
+        }
+        GL_CALL(glTexSubImage2D(texType, 0, 0, 0, image->w, image->h, internalFormat, GL_UNSIGNED_BYTE, image->pixels));
+        GL_CALL(glGenerateMipmap(texType));
+    }
+    else
+    {
+        GL_CALL(glTexImage2D(target, 0, internalFormat, image->w, image->h, 0, internalFormat, GL_UNSIGNED_BYTE, image->pixels));
+    }
     //Disable custom pitch
     if (image->pitch / image->format->BytesPerPixel != image->w)
     {
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
     }
     GL_CALL(glBindTexture(texType, 0));
 

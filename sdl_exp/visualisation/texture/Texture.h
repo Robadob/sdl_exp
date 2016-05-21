@@ -31,6 +31,7 @@ private:
     char *uniformName;
     void createGLTex();
     void deleteGLTex();
+    bool storageAllocated;
 };
 
 #endif //ifndef __Texture_h__

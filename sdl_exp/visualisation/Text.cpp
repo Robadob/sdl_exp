@@ -246,11 +246,12 @@ Text::TextureString::TextureString(unsigned int width, unsigned int height)
 void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders)
 {
 	GL_CALL(glBindTexture(texType, texName));
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));
-    GL_CALL(glTexParameteri(texType, GL_GENERATE_MIPMAP, GL_FALSE));
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    //GL_CALL(glTexStorage2D(texType, 1, GL_R8, width, height));//No mipmaps
+    //GL_CALL(glTexSubImage2D(texType, 0, 0, 0, width, height, GL_RED, GL_UNSIGNED_BYTE, texture[0]));//Don't want immutable storage, otherwise we need to regen text to resize
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));//Disable mipmaps
     GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture[0]));
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
 	GL_CALL(glBindTexture(texType, 0));
 	bindToShader(shaders.get(), 0);
 }

@@ -60,13 +60,17 @@ void HUD::reload()
 }
 void HUD::render()
 {
+    GL_CALL(glDisable(GL_DEPTH_TEST));
+    GL_CALL(glEnable(GL_BLEND));
 	//Iterate stack from lowest z-index to highest
 	std::list<std::shared_ptr<Item>>::reverse_iterator it = stack.rbegin();
 	while (it != stack.rend())
 	{
 		(*it)->overlay->render(&modelViewMat, &projectionMat, (*it)->fvbo);
 		++it;
-	}
+    }
+    GL_CALL(glDisable(GL_BLEND));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
 }
 void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 {

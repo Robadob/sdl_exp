@@ -154,6 +154,7 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
     }
     else
     {
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));//Disable mipmaps
         GL_CALL(glTexImage2D(target, 0, internalFormat, image->w, image->h, 0, internalFormat, GL_UNSIGNED_BYTE, image->pixels));
     }
     //Disable custom pitch

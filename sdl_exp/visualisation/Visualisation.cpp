@@ -110,6 +110,8 @@ bool Visualisation::init(){
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_NORMALIZE);
+        GL_CALL(glBlendEquation(GL_FUNC_ADD));
+        GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         setMSAA(this->msaaState);
 
         // Setup the projection matrix

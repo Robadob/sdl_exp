@@ -98,10 +98,10 @@ Additional Usage:
     * After the render call use `glActiveTexture()` again, followed by `glBindBuffer(0)` to clear the texture unit.
 
 ## Dependencies
-All dependent libraries are included within the repo, licenses are available on their relevant websites.
+All dependent libraries are included within the repo, licenses are available on their respective websites.
 
 * [SDL](https://www.libsdl.org/) 2.4.0
-* [SDL_image](https://www.libsdl.org/projects/SDL_image/) 2.0.1 *(for texture loading)*
-* [GLM](http://glm.g-truc.net/) 0.9.7.3 *(for consistent C/GLS vector maths functionality)*
-* [GLEW](http://glew.sourceforge.net/) 1.13.0
-* [FreeType](http://www.freetype.org/) 2.6.3
+* [SDL_image](https://www.libsdl.org/projects/SDL_image/) 2.0.1 *(texture loading)*
+* [GLM](http://glm.g-truc.net/) 0.9.7.3 *(consistent C++/GLSL vector maths functionality)*
+* [GLEW](http://glew.sourceforge.net/) 1.13.0 *(GL extensions)*
+* [FreeType](http://www.freetype.org/) 2.6.3 *(for font loading)*

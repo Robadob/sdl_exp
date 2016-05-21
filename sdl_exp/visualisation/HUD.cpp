@@ -3,6 +3,12 @@
 #include "Overlay.h"
 #include <glm/gtc/matrix_transform.inl>
 
+/*
+Creates a new HUD, specifying the window dimensions
+@param width Window width
+@param height Window height
+@note This is done within Visualisation, regular users have no reason to instaniate a HUD
+*/
 HUD::HUD(unsigned int width, unsigned int height)
 	: modelViewMat()
 	, projectionMat()
@@ -11,8 +17,20 @@ HUD::HUD(unsigned int width, unsigned int height)
 {
 	resizeWindow(width, height);
 }
-void HUD::add(std::shared_ptr<Overlay> overlay, int x, int y, AnchorV anchorV, AnchorH anchorH, int zIndex)
+/*
+Adds an overlay element to the HUD
+@param overlay The overlay element to be rendered as part of the HUD
+@param anchorV Vertical Anchoring location (North|Center|South), defaults Center
+@param anchordH Horizontal Anchoring location (East|Center|West), defaults Center
+@param x The horizontal offset from the anchored position
+@param y The vertical offset from the anchored position
+@param z-index The priority for which overlay should be on-top.
+@note If two items share the same z-index, the new item will insert as though it has the lower z-index (and be rendered underneath)
+@note Adding the same overlay to HUD a second time, will remove it's first instance.
+*/
+void HUD::add(std::shared_ptr<Overlay> overlay, AnchorV anchorV, AnchorH anchorH, int x, int y, int zIndex)
 {
+    remove(overlay);
 	std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
 	for (; it != stack.end(); ++it)
 	{
@@ -26,7 +44,11 @@ void HUD::add(std::shared_ptr<Overlay> overlay, int x, int y, AnchorV anchorV, A
 	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, this->width, this->height, anchorV, anchorH, zIndex));
 	overlay->setHUDItem(*item);
 }
-unsigned int HUD::removeAll(std::shared_ptr<Overlay> overlay)
+/*
+Removes the specified overlay from the HUD
+@return The number of overlays removed
+*/
+unsigned int HUD::remove(std::shared_ptr<Overlay> overlay)
 {
 	unsigned int removed = 0;
 	std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
@@ -42,22 +64,33 @@ unsigned int HUD::removeAll(std::shared_ptr<Overlay> overlay)
 	}
 	return removed;
 }
+/*
+Removes all overlays from the HUD
+*/
 void HUD::clear()
 {
 	stack.clear();
 }
+/*
+Returns the number of overlays currently on the HUD
+@return The number of overlays
+*/
 unsigned int HUD::getCount()
 {
 	return (unsigned int)stack.size();
 }
 /*
 Calls reload on all held overlay elements
+@note Some overlay subclasses may not implement reload, however their shaders will be reloaded
 */
 void HUD::reload()
 {
 	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
 		(*it)->overlay->_reload();
 }
+/*
+Renders all HUD elements in reverse z-index order, with GL_DEPTH_TEST disabled
+*/
 void HUD::render()
 {
     GL_CALL(glDisable(GL_DEPTH_TEST));
@@ -72,6 +105,11 @@ void HUD::render()
     GL_CALL(glDisable(GL_BLEND));
     GL_CALL(glEnable(GL_DEPTH_TEST));
 }
+/*
+Repositions all HUD ovlerays according to the new window dimensions and their repsective anchoring/offset args
+@param w New window width
+@param h New window height
+*/
 void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 {
 	this->width = w;
@@ -90,7 +128,17 @@ void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
 		(*it)->resizeWindow(this->width, this->height);
 }
-
+/*
+Initialises the HUDItem, by calculating the elements position
+@param overlay The overlay element to be rendered as part of the HUD
+@param x The horizontal offset from the anchored position
+@param y The vertical offset from the anchored position
+@param window_w The width of the HUD
+@param windows_h The height of the HUD
+@param anchorV Vertical Anchoring location (North|Center|South), defaults Center
+@param anchordH Horizontal Anchoring location (East|Center|West), defaults Center
+@param z-index The priority for which overlay should be on-top.
+*/
 HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, AnchorV anchorV, AnchorH anchorH, int zIndex)
 	: overlay(overlay)
 	, x(x)
@@ -141,7 +189,11 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
-/*Update the overlays quad, based on new window size, anchors and overlay dimensions*/
+/*
+Update the overlays quad location, based on new window size, anchors, offsets and overlay dimensions
+@param w The new window width
+@param h The new window height
+*/
 void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 {
 	//Track parameters, so when called from overlay we can reuse previous

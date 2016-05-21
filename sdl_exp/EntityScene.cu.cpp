@@ -1,5 +1,4 @@
 #include "EntityScene.h"
-#include "visualisation/Text.h"
 #include "visualisation/Sprite2D.h"
 
 /*
@@ -18,6 +17,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #else
     , texBuf("_texBuf", 100, 3)
 #endif
+    , dynamicString(new Text("Testg", 50))
 {
     registerEntity(icosphere);
     registerEntity(colorModel);
@@ -47,10 +47,9 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #endif
     texBuf.bindToShader(this->instancedSphere->getShaders().get());
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
-    auto t = new Text("Testg", 50);
-    t->setBackgroundColor(glm::vec4(0.0f, 1.0f, 1.0f, 0.8f));
-    t->setColor(glm::vec4(-1.0f));
-    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(t), 0, 0, HUD::AnchorV::North, HUD::AnchorH::West);
+    dynamicString->setBackgroundColor(glm::vec4(0.0f, 1.0f, 1.0f, 0.8f));
+    dynamicString->setColor(glm::vec4(-1.0f));
+    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(dynamicString), 0, 0, HUD::AnchorV::North, HUD::AnchorH::West);
     this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Sprite2D("../textures/fire-emoji.webp",50)), 0, 0, HUD::AnchorV::South, HUD::AnchorH::East);
     //this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello", 50)), 0, -50);
     //this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello W", 50)), 0, 0);
@@ -94,7 +93,7 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
     {
     case SDLK_p:
         this->polarity = ++this->polarity>1 ? -1 : this->polarity;
-
+        this->dynamicString->setString("Polarity: %i",this->polarity);
         break;
     case SDLK_HASH:
         this->colorModel->exportModel();

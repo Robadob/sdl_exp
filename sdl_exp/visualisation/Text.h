@@ -47,7 +47,8 @@ public:
     void setBackgroundColor(glm::vec3 color);
     void setBackgroundColor(glm::vec4 color);
     glm::vec4 getColor();
-    glm::vec4 getBackgroundColor();
+    glm::vec4 getBackgroundColor(); 
+    void setString(char*fmt, ...);
 private:
     glm::vec4 color;
     glm::vec4 backgroundColor;

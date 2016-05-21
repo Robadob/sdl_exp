@@ -1,6 +1,8 @@
+#define _CRT_SECURE_NO_WARNINGS //vsnprintf()
 #include "Text.h"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
+#include <stdarg.h>
 
 namespace Stock
 {
@@ -19,16 +21,17 @@ namespace Stock
 Text::Text(char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile,unsigned int faceIndex)
     :Text(string, fontHeight, glm::vec4(color,1.0f),fontFile, faceIndex)
 {}
-Text::Text(char *string, unsigned int fontHeight, glm::vec4 color, char const *fontFile,unsigned int faceIndex)
+Text::Text(char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile,unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
 	, library()
     , font()
-    , string(string)
+    , string(0)
     , fontHeight(fontHeight)
     , wrapDistance(800)
     , color(color)
     , backgroundColor(0.0f)
 {
+    //
     getShaders()->addDynamicUniform("_col", glm::value_ptr(this->color), 4);
     getShaders()->addDynamicUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
     if (!fontFile)
@@ -67,7 +70,7 @@ Text::Text(char *string, unsigned int fontHeight, glm::vec4 color, char const *f
         return;
     }
     printf("Font %s was loaded successfully, the file contains %i faces.\n", fontFile, font->num_faces);
-    recomputeTex();
+    setString(_string);
 }
 Text::~Text()
 {
@@ -75,6 +78,8 @@ Text::~Text()
         FT_Done_Face(font);
     if (library)
         FT_Done_FreeType(library);
+    if (string)
+        free(this->string);
 }
 void Text::setFontHeight(unsigned int pixels)
 {
@@ -305,4 +310,25 @@ glm::vec4 Text::getColor()
 glm::vec4 Text::getBackgroundColor()
 {
     return backgroundColor;
+}
+void Text::setString(char*fmt, ...)
+{
+    if (this->string)
+        delete this->string;
+    int bufSize = 0;
+    int ct = 0;
+    va_list argp;
+    va_start(argp, fmt);
+    char *buffer=0;
+    do
+    {//Repeat until buffer is large enough
+        if (buffer)
+            free(buffer);
+        bufSize += 128;
+        buffer = (char*)malloc(bufSize*sizeof(char));
+        ct = vsnprintf(buffer, bufSize, fmt, argp);
+    } while (ct >= bufSize);
+    va_end(argp);
+    this->string = buffer;
+    recomputeTex();
 }

@@ -28,7 +28,7 @@ class Text : public Overlay
 		public:
 		TextureString(unsigned int width, unsigned int height);
 		~TextureString();
-		void paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsigned int penY);
+        void paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigned int penY);
 		void updateTex(std::shared_ptr<Shaders> shaders);
 		void reload() override;
 	private:
@@ -50,6 +50,8 @@ public:
     glm::vec4 getBackgroundColor(); 
     void setString(char*fmt, ...);
 private:
+    unsigned int padding;
+    float lineSpacing;//Line spacing calculatd as a percentage of font Height
     glm::vec4 color;
     glm::vec4 backgroundColor;
     void recomputeTex();

@@ -3,6 +3,7 @@
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include <stdarg.h>
+#include <freetype/ftglyph.h>
 
 namespace Stock
 {
@@ -23,13 +24,15 @@ Text::Text(char *string, unsigned int fontHeight, glm::vec3 color, char const *f
 {}
 Text::Text(char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile,unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
-	, library()
+	, padding(5)
+    , lineSpacing(0.2f)
+    , color(color)
+    , backgroundColor(0.0f)
+    , library()
     , font()
     , string(0)
     , fontHeight(fontHeight)
     , wrapDistance(800)
-    , color(color)
-    , backgroundColor(0.0f)
 {
     //
     getShaders()->addDynamicUniform("_col", glm::value_ptr(this->color), 4);
@@ -118,114 +121,188 @@ void Text::reload()
 	recomputeTex();
 }
 
-
+struct  TGlyph
+{
+    FT_UInt    index;  /* glyph index                  */
+    FT_Vector  pos;    /* glyph origin on the baseline */
+    FT_Glyph   image;  /* glyph image                  */
+    char       c;
+    int        line;
+};
 void Text::recomputeTex()
 {
 	setStringLen();
     FT_Error error;
-    //Measure tex width and height
-    unsigned int texWidth = 0;
-    unsigned int texHeight = fontHeight*2;
-    unsigned int lastSpace = 0;
-    unsigned int currentLineWidth = 0;
-    std::vector<int> lineStarts = {0};
-    //Iterate chars, measuring space required and wrapping lines so we can allocate tex
-    for (unsigned int i = 0; i < stringLen; i++)
-    {
-        FT_UInt glyph_index = FT_Get_Char_Index(font, string[i]);
-        //Defaults to unicode charmap
-        error = FT_Load_Char(font, string[i], FT_LOAD_RENDER);
-        if (error)
-        {
-            fprintf(stderr, "An unexpected error occured whilst loading glyph '%c': %i\n", string[i], error);
-            continue;
-        }
-        //Remember last space so we know for wrapping
-        if (string[i] == ' ')
-        {
-            lastSpace = currentLineWidth;
-        }
-        //handle carraige return and newline
-        if (string[i] == '\r')
-        {
-            texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
-            currentLineWidth = 0;
-            continue;
-        }
-        if (string[i] == '\n')
-        {
-            texHeight += fontHeight;
-            texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
-            currentLineWidth = 0;
-            lineStarts.push_back(i + 1);
-            continue;
-        }
-        //Add char width to current (if not a space on a newline)
-        if (!(string[i] == ' '&&currentLineWidth==0))
-            currentLineWidth += font->glyph->advance.x >> 6;
-        //If this exceeds wrap dist, revert to currentLine and create newline
-        if (currentLineWidth>wrapDistance&&lastSpace>0)
-        {
-            texWidth = lastSpace>texWidth ? lastSpace : texWidth;
-            currentLineWidth -= lastSpace;
-            lastSpace = 0;
-            texHeight += fontHeight;
-            lineStarts.push_back(i + 1);
-        }
-	}
-	//Consider line if no wrap was applied
-	texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
-    texWidth += 10;
-    texHeight += 10;
-    //Allocate tex/Deallocate old tex
-	tex = std::make_unique<TextureString>(texWidth, texHeight);
+    ////Measure tex width and height
+    //unsigned int texWidth = 0;
+    //unsigned int texHeight = fontHeight*2;
+    //unsigned int lastSpace = 0;
+    //unsigned int currentLineWidth = 0;
+    //std::vector<int> lineStarts = {0};
 
-    error = FT_Load_Char(font, *"H", FT_LOAD_RENDER);
-    int offset = fontHeight-font->glyph->bitmap_top;
-    int pen_x = 5;
-    int pen_y = texHeight - offset;
-    lastSpace = 0;
-    currentLineWidth = 0;
-    unsigned int nextLineStart = 0;
-    for (unsigned int i = 0; i < stringLen;i++)
-    {
-        FT_UInt glyph_index = FT_Get_Char_Index(font, string[i]);
-        //Defaults to unicode charmap
-        error = FT_Load_Char(font, string[i], FT_LOAD_RENDER);
-        if (error)
-        {
-            fprintf(stderr, "An unexpected error occured whilst loading glyph '%c': %i\n", string[i], error);
-            continue;
-        }
-        //Remember last space so we know for wrapping
-        if (string[i] == ' ')
-        {
-            lastSpace = currentLineWidth;
-        }
-        //handle carriage return and newline
-        if (string[i] == '\r')
-        {
-            texWidth = currentLineWidth>texWidth ? currentLineWidth : texWidth;
-            currentLineWidth = 0;
-            continue;
-        }
-        //If we wrap at this char, update pen position
-        if (i<lineStarts.size() && lineStarts[nextLineStart] == i)
-        {
-            pen_x = 5;
-            pen_y -= fontHeight;
-        }
-        //Add glyph to tex
-        tex->paintGlyph(font->glyph, pen_x, pen_y);
+    //First load and position all glyphs on a straight line
+    TGlyph *glyphs = (TGlyph *)malloc(stringLen*sizeof(TGlyph));   /* glyph image    */
+    unsigned int glyphPtr = 0;
+    bool use_kerning = FT_HAS_KERNING(font)!=0;
+    unsigned int previous = 0;
 
-        /* increment pen position */
-        if (!(string[i] == ' '&&pen_x == 5))
-            pen_x += font->glyph->advance.x >> 6;
+    int penX = 0, penY = 0;
+    unsigned int i = 0;
+    for (unsigned int n = 0; n < stringLen; n++)
+    {
+        glyphs[i].line = 0;
+        glyphs[i].c = string[n];
+        glyphs[i].index = FT_Get_Char_Index(font, string[n]);
+
+        if (use_kerning && previous && glyphs[i].index)
+        {
+            FT_Vector  delta;
+
+
+            FT_Get_Kerning(font, previous, glyphs[i].index,
+                FT_KERNING_DEFAULT, &delta);
+
+            penX += delta.x >> 6;
+        }
+        glyphs[i].pos.x = penX * 64;
+        glyphs[i].pos.y = penY * 64;
+        
+        error = FT_Load_Glyph(font, glyphs[i].index, FT_LOAD_DEFAULT);
+        if (error) continue;
+
+        error = FT_Get_Glyph(font->glyph, &glyphs[i].image);
+        if (error) continue;
+
+        /* translate the glyph image now */
+        FT_Glyph_Transform(glyphs[i].image, 0, &glyphs[i].pos); 
+        
+        penX += font->glyph->advance.x >> 6;
+        previous = glyphs[i].index;
+        i++;
+    }
+    //i Glyphs were loaded
+    const unsigned int num_glyphs = i;
+    glm::ivec2 origin;
+    //Now we wrap the glyphs
+    //Set origin to the bb min of 0th glyph
+
+    FT_BBox  glyph_bbox;
+    FT_Glyph_Get_CBox(glyphs[0].image, ft_glyph_bbox_pixels, &glyph_bbox);
+    origin = glm::ivec2(glyph_bbox.xMin, glyph_bbox.yMin);
+    for (i = 0; i < num_glyphs; i++)
+    {
+        if (!(glyphs[i].c == '\n' || glyphs[i].c == '\r'))
+        {
+            //Get chars bbox max x
+            FT_Glyph_Get_CBox(glyphs[i].image, ft_glyph_bbox_pixels, &glyph_bbox);
+            //Calculate the further most x coordinate of this char
+            int xMax = (padding * 2) + glyph_bbox.xMax - origin.x;
+            //If char exceeds wrapping dist
+            if (xMax > (int)wrapDistance)
+            {
+                //Find the most recent space
+                int j;
+                for (j = i - 1; j >= 0; j--)
+                {
+                    if (glyphs[j].c == ' ')
+                    {
+                        //Mark char as not required (so we can ignore at render)
+                        //and set this char to current
+                        glyphs[j].c = '\n';
+                        i = j;
+                        break;
+                    }
+                }
+                //Words exceeds wrap length, cancel wrapping
+                if (j < 0)
+                {
+                    break;
+                }
+            }
+            else
+                continue;
+        }
+        //Move all subsequent chars to the next line
+        if (i + 1 >= num_glyphs)
+            continue;
+        FT_Vector  newLineOffset;
+        bool newline = true;
+        if (glyphs[i].c == '\r')
+            newline = false;
+        newLineOffset.y = 0;
+        /*else
+            newLineOffset.y = font->height;*/
+        FT_Glyph_Get_CBox(glyphs[i+1].image, ft_glyph_bbox_pixels, &glyph_bbox);
+        newLineOffset.x = -(glyph_bbox.xMin - origin.x) * 64;
+        for (unsigned int j = (i + 1); j < num_glyphs;j++)
+        {
+            if (newline)
+                glyphs[j].line++;
+            FT_Glyph_Transform(glyphs[j].image, 0, &newLineOffset);
+        }
+        //Continue
+    }
+    //Calculate the bounding box
+    FT_BBox  bbox;
+    bbox.xMin = bbox.yMin = 32000;
+    bbox.xMax = bbox.yMax = -32000;
+    const int lineHeight = (int)((font->height >> 6)*(lineSpacing+1.0f));
+    for (i = 0; i < num_glyphs; i++)
+    {
+        FT_Glyph_Get_CBox(glyphs[i].image, ft_glyph_bbox_pixels, &glyph_bbox);
+        glyph_bbox.yMin += (glyphs[i].line*lineHeight);
+        glyph_bbox.yMax += (glyphs[i].line*lineHeight);
+        if (glyph_bbox.xMin < bbox.xMin)
+            bbox.xMin = glyph_bbox.xMin;
+
+        if (glyph_bbox.yMin < bbox.yMin)
+            bbox.yMin = glyph_bbox.yMin;
+
+        if (glyph_bbox.xMax > bbox.xMax)
+            bbox.xMax = glyph_bbox.xMax;
+
+        if (glyph_bbox.yMax > bbox.yMax)
+            bbox.yMax = glyph_bbox.yMax;
+    }  
+    if (bbox.xMin > bbox.xMax)
+    {
+        printf("unknown err, bounding box incorrect");
+    }
+    //And thus the texture size
+    glm::ivec2 texDim(
+        (2 * padding) + bbox.xMax - bbox.xMin,
+        (2 * padding) + bbox.yMax - bbox.yMin
+        );
+    //Iterate chars, painting them to tex
+    tex = std::make_unique<TextureString>(texDim.x, texDim.y);
+    int ascender = font->ascender >> 6;//Calculate this manually with bb 36;// 
+    for (i = 0; i < num_glyphs; i++)
+    {
+        if (!(glyphs[i].c == '\n' || glyphs[i].c == '\r'))
+        {
+            error = FT_Glyph_To_Bitmap(
+                &glyphs[i].image,
+                FT_RENDER_MODE_NORMAL,
+                0,                  /* no additional translation */
+                1);                /* destroy copy in "image"   */
+            if (!error)
+            {
+                FT_BitmapGlyph  bit = (FT_BitmapGlyph)glyphs[i].image;
+                penX = (int)padding + bit->left - bbox.xMin;
+                penY = (int)padding - bbox.yMin - bit->top + ascender + (lineHeight*glyphs[i].line);
+                if (penX >= 0 && penX + bit->bitmap.pitch < texDim.x && penY >= 0 && penY + (int)bit->bitmap.rows < texDim.y)
+                    tex->paintGlyph(bit->bitmap, penX, penY);
+                else
+                    printf("Skipped painting char '%c' of '%s' to avoid writing out of bounds.\n", glyphs[i].c, string);
+            }
+        }
+        FT_Done_Glyph(glyphs[i].image);
     }
 	//link tex to shader
 	tex->updateTex(getShaders());
 	//Set width
-	setDimensions(texWidth, texHeight);
+    setDimensions(texDim.x, texDim.y);
+    free(glyphs);
 }
 void Text::setStringLen()
 {
@@ -265,23 +342,22 @@ Text::TextureString::~TextureString()
 	free(texture[0]);
 	free(texture);
 }
-void Text::TextureString::paintGlyph(FT_GlyphSlot glyph, unsigned int penX, unsigned int penY)
+void Text::TextureString::paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigned int penY)
 {
-    penY -= glyph->bitmap_top;
-    //penX -= glyph->bitmap_left;
-	for (unsigned int y = 0; y<glyph->bitmap.rows; y++)
+	for (unsigned int y = 0; y<glyph.rows; y++)
 	{
 		//src ptr maps to the start of the current row in the glyph
-		unsigned char *src_ptr = glyph->bitmap.buffer + y*glyph->bitmap.pitch;
+		unsigned char *src_ptr = glyph.buffer + y*glyph.pitch;
 		//dst ptr maps to the pens current Y pos, adjusted for the current glyph row
 		//unsigned char *dst_ptr = tex[penY + (glyph->bitmap.rows - y - 1)] + penX;
 		unsigned char *dst_ptr = texture[penY + y] + penX;
-		//copy entire row
-		memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph->bitmap.pitch);
-		//for (int x = 0; x<glyph->bitmap.pitch; x++)
-		//{
-		//	dst_ptr[x] = src_ptr[x];
-		//}
+		//copy entire row, skipping empty pixels (incase kerning causes char overlap)
+		for (int x = 0; x<glyph.pitch; x++)
+		{
+            if (src_ptr[x])
+			    dst_ptr[x] = src_ptr[x];
+        }
+        //memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph.pitch);
 	}
 }
 void Text::TextureString::reload() {

@@ -634,7 +634,7 @@ void Shaders::destroyShaders(){
 Destroys the shader program
 */
 void Shaders::destroyProgram(){
-    GL_CALL(glDeleteProgram(this->programId));
+    GL_CALL(glDeleteProgram(this->programId));//Invalid operation?
 }
 /*
 Checks whether the specified shader compiled succesfully.

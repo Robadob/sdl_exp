@@ -52,7 +52,7 @@ void Texture::deleteGLTex()
 {
     if (texName)
     {
-        GL_CALL(glDeleteTextures(1, &texName));
+        GL_CALL(glDeleteTextures(1, &texName));//Invalid operation?
         texName = 0;        
     }
 }

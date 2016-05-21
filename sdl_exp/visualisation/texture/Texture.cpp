@@ -43,11 +43,14 @@ void Texture::createGLTex()
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_S, GL_REPEAT));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_T, GL_REPEAT));
     GL_CALL(glTexParameteri(texType, GL_TEXTURE_WRAP_R, GL_REPEAT));
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_BASE_LEVEL, 0));
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));//Changing this kills textures (why?)
-    //GL_CALL(glGenerateMipmap(texType));//Auto generate texture mipmap
+    if (texType == GL_TEXTURE_2D)
+    {
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_BASE_LEVEL, 0));
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 4)); 
+        GL_CALL(glTexParameteri(texType, GL_GENERATE_MIPMAP, GL_TRUE));
+    }
 }
 /*
 Deletes the GL texture

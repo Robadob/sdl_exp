@@ -247,6 +247,8 @@ void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders)
 {
 	GL_CALL(glBindTexture(texType, texName));
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));
+    GL_CALL(glTexParameteri(texType, GL_GENERATE_MIPMAP, GL_FALSE));
     GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture[0]));
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	GL_CALL(glBindTexture(texType, 0));

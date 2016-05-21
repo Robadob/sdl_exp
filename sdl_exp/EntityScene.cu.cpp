@@ -10,7 +10,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , icosphere(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
     , tick(0.0f)
-    , polarity(false)
+    , polarity(-1)
     , instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
 #ifdef __CUDACC__
     , cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
@@ -63,7 +63,7 @@ Called once per frame when Scene animation calls should be
 */
 void EntityScene::update(unsigned int frameTime)
 {
-    this->tick += (this->polarity?1:-1)*((frameTime*60)/1000.0f)*0.01f;
+    this->tick += this->polarity*((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);
     this->icosphere->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
     this->icosphere->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
@@ -93,7 +93,8 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
     switch (keycode)
     {
     case SDLK_p:
-        this->polarity = !this->polarity;
+        this->polarity = ++this->polarity>1 ? -1 : this->polarity;
+
         break;
     case SDLK_HASH:
         this->colorModel->exportModel();

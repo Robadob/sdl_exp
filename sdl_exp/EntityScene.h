@@ -28,7 +28,7 @@ private:
     std::shared_ptr<Entity> icosphere;
     std::shared_ptr<Entity> colorModel;
     float tick;
-    bool polarity;
+    int polarity;
 };
 
 #endif

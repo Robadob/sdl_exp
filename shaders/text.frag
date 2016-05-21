@@ -58,7 +58,8 @@ float roundCorner()
 }
 void main()
 {
-  float tex = texture(_texture, vec2(texCoords.x,-texCoords.y)).r;
+  //TextureLod(0) so even if mipmaps gen, we try to use best quality
+  float tex = textureLod(_texture, vec2(texCoords.x,-texCoords.y),0.0f).r;
   //Interpolate the forecolour according to the tex
   vec4 foreground = _col*tex;
   //Interpolate the background according to inverse tex

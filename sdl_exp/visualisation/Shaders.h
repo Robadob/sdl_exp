@@ -101,6 +101,7 @@ public:
     bool hasFragmentShader() const;
     bool hasGeometryShader() const;
     bool getCompileSuccess() const;
+    int getProgram();
 
     void createShaders();
     bool reload(bool silent = false);
@@ -121,7 +122,9 @@ public:
     bool addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count=1);
     bool addDynamicUniform(char *uniformName, GLint *array, unsigned int count=1);
     bool addStaticUniform(char *uniformName, GLfloat *array, unsigned int count=1);
-    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count = 1);    
+    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count = 1);
+    static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
+    static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
     
     void setColor(glm::vec3 color);
     void setColor(glm::vec4 color);
@@ -185,8 +188,6 @@ private:
 
     std::regex versionRegex;
     unsigned int findShaderVersion(const char *shaderSource);
-    std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int shaderProgram);
-    std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, const int shaderProgram);
 };
 
 #endif //ifndef __Shaders_h__

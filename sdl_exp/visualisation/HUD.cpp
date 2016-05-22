@@ -2,6 +2,7 @@
 
 #include "Overlay.h"
 #include <glm/gtc/matrix_transform.inl>
+#include <glm/gtc/type_ptr.hpp>
 
 /*
 Creates a new HUD, specifying the window dimensions
@@ -239,4 +240,12 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
 	GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(glm::vec3), data));
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    //If required, pass to shader
+    auto pair = Shaders::findUniform("_viewportDims", overlay->getShaders()->getProgram());
+    if (std::get<0>(pair) != -1)
+    {
+        glm::ivec2 viewportDims(width, height);
+        overlay->getShaders()->addStaticUniform("_viewportDims", glm::value_ptr(viewportDims), 2);
+    }
 }

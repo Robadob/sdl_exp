@@ -49,7 +49,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
     dynamicString->setBackgroundColor(glm::vec4(0.0f, 1.0f, 1.0f, 0.8f));
     dynamicString->setColor(glm::vec4(-1.0f));
-    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(dynamicString), HUD::AnchorV::North, HUD::AnchorH::West);
+    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(dynamicString), HUD::AnchorV::North, HUD::AnchorH::Center,1,1);
     this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Sprite2D("../textures/fire-emoji.webp",50)), HUD::AnchorV::South, HUD::AnchorH::East);
     this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World!", 50, glm::vec3(1.0f), Stock::Font::JOKERMAN)));
 }

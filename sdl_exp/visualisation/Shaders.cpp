@@ -732,7 +732,7 @@ std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int s
 /*
 Attempts to locate the specified attribute's location and type
 @param attributeName The name of the attribute
-@param shaderProgram The programId of the shader
+@param shaderProgram The programId of the shaderprogram
 @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
 @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
 */
@@ -974,4 +974,12 @@ void Shaders::setColor(glm::vec4 color)
         }
         glUseProgram(0);
     }
+}
+/*
+Returns the program id
+@return The GL program id, negative values are invalid (meaning no program exists)
+*/
+int Shaders::getProgram()
+{
+    return this->programId;
 }

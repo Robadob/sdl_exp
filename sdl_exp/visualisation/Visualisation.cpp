@@ -184,6 +184,7 @@ Provides destruction of the object, deletes child objects, removes the GL contex
 */
 void Visualisation::close(){
     //Delete objects before we delete the GL context!
+    this->hud.clear();
     if (this->scene)
     {
         this->scene->kill();

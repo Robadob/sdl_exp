@@ -26,9 +26,11 @@ class Text : public Overlay
 	class TextureString : public Texture
 	{
 		public:
-		TextureString(unsigned int width, unsigned int height);
-		~TextureString();
+		TextureString();
+        ~TextureString(); 
+        void resize(unsigned int width, unsigned int height);
         void paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigned int penY);
+        void paintGlyphMono(FT_Bitmap glyph, unsigned int penX, unsigned int penY);
 		void updateTex(std::shared_ptr<Shaders> shaders);
 		void reload() override;
 	private:
@@ -37,8 +39,8 @@ class Text : public Overlay
 		unsigned int height;
 	};
 public:
-    Text(char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile = 0, unsigned int faceIndex = 0);
-    Text(char *string, unsigned int fontHeight = 20, glm::vec4 color = glm::vec4(0.0f,0.0f,0.0f,1.0f), char const *fontFile = 0, unsigned int faceIndex = 0);
+    Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile = 0, unsigned int faceIndex = 0);
+    Text(const char *string, unsigned int fontHeight = 20, glm::vec4 color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), char const *fontFile = 0, unsigned int faceIndex = 0);
     virtual ~Text(); 
 	void reload() override;
     void setColor(glm::vec3 color);
@@ -51,14 +53,17 @@ public:
     unsigned int getPadding();
     void setMaxWidth(unsigned int maxWidth, bool refreshTex = true);
     unsigned int getMaxWidth();
-    void setLineSpacing(float lineSpacing, bool refreshTex = true);
+    void setLineSpacing(float lineSpacing, bool refreshTex = true); 
+    bool getUseAA();
+    void setUseAA(bool useAA, bool refreshTex = true);
     float getLineSpacing();
     glm::vec4 getColor();
     glm::vec4 getBackgroundColor(); 
-    void setString(char*fmt, ...);
+    void setString(const char*fmt, ...);
 private:
+    bool printMono;
     unsigned int padding;
-    float lineSpacing;//Line spacing calculatd as a percentage of font Height
+    float lineSpacing;//Line spacing calculated as a percentage of font Height
     glm::vec4 color;
     glm::vec4 backgroundColor;
     void recomputeTex();

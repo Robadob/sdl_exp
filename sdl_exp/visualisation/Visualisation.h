@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Axis.h"
 #include "HUD.h"
+#include "Text.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -79,6 +80,7 @@ private:
     unsigned int previousTime = 0;
     unsigned int currentTime;
     unsigned int frameCount = 0;
+    std::shared_ptr<Text> fpsDisplay;
 };
 
 #endif //ifndef __Visualisation_h__

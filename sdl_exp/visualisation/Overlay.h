@@ -22,12 +22,16 @@ public:
 	{ return height; }; 
 	std::shared_ptr<Shaders> Overlay::getShaders() const
 	{ return shaders; }
+    void setVisible(bool isVisible);
+    bool getVisible() const
+    { return visible; }
 protected:
 	void setWidth(unsigned int w);
 	void setHeight(unsigned int h);
 	void setDimensions(unsigned int w, unsigned int h);
 	std::weak_ptr<HUD::Item> hudItem;
 private:
+    bool visible;
 	void setHUDItem(std::shared_ptr<HUD::Item> ptr);
 	std::shared_ptr<Shaders> shaders;
 	unsigned int width;

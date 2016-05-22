@@ -27,7 +27,7 @@ private:
     TextureBuffer<float> texBuf;
     std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> icosphere;
-    std::shared_ptr<Entity> colorModel; 
+    std::shared_ptr<Entity> colorModel;
     std::shared_ptr<Text> dynamicString;
     float tick;
     int polarity;

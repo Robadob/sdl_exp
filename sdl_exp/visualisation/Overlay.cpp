@@ -58,7 +58,8 @@ Overlay::Overlay(std::shared_ptr<Shaders> shaders, unsigned int width, unsigned 
 hudItem(), 
 shaders(shaders), 
 width(width), 
-height(height)
+height(height),
+visible(true)
 {
 }
 /*
@@ -69,6 +70,8 @@ Renders the overlay using the provided details
 */
 void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)
 {
+    if (!visible)
+        return;
 	if (this->shaders != nullptr)
 		shaders->useProgram(mv, proj);
 	else//Lets try fixed function, but no promises
@@ -89,4 +92,12 @@ void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)
 	if (this->shaders != nullptr)
 		shaders->clearProgram();
 	//Do something, setup projection/quad
+}
+/*
+Sets whether the overlay should be rendered or not
+@param isVisible True if the overlay should be rendered
+*/
+void Overlay::setVisible(bool isVisible)
+{
+    this->visible = isVisible;
 }

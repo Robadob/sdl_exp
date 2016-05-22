@@ -17,7 +17,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #else
     , texBuf("_texBuf", 100, 3)
 #endif
-    , dynamicString(new Text("The Quick Brown Fox Jumps Over the Lazy Dog!", 50))// Over the Lazy Dog! 12 13 14 15 16
+    , dynamicString(new Text("The Quick Brown Fox Jumps Over the Lazy Dog!", 50))
 {
     registerEntity(icosphere);
     registerEntity(colorModel);
@@ -51,7 +51,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     dynamicString->setColor(glm::vec4(-1.0f));
     this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(dynamicString), HUD::AnchorV::North, HUD::AnchorH::Center,1,1);
     this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Sprite2D("../textures/fire-emoji.webp",50)), HUD::AnchorV::South, HUD::AnchorH::East);
-    this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World!", 50, glm::vec3(1.0f), Stock::Font::JOKERMAN)));
+   // this->visualisation.getHUD()->add(std::shared_ptr<Overlay>(new Text("Hello World!", 50, glm::vec3(1.0f), Stock::Font::JOKERMAN)));
 }
 /*
 Called once per frame when Scene animation calls should be 

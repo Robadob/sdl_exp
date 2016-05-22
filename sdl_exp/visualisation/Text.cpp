@@ -13,7 +13,7 @@ namespace Stock
     namespace Font
     {
         const char* ARIAL = "C:/Windows/Fonts/Arial.ttf";
-        const char* LUCIDIA_CONSOLE = "C:/Windows/Fonts/lucon.TTF.ttf";
+        const char* LUCIDIA_CONSOLE = "C:/Windows/Fonts/lucon.TTF";
         const char* SEGOE_UI = "C:/Windows/Fonts/segoeui.ttf";
         const char* JOKERMAN = "C:/Windows/Fonts/JOKERMAN.TTF";
         const char* TIMES_NEW_ROMAN = "C:/Windows/Fonts/times.ttf";
@@ -28,7 +28,7 @@ Creates a text overlay with the provided string
 @param fontFile The path to the desired font
 @param faceIndex The face within the font file to be used (most likely 0)
 */
-Text::Text(char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile,unsigned int faceIndex)
+Text::Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile,unsigned int faceIndex)
     :Text(string, fontHeight, glm::vec4(color,1.0f),fontFile, faceIndex)
 {}
 /*
@@ -39,10 +39,10 @@ Creates a text overlay with the provided string
 @param fontFile The path to the desired font
 @param faceIndex The face within the font file to be used (most likely 0)
 */
-Text::Text(char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile,unsigned int faceIndex)
+Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile, unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
 	, padding(5)
-    , lineSpacing(0.2f)
+    , lineSpacing(-0.1f)
     , color(color)
     , backgroundColor(0.0f)
     , library()
@@ -50,6 +50,8 @@ Text::Text(char *_string, unsigned int fontHeight, glm::vec4 color, char const *
     , string(0)
     , fontHeight(fontHeight)
     , wrapDistance(800)
+    , printMono(false)
+    , tex(std::make_unique<TextureString>())
 {
     getShaders()->addDynamicUniform("_col", glm::value_ptr(this->color), 4);
     getShaders()->addDynamicUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
@@ -76,8 +78,12 @@ Text::Text(char *_string, unsigned int fontHeight, glm::vec4 color, char const *
     }
     if (error)
     {
-        fprintf(stderr, "An unexpected error occured whilst loading font file %s: %i\n", fontFile, error);
-        return;
+        fprintf(stderr, "An unexpected error occured whilst loading font file %s: %i, defaulting to Arial\n", fontFile, error);
+        fontFile = Stock::Font::ARIAL;
+        error = FT_New_Face(library,
+            fontFile,
+            0,
+            &this->font);
     }
     error = FT_Set_Pixel_Sizes(
         this->font,   /* handle to face object */
@@ -125,6 +131,7 @@ Repaints the text to a texture, according to the provided parameters
 */
 void Text::recomputeTex() {
 	setStringLen();
+    if (stringLen <= 0) return;
     FT_Error error;
 
     //First load and position all glyphs on a straight line
@@ -151,7 +158,7 @@ void Text::recomputeTex() {
         glyphs[i].pos.x = penX * 64;
         glyphs[i].pos.y = penY * 64;
         
-        error = FT_Load_Glyph(font, glyphs[i].index, FT_LOAD_DEFAULT);
+        error = FT_Load_Glyph(font, glyphs[i].index, FT_LOAD_TARGET_LIGHT|FT_LOAD_FORCE_AUTOHINT);//FT_LOAD_DEFAULT, FT_LOAD_TARGET_LIGHT
         if (error) continue;
 
         error = FT_Get_Glyph(font->glyph, &glyphs[i].image);
@@ -228,12 +235,14 @@ void Text::recomputeTex() {
     FT_BBox  bbox;
     bbox.xMin = bbox.yMin = 32000;
     bbox.xMax = bbox.yMax = -32000;
-    const int lineHeight = (int)((font->height >> 6)*(lineSpacing+1.0f));
+    const int lineHeight = (int)((this->font->size->metrics.height >> 6));
+    const int ascender = this->font->size->metrics.ascender >> 6;
+    const int descender = this->font->size->metrics.descender >> 6;
     for (i = 0; i < num_glyphs; i++)
     {
         FT_Glyph_Get_CBox(glyphs[i].image, ft_glyph_bbox_pixels, &glyph_bbox);
-        glyph_bbox.yMin += (glyphs[i].line*lineHeight);
-        glyph_bbox.yMax += (glyphs[i].line*lineHeight);
+        glyph_bbox.yMin = (FT_Pos)(glyph_bbox.yMax>ascender ? ((glyphs[i].line)*lineHeight*(lineSpacing + 1.0f)) - ((int)glyph_bbox.yMax - ascender) : ((glyphs[i].line)*lineHeight*(lineSpacing + 1.0f)));
+        glyph_bbox.yMax = (FT_Pos)(glyph_bbox.yMin<descender ? ((glyphs[i].line + 1)*lineHeight*(lineSpacing + 1.0f)) + (descender - glyph_bbox.yMin) : ((glyphs[i].line + 1)*lineHeight*(lineSpacing + 1.0f)));
         if (glyph_bbox.xMin < bbox.xMin)
             bbox.xMin = glyph_bbox.xMin;
 
@@ -248,35 +257,37 @@ void Text::recomputeTex() {
     }  
     if (bbox.xMin > bbox.xMax)
     {
-        printf("unknown err, bounding box incorrect");
+        fprintf(stderr,"unknown err, bounding box incorrect");
     }
     //And thus the texture size
     glm::ivec2 texDim(
         (2 * padding) + bbox.xMax - bbox.xMin,
-        (2 * padding) + bbox.yMax - bbox.yMin
+        (2 * padding) + bbox.yMax - bbox.yMin - lineHeight*(lineSpacing)
         );
     //Iterate chars, painting them to tex
-    tex = std::make_unique<TextureString>(texDim.x, texDim.y);
-    int ascender = font->ascender >> 6;//Calculate this manually with bb 36;// 
+    tex->resize(texDim.x, texDim.y);
     for (i = 0; i < num_glyphs; i++)
     {
         if (!(glyphs[i].c == '\n' || glyphs[i].c == '\r'))
         {
             error = FT_Glyph_To_Bitmap(
                 &glyphs[i].image,
-                FT_RENDER_MODE_NORMAL,
+                printMono ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_LIGHT, //FT_RENDER_MODE_NORMAL,FT_RENDER_MODE_MONO, FT_RENDER_MODE_LIGHT
                 0,                  /* no additional translation */
                 1);                /* destroy copy in "image"   */
             if (!error)
             {
                 FT_BitmapGlyph  bit = (FT_BitmapGlyph)glyphs[i].image;
                 penX = (int)padding + bit->left - bbox.xMin;
-                penY = (int)padding - bbox.yMin - bit->top + ascender + (lineHeight*glyphs[i].line);
+                penY = (int)padding - bit->top + ascender + (int)(lineHeight*glyphs[i].line*(lineSpacing + 1.0f));
                 //Only paint is the glyph is within bounds of the texture (report err if our maths is bad)
-                if (penX >= 0 && penX + bit->bitmap.pitch < texDim.x && penY >= 0 && penY + (int)bit->bitmap.rows < texDim.y)
-                    tex->paintGlyph(bit->bitmap, penX, penY);
+                if (penX >= 0 && penX + bit->bitmap.pitch <= texDim.x && penY >= 0 && penY + (int)bit->bitmap.rows <= texDim.y)
+                    if (printMono)
+                        tex->paintGlyphMono(bit->bitmap, penX, penY);
+                    else
+                        tex->paintGlyph(bit->bitmap, penX, penY);
                 else
-                    printf("Skipped painting char '%c' of '%s' to avoid writing out of bounds.\n", glyphs[i].c, string);
+                    fprintf(stderr,"Skipped painting char '%c' of '%s' to avoid writing out of bounds.%i\n", glyphs[i].c, string, (int)FT_IS_SCALABLE(this->font));
             }
         }
         FT_Done_Glyph(glyphs[i].image);
@@ -347,6 +358,25 @@ unsigned int Text::getPadding() {
     return this->padding;
 }
 /*
+Sets whether the font should be printed with anti-aliasing
+Due to a lack of fancy sub-pixel rendering techniques, smaller fonts are likely to appear clearer without anti-aliasing
+@param aa The padding of overlay in pixels
+@param refreshTex Whether to automatically refresh the texture
+*/
+void Text::setUseAA(bool aa, bool refreshTex) {
+    this->printMono = !aa;
+    if (refreshTex)
+        recomputeTex();
+}
+/*
+Returns whether the font is being rendered with anti-aliasing
+@return The stored aliasing state
+@note If refreshTex was set to false when the padding was updated, this may not reflect the rendered text
+*/
+bool Text::getUseAA() {
+    return !this->printMono;
+}
+/*
 Sets the maximum width of the texture, if text extends past this it will be wrapped
 @param pixels The max width of the texture in pixels
 @param refreshTex Whether to automatically refresh the texture
@@ -365,8 +395,8 @@ unsigned int Text::getMaxWidth() {
     return this->wrapDistance;
 }
 /*
-Sets the line spacing, this is measured as a proporition of the line height
-@param lineSpacing The line spacing, recommended values are 0.2-0.35
+Sets the line spacing, this is measured as a proporition of the line height (which may include space or not, dependent on font)
+@param lineSpacing The line spacing, recommended values are -0.2-0.0
 @param refreshTex Whether to automatically refresh the texture
 */
 void Text::setLineSpacing(float lineSpacing, bool refreshTex) {
@@ -381,25 +411,6 @@ Returns the line spacing of the text
 */
 float Text::getLineSpacing() {
     return this->lineSpacing;
-};
-/*
-Creates a new TextureString which represents the texture holding the glyphs of the string
-@param width The width of the texture to be created
-@param height The height of the texture to be created
-*/
-Text::TextureString::TextureString(unsigned int width, unsigned int height)
-	: Texture(GL_TEXTURE_2D, "")//_texture as default
-	, texture(0)
-	, width(width)
-	, height(height)
-{
-	texture = (unsigned char**)malloc(sizeof(char*)*height);
-	texture[0] = (unsigned char*)malloc(sizeof(char)*width*height);
-	memset(texture[0], 0, sizeof(char)*width*height);
-	for (unsigned int i = 1; i < height; i++)
-	{
-		texture[i] = texture[i - 1] + width;
-	}
 }
 /*
 Sets the color of the font
@@ -448,7 +459,7 @@ Updates the string using a string format
 @note This function simply wraps snprintf() for convenience
 @note This function will always refresh the texture
 */
-void Text::setString(char*fmt, ...) {
+void Text::setString(const char*fmt, ...) {
     if (this->string)
         delete this->string;
     int bufSize = 0;
@@ -469,10 +480,43 @@ void Text::setString(char*fmt, ...) {
     recomputeTex();
 }
 /*
+Creates a new TextureString which represents the texture holding the glyphs of the string
+@param width The width of the texture to be created
+@param height The height of the texture to be created
+*/
+Text::TextureString::TextureString()
+    : Texture(GL_TEXTURE_2D, "")//_texture as default
+    , texture(0)
+    , width(0)
+    , height(0)
+{
+}
+/*
+Resizes the texture
+@param width The width of the texture to be created
+@param height The height of the texture to be created
+*/
+void Text::TextureString::resize(unsigned int width, unsigned int height)
+{
+    this->width = width;
+    this->height = height;
+    if (texture)
+        free(texture);
+    texture = (unsigned char**)malloc(sizeof(char*)*height);
+    texture[0] = (unsigned char*)malloc(sizeof(char)*width*height);
+    memset(texture[0], 0, sizeof(char)*width*height);
+    for (unsigned int i = 1; i < height; i++)
+    {
+        texture[i] = texture[i - 1] + width;
+    }
+}
+/*
 Updates the GL texture to match the painted texture
 @param shaders The shader object to bind the texture to
 */
 void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders) {
+    if (!texture)
+        return;
     GL_CALL(glBindTexture(texType, texName));
     GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     //GL_CALL(glTexStorage2D(texType, 1, GL_R8, width, height));//No mipmaps
@@ -491,7 +535,7 @@ Text::TextureString::~TextureString() {
     free(texture);
 }
 /*
-Paints a single character glyph to the texture at the specified location
+Paints a single character glyph to the texture at the specified location from a 1-byte texture
 @param penX The x coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
 @param penY The y coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
 */
@@ -506,8 +550,30 @@ void Text::TextureString::paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigne
         //copy entire row, skipping empty pixels (incase kerning causes char overlap)
         for (int x = 0; x<glyph.pitch; x++)
         {
-            if (src_ptr[x])
-                dst_ptr[x] = src_ptr[x];
+            dst_ptr[x] = src_ptr[x];
+        }
+        //memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph.pitch);
+    }
+}
+/*
+Paints a single character glyph to the texture at the specified location from a 1-bit mono texture
+@param penX The x coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
+@param penY The y coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
+*/
+void Text::TextureString::paintGlyphMono(FT_Bitmap glyph, unsigned int penX, unsigned int penY) {
+    for (unsigned int y = 0; y<glyph.rows; y++)
+    {
+        //src ptr maps to the start of the current row in the glyph
+        unsigned char *src_ptr = glyph.buffer + y*glyph.pitch;
+        //dst ptr maps to the pens current Y pos, adjusted for the current glyph row
+        //unsigned char *dst_ptr = tex[penY + (glyph->bitmap.rows - y - 1)] + penX;
+        unsigned char *dst_ptr = texture[penY + y] + penX;
+        //copy entire row, skipping empty pixels (incase kerning causes char overlap)
+        for (int x = 0; x<glyph.pitch; x++)
+        {
+            for (int j = 0; j < 8; j++)
+                if (((src_ptr[x] >> (7 - j)) & 1) == 1)
+                    dst_ptr[x * 8 + j] = 0xff;// src_ptr[x];
         }
         //memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph.pitch);
     }

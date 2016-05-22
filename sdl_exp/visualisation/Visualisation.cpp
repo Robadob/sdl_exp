@@ -45,8 +45,13 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     , msaaState(true)
     , skybox(0)
     , scene(0)
+    , fpsDisplay(0)
 {
     this->isInitialised = this->init();
+
+    fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
+    fpsDisplay->setUseAA(false);
+    hud.add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);
 }
 /*
 Default destructor, destruction happens in close() to ensure objects are killed before the GL context
@@ -167,6 +172,9 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F9:
         this->setSkybox(!this->skybox);
         break;
+    case SDLK_F8:
+        this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+        break;
     case SDLK_F5:
         if (this->skybox)
             this->skybox->reload();
@@ -184,6 +192,7 @@ Provides destruction of the object, deletes child objects, removes the GL contex
 */
 void Visualisation::close(){
     //Delete objects before we delete the GL context!
+    fpsDisplay.reset();
     this->hud.clear();
     if (this->scene)
     {
@@ -493,10 +502,12 @@ void Visualisation::updateFPS(){
     if (this->currentTime > this->previousTime + ONE_SECOND_MS){
         // Calculate average fps.
         double fps = this->frameCount / double(this->currentTime - this->previousTime) * ONE_SECOND_MS;
-        // Update the title to include FPS at the end.
-        std::ostringstream newTitle;
-        newTitle << this->windowTitle << " (" << std::to_string(static_cast<int>(std::ceil(fps))) << " fps)";
-        SDL_SetWindowTitle(this->window, newTitle.str().c_str());
+        //// Update the title to include FPS at the end.
+        //std::ostringstream newTitle;
+        //newTitle << this->windowTitle << " (" << std::to_string(static_cast<int>(std::ceil(fps))) << " fps)";
+        //SDL_SetWindowTitle(this->window, newTitle.str().c_str());
+        //Update the FPS string
+        this->fpsDisplay->setString("%.3f fps", fps);
 
         // reset values;
         this->previousTime = this->currentTime;

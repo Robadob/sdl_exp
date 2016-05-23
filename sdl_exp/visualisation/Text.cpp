@@ -474,7 +474,7 @@ void Text::setString(const char*fmt, ...) {
         bufSize += 128;
         buffer = (char*)malloc(bufSize*sizeof(char));
         ct = vsnprintf(buffer, bufSize, fmt, argp);
-    } while (ct >= bufSize);
+    } while (ct == -1);
     va_end(argp);
     this->string = buffer;
     recomputeTex();

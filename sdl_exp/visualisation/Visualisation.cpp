@@ -52,6 +52,10 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
     fpsDisplay->setUseAA(false);
     hud.add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);
+    helpText = std::make_shared<Text>("Controls\nW,S: Move Forwards/Backwards\nA,D: Strafe\nQ,E: Roll\nF1:  Toggle Show Controls\nF5:  Reload Resources/Shaders\nF8:  Toggle Show FPS\nF9:  Toggle Show Skybox\nF10: Toggle MSAA\nF11: Toggle Fullscreen\nESC: Quit", 20, glm::vec3(1.0f), Stock::Font::LUCIDIA_CONSOLE);
+    helpText->setBackgroundColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
+    helpText->setVisible(false);
+    hud.add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
 }
 /*
 Default destructor, destruction happens in close() to ensure objects are killed before the GL context
@@ -162,6 +166,9 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     switch (keycode){
     case SDLK_ESCAPE:
         this->quit();
+        break;
+    case SDLK_F1:
+        this->helpText->setVisible(!this->helpText->getVisible());
         break;
     case SDLK_F11:
         this->toggleFullScreen();
@@ -536,7 +543,10 @@ This pointer can be used to continuously track the visualisations projection mat
 const glm::mat4 *Visualisation::getFrustrumPtr() const{
     return &this->frustum;
 }
-
+/*
+Returns the visusalisation's HUD, to be used to add overlays
+@return The visualisation's scene
+*/
 HUD* Visualisation::getHUD(){
 	return &hud;
 }

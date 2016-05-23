@@ -81,6 +81,7 @@ private:
     unsigned int currentTime;
     unsigned int frameCount = 0;
     std::shared_ptr<Text> fpsDisplay;
+    std::shared_ptr<Text> helpText;
 };
 
 #endif //ifndef __Visualisation_h__

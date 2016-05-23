@@ -11,7 +11,7 @@ Shell texture class providing various utility methods for subclasses
 */
 class Texture
 {
-    static const char *IMAGE_EXTS[4];
+    static const char *IMAGE_EXTS[6];
     char *TEXTURE_UNIFORM_NAME = "_texture";//cant make const because of where it gets passed
 public:
     virtual void reload() = 0;
@@ -21,7 +21,7 @@ public:
     bool bindToShader(Shaders *s, char *uniformName = 0);
 protected:
     Texture(GLenum type, const char *texPath = 0, char *uniformName = 0);
-    ~Texture();
+    virtual ~Texture();
     static SDL_Surface *readImage(const char *texturePath, bool printErr = true);
     void setTexture(SDL_Surface *image, GLuint target = 0, bool dontFreeImage = false);
     GLuint texName;
@@ -31,6 +31,7 @@ private:
     char *uniformName;
     void createGLTex();
     void deleteGLTex();
+    bool storageAllocated;
 };
 
 #endif //ifndef __Texture_h__

@@ -38,14 +38,24 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
+	, hud(windowWidth, windowHeight)
     , camera(glm::vec3(50,50,50))
     , renderAxisState(false)
     , axis(25)
     , msaaState(true)
     , skybox(0)
     , scene(0)
+    , fpsDisplay(0)
 {
     this->isInitialised = this->init();
+
+    fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
+    fpsDisplay->setUseAA(false);
+    hud.add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);
+    helpText = std::make_shared<Text>("Controls\nW,S: Move Forwards/Backwards\nA,D: Strafe\nQ,E: Roll\nF1:  Toggle Show Controls\nF5:  Reload Resources/Shaders\nF8:  Toggle Show FPS\nF9:  Toggle Show Skybox\nF10: Toggle MSAA\nF11: Toggle Fullscreen\nESC: Quit", 20, glm::vec3(1.0f), Stock::Font::LUCIDIA_CONSOLE);
+    helpText->setBackgroundColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
+    helpText->setVisible(false);
+    hud.add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
 }
 /*
 Default destructor, destruction happens in close() to ensure objects are killed before the GL context
@@ -109,6 +119,8 @@ bool Visualisation::init(){
         glEnable(GL_LIGHT0);
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_NORMALIZE);
+        GL_CALL(glBlendEquation(GL_FUNC_ADD));
+        GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         setMSAA(this->msaaState);
 
         // Setup the projection matrix
@@ -155,6 +167,9 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_ESCAPE:
         this->quit();
         break;
+    case SDLK_F1:
+        this->helpText->setVisible(!this->helpText->getVisible());
+        break;
     case SDLK_F11:
         this->toggleFullScreen();
         break;
@@ -164,11 +179,15 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F9:
         this->setSkybox(!this->skybox);
         break;
+    case SDLK_F8:
+        this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+        break;
     case SDLK_F5:
         if (this->skybox)
             this->skybox->reload();
         if (this->scene)
-            this->scene->_reload();
+			this->scene->_reload();
+		this->hud.reload();
         break;
     default:
         // Do nothing?
@@ -180,6 +199,8 @@ Provides destruction of the object, deletes child objects, removes the GL contex
 */
 void Visualisation::close(){
     //Delete objects before we delete the GL context!
+    fpsDisplay.reset();
+    this->hud.clear();
     if (this->scene)
     {
         this->scene->kill();
@@ -280,6 +301,7 @@ void Visualisation::render()
         this->axis.render();
     this->defaultLighting();
     this->scene->render();
+	this->hud.render();
 
     GL_CHECK();
 
@@ -464,6 +486,7 @@ void Visualisation::resizeWindow(){
     float left = fAspect * bottom;
     float right = fAspect * top;
     this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
+	hud.resizeWindow(this->windowWidth, this->windowHeight);
 }
 /*
 @return True if the window is currently full screen
@@ -486,10 +509,12 @@ void Visualisation::updateFPS(){
     if (this->currentTime > this->previousTime + ONE_SECOND_MS){
         // Calculate average fps.
         double fps = this->frameCount / double(this->currentTime - this->previousTime) * ONE_SECOND_MS;
-        // Update the title to include FPS at the end.
-        std::ostringstream newTitle;
-        newTitle << this->windowTitle << " (" << std::to_string(static_cast<int>(std::ceil(fps))) << " fps)";
-        SDL_SetWindowTitle(this->window, newTitle.str().c_str());
+        //// Update the title to include FPS at the end.
+        //std::ostringstream newTitle;
+        //newTitle << this->windowTitle << " (" << std::to_string(static_cast<int>(std::ceil(fps))) << " fps)";
+        //SDL_SetWindowTitle(this->window, newTitle.str().c_str());
+        //Update the FPS string
+        this->fpsDisplay->setString("%.3f fps", fps);
 
         // reset values;
         this->previousTime = this->currentTime;
@@ -517,4 +542,11 @@ This pointer can be used to continuously track the visualisations projection mat
 */
 const glm::mat4 *Visualisation::getFrustrumPtr() const{
     return &this->frustum;
+}
+/*
+Returns the visusalisation's HUD, to be used to add overlays
+@return The visualisation's scene
+*/
+HUD* Visualisation::getHUD(){
+	return &hud;
 }

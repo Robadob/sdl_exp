@@ -32,7 +32,9 @@ namespace Stock
         const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", 0 };
         const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", 0 };
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", 0 };
-        const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
+		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
+		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", 0 };
+		const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", 0 };
     };
 };
 /*
@@ -99,10 +101,12 @@ public:
     bool hasFragmentShader() const;
     bool hasGeometryShader() const;
     bool getCompileSuccess() const;
+    int getProgram();
 
     void createShaders();
     bool reload(bool silent = false);
     void useProgram(Entity *e = 0);
+	void useProgram(const glm::mat4 *mv, const glm::mat4 *proj);
     void clearProgram();
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
@@ -118,12 +122,15 @@ public:
     bool addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count=1);
     bool addDynamicUniform(char *uniformName, GLint *array, unsigned int count=1);
     bool addStaticUniform(char *uniformName, GLfloat *array, unsigned int count=1);
-    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count = 1);    
+    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count = 1);
+    static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
+    static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
     
     void setColor(glm::vec3 color);
     void setColor(glm::vec4 color);
 
 private:
+	void _useProgram();
     struct DynamicUniformDetail
     {
         GLenum type;
@@ -181,8 +188,6 @@ private:
 
     std::regex versionRegex;
     unsigned int findShaderVersion(const char *shaderSource);
-    std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int shaderProgram);
-    std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, const int shaderProgram);
 };
 
 #endif //ifndef __Shaders_h__

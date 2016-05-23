@@ -87,7 +87,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -101,10 +101,11 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>"$(SolutionDir)include"</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
@@ -128,7 +129,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -143,13 +144,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>"$(SolutionDir)include"</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;glew32.lib;OpenGL32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -162,9 +164,13 @@
     <ClCompile Include="visualisation\Axis.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
+    <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
+    <ClCompile Include="visualisation\Overlay.cpp" />
     <ClCompile Include="visualisation\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
+    <ClCompile Include="visualisation\Sprite2D.cpp" />
+    <ClCompile Include="visualisation\Text.cpp" />
     <ClCompile Include="visualisation\texture\Texture.cpp" />
     <ClCompile Include="visualisation\texture\Texture2D.cpp" />
     <ClCompile Include="visualisation\texture\TextureBuffer.cu.cpp" />
@@ -186,9 +192,13 @@
     <ClInclude Include="visualisation\Camera.h" />
     <ClInclude Include="visualisation\Entity.h" />
     <ClInclude Include="visualisation\GLcheck.h" />
+    <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\Material.h" />
+    <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
+    <ClInclude Include="visualisation\Sprite2D.h" />
+    <ClInclude Include="visualisation\Text.h" />
     <ClInclude Include="visualisation\texture\Texture.h" />
     <ClInclude Include="visualisation\texture\Texture2D.h" />
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />

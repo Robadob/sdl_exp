@@ -72,6 +72,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\Text.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Overlay.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\HUD.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Sprite2D.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -126,6 +138,18 @@
     </ClInclude>
     <ClInclude Include="visualisation\texture\TextureBuffer.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Text.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Overlay.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\HUD.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Sprite2D.h">
+      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

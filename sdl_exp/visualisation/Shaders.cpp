@@ -321,50 +321,95 @@ Call this prior to rendering to enable the program and automatically bind known 
 @param e If an entity is passed, their location and rotation values will be applied to the ModelView matrix before it is loaded
 */
 void Shaders::useProgram(Entity *e){
-    GL_CALL(glUseProgram(this->programId));
+	GL_CALL(glUseProgram(this->programId));
 
-    //glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
+	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 
-    //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-    if (this->vertexShaderVersion <= 120 && this->projection.matrixPtr > 0)
-    {//If old shaders where gl_ModelViewProjectionMatrix is available
-        glMatrixMode(GL_PROJECTION);
-        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
-    }
-    if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
-    {//If projection matrix location and camera ptr are known
-        GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*this->projection.matrixPtr)));
-    }
-    //Calculate modelview matrix
-    glm::mat4 mv;
-    if (this->modelview.matrixPtr)
-    {
-        mv = *this->modelview.matrixPtr;
-        if (e)
-        {
-            glm::vec4 rot = e->getRotation();
-            glm::vec3 tran = e->getLocation();
-            if ((rot.x != 0 || rot.y != 0 || rot.z != 0) && rot.w != 0)
-                mv = glm::rotate(mv, glm::radians(rot.w), glm::vec3(rot.x, rot.y, rot.z));
-            mv = glm::translate(mv, tran);
-        }
-    }
-    //Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
-    if (this->vertexShaderVersion <= 120 && this->modelview.matrixPtr > 0)
-    {//If old shaders where gl_ModelViewMatrix is available
-        glMatrixMode(GL_MODELVIEW);
-        GL_CALL(glLoadMatrixf(glm::value_ptr(mv)));
-    }
-    if (this->modelview.location >= 0 && this->modelview.matrixPtr > 0)
-    {//If modeview matrix location and camera ptr are known
-        GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(mv)));
-    }
-    //Set the model view projection matrix (e.g. projection * modelview)
-    if (this->modelviewprojection >= 0 && this->modelview.matrixPtr && this->projection.matrixPtr)
-    {
-        glm::mat4 mvp = *this->projection.matrixPtr * mv;
-        GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
-    }
+	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
+	if (this->vertexShaderVersion <= 120 && this->projection.matrixPtr > 0)
+	{//If old shaders where gl_ModelViewProjectionMatrix is available
+		glMatrixMode(GL_PROJECTION);
+		GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
+	}
+	if (this->projection.location >= 0 && this->projection.matrixPtr > 0)
+	{//If projection matrix location and camera ptr are known
+		GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*this->projection.matrixPtr)));
+	}
+	//Calculate modelview matrix
+	glm::mat4 mv;
+	if (this->modelview.matrixPtr)
+	{
+		mv = *this->modelview.matrixPtr;
+		if (e)
+		{
+			glm::vec4 rot = e->getRotation();
+			glm::vec3 tran = e->getLocation();
+			if ((rot.x != 0 || rot.y != 0 || rot.z != 0) && rot.w != 0)
+				mv = glm::rotate(mv, glm::radians(rot.w), glm::vec3(rot.x, rot.y, rot.z));
+			mv = glm::translate(mv, tran);
+		}
+	}
+	//Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
+	if (this->vertexShaderVersion <= 120 && this->modelview.matrixPtr > 0)
+	{//If old shaders where gl_ModelViewMatrix is available
+		glMatrixMode(GL_MODELVIEW);
+		GL_CALL(glLoadMatrixf(glm::value_ptr(mv)));
+	}
+	if (this->modelview.location >= 0 && this->modelview.matrixPtr > 0)
+	{//If modeview matrix location and camera ptr are known
+		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(mv)));
+	}
+	//Set the model view projection matrix (e.g. projection * modelview)
+	if (this->modelviewprojection >= 0 && this->modelview.matrixPtr && this->projection.matrixPtr)
+	{
+		glm::mat4 mvp = *this->projection.matrixPtr * mv;
+		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
+	}
+	_useProgram();
+}
+/*
+Call to setup shader with external modelview and projection matrices
+@note Used by Overlay/HUD
+*/
+void Shaders::useProgram(const glm::mat4 *mv, const glm::mat4 *proj)
+{
+	GL_CALL(glUseProgram(this->programId));
+
+	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
+
+	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
+	if (this->vertexShaderVersion <= 120 && proj)
+	{//If old shaders where gl_ModelViewProjectionMatrix is available
+		glMatrixMode(GL_PROJECTION);
+		GL_CALL(glLoadMatrixf(glm::value_ptr(*proj)));
+	}
+	if (this->projection.location >= 0 && proj )
+	{//If projection matrix location and camera ptr are known
+		GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*proj)));
+	}
+	//Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
+	if (this->vertexShaderVersion <= 120 && mv )
+	{//If old shaders where gl_ModelViewMatrix is available
+		glMatrixMode(GL_MODELVIEW);
+		GL_CALL(glLoadMatrixf(glm::value_ptr(*mv)));
+	}
+	if (this->modelview.location >= 0 && mv)
+	{//If modeview matrix location and camera ptr are known
+		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(*mv)));
+	}
+	//Set the model view projection matrix (e.g. projection * modelview)
+	if (this->modelviewprojection >= 0 && mv && proj)
+	{
+		glm::mat4 mvp = *proj * *mv;
+		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
+	}
+	_useProgram();
+}
+/*
+Used internally by useProgram() fns, to handle shader setup after matrix setup
+*/
+void Shaders::_useProgram()
+{
 
     //Don't think we need to use
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
@@ -496,6 +541,8 @@ void Shaders::useProgram(Entity *e){
         }
     }
 }
+
+
 /*
 Disables the currently active shader progam and attributes attached to this shader
 */
@@ -587,7 +634,7 @@ void Shaders::destroyShaders(){
 Destroys the shader program
 */
 void Shaders::destroyProgram(){
-    GL_CALL(glDeleteProgram(this->programId));
+    GL_CALL(glDeleteProgram(this->programId));//Invalid operation?
 }
 /*
 Checks whether the specified shader compiled succesfully.
@@ -685,7 +732,7 @@ std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int s
 /*
 Attempts to locate the specified attribute's location and type
 @param attributeName The name of the attribute
-@param shaderProgram The programId of the shader
+@param shaderProgram The programId of the shaderprogram
 @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
 @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
 */
@@ -760,7 +807,7 @@ Permenently binds a texture buffer to be loaded when useProgram() is called
 */
 int Shaders::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
 {
-    GLint bufferId = textures.size();
+    GLint bufferId = (GLint)textures.size();
     GLint maxTex;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex);
     if (bufferId<maxTex && addStaticUniform(uniformName, &bufferId))
@@ -927,4 +974,12 @@ void Shaders::setColor(glm::vec4 color)
         }
         glUseProgram(0);
     }
+}
+/*
+Returns the program id
+@return The GL program id, negative values are invalid (meaning no program exists)
+*/
+int Shaders::getProgram()
+{
+    return this->programId;
 }

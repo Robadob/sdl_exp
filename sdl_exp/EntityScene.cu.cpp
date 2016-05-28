@@ -1,4 +1,5 @@
 #include "EntityScene.h"
+#include <glm/gtc/type_ptr.hpp>
 
 /*
 Constructor, modify this to change what happens
@@ -15,6 +16,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , texBuf("_texBuf", cuTexBuf, true)
 #else
     , texBuf("_texBuf", 100, 3)
+    , billboardShaders(new Shaders(Stock::Shaders::BILLBOARD))
 #endif
 {
     registerEntity(deerModel);
@@ -42,6 +44,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #endif
     texBuf.bindToShader(this->instancedSphere->getShaders().get());
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+    initParticles();
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -62,9 +65,10 @@ Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
-    colorModel->render();
-    deerModel->render();
-    this->instancedSphere->renderInstances(100);
+    //colorModel->render();
+    //deerModel->render();
+    //this->instancedSphere->renderInstances(100);
+    renderParticles();
 }
 /*
 Called when the user requests a reload
@@ -72,6 +76,7 @@ Called when the user requests a reload
 void EntityScene::reload()
 {
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+    this->billboardShaders->reload(true);
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
@@ -89,4 +94,86 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
         return true;
     }
     return false;
+}
+void EntityScene::initParticles()
+{
+    this->billboardShaders->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());//&particleTransform);// 
+    this->billboardShaders->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+    //Init vbo's
+    unsigned int bufferSize = 0;
+    bufferSize += 4 * sizeof(glm::vec3); //4 points to a quad
+    bufferSize += 4 * sizeof(glm::vec2);//4 points to a tex coord
+    particleData = malloc(bufferSize);
+    //Setup tex coords
+    glm::vec2 *texCoords = static_cast<glm::vec2*>(static_cast<void*>(static_cast<glm::vec3*>(particleData)+4));
+    texCoords[0] = glm::vec2(0.0f, 1.0f); //TopLeft
+    texCoords[1] = glm::vec2(0.0f, 0.0f); //BottomLeft
+    texCoords[2] = glm::vec2(1.0f, 1.0f); //TopRight
+    texCoords[3] = glm::vec2(1.0f, 0.0f); //BottomRight
+    //Initalise buffer
+    GL_CALL(glGenBuffers(1, &vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, bufferSize, particleData, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    //Setup vertices
+    glm::vec3 *topLeft = static_cast<glm::vec3*>(particleData);
+    glm::vec3 *bottomLeft = topLeft + 1;
+    glm::vec3 *topRight = bottomLeft + 1;
+    glm::vec3 *bottomRight = topRight + 1;
+    const float size = 1;
+    *topLeft = glm::vec3(-size, -size, 0);
+    *bottomLeft = glm::vec3(size, -size, 0);
+    *topRight = glm::vec3(-size, size, 0);
+    *bottomRight = glm::vec3(size, size, 0);
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(glm::vec3), particleData));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    //Link Vertex Attributes
+    Shaders::VertexAttributeDetail pos(GL_FLOAT, 3, sizeof(float));
+    pos.vbo = vbo;
+    pos.count = 4;
+    pos.data = particleData;
+    pos.offset = 0;
+    pos.stride = 0;
+    this->billboardShaders->setPositionsAttributeDetail(pos);
+    Shaders::VertexAttributeDetail texCo(GL_FLOAT, 2, sizeof(float));
+    texCo.vbo = vbo;
+    texCo.count = 4;
+    texCo.data = texCoords;
+    texCo.offset = 4 * sizeof(glm::vec3);
+    texCo.stride = 0;
+    this->billboardShaders->setTexCoordsAttributeDetail(texCo);
+    //Setup faces
+    GL_CALL(glGenBuffers(1, &fvbo));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
+    const int faces[] = { 0, 1, 2, 3 };
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(int), &faces, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    //Init uniforms
+    this->particleTick = 0;
+    this->billboardShaders->addDynamicUniform("_tick", &this->particleTick);
+}
+void EntityScene::renderParticles()
+{
+    glm::vec3 t = this->visualisation.getCamera()->getUp();
+    this->billboardShaders->addStaticUniform("_up", value_ptr(t), 3);
+    glm::vec3 r = this->visualisation.getCamera()->getRight();
+    this->billboardShaders->addStaticUniform("_right", value_ptr(r), 3);
+
+    GL_CALL(glEnable(GL_BLEND));
+    //Use Shader
+    billboardShaders->useProgram();
+    //Render quad
+    glDisable(GL_CULL_FACE);
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
+    glPushMatrix();
+    GL_CALL(glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0));
+    glPopMatrix();
+
+    //Unload shader
+    glEnable(GL_CULL_FACE);
+    billboardShaders->clearProgram();
+
+    GL_CALL(glDisable(GL_BLEND));
+    this->particleTick+=0.02f;
 }

@@ -190,6 +190,12 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+HUD::Item::~Item()
+{
+    GL_CALL(glDeleteBuffers(1, &vbo));
+    GL_CALL(glDeleteBuffers(1, &fvbo));
+    free(data);
+}
 /*
 Update the overlays quad location, based on new window size, anchors, offsets and overlay dimensions
 @param w The new window width

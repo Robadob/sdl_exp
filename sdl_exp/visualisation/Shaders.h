@@ -34,7 +34,8 @@ namespace Stock
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", 0 };
 		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", 0 };
 		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", 0 };
-		const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", 0 };
+        const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", 0 };
+        const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", 0 };
     };
 };
 /*
@@ -119,10 +120,10 @@ public:
 
     int addTextureUniform(GLuint texture, char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
-    bool addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count=1);
-    bool addDynamicUniform(char *uniformName, GLint *array, unsigned int count=1);
-    bool addStaticUniform(char *uniformName, GLfloat *array, unsigned int count=1);
-    bool addStaticUniform(char *uniformName, GLint *array, unsigned int count = 1);
+    bool addDynamicUniform(char *uniformName, GLfloat *arry, unsigned int count=1);
+    bool addDynamicUniform(char *uniformName, GLint *arry, unsigned int count = 1);
+    bool addStaticUniform(char *uniformName, GLfloat *arry, unsigned int count = 1);
+    bool addStaticUniform(char *uniformName, GLint *arry, unsigned int count = 1);
     static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
     static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
     

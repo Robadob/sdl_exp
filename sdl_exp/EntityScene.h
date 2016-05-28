@@ -3,7 +3,6 @@
 
 #include "visualisation/Scene.h"
 #include "visualisation/Entity.h"
-#include "visualisation/Text.h"
 
 #include "visualisation/texture/TextureBuffer.h"
 /*
@@ -19,6 +18,13 @@ public:
     void update(unsigned int frameTime) override;
     bool keypress(SDL_Keycode keycode, int x, int y) override;
 private:
+    void renderParticles();
+    void initParticles();
+    void *particleData;
+    GLuint vbo, fvbo;
+    float particleTick;
+    glm::mat4 particleTransform;
+
 #ifdef __CUDACC__
     void cuInit();
     void cuUpdate();
@@ -28,6 +34,7 @@ private:
     std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> deerModel;
     std::shared_ptr<Entity> colorModel;
+    std::shared_ptr<Shaders> billboardShaders;
     float tick;
     int polarity;
 };

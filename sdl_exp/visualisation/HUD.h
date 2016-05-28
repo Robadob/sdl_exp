@@ -25,6 +25,7 @@ public:
 	{
 	public:
 		Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, AnchorV anchorV = AnchorV::Center, AnchorH anchorH = AnchorH::Center, int zIndex = 0);
+        ~Item();
 		void resizeWindow(const unsigned int w=0, const unsigned int h=0);
 		std::shared_ptr<Overlay> overlay;
 		const int x;

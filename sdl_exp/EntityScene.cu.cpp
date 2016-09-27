@@ -54,6 +54,9 @@ void EntityScene::update(unsigned int frameTime)
 {
     this->tick += this->polarity*((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);
+
+
+    this->particleTick += this->polarity*(0.02f);
     this->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
     this->deerModel->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
 #ifdef __CUDACC__
@@ -155,19 +158,24 @@ void EntityScene::initParticles()
 }
 void EntityScene::renderParticles()
 {
+    //Update particle locations
+
+    //Sort back to front
+
     glm::vec3 t = this->visualisation.getCamera()->getUp();
     this->billboardShaders->addStaticUniform("_up", value_ptr(t), 3);
     glm::vec3 r = this->visualisation.getCamera()->getRight();
     this->billboardShaders->addStaticUniform("_right", value_ptr(r), 3);
 
     GL_CALL(glEnable(GL_BLEND));
+    //GL_CALL(glDisable(GL_DEPTH_TEST));
     //Use Shader
     billboardShaders->useProgram();
     //Render quad
     glDisable(GL_CULL_FACE);
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
     glPushMatrix();
-    GL_CALL(glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0));
+    GL_CALL(glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, 100));
     glPopMatrix();
 
     //Unload shader
@@ -175,5 +183,5 @@ void EntityScene::renderParticles()
     billboardShaders->clearProgram();
 
     GL_CALL(glDisable(GL_BLEND));
-    this->particleTick+=0.02f;
+    //GL_CALL(glEnable(GL_DEPTH_TEST));
 }

@@ -41,6 +41,9 @@ float lerp(float a, float b, float w)
 }
 void main()
 {
-  vec3 hsv = vec3(distOrigin*10,1.0,1.0);
-  fragColor = vec4(hsv2rgb(hsv),1-length(2*(texCoords.xy-vec2(0.5))));
+  float alpha = 5-pow(length(10*(texCoords.xy-vec2(0.5))),2);
+  if(alpha<0.05)
+      discard;
+  vec3 hsv = vec3(distOrigin,1.0,1.0);
+  fragColor = vec4(hsv2rgb(hsv),alpha/2.0);
 }

@@ -120,10 +120,10 @@ public:
 
     int addTextureUniform(GLuint texture, char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 
-    bool addDynamicUniform(char *uniformName, GLfloat *arry, unsigned int count=1);
-    bool addDynamicUniform(char *uniformName, GLint *arry, unsigned int count = 1);
-    bool addStaticUniform(char *uniformName, GLfloat *arry, unsigned int count = 1);
-    bool addStaticUniform(char *uniformName, GLint *arry, unsigned int count = 1);
+    bool addDynamicUniform(char *uniformName, const GLfloat *arry, unsigned int count=1);
+	bool addDynamicUniform(char *uniformName, const GLint *arry, unsigned int count = 1);
+	bool addStaticUniform(char *uniformName, const GLfloat *arry, unsigned int count = 1);
+	bool addStaticUniform(char *uniformName, const GLint *arry, unsigned int count = 1);
     static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
     static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
     

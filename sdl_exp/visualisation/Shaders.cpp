@@ -493,7 +493,7 @@ void Shaders::_useProgram()
         if (activeVBO != this->texcoords.vbo)
         {
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
-            //activeVBO = this->texcoords.vbo;
+            activeVBO = this->texcoords.vbo;
         }
         GL_CALL(glVertexAttribPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, GL_FALSE, this->texcoords.stride, ((char *)NULL + this->texcoords.offset)));
     }
@@ -825,7 +825,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
 @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
-bool Shaders::addDynamicUniform(char *uniformName, GLint *array, unsigned int count)
+bool Shaders::addDynamicUniform(char *uniformName, const GLint *array, unsigned int count)
 {
     if (this->programId > 0 && count > 0 && count <= 4)
     {
@@ -850,7 +850,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
 @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
-bool Shaders::addDynamicUniform(char *uniformName, GLfloat *array, unsigned int count)
+bool Shaders::addDynamicUniform(char *uniformName, const GLfloat *array, unsigned int count)
 {
     if (this->programId > 0 && count > 0 && count <= 4)
     {
@@ -876,7 +876,7 @@ Remembers a pointer to an array of upto 4 floats that will be updated everytime 
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
 @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
-bool Shaders::addStaticUniform(char *uniformName, GLfloat *array, unsigned int count)
+bool Shaders::addStaticUniform(char *uniformName, const GLfloat *array, unsigned int count)
 {
     staticUniforms.push_front(StaticUniformDetail{ GL_FLOAT, *(glm::ivec4 *)array, count, uniformName });
     if (this->programId > 0 && count > 0 && count <= 4)
@@ -915,7 +915,7 @@ Remembers a pointer to an array of upto 4 integers that will be updated everytim
 @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
 @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 */
-bool Shaders::addStaticUniform(char *uniformName, GLint *array, unsigned int count)
+bool Shaders::addStaticUniform(char *uniformName, const GLint *array, unsigned int count)
 {
     staticUniforms.push_front(StaticUniformDetail{ GL_INT, (glm::ivec4)*array, count, uniformName });
     if (this->programId > 0 && count > 0 && count <= 4)

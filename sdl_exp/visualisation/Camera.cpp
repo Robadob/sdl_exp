@@ -192,6 +192,52 @@ glm::vec3 Camera::getRight() const{
     return right;
 }
 /*
+Returns a constant pointer to the cameras location
+This pointer can be used to continuously track the cameras location
+@return The location of the camera in world space
+*/
+const glm::vec3 *Camera::getEyePtr() const
+{
+	return &eye;
+}
+/*
+Returns a constant pointer to the cameras normalized direction vector
+This pointer can be used to continuously track the cameras normalized direction vector
+@return The normalized direction of the camera
+*/
+const glm::vec3 *Camera::getLookPtr() const
+{
+	return &look;
+}
+/*
+Returns a constant pointer to the cameras normalized up vector
+This pointer can be used to continuously track the cameras normalized up vector
+@return The normalized direction the camera treats as upwards
+*/
+const glm::vec3 *Camera::getUpPtr() const
+{
+	return &up;
+}
+/*
+Returns a constant pointer to the value of pureUp
+This value is used by the stabilisation to prevent the camera rolling unintentionally
+This pointer can be used to continuously track the value of pureUp
+@return The normalized direction the camera treats as the true up
+*/
+const glm::vec3 *Camera::getPureUpPtr() const
+{
+	return &pureUp;
+}
+/*
+Returns a constant pointer to the cameras normalized right vector
+This pointer can be used to continuously track the cameras normalized right vector
+@return The normalized direction the camera treats as rightwards
+*/
+const glm::vec3 *Camera::getRightPtr() const
+{
+	return &right;
+}
+/*
 Sets whether the camera should be stabilised
 When the camera is stabilised, the up vector will not rotate about the cameras direction
 When the camera is not stabilsed, moving the mouse in a circular motion may cause the camera to roll

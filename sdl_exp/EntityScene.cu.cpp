@@ -155,17 +155,15 @@ void EntityScene::initParticles()
     //Init uniforms
     this->particleTick = 0;
     this->billboardShaders->addDynamicUniform("_tick", &this->particleTick);
+	//Bind uniforms
+	this->billboardShaders->addDynamicUniform("_up", reinterpret_cast<const GLfloat *>(this->visualisation.getCamera()->getUpPtr()), 3);
+	this->billboardShaders->addDynamicUniform("_right", reinterpret_cast<const GLfloat *>(this->visualisation.getCamera()->getRightPtr()), 3);
 }
 void EntityScene::renderParticles()
 {
     //Update particle locations
 
     //Sort back to front
-
-    glm::vec3 t = this->visualisation.getCamera()->getUp();
-    this->billboardShaders->addStaticUniform("_up", value_ptr(t), 3);
-    glm::vec3 r = this->visualisation.getCamera()->getRight();
-    this->billboardShaders->addStaticUniform("_right", value_ptr(r), 3);
 
     GL_CALL(glEnable(GL_BLEND));
     //GL_CALL(glDisable(GL_DEPTH_TEST));

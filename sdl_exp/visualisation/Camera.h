@@ -28,6 +28,11 @@ public:
     glm::vec3 getUp() const;
     glm::vec3 getPureUp() const;
     glm::vec3 getRight() const;
+    const glm::vec3 *getEyePtr() const;
+    const glm::vec3 *getLookPtr() const;
+    const glm::vec3 *getUpPtr() const;
+    const glm::vec3 *getPureUpPtr() const;
+    const glm::vec3 *getRightPtr() const;
     const glm::mat4 *Camera::getViewMatPtr() const;
     const glm::mat4 *Camera::getSkyboxViewMatPtr() const;
 private:

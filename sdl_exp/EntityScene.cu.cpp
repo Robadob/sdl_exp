@@ -1,6 +1,7 @@
 #include "EntityScene.h"
 #include <glm/gtc/type_ptr.hpp>
-
+#include "visualisation/ComputeShader.h"
+#define PARTICLE_COUNT 128
 /*
 Constructor, modify this to change what happens
 */
@@ -12,12 +13,13 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , polarity(-1)
     , instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
 #ifdef __CUDACC__
-    , cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
+	, cuTexBuf(mallocGLInteropTextureBuffer<float>(PARTICLE_COUNT, 3))
     , texBuf("_texBuf", cuTexBuf, true)
 #else
-    , texBuf("_texBuf", 100, 3)
-    , billboardShaders(new Shaders(Stock::Shaders::BILLBOARD))
+	, texBuf("_texBuf", PARTICLE_COUNT, 3)
 #endif
+	, billboardShaders(new Shaders(Stock::Shaders::BILLBOARD))
+	, particleSort(0)
 {
     registerEntity(deerModel);
     registerEntity(colorModel);
@@ -32,12 +34,12 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #ifdef __CUDACC__
     cuInit();
 #else
-    float *tempData = (float*)malloc(sizeof(float) * 3 * 100);
-    for (int i = 0; i < 100;i++)
+	float *tempData = (float*)malloc(sizeof(float) * 3 * PARTICLE_COUNT);
+	for (int i = 0; i < PARTICLE_COUNT; i++)
     {
-        tempData[(i * 3) + 0] = 100 * (float)sin(i*3.6);
+		tempData[(i * 3) + 0] = PARTICLE_COUNT * (float)sin(i*3.6);
         tempData[(i * 3) + 1] = -50.0f;
-        tempData[(i * 3) + 2] = 100 * (float)cos(i*3.6);
+		tempData[(i * 3) + 2] = PARTICLE_COUNT * (float)cos(i*3.6);
     }
     texBuf.setData(tempData);
     free(tempData);
@@ -158,13 +160,126 @@ void EntityScene::initParticles()
 	//Bind uniforms
 	this->billboardShaders->addDynamicUniform("_up", reinterpret_cast<const GLfloat *>(this->visualisation.getCamera()->getUpPtr()), 3);
 	this->billboardShaders->addDynamicUniform("_right", reinterpret_cast<const GLfloat *>(this->visualisation.getCamera()->getRightPtr()), 3);
+	//Compute Shader
+	particleSort = new ComputeShader();
+	//particleSort->addShader("../shaders/bitonicMerge.comp");
+	particleSort->addShader("../shaders/bitonicNetwork.comp");
+	float *tempData = (float*)malloc(sizeof(float) * 4 * PARTICLE_COUNT);
+	int j = 0;
+	for (int i = 0; i < PARTICLE_COUNT; i++)
+	{
+		tempData[(i * 4) + 0] = PARTICLE_COUNT * (float)sin(i*3.6);
+		tempData[(i * 4) + 1] = 0;// -50.0f;
+		tempData[(i * 4) + 2] = PARTICLE_COUNT * (float)cos(i*3.6);
+		tempData[(i * 4) + 3] = *reinterpret_cast<float*>(&i);//Store int bytes as float
+		j += i;
+		//printf("%d,", i);
+	}
+	printf("=%d\n", j);
+	
+	//ssbo;//shader storage buffer object
+	GL_CALL(glGenBuffers(1, &ssbo));
+	GL_CALL(glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo));
+	GL_CALL(glBufferData(GL_SHADER_STORAGE_BUFFER, PARTICLE_COUNT*sizeof(glm::vec4), tempData, GL_DYNAMIC_DRAW));
+	GLuint block_index = 0;
+	block_index = glGetProgramResourceIndex(particleSort->getProgram(), GL_SHADER_STORAGE_BLOCK, "Particles");
+	GL_CALL(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, block_index, ssbo));
+	//Also bind buffer to render shader
+
+	
+	block_index = glGetProgramResourceIndex(billboardShaders->getProgram(), GL_SHADER_STORAGE_BLOCK, "Particles");
+	GL_CALL(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, block_index, ssbo));
+
+	GL_CALL(glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0));
+
+	nextPow2 = ceil(log(PARTICLE_COUNT) / log(2));
+
+	//Find compute shader uniforms
+	particleCtLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "particleCount"));
+	threadCtLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "threadCount"));
+	hopLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "hop"));
+	hop2Loc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "hop2"));
+	eyeLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "eye"));
+	periodisationLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "periodisation"));
+	directionLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "direction"));
+	if (particleCtLoc == -1 || hopLoc == -1 || hop2Loc == -1 || eyeLoc == -1 || periodisationLoc == -1 || directionLoc == -1) printf("err compute shader uniform missing.\n");
+
+	free(tempData);
+}
+void cpuBitonicMerge(int particleCount, int hop, int hop2, glm::vec4 *data, glm::vec3 eye)
+{
+	for (int i = 0; i < 256;++i)
+	{
+		//Calculate indexes to be Compare&Swap'd
+		int indexA = (i%hop) + ((i / hop)*hop2);
+		int indexB = indexA + hop;
+
+		//Check indexes are in range
+		if (indexB >= particleCount || indexA >= particleCount)
+			return;
+
+		//Read particles
+		int mapA = glm::floatBitsToInt(data[indexA].w);
+		glm::vec3 particleA = glm::vec3(data[mapA]);
+		int mapB = glm::floatBitsToInt(data[indexB].w);
+		glm::vec3 particleB = glm::vec3(data[mapB]);
+
+		//printf("%d: %d<->%d\n", i, indexA, indexB);
+		//Compare (Bring furthest to front)
+		if (length(particleB-eye)>length(particleA-eye))
+		{
+			//and Swap
+			data[indexA].w = glm::intBitsToFloat(mapB);
+			data[indexB].w = glm::intBitsToFloat(mapA);
+		}
+	}
 }
 void EntityScene::renderParticles()
 {
-    //Update particle locations
+	GL_CALL(glUseProgram(particleSort->getProgram()));
+	//Bitonic Sequence Generator
+	for (int stage = 0; stage < (nextPow2 - 1); ++stage)
+	{
+		int periodisation = 1 << stage;
+		for (int pass = stage; pass >= 0; --pass)
+		{
+			int hop = 1 << pass;
+			int hop2 = hop << 1;
+			//Update uniforms
+			int pc = PARTICLE_COUNT;
+			GL_CALL(glUniform1iv(particleCtLoc, 1, (GLint *)&pc));
+			int tc = pow(2, nextPow2 - 1);
+			GL_CALL(glUniform1iv(threadCtLoc, 1, (GLint *)&tc));
+			GL_CALL(glUniform1iv(hopLoc, 1, (GLint *)&hop));
+			GL_CALL(glUniform1iv(hop2Loc, 1, (GLint *)&hop2));
+			GL_CALL(glUniform1iv(periodisationLoc, 1, (GLint *)&periodisation));
+			int dir = 1;//Direction must be 1 throughout generation of bitonic sequence
+			GL_CALL(glUniform1iv(directionLoc, 1, (GLint *)&dir));
+			GL_CALL(glUniform3fv(eyeLoc, 1, (GLfloat *)visualisation.getCamera()->getEyePtr()));
+			particleSort->launch(ceil((PARTICLE_COUNT / 2.0f) / 256.0));
+			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		}
+	}
+	//Bitonic Merge
+	for (int i = nextPow2 - 1; i >= 0; i--)
+	{
+		int hop = 1 << i;
+		int hop2 = hop << 1;
 
-    //Sort back to front
-
+		//Update uniforms
+		int pc = PARTICLE_COUNT;
+		GL_CALL(glUniform1iv(particleCtLoc, 1, (GLint *)&pc));
+		int tc = pow(2, nextPow2 - 1);
+		GL_CALL(glUniform1iv(threadCtLoc, 1, (GLint *)&tc));
+		GL_CALL(glUniform1iv(hopLoc, 1, (GLint *)&hop));
+		GL_CALL(glUniform1iv(hop2Loc, 1, (GLint *)&hop2));
+		GL_CALL(glUniform3fv(eyeLoc, 1, (GLfloat *)visualisation.getCamera()->getEyePtr()));
+		GL_CALL(glUniform1iv(periodisationLoc, 1, (GLint *)&pc));//The particle count sets direction to 0 throughout
+		int dir = -1;//-1 Dir gives us them in descending order (+1 for asc)
+		GL_CALL(glUniform1iv(directionLoc, 1, (GLint *)&dir));
+		particleSort->launch(ceil((PARTICLE_COUNT / 2.0f) / 256.0));
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	}
     GL_CALL(glEnable(GL_BLEND));
     //GL_CALL(glDisable(GL_DEPTH_TEST));
     //Use Shader
@@ -173,7 +288,7 @@ void EntityScene::renderParticles()
     glDisable(GL_CULL_FACE);
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
     glPushMatrix();
-    GL_CALL(glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, 100));
+	GL_CALL(glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, PARTICLE_COUNT));
     glPopMatrix();
 
     //Unload shader

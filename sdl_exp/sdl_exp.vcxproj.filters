@@ -84,6 +84,12 @@
     <ClCompile Include="visualisation\Sprite2D.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\ComputeShader.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\ShaderCore.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -149,6 +155,12 @@
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Sprite2D.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\ComputeShader.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\ShaderCore.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>

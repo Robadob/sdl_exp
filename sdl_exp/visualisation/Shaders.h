@@ -1,9 +1,8 @@
 #ifndef __Shaders_h__
 #define __Shaders_h__
 
-//Define EXIT_ON_ERROR to cause the program to exit when shader compilation fails
 
-#include "GLcheck.h"
+#include "ShaderCore.h"
 
 #include <glm/glm.hpp>
 #include <regex>
@@ -42,7 +41,7 @@ namespace Stock
 Abstracts compilation of Shaders, and attempts to automatically bind uniforms and attributes.
 Each Shaders object is 'bound' to a single entity, so create a 2nd if you wish to use the same shaders with a seperate entity.
 */
-class Shaders
+class Shaders : private ShaderCore
 {
     //These constants are the names that will be searched for within the shaders
     const char *MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
@@ -108,7 +107,8 @@ public:
     bool reload(bool silent = false);
     void useProgram(Entity *e = 0);
 	void useProgram(const glm::mat4 *mv, const glm::mat4 *proj);
-    void clearProgram();
+	void clearProgram();
+	void destroyProgram();
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
     void setProjectionMatPtr(glm::mat4 const *projectionMat);
@@ -179,16 +179,8 @@ private:
     unsigned int geometryShaderVersion;
     //Shader program ID
     int programId;
-    bool compileSuccessFlag;
 
-    char *loadShaderSource(const char *file);
     void destroyShaders();
-    void destroyProgram();
-    bool checkShaderCompileError(const int shaderId, const char *shaderPath);
-    bool checkProgramCompileError(const int programId);
-
-    std::regex versionRegex;
-    unsigned int findShaderVersion(const char *shaderSource);
 };
 
 #endif //ifndef __Shaders_h__

@@ -1,0 +1,46 @@
+#version 430
+//https://wiki.rice.edu/confluence/download/attachments/4435861/comp322-s12-lec28-slides-JMC.pdf?version=1&modificationDate=1333163955158
+layout(local_size_x=256) in;
+
+buffer Particles
+{
+	vec4 particles[];
+};
+//Total particles
+uniform int particleCount;
+uniform int threadCount;
+uniform int hop;
+uniform int hop2;
+//Camera pos
+uniform vec3 eye;
+//Camera dir
+//uniform vec3 look;
+float distFromEye(vec3 particle)
+{
+	return length(eye-particle);
+}
+//Bitonic merging network
+void main () 
+{
+    //Calculate indexes to be Compare&Swap'd
+	uint indexA = (gl_GlobalInvocationID.x%hop)+((gl_GlobalInvocationID.x/hop)*hop2);	
+	uint indexB = indexA+hop;
+	
+	//Check indexes are in range
+	if(indexB>=particleCount||indexA>=particleCount||gl_GlobalInvocationID.x>=threadCount)
+		return;
+	
+	//Read particles
+	int mapA = floatBitsToInt(particles[indexA].w);
+	vec3 particleA = particles[mapA].xyz;
+	int mapB = floatBitsToInt(particles[indexB].w);
+	vec3 particleB = particles[mapB].xyz;
+	
+	//Compare (Bring furthest to front)
+	if(distFromEye(particleB)>distFromEye(particleA))
+	{
+		//and Swap
+		particles[indexA].w=intBitsToFloat(mapB);
+		particles[indexB].w=intBitsToFloat(mapA);
+	}
+}

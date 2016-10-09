@@ -3,6 +3,7 @@
 in vec3 texCoords;
 
 in float distOrigin;
+in flat int renderOrder;
 out vec4 fragColor;
 //HSV interpolation is more attractive than rgb interpolation
 //http://www.cs.rit.edu/~ncs/color/t_convert.html
@@ -40,10 +41,15 @@ float lerp(float a, float b, float w)
   return float((1.0f-w)*a+w*b);
 }
 void main()
-{
-  float alpha = 5-pow(length(10*(texCoords.xy-vec2(0.5))),2);
+{ 
+  //tex cords run from 0 to +1
+  //Normalise dist from center so it ranges from 0-1
+  float dFromCenter = 2*length(texCoords.xy-vec2(0.5));
+  float alpha = 1-pow(dFromCenter,2);
   if(alpha<0.05)
       discard;
-  vec3 hsv = vec3(distOrigin,1.0,1.0);
+  vec3 hsv = vec3(renderOrder,1.0,1.0);
   fragColor = vec4(hsv2rgb(hsv),alpha/2.0);
+
+  //fragColor = vec4(texCoords.xy,0.0,1.0);
 }

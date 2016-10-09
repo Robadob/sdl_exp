@@ -1,7 +1,7 @@
 #include "EntityScene.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "visualisation/ComputeShader.h"
-#define PARTICLE_COUNT 128
+#define PARTICLE_COUNT 100
 /*
 Constructor, modify this to change what happens
 */
@@ -168,14 +168,12 @@ void EntityScene::initParticles()
 	int j = 0;
 	for (int i = 0; i < PARTICLE_COUNT; i++)
 	{
-		tempData[(i * 4) + 0] = PARTICLE_COUNT * (float)sin(i*3.6);
+		tempData[(i * 4) + 0] = 35 * (float)sin(i*(6.28319f / (PARTICLE_COUNT)));
 		tempData[(i * 4) + 1] = 0;// -50.0f;
-		tempData[(i * 4) + 2] = PARTICLE_COUNT * (float)cos(i*3.6);
+		tempData[(i * 4) + 2] = 35 * (float)cos(i*(6.28319f / (PARTICLE_COUNT)));
 		tempData[(i * 4) + 3] = *reinterpret_cast<float*>(&i);//Store int bytes as float
 		j += i;
-		//printf("%d,", i);
 	}
-	printf("=%d\n", j);
 	
 	//ssbo;//shader storage buffer object
 	GL_CALL(glGenBuffers(1, &ssbo));
@@ -253,7 +251,7 @@ void EntityScene::renderParticles()
 			GL_CALL(glUniform1iv(hopLoc, 1, (GLint *)&hop));
 			GL_CALL(glUniform1iv(hop2Loc, 1, (GLint *)&hop2));
 			GL_CALL(glUniform1iv(periodisationLoc, 1, (GLint *)&periodisation));
-			int dir = 1;//Direction must be 1 throughout generation of bitonic sequence
+			int dir = 1;//Direction must be inverse throughout sequence for non 2^n populations to work
 			GL_CALL(glUniform1iv(directionLoc, 1, (GLint *)&dir));
 			GL_CALL(glUniform3fv(eyeLoc, 1, (GLfloat *)visualisation.getCamera()->getEyePtr()));
 			particleSort->launch(ceil((PARTICLE_COUNT / 2.0f) / 256.0));
@@ -280,8 +278,10 @@ void EntityScene::renderParticles()
 		particleSort->launch(ceil((PARTICLE_COUNT / 2.0f) / 256.0));
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
+	//Render them
     GL_CALL(glEnable(GL_BLEND));
-    //GL_CALL(glDisable(GL_DEPTH_TEST));
+	//GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glDisable(GL_DEPTH_TEST));
     //Use Shader
     billboardShaders->useProgram();
     //Render quad
@@ -296,5 +296,5 @@ void EntityScene::renderParticles()
     billboardShaders->clearProgram();
 
     GL_CALL(glDisable(GL_BLEND));
-    //GL_CALL(glEnable(GL_DEPTH_TEST));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
 }

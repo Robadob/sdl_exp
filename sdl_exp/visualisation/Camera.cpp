@@ -5,7 +5,7 @@
 /*
 Initialises the camera located at (1,1,1) directed at (0,0,0)
 */
-Camera::Camera() 
+Camera::Camera()
     : Camera(glm::vec3(1, 1, 1))
 {}
 /*
@@ -26,20 +26,15 @@ Camera::Camera(glm::vec3 eye, glm::vec3 target)
     : pureUp(0.0f, 1.0f, 0.0f)
     , eye(eye)
     , look(normalize(target - eye))
-    , right(normalize(cross(glm::vec3(0, 1, 0), target - eye)))
-    , up(normalize(cross(cross(glm::vec3(0, 1, 0), target - eye), target - eye)))
+    , right(normalize(cross(target - eye, glm::vec3(0, 1, 0))))
+    , up(normalize(cross(cross(target - eye, glm::vec3(0, 1, 0)), target - eye)))
     , stabilise(true)
 {
     //this->eye = eye;                                  //Eye is the location passed by user
     //this->look = target - eye;                        //Look is the direction from eye to target
-    //this->right = cross(glm::vec3(0, 1, 0), look);    //Right is perpendicular to look and (0,1,0)[Default up]
+    //this->right = cross(look, pureUp);                //Right is perpendicular to look and pureUp
     //this->up = cross(right, look);                    //Up is perpendicular to right and look
-    //Make sure Up is not upside down
-    if (up.y < 0)
-    {
-        up = -up;
-        right = -right;
-    }
+
     this->updateViews();
 }
 /*
@@ -55,15 +50,15 @@ Rotate look and up, pitch radians about right
 */
 void Camera::turn(float yaw, float pitch){
     //Rotate everything yaw rads about up vector
-    this->look = normalize(rotate(this->look, -yaw, this->up));
-    this->right = normalize(rotate(this->right, -yaw, this->up));
+    this->look = rotate(this->look, -yaw, this->up);
+    this->right = rotate(this->right, -yaw, this->up);
     //Rotate everything pitch rads about right vector
-    glm::vec3 look = normalize(rotate(this->look, -pitch, this->right));
-    glm::vec3 up = normalize(rotate(this->up, -pitch, this->right));
+    glm::vec3 look = rotate(this->look, -pitch, this->right);
+    glm::vec3 up = rotate(this->up, -pitch, this->right);
     glm::vec3 right = this->right;
     if (stabilise)
-    {    
-        //Right is perpendicular to look and (0,1,0)[Default up]
+    {
+        //Right is perpendicular to look and pureUp
         right = cross(look, this->pureUp);
         //Stabilised up is perpendicular to right and look
         up = cross(right, look);
@@ -72,9 +67,9 @@ void Camera::turn(float yaw, float pitch){
             return;
     }
     //Commit changes
-    this->look = look;
-    this->right = right;
-    this->up = up;
+    this->look = normalize(look);
+    this->right = normalize(right);
+    this->up = normalize(up);
     this->updateViews();
 }
 /*
@@ -120,7 +115,7 @@ void Camera::updateViews(){
     skyboxViewMat = glm::lookAt(glm::vec3(0), look, up);
 }
 /*
-Returns the projection matrix 
+Returns the projection matrix
 For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
 @return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
 */
@@ -148,7 +143,7 @@ glm::mat4 Camera::skyboxView() const{
     return skyboxViewMat;
 }
 /*
-Calls gluLookAt() from the perspective required for rendering a skybox (direction only) 
+Calls gluLookAt() from the perspective required for rendering a skybox (direction only)
 For people using fixed function pipeline, although manually setting the matrix with glLoadMatrixf() also works.
 @see skyboxView()
 */

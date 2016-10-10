@@ -46,8 +46,8 @@ void main()
   //Normalise dist from center so it ranges from 0-1
   float dFromCenter = 2*length(texCoords.xy-vec2(0.5));
   float alpha = 1-pow(dFromCenter,2);
-  if(alpha<0.005)
-      discard;
+  //if(alpha<0.0005)
+  //    discard;
   vec3 hsv = vec3(renderOrder,1.0,1.0);
   fragColor = vec4(hsv2rgb(hsv),alpha/2.0);
 

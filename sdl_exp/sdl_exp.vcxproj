@@ -203,6 +203,7 @@
     <ClInclude Include="visualisation\texture\Texture2D.h" />
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
+    <ClInclude Include="visualisation\Viewport.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>

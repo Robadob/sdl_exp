@@ -10,7 +10,7 @@
 #include "Shaders.h"
 #include "texture/Texture2D.h"
 #include "Camera.h"
-#include "Visualisation.h"
+#include "Viewport.h"
 
 namespace Stock
 {
@@ -75,7 +75,7 @@ public:
     virtual void setModelViewMatPtr(glm::mat4 const *modelViewMat);
     virtual void setProjectionMatPtr(glm::mat4 const *projectionMat);
     virtual void setModelViewMatPtr(const Camera *modelViewMat);
-    virtual void setProjectionMatPtr(const Visualisation *visualisation);
+    virtual void setProjectionMatPtr(const Viewport *visualisation);
     void flipVertexOrder();
     void setCullFace(const bool cullFace);
 protected:

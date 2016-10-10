@@ -1360,7 +1360,7 @@ Sets the projection matrix to be tracked by this entitiy (in the shader)
 @param camera The visualisation holding the projection matrix
 @note This function exists so that subclasses of Entity can intercept the matrix
 */
-void Entity::setProjectionMatPtr(const Visualisation *visualisation)
+void Entity::setProjectionMatPtr(const Viewport *visualisation)
 {
     setProjectionMatPtr(visualisation->getFrustrumPtr());
 }

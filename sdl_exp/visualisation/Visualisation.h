@@ -8,6 +8,7 @@
 #include "Axis.h"
 #include "HUD.h"
 #include "Text.h"
+#include "Viewport.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -17,7 +18,7 @@ class Skybox;
 /*
 This class provides an OpenGL window
 */
-class Visualisation
+class Visualisation : public Viewport
 {
 public:
     Visualisation(char *windowTitle, int windowWidth, int windowHeight);
@@ -43,7 +44,7 @@ public:
     void Visualisation::setSkybox(bool state);
     const Camera *getCamera() const;
     const Scene *getScene() const;
-    const glm::mat4 *getFrustrumPtr() const;
+	const glm::mat4 *getFrustrumPtr() const override;
 	HUD* getHUD();
 private:
     void clearFrame();

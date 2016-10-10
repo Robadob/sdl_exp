@@ -151,6 +151,9 @@
     <ClInclude Include="visualisation\Sprite2D.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
+    <ClInclude Include="visualisation\Viewport.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">

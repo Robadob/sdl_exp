@@ -43,14 +43,15 @@ Each Shaders object is 'bound' to a single entity, so create a 2nd if you wish t
 */
 class Shaders : private ShaderCore
 {
-    //These constants are the names that will be searched for within the shaders
-    const char *MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
-    const char *PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
-    const char *MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
-    const char *VERTEX_ATTRIBUTE_NAME = "_vertex";
-    const char *NORMAL_ATTRIBUTE_NAME = "_normal";
-    const char *COLOR_ATTRIBUTE_NAME = "_color";
-    const char *TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
+public:
+	//These constants are the names that will be searched for when loading shaders
+	static const char *MODELVIEW_MATRIX_UNIFORM_NAME;//="_modelViewMat";
+	static const char *PROJECTION_MATRIX_UNIFORM_NAME;//="_projectionMat";
+	static const char *MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME;// "_modelViewProjectionMat";
+	static const char *VERTEX_ATTRIBUTE_NAME;// = "_vertex";
+	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
+	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
+	static const char *TEXCOORD_ATTRIBUTE_NAME;// = "_texCoords";
 
 public:
     struct UniformMatrixDetail
@@ -87,12 +88,6 @@ public:
         unsigned int offset;        //Specifies the offset within the vbo
         unsigned int stride;        //Spacing between elements within the array
      };
-    struct UniformTextureDetail
-    {
-        GLuint name;
-        GLint bufferId;
-        GLenum type;
-    };
     Shaders(Stock::Shaders::ShaderSet set);
     Shaders(const char *vertexShaderPath = 0, const char *fragmentShaderPath = 0, const char *geometryShaderPath = 0);
     ~Shaders();
@@ -100,15 +95,14 @@ public:
     bool hasVertexShader() const;
     bool hasFragmentShader() const;
     bool hasGeometryShader() const;
-    bool getCompileSuccess() const;
-    int getProgram();
+    //bool getCompileSuccess() const;
+    //int getProgram();
 
-    void createShaders();
-    bool reload(bool silent = false);
+    //void createShaders();
+    //bool reload(bool silent = false);
     void useProgram(Entity *e = 0);
 	void useProgram(const glm::mat4 *mv, const glm::mat4 *proj);
-	void clearProgram();
-	void destroyProgram();
+	//void destroyProgram();
 
     void setModelViewMatPtr(glm::mat4 const *modelViewMat);
     void setProjectionMatPtr(glm::mat4 const *projectionMat);
@@ -118,34 +112,12 @@ public:
     void setColorsAttributeDetail(VertexAttributeDetail vad);
     void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
 
-    int addTextureUniform(GLuint texture, char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
-
-    bool addDynamicUniform(char *uniformName, const GLfloat *arry, unsigned int count=1);
-	bool addDynamicUniform(char *uniformName, const GLint *arry, unsigned int count = 1);
-	bool addStaticUniform(char *uniformName, const GLfloat *arry, unsigned int count = 1);
-	bool addStaticUniform(char *uniformName, const GLint *arry, unsigned int count = 1);
-    static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
-    static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
-    
     void setColor(glm::vec3 color);
     void setColor(glm::vec4 color);
 
 private:
+	void _clearProgram() override;
 	void _useProgram();
-    struct DynamicUniformDetail
-    {
-        GLenum type;
-        void *data;
-        unsigned int count;
-        char *uniformName;
-    };
-    struct StaticUniformDetail
-    {
-        GLenum type;
-        glm::ivec4 data;
-        unsigned int count;
-        char *uniformName;
-    };
     //Matrix uniform pointers
     UniformMatrixDetail modelview;
     UniformMatrixDetail projection;
@@ -157,13 +129,6 @@ private:
     int colorUniformLocation;
     int colorUniformSize;
 
-    //Texture tracking
-    std::vector<UniformTextureDetail> textures;
-
-    //Misc uniform tracking
-    std::map<GLint, DynamicUniformDetail> dynamicUniforms;
-    std::list<DynamicUniformDetail> lostDynamicUniforms;//Ones that went missing after a shader reload
-    std::forward_list<StaticUniformDetail> staticUniforms;
 
     //Shader file paths
     const char *vertexShaderPath;
@@ -177,8 +142,6 @@ private:
     unsigned int vertexShaderVersion;
     unsigned int fragmentShaderVersion;
     unsigned int geometryShaderVersion;
-    //Shader program ID
-    int programId;
 
     void destroyShaders();
 };

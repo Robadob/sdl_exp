@@ -75,8 +75,10 @@ glm::uvec3 ComputeShader::getMaxWorkGroupDims()
 	int maxSize;
 	glm::uvec3 rtn;
 	GL_CALL(glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &maxSize));
-	rtn.x = maxSize;	GL_CALL(glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxSize));
-	rtn.y = maxSize;	GL_CALL(glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxSize));
+	rtn.x = maxSize;
+	GL_CALL(glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &maxSize));
+	rtn.y = maxSize;
+	GL_CALL(glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &maxSize));
 	rtn.z = maxSize;
 	return rtn;
 }

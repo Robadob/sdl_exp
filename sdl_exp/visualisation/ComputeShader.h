@@ -20,9 +20,9 @@ class ComputeShader : private ShaderCore
 public:
 	ComputeShader();
 	int addShader(const char* shaderPath);
-	int getProgram() const { return programId; };
+	//int getProgram() const { return programId; };
 
-	bool reload();
+	void _reload();
 	inline void launch(GLuint workGroupsX, GLuint workGroupsY = 1, GLuint workGroupsZ = 1)
 	{
 		launch(glm::uvec3(workGroupsX, workGroupsY, workGroupsZ));

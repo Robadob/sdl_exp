@@ -9,6 +9,13 @@
 
 #include "Entity.h"
 
+const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
+const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
+const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
+const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
+const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
+const char *Shaders::COLOR_ATTRIBUTE_NAME = "_color";
+const char *Shaders::TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
 /*
 Constructs a shader object from one of the stock shader sets
 @param set The shader set to create
@@ -369,9 +376,7 @@ Call to setup shader with external modelview and projection matrices
 */
 void Shaders::useProgram(const glm::mat4 *mv, const glm::mat4 *proj)
 {
-	GL_CALL(glUseProgram(this->programId));
-
-	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
+	ShaderCore::useProgram();
 
 	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
 	if (this->vertexShaderVersion <= 120 && proj)
@@ -399,7 +404,6 @@ void Shaders::useProgram(const glm::mat4 *mv, const glm::mat4 *proj)
 		glm::mat4 mvp = *proj * *mv;
 		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
 	}
-	_useProgram();
 }
 /*
 Used internally by useProgram() fns, to handle shader setup after matrix setup
@@ -407,7 +411,7 @@ Used internally by useProgram() fns, to handle shader setup after matrix setup
 void Shaders::_useProgram()
 {
 
-    //Don't think we need to use
+    //Don't think we need to use (this is for generic vertex attrib buffers)
     //GL_CALL(glBindAttribLocation(this->programId, 0, "in_position"));
 
     GLuint activeVBO = 0;
@@ -542,7 +546,7 @@ void Shaders::_useProgram()
 /*
 Disables the currently active shader progam and attributes attached to this shader
 */
-void Shaders::clearProgram(){
+void Shaders::_clearProgram(){
     //Massively shorten this with glPopAttrib()?
     //Vertex location
     if (this->vertexShaderVersion <= 140 && this->positions.vbo > 0)
@@ -580,7 +584,6 @@ void Shaders::clearProgram(){
     {//If vertex attribute location and vbo are known
         glDisableVertexAttribArray(this->texcoords.location);
     }
-    GL_CALL(glUseProgram(0));
 }
 /*
 Destroys the compiled shaders
@@ -596,50 +599,7 @@ void Shaders::destroyShaders(){
     if (this->hasGeometryShader())
         GL_CALL(glDeleteShader(this->geometryShaderId));
 }
-/*
-Destroys the shader program
-*/
-void Shaders::destroyProgram(){
-    GL_CALL(glDeleteProgram(this->programId));//Invalid operation?
-}
-/*
-Attempts to locate the speicified uniform's location and type
-@param uniformName The name of the uniform
-@param shaderProgram The programId of the shader
-@return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
-@note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
-*/
-std::pair<int, GLenum> Shaders::findUniform(const char *uniformName, const int shaderProgram)
-{
-    int result = GL_CALL(glGetUniformLocation(shaderProgram, uniformName));
-    if (result > -1)
-    {
-        GLenum type;
-        GLint size;//Collect size, because its not documented that you can pass 0
-        GL_CALL(glGetActiveUniform(shaderProgram, result, 0, 0, &size, &type, 0));
-        return std::pair<int, GLenum>(result, type);
-    }
-    return  std::pair<int, GLenum>(-1, 0);
-}
-/*
-Attempts to locate the specified attribute's location and type
-@param attributeName The name of the attribute
-@param shaderProgram The programId of the shaderprogram
-@return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
-@note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
-*/
-std::pair<int, GLenum> Shaders::findAttribute(const char *attributeName, const int shaderProgram)
-{
-    int result = GL_CALL(glGetAttribLocation(shaderProgram, attributeName));
-    if (result > -1)
-    {
-        GLenum type;
-        GLint size;//Collect size, because its not documented that you can pass 0
-        GL_CALL(glGetActiveAttrib(shaderProgram, result, 0, 0, &size, &type, 0));
-        return std::pair<int, GLenum>(result, type);
-    }
-    return  std::pair<int, GLenum>(-1, 0);
-}
+
 /*
 Sets the pointer from which the ModelView matrix should be loaded from
 This pointer is likely provided by the Camera object
@@ -691,154 +651,6 @@ void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
     this->texcoords = vad;
 }
 /*
-Permenently binds a texture buffer to be loaded when useProgram() is called
-@param texture The name of the texture (as returned by glGenTexture())
-@param uniformName The name of the uniform within the shader this texture should be bound to
-@param type The type of texture being bound
-@return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
-*/
-int Shaders::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
-{
-    GLint bufferId = (GLint)textures.size();
-    GLint maxTex;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex);
-    if (bufferId<maxTex && addStaticUniform(uniformName, &bufferId))
-    {
-        textures.push_back(UniformTextureDetail{ texture, bufferId, type });
-        return bufferId;
-    }
-    return -1;
-}
-/*
-Remembers a pointer to an array of upto 4 integers that will be updated everytime useProgram() is called on this Shaders object
-@param uniformName The name of the uniform within the shader
-@param array A pointer to the array of integers
-@param count The number of integers provided in the array (a maximum of 4)
-@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
-@note Even when false is returned, the value will be stored for reprocessing on shader reloads
-*/
-bool Shaders::addDynamicUniform(char *uniformName, const GLint *array, unsigned int count)
-{
-    if (this->programId > 0 && count > 0 && count <= 4)
-    {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
-        if (location != -1)
-        {
-            dynamicUniforms[location] = DynamicUniformDetail{ GL_INT, (void*)array, count, uniformName };
-            return true;
-        }
-        else
-        {
-            fprintf(stderr, "Dynamic uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath : ""));
-        }
-    }
-    return false;
-}
-/*
-Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
-@param uniformName The name of the uniform within the shader
-@param array A pointer to the array of floats
-@param count The number of floats provided in the array (a maximum of 4)
-@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
-@note Even when false is returned, the value will be stored for reprocessing on shader reloads
-*/
-bool Shaders::addDynamicUniform(char *uniformName, const GLfloat *array, unsigned int count)
-{
-    if (this->programId > 0 && count > 0 && count <= 4)
-    {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
-        if (location != -1)
-        {
-            dynamicUniforms[location] = DynamicUniformDetail{ GL_FLOAT, (void*)array, count, uniformName };
-            return true;
-        }
-        else
-        {
-            fprintf(stderr, "Dynamic uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath : ""));
-        }
-    }
-    return false;
-}
-/*
-Sets the
-Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
-@param uniformName The name of the uniform within the shader
-@param array A pointer to the array of floats
-@param count The number of floats provided in the array (a maximum of 4)
-@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
-@note Even when false is returned, the value will be stored for reprocessing on shader reloads
-*/
-bool Shaders::addStaticUniform(char *uniformName, const GLfloat *array, unsigned int count)
-{
-    staticUniforms.push_front(StaticUniformDetail{ GL_FLOAT, *(glm::ivec4 *)array, count, uniformName });
-    if (this->programId > 0 && count > 0 && count <= 4)
-    {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
-        if (location != -1)
-        {
-            glUseProgram(this->programId);
-            if (count == 1){
-                GL_CALL(glUniform1fv(location, 1, array));
-            }
-            else if (count == 2){
-                GL_CALL(glUniform2fv(location, 1, array));
-            }
-            else if (count == 3){
-                GL_CALL(glUniform3fv(location, 1, array));
-            }
-            else if (count == 4){
-                GL_CALL(glUniform4fv(location, 1, array));
-            }
-            glUseProgram(0);
-            return true;
-        }
-        else
-        {
-            fprintf(stderr, "Static uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath : ""));
-        }
-    }
-    return false;
-}
-/*
-Remembers a pointer to an array of upto 4 integers that will be updated everytime useProgram() is called on this Shaders object
-@param uniformName The name of the uniform within the shader
-@param array A pointer to the array of integers
-@param count The number of integers provided in the array (a maximum of 4)
-@returns false if the uniform name was not found or count is outside of the inclusive range 1-4
-@note Even when false is returned, the value will be stored for reprocessing on shader reloads
-*/
-bool Shaders::addStaticUniform(char *uniformName, const GLint *array, unsigned int count)
-{
-    staticUniforms.push_front(StaticUniformDetail{ GL_INT, (glm::ivec4)*array, count, uniformName });
-    if (this->programId > 0 && count > 0 && count <= 4)
-    {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
-        if (location != -1)
-        {
-            glUseProgram(this->programId);
-            if (count == 1){
-                GL_CALL(glUniform1iv(location, 1, array));
-            }
-            else if (count == 2){
-                GL_CALL(glUniform2iv(location, 1, array));
-            }
-            else if (count == 3){
-                GL_CALL(glUniform3iv(location, 1, array));
-            }
-            else if (count == 4){
-                GL_CALL(glUniform4iv(location, 1, array));
-            }
-            glUseProgram(0);
-            return true;
-        }
-        else
-        {
-            fprintf(stderr, "Static uniform named: %s was not found in shaders '%s' etc.\n", uniformName, this->vertexShaderPath ? this->vertexShaderPath : (this->fragmentShaderPath ? this->fragmentShaderPath:""));
-        }
-    }
-    return false;
-}
-/*
 Sets the color uniform
 @param color The RGB value of the color
 */
@@ -853,9 +665,9 @@ Sets the color uniform
 void Shaders::setColor(glm::vec4 color)
 {
     //Set the color uniform is present
-    if (this->programId>0 && this->colorUniformLocation >= 0)
+    if (this->getProgram()>0 && this->colorUniformLocation >= 0)
     {//If projection matrix location and camera ptr are known
-        glUseProgram(this->programId);
+		glUseProgram(this->getProgram());
         if (this->colorUniformSize == 3)
         {
             GL_CALL(glUniform3fv(this->colorUniformLocation, 1, glm::value_ptr(color)));
@@ -866,12 +678,4 @@ void Shaders::setColor(glm::vec4 color)
         }
         glUseProgram(0);
     }
-}
-/*
-Returns the program id
-@return The GL program id, negative values are invalid (meaning no program exists)
-*/
-int Shaders::getProgram()
-{
-    return this->programId;
 }

@@ -12,7 +12,9 @@ ShaderCore::ShaderCore()
 	, shaderTag("")
 { }
 ShaderCore::~ShaderCore()
-{ }
+{
+	if (shaderTag[0] != '\0') delete[] shaderTag;
+}
 //Core
 void ShaderCore::reload()
 {
@@ -479,7 +481,7 @@ std::pair<int, GLenum> ShaderCore::findUniform(const char *uniformName, const in
 	{
 		GLenum type;
 		GLint size;//Collect size, because its not documented that you can pass 0
-		GL_CALL(glGetActiveUniform(shaderProgram, result, 0, 0, &size, &type, 0));
+		GL_CALL(glGetActiveUniform(shaderProgram, result, 0, nullptr, &size, &type, nullptr));
 		return std::pair<int, GLenum>(result, type);
 	}
 	return  std::pair<int, GLenum>(-1, 0);
@@ -491,7 +493,7 @@ std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, cons
 	{
 		GLenum type;
 		GLint size;//Collect size, because its not documented that you can pass 0
-		GL_CALL(glGetActiveAttrib(shaderProgram, result, 0, 0, &size, &type, 0));
+		GL_CALL(glGetActiveAttrib(shaderProgram, result, 0, nullptr, &size, &type, nullptr));
 		return std::pair<int, GLenum>(result, type);
 	}
 	return  std::pair<int, GLenum>(-1, 0);
@@ -522,12 +524,9 @@ bool ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::i
 	GLuint shaderId = createShader(type);
 	GL_CALL(glShaderSource(shaderId, shaderSources.size(), &shaderSources[0], nullptr));
 	GL_CALL(glCompileShader(shaderId));
-	//Grab the last files filename
-	char fname[_MAX_FNAME];
-	char ext[_MAX_EXT];
-	_splitpath(*(shaderSourceFiles.end() - 1), nullptr, nullptr, fname, ext);
+	std::string shaderName = getFilenameFromPath(*(shaderSourceFiles.end() - 1));
 	//Check for compile errors
-	if (!this->checkShaderCompileError(shaderId, std::string(fname, ext).c_str()))
+	if (!this->checkShaderCompileError(shaderId, shaderName.c_str()))
 	{
 		//Cleanup
 		for (auto j : shaderSources)
@@ -538,23 +537,36 @@ bool ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::i
 	}
 	//Attach shader to program
 	GL_CALL(glAttachShader(t_shaderProgram, shaderId));
+	//Append to shaderTag
+	if (shaderTag[0] == '\0')
+	{
+		shaderName = removeFileExt(shaderName);
+	}
+	else
+	{
+		shaderName = std::string(shaderTag) + std::string(":") + removeFileExt(shaderName);
+		delete[] this->shaderTag;
+	}
+	this->shaderTag = new char[shaderName.length() + 1];
+	strcpy(this->shaderTag, shaderName.c_str());
 	return true;
 }
 char* ShaderCore::loadShaderSource(const char* file){
 	// If file path is 0 it is being omitted. kinda gross
-	if (file != 0){
+	if (file != nullptr){
 		FILE* fptr = fopen(file, "rb");
 		if (!fptr){
 			fprintf(stderr, "Shader source not found: %s\n", file);
-#ifdef EXIT_ON_ERROR
-			getchar();
-			exit(1);
-#endif
-			return 0;
+			if(exitOnError)
+			{
+				getchar();
+				exit(1);
+			}
+			return nullptr;
 		}
 		fseek(fptr, 0, SEEK_END);
 		long length = ftell(fptr);
-		char* buf = (char*)malloc(length + 1); // Allocate a buffer for the entire length of the file and a null terminator
+		char* buf = static_cast<char*>(malloc(length + 1)); // Allocate a buffer for the entire length of the file and a null terminator
 		fseek(fptr, 0, SEEK_SET);
 		fread(buf, length, 1, fptr);
 		fclose(fptr);
@@ -562,7 +574,7 @@ char* ShaderCore::loadShaderSource(const char* file){
 		return buf;
 	}
 	else {
-		return 0;
+		return nullptr;
 	}
 }
 bool ShaderCore::checkShaderCompileError(GLuint shaderId, const char* shaderPath){
@@ -599,7 +611,7 @@ bool ShaderCore::checkProgramLinkError(const GLuint programId) const{
 		GL_CALL(glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &len));
 		// Get the contents of the log message
 		char* log = new char[len + 1];
-		GL_CALL(glGetProgramInfoLog(programId, len, 0, log));
+		GL_CALL(glGetProgramInfoLog(programId, len, nullptr, log));
 		// Print the message
 		fprintf(stderr, "Program compilation error (%s):\n", shaderTag);
 		fprintf(stderr, "%s\n", log);

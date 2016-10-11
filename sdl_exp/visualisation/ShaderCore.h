@@ -19,7 +19,6 @@
  * @see Shaders
  * @see ComputeShader
  * @todo Replace uniform bindings pointers with weak ptrs
- * @todo Update compileShader() to build shadertag
  */
 class ShaderCore : public Reloadable
 {
@@ -36,7 +35,7 @@ private:
 	/**
 	 * A constant string to identify the particular shader instance
 	 */
-	const char* shaderTag;
+	char* shaderTag;
 protected:
 	/**
 	 * Construtor, initialises common values

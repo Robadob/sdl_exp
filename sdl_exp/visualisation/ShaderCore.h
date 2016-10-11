@@ -19,7 +19,6 @@
  * @see Shaders
  * @see ComputeShader
  * @todo Replace uniform bindings pointers with weak ptrs
- * @todo Update compileShader() to also compile under Linux (It uses _splitpath)
  * @todo Update compileShader() to build shadertag
  */
 class ShaderCore : public Reloadable
@@ -325,18 +324,20 @@ private:
 	static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
 	/**
 	* Subclasses should use this to clear any enabled client states or attribute arrays
+	* If not overriden, does nothing
 	* Called by clearProgram()
 	*/
-	virtual void _clearProgram() = 0;
+	virtual void _clearProgram() {};
 	/**
 	* Subclasses should use this to apply any subclass specific shader bindings
+	* If not overriden, does nothing
 	* Called by useProgram()
 	*/
-	virtual void _useProgram() = 0;
+	virtual void _useProgram() {};
 	/**
 	* Subclasses should use this to call compileShader() with each shader src
-	* @param Temporary shader program ID which succesfully compiled shaders should be attatched to
-	* Called by useProgram()
+	* @param t_shaderProgram Temporary shader program ID which succesfully compiled shaders should be attatched to
+	* Called by reload()
 	*/
 	virtual bool _compileShaders(const GLuint t_shaderProgram) = 0;
 	/**
@@ -390,6 +391,19 @@ private:
 	 * @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
 	 */
 	bool checkProgramLinkError(const GLuint programId) const;
+	/**
+	 * Returns the filename from the provided file path
+	 * @param filePath A null terminated string holding a file path
+	 * @return The filename extracted from the string
+	 * @note This has operating system dependent behaviour, Linux consider \\ a valid path
+	 */
+	static std::string getFilenameFromPath(const char* filePath);
+	/**
+	 * Returns the filename from the provided file path
+	 * @param filename A null terminated string holding a file name
+	 * @return The filename sans extension
+	 */
+	static std::string ShaderCore::removeFileExt(const std::string &filename);
 };
 
 #endif

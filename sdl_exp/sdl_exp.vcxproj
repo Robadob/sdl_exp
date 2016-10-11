@@ -198,6 +198,7 @@
     <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\Overlay.h" />
+    <ClInclude Include="visualisation\Reloadable.h" />
     <ClInclude Include="visualisation\ShaderCore.h" />
     <ClInclude Include="visualisation\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />

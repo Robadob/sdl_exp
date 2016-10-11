@@ -1,8 +1,8 @@
 #define  _CRT_SECURE_NO_WARNINGS
 #include "ShaderCore.h"
+#include <cstdlib> //<_splitpath() Windows only, need to rewrite linux ver
 #include <regex>
 #include <glm/gtc/type_ptr.hpp>
-#include <concrt.h> //<Windows only, need to rewrite linux ver
 
 bool ShaderCore::exitOnError = false;//Tempted to use pre-processor macros to swap this default to true on release mode
 
@@ -621,3 +621,41 @@ bool ShaderCore::checkProgramLinkError(const GLuint programId) const{
 //		return stoul(match[1]);
 //	return 0;
 //}
+//_WIN32 is defined for both x86 and x64
+//https://msdn.microsoft.com/en-us/library/b0084kay.aspx
+#ifdef _WIN32 
+struct MatchPathSeparator
+{
+	bool operator()(char ch) const
+	{
+		return ch == '\\' || ch == '/';
+	}
+};
+#else
+struct MatchPathSeparator
+{
+	bool operator()(char ch) const
+	{
+		return ch == '/';
+	}
+};
+#endif
+std::string ShaderCore::getFilenameFromPath(const char* filePath)
+{
+	std::string pathname(filePath);
+	std::string result = std::string(
+		std::find_if(pathname.rbegin(), pathname.rend(),
+		MatchPathSeparator()).base(),
+		pathname.end());
+	printf("File: %s\n", filePath);
+	printf("FileName: %s\n", result.c_str());
+	return result;
+}
+std::string ShaderCore::removeFileExt(const std::string &filename)
+{
+	size_t lastdot = filename.find_last_of(".");
+	if (lastdot == std::string::npos) return filename;
+	printf("File: %s\n", filename.c_str());
+	printf("FileName: %s\n", filename.substr(0, lastdot).c_str());
+	return filename.substr(0, lastdot);
+}

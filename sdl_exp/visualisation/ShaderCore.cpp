@@ -325,7 +325,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLfloat *arry, 
 	}
 	return false;
 }
-bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *array, unsigned int count)
+bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count)
 {
 	//Purge any existing buffer which matches
 	for (auto a = staticUniforms.begin(); a != staticUniforms.end(); ++a)
@@ -336,7 +336,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *array, u
 			--a;
 		}
 	}
-	staticUniforms.push_front({ GL_INT, *reinterpret_cast<const glm::ivec4*>(array), count, uniformName });
+	staticUniforms.push_front({ GL_INT, *reinterpret_cast<const glm::ivec4*>(arry), count, uniformName });
 	if (this->programId > 0 && count > 0 && count <= 4)
 	{
 		GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
@@ -344,16 +344,16 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *array, u
 		{
 			glUseProgram(this->programId);
 			if (count == 1){
-				GL_CALL(glUniform1iv(location, 1, array));
+				GL_CALL(glUniform1iv(location, 1, arry));
 			}
 			else if (count == 2){
-				GL_CALL(glUniform2iv(location, 1, array));
+				GL_CALL(glUniform2iv(location, 1, arry));
 			}
 			else if (count == 3){
-				GL_CALL(glUniform3iv(location, 1, array));
+				GL_CALL(glUniform3iv(location, 1, arry));
 			}
 			else if (count == 4){
-				GL_CALL(glUniform4iv(location, 1, array));
+				GL_CALL(glUniform4iv(location, 1, arry));
 			}
 			glUseProgram(0);
 			return true;

@@ -41,7 +41,7 @@ namespace Stock
 Abstracts compilation of Shaders, and attempts to automatically bind uniforms and attributes.
 Each Shaders object is 'bound' to a single entity, so create a 2nd if you wish to use the same shaders with a seperate entity.
 */
-class Shaders : private ShaderCore
+class Shaders : public ShaderCore
 {
 public:
 	//These constants are the names that will be searched for when loading shaders
@@ -117,7 +117,9 @@ public:
 
 private:
 	void _clearProgram() override;
-	void _useProgram();
+	void _useProgram() override;
+	bool _compileShaders(const GLuint t_shaderProgram)override;
+	void _setupBindings() override;
     //Matrix uniform pointers
     UniformMatrixDetail modelview;
     UniformMatrixDetail projection;

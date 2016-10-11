@@ -81,7 +81,7 @@ Called when the user requests a reload
 void EntityScene::reload()
 {
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
-    this->billboardShaders->reload(true);
+    this->billboardShaders->reload();
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)

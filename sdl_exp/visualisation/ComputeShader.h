@@ -6,7 +6,7 @@
 #include "ShaderCore.h"
 #include "glm/glm.hpp"
 
-class ComputeShader : private ShaderCore
+class ComputeShader : public ShaderCore
 {
 	struct ShaderDetail
 	{

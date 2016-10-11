@@ -30,7 +30,8 @@ Constructs a shader program from the provided shader files
 @param camera The camera object to pull the modelView and projection matrices from
 */
 Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, const char *geometryShaderPath)
-    : vertexShaderPath(vertexShaderPath)
+	: ShaderCore(0)
+	, vertexShaderPath(vertexShaderPath)
     , fragmentShaderPath(fragmentShaderPath)
     , geometryShaderPath(geometryShaderPath)
     , vertexShaderVersion(0)
@@ -43,8 +44,6 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
     , colors(GL_FLOAT, 3, sizeof(float))
     , texcoords(GL_FLOAT, 2, sizeof(float))
-    , textures()
-    , programId(0)
 {
     GL_CHECK();
     this->createShaders();
@@ -78,94 +77,27 @@ Returns whether a geometry shader has been loaded
 bool Shaders::hasGeometryShader() const{
     return this->geometryShaderPath != 0;
 }
-/*
-Returns whether the last call to createShaders() (via object creation or a call to reload()) was successful
-@return True if the currently loaded shaders match the last loaded shaders
-*/
-bool Shaders::getCompileSuccess() const{
-    return this->compileSuccessFlag;
+bool Shaders::_compileShaders(const GLuint t_programId)
+{
+	if (vertexShaderFiles.size()>0)
+		if (!compileShader(t_programId, GL_VERTEX_SHADER, vertexShaderFiles))
+			return false;
+
+	if (fragmentShaderFiles.size()>0)
+		if (!compileShader(t_programId, GL_VERTEX_SHADER, fragmentShaderFiles))
+			return false;
+
+	if (geometryShaderFiles.size()>0)
+		if (!compileShader(t_programId, GL_VERTEX_SHADER, geometryShaderFiles))
+			return false;
+	return true;
 }
 /*
 Compiles the shader sources specified at the objects creation
 Errors are reported directly to stderr, and will cause compileSuccessFlag to be set to false
 Exiting the program on error can be configured by defining EXIT_ON_ERROR
 */
-void Shaders::createShaders(){
-    // Reset the flag
-    this->compileSuccessFlag = true;
-    // Load shader files
-    const char* vertexSource = loadShaderSource(this->vertexShaderPath);
-    const char* fragmentSource = loadShaderSource(this->fragmentShaderPath);
-    const char* geometrySource = loadShaderSource(this->geometryShaderPath);
-    //Check for shaders that didn't load correctly
-    if (vertexSource == 0) this->vertexShaderPath = 0;
-    if (fragmentSource == 0) this->fragmentShaderPath = 0;
-    if (geometrySource == 0) this->geometryShaderPath = 0;
-
-    // For each shader we have been able to read.
-    // Create the empty shader handle
-    // Attempt to compile the shader
-    // Check compilation
-    if (hasVertexShader()){
-        this->vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-        GL_CALL(glShaderSource(this->vertexShaderId, 1, &vertexSource, 0));
-        GL_CALL(glCompileShader(this->vertexShaderId));
-        this->checkShaderCompileError(this->vertexShaderId, this->vertexShaderPath);
-    }
-    else
-    {
-        this->vertexShaderId = -1;        
-    }
-    if (hasFragmentShader()){
-        this->fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-        GL_CALL(glShaderSource(this->fragmentShaderId, 1, &fragmentSource, 0));
-        GL_CALL(glCompileShader(this->fragmentShaderId));
-        this->checkShaderCompileError(this->fragmentShaderId, this->fragmentShaderPath);
-    }
-    else
-    {
-        this->fragmentShaderId = -1;        
-    }
-    if (hasGeometryShader()){
-        this->geometryShaderId = glCreateShader(GL_GEOMETRY_SHADER);
-        GL_CALL(glShaderSource(this->geometryShaderId, 1, &geometrySource, 0));
-        GL_CALL(glCompileShader(this->geometryShaderId));
-        this->checkShaderCompileError(this->geometryShaderId, this->geometryShaderPath);
-    }
-    else
-    {
-        this->geometryShaderId = -1;        
-    }
-    // Only attempt to link the program if the compilation of each individual shader was successful.
-    if (this->compileSuccessFlag){
-
-        // Create the program
-        int newProgramId = GL_CALL(glCreateProgram());
-
-        // Attach each included shader
-        if (this->hasVertexShader())
-            GL_CALL(glAttachShader(newProgramId, this->vertexShaderId));
-        if (this->hasFragmentShader())
-            GL_CALL(glAttachShader(newProgramId, this->fragmentShaderId));
-        if (this->hasGeometryShader())
-            GL_CALL(glAttachShader(newProgramId, this->geometryShaderId));
-        
-        // Link the program and Ensure the program compiled correctly;
-        GL_CALL(glLinkProgram(newProgramId));
-
-        this->checkProgramCompileError(newProgramId);
-        // If the program compiled ok, then we update the instance variable (for live reloading)
-        if (this->compileSuccessFlag){
-            // Destroy the old program
-            this->destroyProgram();
-            // Update the class var for the next usage.
-            this->programId = newProgramId;
-        }
-    }
-
-    //Compilation was successful, lets try and detect how to configure the shader
-    if (this->compileSuccessFlag)
-    {
+void Shaders::_setupBindings(){
         //Detect shader version numbers
         if (this->hasVertexShader())
             this->vertexShaderVersion = this->findShaderVersion(vertexSource);
@@ -224,80 +156,7 @@ void Shaders::createShaders(){
             this->colorUniformLocation = -1;
         this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
 
-        //Refresh dynamic uniforms
-        std::map<GLint, DynamicUniformDetail> t_dynamicUniforms;
-        for (std::map<GLint, DynamicUniformDetail>::iterator i = dynamicUniforms.begin(); i != dynamicUniforms.end(); i++)
-        {
-            DynamicUniformDetail d = i->second;
-            GLint location = GL_CALL(glGetUniformLocation(this->programId, i->second.uniformName));
-            if (location != -1)
-                t_dynamicUniforms[location] = d;
-            else//If the uniform isn't found again, assign it to a semi random location, in hopes of it not being lost from the map
-            {
-                lostDynamicUniforms.push_front(d);
-                printf("Dynamic uniform '%s' could not be located on shader reload.\n", d.uniformName);
-            }
-        }
-        //Check whether lost uniforms have reappeared
-        for (std::list<DynamicUniformDetail>::iterator i = lostDynamicUniforms.begin(); i != lostDynamicUniforms.end(); i++)
-        {
-            GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
-            if (location != -1)
-            {
-                t_dynamicUniforms[location] = *i;
-                lostDynamicUniforms.erase(i);
-            }
-            else//If the uniform isn't found again, remind the user
-            {
-                printf("Dynamic uniform '%s' remains not located on shader reload.\n", i->uniformName);
-            }
-        }
-        //Refresh static uniforms
-        glUseProgram(this->programId);
-        for (std::forward_list<StaticUniformDetail>::iterator i = staticUniforms.begin(); i != staticUniforms.end(); i++)
-        {
-            GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
-            if (location != -1)
-            {
-                if (i->type == GL_FLOAT)
-                {
-                    if (sizeof(int) != sizeof(float))
-                        printf("Error: int and float sizes differ, static float uniforms may be corrupted.\n");
-                    if (i->count == 1){
-                        GL_CALL(glUniform1fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
-                    }
-                    else if (i->count == 2){
-                        GL_CALL(glUniform2fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
-                    }
-                    else if (i->count == 3){
-                        GL_CALL(glUniform3fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
-                    }
-                    else if (i->count == 4){
-                        GL_CALL(glUniform4fv(location, 1, reinterpret_cast<GLfloat *>(glm::value_ptr(i->data))));
-                    }
-                }
-                else if (i->type == GL_INT)
-                {
-                    if (i->count == 1){
-                        GL_CALL(glUniform1iv(location, 1, glm::value_ptr(i->data)));
-                    }
-                    else if (i->count == 2){
-                        GL_CALL(glUniform2iv(location, 1, glm::value_ptr(i->data)));
-                    }
-                    else if (i->count == 3){
-                        GL_CALL(glUniform3iv(location, 1, glm::value_ptr(i->data)));
-                    }
-                    else if (i->count == 4){
-                        GL_CALL(glUniform4iv(location, 1, glm::value_ptr(i->data)));
-                    }
-                }
-            }
-            else//If the uniform isn't found again, remind the user
-            {
-                printf("Static uniform '%s' could not located on shader reload.\n", i->uniformName);
-            }
-        }
-        glUseProgram(0);
+
     }
 
     // Clean up any shaders

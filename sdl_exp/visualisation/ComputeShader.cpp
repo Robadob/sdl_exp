@@ -1,7 +1,11 @@
 #include "ComputeShader.h"
 
+ComputeShader::ComputeShader(const char *path, glm::uvec3 defaultLaunchConfig)
+	: ComputeShader({ path }, defaultLaunchConfig)
+{ }
 ComputeShader::ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig)
-	: lastLaunchConfig(defaultLaunchConfig)
+	: ShaderCore()
+	, lastLaunchConfig(defaultLaunchConfig)
 	, shaderFilePaths(paths)
 {
 	reload();
@@ -15,7 +19,6 @@ void ComputeShader::launch()
 		this->useProgram();
 		//Launch
 		glDispatchCompute(lastLaunchConfig.x, lastLaunchConfig.y, lastLaunchConfig.z);
-
 	}
 }
 glm::uvec3 ComputeShader::getMaxWorkGroupDims()
@@ -36,7 +39,6 @@ unsigned int ComputeShader::getMaxThreadsPerWorkGroup()
 	GL_CALL(glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &maxInvoc));
 	return maxInvoc;
 }
-
 bool ComputeShader::_compileShaders(const GLuint t_shaderProgram)
 {
 	return this->compileShader(t_shaderProgram, GL_COMPUTE_SHADER, shaderFilePaths);

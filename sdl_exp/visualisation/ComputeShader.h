@@ -11,9 +11,16 @@ class ComputeShader : public ShaderCore
 {
 public:
 	/**
-	 * Creates a compute shader
+	* Creates a compute shader from a single source file
+	* @param path File path to be included in the shader
+	* @param defaultLaunchConfig Default launch config (useful if you will be using the same config each launch)
+	*/
+	ComputeShader(const char * path, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
+	/**
+	 * Creates a compute shader from multiple source files
 	 * @param paths Init list of file paths to be included in the shader
 	 * @param defaultLaunchConfig Default launch config (useful if you will be using the same config each launch)
+	 * @note The file containing main() should be the final item (this is just an assumption)
 	 */
 	ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
 	/**
@@ -59,6 +66,10 @@ public:
 	 */
 	using ShaderCore::useProgram;
 private:
+	/**
+	* Calls compileShader() with shaderFilePaths
+	* @return The return value of the compileShader() call
+	*/
 	bool _compileShaders(const GLuint t_shaderProgram) override;
 	glm::uvec3 lastLaunchConfig; 	
 	std::initializer_list<const char *> shaderFilePaths;

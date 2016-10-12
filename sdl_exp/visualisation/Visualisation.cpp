@@ -43,9 +43,9 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     , renderAxisState(false)
     , axis(25)
     , msaaState(true)
-    , skybox(0)
-    , scene(0)
-    , fpsDisplay(0)
+    , skybox(nullptr)
+    , scene(nullptr)
+    , fpsDisplay(nullptr)
 {
     this->isInitialised = this->init();
 
@@ -92,7 +92,7 @@ bool Visualisation::init(){
         SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
         );
 
-    if (this->window == NULL){
+    if (this->window == nullptr){
         printf("window failed to init");
     }
     else {
@@ -204,16 +204,16 @@ void Visualisation::close(){
     if (this->scene)
     {
         this->scene->kill();
-        this->scene = 0;
+        this->scene = nullptr;
     }
     if (this->skybox)
     {
         delete this->skybox;
-        this->skybox = 0;
+        this->skybox = nullptr;
     }
     SDL_GL_DeleteContext(this->context);
     SDL_DestroyWindow(this->window);
-    this->window = 0;
+    this->window = nullptr;
     SDL_Quit();
 }
 /*
@@ -226,7 +226,7 @@ void Visualisation::render()
     static unsigned int updateTime = 0;
     SDL_Event e;
     // Handle continuous key presses (movement)
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    const Uint8 *state = SDL_GetKeyboardState(nullptr);
     float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
     if (state[SDL_SCANCODE_W]) {
         this->camera.move(DELTA_MOVE*turboMultiplier);
@@ -393,7 +393,7 @@ void Visualisation::setSkybox(bool state){
     else if (!state&&this->skybox)
     {
         delete this->skybox;
-        this->skybox = 0;
+        this->skybox = nullptr;
     }
 }
 /*

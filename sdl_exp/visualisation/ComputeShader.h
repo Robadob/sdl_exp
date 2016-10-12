@@ -1,12 +1,16 @@
 #ifndef __ComputeShader_h__
 #define __ComputeShader_h__
-/*
- * https://www.cg.tuwien.ac.at/courses/Realtime/repetitorium/rtr_rep_2014_ComputeShader.pdf
- */
 #include "ShaderCore.h"
 #include <glm/detail/type_vec2.hpp>
 #include <glm/detail/type_vec3.hpp>
 
+/**
+ * Class representative of a compute shader, it wraps the common bindings found in ShaderCore and adds a custom wrapper
+ * to glUseProgram();glDispatchCompute() which can be access via the numerous launch methods()
+ * Good intro to compute shaders here: https://www.cg.tuwien.ac.at/courses/Realtime/repetitorium/rtr_rep_2014_ComputeShader.pdf
+ * @see ShaderCore
+ * @author Rob
+ */
 class ComputeShader : public ShaderCore
 {
 public:
@@ -18,6 +22,7 @@ public:
 	ComputeShader(const char * path, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
 	/**
 	 * Creates a compute shader from multiple source files
+	 * Use this constructor if you wish to constructor a shader from multiple files (e.g. a common functions file)
 	 * @param paths Init list of file paths to be included in the shader
 	 * @param defaultLaunchConfig Default launch config (useful if you will be using the same config each launch)
 	 * @note The file containing main() should be the final item (this is just an assumption)
@@ -25,6 +30,10 @@ public:
 	ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
 	/**
 	* Launches the compute shader according to the provided launch configuration
+	* @param workGroupsX The number of work groups in the X axis
+	* @param workGroupsY The number of work groups in the Y axis
+	* @param workGroupsZ The number of work groups in the Z axis
+	* @note Workgroups are not threads, workgroups have their own upto 3D size which must be specified within the shaders code
 	*/
 	inline void launch(GLuint workGroupsX, GLuint workGroupsY = 1, GLuint workGroupsZ = 1)
 	{
@@ -32,6 +41,8 @@ public:
 	}
 	/**
 	* Launches the compute shader according to the provided launch configuration
+	* @param workGroups A 3D workgroup specification
+	* @note Workgroups are not threads, workgroups have their own upto 3D size which must be specified within the shaders code
 	*/
 	inline void launch(glm::uvec3 workGroups)
 	{
@@ -40,6 +51,8 @@ public:
 	}
 	/**
 	* Launches the compute shader according to the provided launch configuration
+	* @param workGroups A 2D workgroup specification
+	* @note Workgroups are not threads, workgroups have their own upto 3D size which must be specified within the shaders code
 	*/
 	inline void launch(glm::uvec2 workGroups)
 	{

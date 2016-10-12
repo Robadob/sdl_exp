@@ -19,7 +19,7 @@ const char* Texture::IMAGE_EXTS[] = {
 Texture::Texture(GLenum type, const char *texPath, char *uniformName)
     : texName(0)
     , texType(type)
-    , uniformName(uniformName == 0 ? TEXTURE_UNIFORM_NAME : uniformName)
+    , uniformName(uniformName == nullptr ? TEXTURE_UNIFORM_NAME : uniformName)
     , storageAllocated(false)
 {
     if (texPath)
@@ -64,8 +64,8 @@ This method attempts all the suffices stored in Texture::IMAGE_EXTS
 SDL_Surface *Texture::findImage(const char *imagePath)
 {
     if (!imagePath)
-        return 0;
-    SDL_Surface *image=0;
+        return nullptr;
+    SDL_Surface *image=nullptr;
     for (int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*);i++)
     {
         image = IMG_Load(std::string(imagePath).append(IMAGE_EXTS[i]).c_str());
@@ -95,7 +95,7 @@ SDL_Surface *Texture::readImage(const char *texturePath, bool printErr){
         if (printErr)
             fprintf(stderr, "'%s': Textures must be RGB or RGBA with 8 bits per colour.\n", texturePath);
         SDL_FreeSurface(image);
-        return 0;
+        return nullptr;
     }
     else if (image->format->Rshift>image->format->Bshift)
     {   //If the teture is BGR order rathern than RGB order, switch bytes
@@ -125,7 +125,7 @@ Loads a texture from the provided .png or .bmp file
 */
 void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
 {
-    if (image == 0)
+    if (image == nullptr)
         return;
     if (target == 0)
         target = texType;

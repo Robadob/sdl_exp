@@ -39,8 +39,8 @@ class Text : public Overlay
 		unsigned int height;
 	};
 public:
-    Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile = 0, unsigned int faceIndex = 0);
-    Text(const char *string, unsigned int fontHeight = 20, glm::vec4 color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), char const *fontFile = 0, unsigned int faceIndex = 0);
+    Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile = nullptr, unsigned int faceIndex = 0);
+    Text(const char *string, unsigned int fontHeight = 20, glm::vec4 color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), char const *fontFile = nullptr, unsigned int faceIndex = 0);
     virtual ~Text(); 
 	void reload() override;
     void setColor(glm::vec3 color);

@@ -86,7 +86,7 @@ namespace
         cudaResourceDesc resDesc;
         memset(&resDesc, 0, sizeof(cudaResourceDesc));
         //Return empty if invalid input
-        if (d_TexPointer == 0 ||
+        if (d_TexPointer == nullptr ||
             bufferSize == 0 ||
             componentCount == 0 ||
             componentCount > 4)
@@ -142,7 +142,7 @@ CUDATextureBuffer<T> *mallocGLInteropTextureBuffer(const unsigned int elementCou
     if (elementCount==0||
         t_componentCount == 0 ||
         t_componentCount>4)
-        return 0;
+        return nullptr;
     //Temporary storage of return values
     GLuint glTexName;
     GLuint glTBO;
@@ -163,7 +163,7 @@ CUDATextureBuffer<T> *mallocGLInteropTextureBuffer(const unsigned int elementCou
     GL_CALL(glGenBuffers(1, &glTBO));
     //Size buffer and tie to tex
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, glTBO));
-    GL_CALL(glBufferData(GL_TEXTURE_BUFFER, bufferSize, 0, GL_STATIC_DRAW));                                    //TODO dynamic draw better?
+    GL_CALL(glBufferData(GL_TEXTURE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW));                                    //TODO dynamic draw better?
 
     GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, glTexName));
     GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, internalFormat, glTBO));

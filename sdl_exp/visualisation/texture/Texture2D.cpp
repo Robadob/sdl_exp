@@ -20,7 +20,7 @@ This paramters of this function wrap setTexture()
 */
 Texture2D::Texture2D(char *uniformName, void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
     : Texture(GL_TEXTURE_2D, "", uniformName)
-    , texturePath(0)
+    , texturePath(nullptr)
 {
     setTexture(image, imageSize, width, height, internalFormat, format, type);
 }
@@ -38,7 +38,7 @@ Loads a texture from the provided pointer
 */
 void Texture2D::setTexture(void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
 {
-    if (image == 0)
+    if (image == nullptr)
         return;
 
     GL_CALL(glBindTexture(texType, texName));

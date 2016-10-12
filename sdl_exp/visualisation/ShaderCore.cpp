@@ -61,7 +61,7 @@ void ShaderCore::setupBindings()
 		t_dynamicUniforms.push_back(i->second);
 	}
 	dynamicUniforms.clear();
-	for (DynamicUniformDetail d : t_dynamicUniforms)
+	for (DynamicUniformDetail const &d : t_dynamicUniforms)
 	{
 		GLint location = GL_CALL(glGetUniformLocation(this->programId, d.uniformName));
 		if (location != -1)
@@ -127,7 +127,7 @@ void ShaderCore::setupBindings()
 		t_buffers.push_back(i->second);
 	}
 	buffers.clear();
-	for (BufferDetail d : t_buffers)
+	for (BufferDetail const &d : t_buffers)
 	{
 		GLuint location = GL_CALL(glGetProgramResourceIndex(this->programId, d.type, d.nameInShader));
 		if (location != GL_INVALID_INDEX)
@@ -147,10 +147,10 @@ void ShaderCore::setupBindings()
 }
 void ShaderCore::useProgram()
 {
+	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 	//Kill if shader isn't built
 	if (this->programId <= 0) reload();
 
-	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 
 	//Set any Texture buffers
 	for (auto utd: textures)
@@ -205,6 +205,7 @@ void ShaderCore::useProgram()
 }
 void ShaderCore::clearProgram()
 {
+	//Massively shorten this with glPopAttrib()?
 	this->_clearProgram();
 	GL_CALL(glUseProgram(0));
 }
@@ -261,14 +262,7 @@ bool ShaderCore::addDynamicUniform(DynamicUniformDetail d)
 	if (d.count > 0 && d.count <= 4)
 	{
 		//Purge any existing dynamic uniform which matches
-		for (auto a = lostDynamicUniforms.begin(); a != lostDynamicUniforms.end(); ++a)
-		{
-			if (std::string((*a).uniformName) == std::string(d.uniformName))
-			{
-				a = lostDynamicUniforms.erase(a);
-				--a;
-			}
-		}
+		removeDynamicUniform(d.uniformName);
 		if (this->programId > 0)
 		{
 			GLint location = GL_CALL(glGetUniformLocation(this->programId, d.uniformName));
@@ -289,14 +283,7 @@ bool ShaderCore::addDynamicUniform(DynamicUniformDetail d)
 bool ShaderCore::addStaticUniform(const char *uniformName, const GLfloat *arry, unsigned int count)
 {
 	//Purge any existing buffer which matches
-	for (auto a = staticUniforms.begin(); a != staticUniforms.end(); ++a)
-	{
-		if (std::string((*a).uniformName) == std::string(uniformName))
-		{
-			a = staticUniforms.erase(a);
-			--a;
-		}
-	}
+	removeStaticUniform(uniformName);
 	//Note we reinterpret_cast the data to from float to int
 	staticUniforms.push_front({ GL_FLOAT, *reinterpret_cast<const glm::ivec4*>(arry), count, uniformName });
 	if (this->programId > 0 && count > 0 && count <= 4)
@@ -330,14 +317,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLfloat *arry, 
 bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count)
 {
 	//Purge any existing buffer which matches
-	for (auto a = staticUniforms.begin(); a != staticUniforms.end(); ++a)
-	{
-		if (std::string((*a).uniformName) == std::string(uniformName))
-		{
-			a = staticUniforms.erase(a);
-			--a;
-		}
-	}
+	removeStaticUniform(uniformName);
 	staticUniforms.push_front({ GL_INT, *reinterpret_cast<const glm::ivec4*>(arry), count, uniformName });
 	if (this->programId > 0 && count > 0 && count <= 4)
 	{
@@ -370,14 +350,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, un
 bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName)
 {
 	//Purge any existing buffer which matches
-	for (auto a = lostBuffers.begin(); a != lostBuffers.end(); ++a)
-	{
-		if (std::string((*a).nameInShader) == std::string(bufferNameInShader))
-		{
-			a = lostBuffers.erase(a);
-			--a;
-		}
-	}
+	removeBuffer(bufferNameInShader);
 	if (this->programId > 0)
 	{
 		GLuint blockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, bufferType, bufferNameInShader));
@@ -499,7 +472,7 @@ std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, cons
 	return  std::pair<int, GLenum>(-1, 0);
 }
 //Util
-bool ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::initializer_list<const char *> shaderSourceFiles)
+int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::initializer_list<const char *> shaderSourceFiles)
 {
 	if (shaderSourceFiles.size() == 0) return false;
 	// Load shader files
@@ -518,7 +491,7 @@ bool ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::i
 			{
 				free(j);
 			}
-			return false;
+			return -1;
 		}
 	}
 	GLuint shaderId = createShader(type);
@@ -533,7 +506,7 @@ bool ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::i
 		{
 			free(j);
 		}
-		return false;
+		return -1;
 	}
 	//Attach shader to program
 	GL_CALL(glAttachShader(t_shaderProgram, shaderId));
@@ -549,7 +522,7 @@ bool ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::i
 	}
 	this->shaderTag = new char[shaderName.length() + 1];
 	strcpy(this->shaderTag, shaderName.c_str());
-	return true;
+	return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
 }
 char* ShaderCore::loadShaderSource(const char* file){
 	// If file path is 0 it is being omitted. kinda gross
@@ -625,14 +598,15 @@ bool ShaderCore::checkProgramLinkError(const GLuint programId) const{
 	}
 	return true;
 }
-//unsigned int ShaderCore::findShaderVersion(const char *shaderSource)
-//{
-//	static std::regex versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase);
-//	std::cmatch match;
-//	if (std::regex_search(shaderSource, match, versionRegex))
-//		return stoul(match[1]);
-//	return 0;
-//}
+unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSources)
+{
+	static std::regex versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase);
+	std::cmatch match;
+	for (auto shaderSource: shaderSources)
+		if (std::regex_search(shaderSource, match, versionRegex))
+			return stoul(match[1]);
+	return 0;
+}
 //_WIN32 is defined for both x86 and x64
 //https://msdn.microsoft.com/en-us/library/b0084kay.aspx
 #ifdef _WIN32 

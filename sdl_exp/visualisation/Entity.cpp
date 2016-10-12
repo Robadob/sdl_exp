@@ -76,7 +76,7 @@ Entity::Entity(
     , vn_count(0)
     , SCALE(modelScale)
     , modelPath(modelPath)
-    , material(0)
+    , material(nullptr)
     , color(1, 0, 0, 1)
     , location(0.0f)
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
@@ -136,7 +136,7 @@ void Entity::render(){
     if (this->material)
         this->material->useMaterial();
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-    GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
+    GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, nullptr));
     if (!cullFace)
         glEnable(GL_CULL_FACE);
     glPopMatrix();
@@ -163,7 +163,7 @@ void Entity::renderInstances(int count){
     if (this->material)
         this->material->useMaterial();
     GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
+    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, nullptr, count));
     if (!cullFace)
         glDisable(GL_CULL_FACE);
     glPopMatrix();
@@ -271,8 +271,8 @@ void Entity::loadModelFromFile()
     //MTL details
     char mtllib_tag[7] = "mtllib";
     char usemtl_tag[7] = "usemtl";
-    char *mtllib = 0;
-    char *usemtl = 0;
+    char *mtllib = nullptr;
+    char *usemtl = nullptr;
     //Count vertices/faces, attributes
     char c;
     int dotCtr;
@@ -423,12 +423,12 @@ exit_loop:;
     float *t_normals = (float *)malloc(normals.count * normals.components * normals.componentSize);
     float *t_texcoords = (float *)malloc(texcoords.count * texcoords.components*texcoords.componentSize);
     //3 parts to each face,store the relevant norm and tex indexes
-    unsigned int *t_norm_pos = 0;
+    unsigned int *t_norm_pos = nullptr;
     if (face_hasNormals)
         t_norm_pos = (unsigned int *)malloc(faces.count*faces.components*faces.componentSize);
     else
         normals.count = 0;
-    unsigned int *t_tex_pos = 0;
+    unsigned int *t_tex_pos = nullptr;
     if (face_hasTexcoords)
         t_tex_pos = (unsigned int *)malloc(faces.count*faces.components*faces.componentSize);
     else
@@ -633,17 +633,17 @@ exit_loop:;
                 {
                     //This is a vertex index
                 case 0: //Decrease value by 1, obj is 1-index, our arrays are 0-index
-                    ((unsigned int *)faces.data)[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    ((unsigned int *)faces.data)[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, nullptr, 0) - 1;
                     break;
                     //This is a normal index
                 case 1:
                     if (face_hasTexcoords)
                     {//Drop #2nd item onto texture if we have no normals
-                        t_tex_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                        t_tex_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, nullptr, 0) - 1;
                         break;
                     }
                 case 2:
-                    t_norm_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, 0, 0) - 1;
+                    t_norm_pos[(faces_read*faces.components) + (componentsRead / (1 + (int)face_hasNormals + (int)face_hasTexcoords))] = (unsigned int)std::strtoul(buffer, nullptr, 0) - 1;
                     break;
                     //This is a texture index
                 }
@@ -876,7 +876,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 
     //Open file
     FILE* file = fopen(materialPath.c_str(), "r");
-    if (file == NULL){
+    if (file == nullptr){
         fprintf(stderr, "Could not open material: '%s'!\n", materialPath.c_str());
         return;
     }
@@ -1019,7 +1019,7 @@ Frees the storage for the model's material
 void Entity::freeMaterial(){
     if (this->material){
         delete this->material;
-        this->material = 0;
+        this->material = nullptr;
     }
 }
 /*
@@ -1334,7 +1334,7 @@ std::shared_ptr<Shaders> Entity::getShaders() const
     if (shaders.get())
         return shaders;
     else
-        return std::shared_ptr<Shaders>(0);
+        return std::shared_ptr<Shaders>(nullptr);
 }
 /*
 Reloads the entities texture and shaders

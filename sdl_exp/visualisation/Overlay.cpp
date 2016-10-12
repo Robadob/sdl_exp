@@ -86,7 +86,7 @@ void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)
 	//Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo));
 	glPushMatrix(); 
-	    GL_CALL(glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0));
+	    GL_CALL(glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, nullptr));
 	glPopMatrix();
     //GL_CALL(glDisable(GL_BLEND));
 	if (this->shaders != nullptr)

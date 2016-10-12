@@ -8,7 +8,7 @@ Creates the texture buffer
 */
 template<class T>
 TextureBuffer<T>::TextureBuffer(char *uniformName, const unsigned int elementCount, const unsigned int componentCount, T *data)
-    : Texture(GL_TEXTURE_BUFFER, 0, uniformName)
+    : Texture(GL_TEXTURE_BUFFER, nullptr, uniformName)
     , elementCount(elementCount)
     , componentCount(componentCount)
 #ifdef __CUDACC__

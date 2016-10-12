@@ -148,7 +148,7 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	, anchorH(anchorH)
 	, zIndex(zIndex)
 	, vbo(0)
-	, data(0)
+	, data(nullptr)
 {
 	//Init vbo's
 	unsigned int bufferSize=0;
@@ -220,16 +220,16 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	if (anchorH == AnchorH::West)
 		bottomLeft->x = 0;
 	else if (anchorH == AnchorH::Center)
-		bottomLeft->x = (float)(int)((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
+		bottomLeft->x = floor((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorH == AnchorH::East)
-		bottomLeft->x = (float)width - (float)overlay->getWidth();
+		bottomLeft->x = width - overlay->getWidth();
 	//Anchor vertical
 	if (anchorV == AnchorV::South)
 		bottomLeft->y = 0;
 	else if (anchorV==AnchorV::Center)
-		bottomLeft->y = (float)(int)((height / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
+		bottomLeft->y = floor((height / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorV==AnchorV::North)
-		bottomLeft->y = ((float)height - (float)overlay->getHeight());
+		bottomLeft->y = height - overlay->getHeight();
 	//Apply offsets
     bottomLeft->x += x;
     bottomLeft->y += y;
@@ -248,7 +248,7 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     //If required, pass to shader
-    auto pair = Shaders::findUniform("_viewportDims", overlay->getShaders()->getProgram());
+    auto pair = ShaderCore::findUniform("_viewportDims", overlay->getShaders()->getProgram());
     if (std::get<0>(pair) != -1)
     {
         glm::ivec2 viewportDims(width, height);

@@ -41,5 +41,5 @@ unsigned int ComputeShader::getMaxThreadsPerWorkGroup()
 }
 bool ComputeShader::_compileShaders(const GLuint t_shaderProgram)
 {
-	return this->compileShader(t_shaderProgram, GL_COMPUTE_SHADER, shaderFilePaths);
+	return this->compileShader(t_shaderProgram, GL_COMPUTE_SHADER, shaderFilePaths)>=0;
 }

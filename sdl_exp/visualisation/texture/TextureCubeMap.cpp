@@ -22,7 +22,7 @@ Constructs a new cubemap texture from files in the provided directory
 */
 TextureCubeMap::TextureCubeMap(const char *cubemapDirectory, char *uniformName)
     :Texture(GL_TEXTURE_CUBE_MAP, cubemapDirectory, uniformName)
-    , texturePath(cubemapDirectory == 0 ? SKYBOX_PATH : cubemapDirectory)
+    , texturePath(cubemapDirectory == nullptr ? SKYBOX_PATH : cubemapDirectory)
 {
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     if (cubemapDirectory)

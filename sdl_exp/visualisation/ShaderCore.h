@@ -48,6 +48,7 @@ protected:
 	 */
 	virtual ~ShaderCore();
 public:
+	inline const char* getShaderTag(){ return this->shaderTag; }
 	/**
      * Reloads the shader source from file, recompiles it and rebinds all bound items
 	 * @note It is expected that subclass constructors call this method after configuring their sources
@@ -169,7 +170,27 @@ public:
 	* @return True if the program should exit on shader compilation failure
 	*/
 	static bool getExitOnError(){ return ShaderCore::exitOnError; }
+	/**
+	* Attempts to locate the specified uniform's location and type within the provided shader
+	* @param uniformName The name of the uniform
+	* @param shaderProgram The programId of the shader
+	* @return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
+	* @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
+	*/
+	static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
+	/**
+	* Attempts to locate the specified attribute's location and type
+	* @param attributeName The name of the attribute
+	* @param shaderProgram The programId of the shaderprogram
+	* @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
+	* @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
+	*/
+	static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
 private:
+	/**
+	 * Holds shaders thats have been compiled, so that they can be deleted
+	 * @see deleteShaders()
+	 */
 	std::vector<GLuint> floatingShaders;
 	/**
 	* Simply wraps glCreateShader(GLenum), so that we can track created shaders to clean them after linking
@@ -182,6 +203,7 @@ private:
 	}
 	/**
 	* Simply calls glDeleteShader(GLuint) on all values stored in floatingShaders and then clears floatingShaders
+	* Once they have been linked to the program, they are nolonger required
 	*/
 	void deleteShaders()
 	{
@@ -303,24 +325,9 @@ private:
 	std::map<GLuint, BufferDetail> buffers;
 	/**
 	* Holds buffers that were not found within the shader
+	* or went missing after a shader reload
 	*/
-	std::list<BufferDetail> lostBuffers;//Ones that went missing after a shader reload
-	/**
-	 * Attempts to locate the specified uniform's location and type within the provided shader
-	 * @param uniformName The name of the uniform
-	 * @param shaderProgram The programId of the shader
-	 * @return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
-	 * @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
-	 */
-	static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
-	/**
-	 * Attempts to locate the specified attribute's location and type
-	 * @param attributeName The name of the attribute
-	 * @param shaderProgram The programId of the shaderprogram
-	 * @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
-	 * @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
-	 */
-	static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
+	std::list<BufferDetail> lostBuffers;
 	/**
 	* Subclasses should use this to clear any enabled client states or attribute arrays
 	* If not overriden, does nothing
@@ -349,30 +356,27 @@ private:
 	* Called by setupBindings()
 	*/
 	virtual void _setupBindings()=0;
-
 protected:
 	/**
 	 * Compiles the specified shader source and attatches it to the provided program
-	 * @param t_ShaderProgram
+	 * @param t_shaderProgram The shader program to attach the compiled shader to
 	 * @param type GL_VERTEX_SHADER/GL_FRAGMENT_SHADER/GL_GEOMETRY_SHADER/GL_COMPUTE_SHADER
 	 * @param shaderSourceFiles An initialiser list ({a,b,c}) of paths to shader sources
-	 * @return True if no errors occured
+	 * @return The shader version detected, -1 on compilation failure
 	 */
-	bool compileShader(const GLuint t_shaderProgram, GLenum type, std::initializer_list<const char *> shaderSourceFiles);
+	int compileShader(const GLuint t_shaderProgram, GLenum type, std::initializer_list<const char *> shaderSourceFiles);
 	/**
 	 * Loads the text from the provided filepath
 	 * @return A pointer to the loaded shader source
 	 * @note the returned pointer is allocated via malloc, and should be free'd when nolonger required
 	 */
 	static char *loadShaderSource(const char *file);
-
 	/**
 	* Looks for the '#version xx' tag in the provided shader source and returns the numeric value
-	* @param shaderSource The shader code to detect the version from
+	* @param shaderSources The shader code to detect the version from
 	* @return The detected shader version, 0 if one was not found
 	*/
-	//static unsigned int findShaderVersion(const char *shaderSource);
-
+	static unsigned int findShaderVersion(std::vector<const char*> shaderSources);
 private:
 	/**
 	* Checks whether the specified shader compiled succesfully.

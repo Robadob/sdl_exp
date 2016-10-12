@@ -22,10 +22,10 @@ namespace Stock
             char *texturePath;
             Stock::Shaders::ShaderSet defaultShaders;
         };
-        const Model ICOSPHERE{ "../models/icosphere.obj", 0, Stock::Shaders::FLAT };
-        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", 0, Stock::Shaders::COLOR };//Remove texture?
-        const Model CUBE{ "../models/cube.obj", 0, Stock::Shaders::COLOR };
-        const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0, Stock::Shaders::PHONG };
+        const Model ICOSPHERE{ "../models/icosphere.obj", nullptr, Stock::Shaders::FLAT };
+        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", nullptr, Stock::Shaders::COLOR };//Remove texture?
+        const Model CUBE{ "../models/cube.obj", nullptr, Stock::Shaders::COLOR };
+        const Model ROTHWELL{ "../models/rothwell-wy-1.obj", nullptr, Stock::Shaders::PHONG };
         const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::TEXTURE };
     };
 };

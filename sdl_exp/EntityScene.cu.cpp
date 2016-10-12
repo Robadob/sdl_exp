@@ -19,7 +19,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, texBuf("_texBuf", PARTICLE_COUNT, 3)
 #endif
 	, billboardShaders(new Shaders(Stock::Shaders::BILLBOARD))
-	, particleSort(0)
+	, particleSort(nullptr)
 {
     registerEntity(deerModel);
     registerEntity(colorModel);
@@ -288,7 +288,7 @@ void EntityScene::renderParticles()
     glDisable(GL_CULL_FACE);
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
     glPushMatrix();
-	GL_CALL(glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, 0, PARTICLE_COUNT));
+	GL_CALL(glDrawElementsInstanced(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, nullptr, PARTICLE_COUNT));
     glPopMatrix();
 
     //Unload shader

@@ -47,7 +47,7 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     , backgroundColor(0.0f)
     , library()
     , font()
-    , string(0)
+    , string(nullptr)
     , fontHeight(fontHeight)
     , wrapDistance(800)
     , printMono(false)
@@ -165,7 +165,7 @@ void Text::recomputeTex() {
         if (error) continue;
 
         /* translate the glyph image now */
-        FT_Glyph_Transform(glyphs[i].image, 0, &glyphs[i].pos); 
+        FT_Glyph_Transform(glyphs[i].image, nullptr, &glyphs[i].pos); 
         
         penX += font->glyph->advance.x >> 6;
         previous = glyphs[i].index;
@@ -227,7 +227,7 @@ void Text::recomputeTex() {
         {
             if (newline)
                 glyphs[j].line++;
-            FT_Glyph_Transform(glyphs[j].image, 0, &newLineOffset);
+            FT_Glyph_Transform(glyphs[j].image, nullptr, &newLineOffset);
         }
         //Continue
     }
@@ -273,7 +273,7 @@ void Text::recomputeTex() {
             error = FT_Glyph_To_Bitmap(
                 &glyphs[i].image,
                 printMono ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_LIGHT, //FT_RENDER_MODE_NORMAL,FT_RENDER_MODE_MONO, FT_RENDER_MODE_LIGHT
-                0,                  /* no additional translation */
+                nullptr,                  /* no additional translation */
                 1);                /* destroy copy in "image"   */
             if (!error)
             {
@@ -466,7 +466,7 @@ void Text::setString(const char*fmt, ...) {
     int ct = 0;
     va_list argp;
     va_start(argp, fmt);
-    char *buffer=0;
+    char *buffer=nullptr;
     do
     {//Repeat until buffer is large enough
         if (buffer)
@@ -486,7 +486,7 @@ Creates a new TextureString which represents the texture holding the glyphs of t
 */
 Text::TextureString::TextureString()
     : Texture(GL_TEXTURE_2D, "")//_texture as default
-    , texture(0)
+    , texture(nullptr)
     , width(0)
     , height(0)
 {
@@ -525,7 +525,7 @@ void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders) {
     GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture[0]));
     GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
     GL_CALL(glBindTexture(texType, 0));
-    bindToShader(shaders.get(), 0);
+    bindToShader(shaders.get(), nullptr);
 }
 /*
 Frees the texture's data

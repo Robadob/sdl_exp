@@ -18,9 +18,9 @@ public:
     //void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
     //void deleteTextureBufferObject(GLuint *tbo); 
     
-    bool bindToShader(Shaders *s, char *uniformName = 0);
+    bool bindToShader(Shaders *s, char *uniformName = nullptr);
 protected:
-    Texture(GLenum type, const char *texPath = 0, char *uniformName = 0);
+    Texture(GLenum type, const char *texPath = nullptr, char *uniformName = nullptr);
     virtual ~Texture();
     static SDL_Surface *readImage(const char *texturePath, bool printErr = true);
     void setTexture(SDL_Surface *image, GLuint target = 0, bool dontFreeImage = false);

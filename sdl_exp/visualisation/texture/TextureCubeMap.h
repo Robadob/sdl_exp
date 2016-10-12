@@ -17,7 +17,7 @@ public:
     };
     static const CubeMapParts FACES[6];
 
-    TextureCubeMap(const char *texturePath = 0, char *uniformName = 0);
+    TextureCubeMap(const char *texturePath = nullptr, char *uniformName = nullptr);
     virtual ~TextureCubeMap(){}
     void reload() override;
 private:

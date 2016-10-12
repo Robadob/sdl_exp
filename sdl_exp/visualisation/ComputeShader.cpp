@@ -1,7 +1,7 @@
 #include "ComputeShader.h"
 
 ComputeShader::ComputeShader(const char *path, glm::uvec3 defaultLaunchConfig)
-	: ComputeShader({ path }, defaultLaunchConfig)
+	: ComputeShader(std::initializer_list<const char *>{ path }, defaultLaunchConfig)
 { }
 ComputeShader::ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig)
 	: ShaderCore()

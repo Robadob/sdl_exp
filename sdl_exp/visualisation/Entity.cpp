@@ -5,6 +5,8 @@
 #include <functional>
 #include <thread>
 #include <glm/gtx/component_wise.hpp>
+#include <algorithm>
+#include <locale>
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
@@ -68,20 +70,20 @@ Entity::Entity(
     std::shared_ptr<Shaders> shaders,
     std::shared_ptr<Texture> texture
     )
-    : positions(GL_FLOAT, 3, sizeof(float))
+    : shaders(shaders)
+    , texture(texture)
+    , SCALE(modelScale)
+    , modelPath(modelPath)
+    , vn_count(0)
+    , positions(GL_FLOAT, 3, sizeof(float))
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
     , colors(GL_FLOAT, 3, sizeof(float))
     , texcoords(GL_FLOAT, 2, sizeof(float))
     , faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
-    , vn_count(0)
-    , SCALE(modelScale)
-    , modelPath(modelPath)
     , material(nullptr)
     , color(1, 0, 0, 1)
     , location(0.0f)
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
-    , shaders(shaders)
-    , texture(texture)
     , cullFace(true)
 {
     GL_CHECK();
@@ -98,6 +100,8 @@ Entity::Entity(
         this->shaders->setNormalsAttributeDetail(normals);
         this->shaders->setColorsAttributeDetail(colors);
         this->shaders->setTexCoordsAttributeDetail(texcoords);
+		this->shaders->setRotationPtr(&this->rotation);
+		this->shaders->setTranslationPtr(&this->location);
     }
     if (needsExport)
     {
@@ -125,7 +129,7 @@ Calls the necessary code to render a single instance of the entity
 */
 void Entity::render(){
     if (this->shaders != nullptr)
-        shaders->useProgram(this);
+        shaders->useProgram();
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
@@ -152,7 +156,7 @@ The index of the instance being rendered can be identified within the vertex sha
 */
 void Entity::renderInstances(int count){
     if (this->shaders != nullptr)
-        shaders->useProgram(this);
+        shaders->useProgram();
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
@@ -1342,7 +1346,7 @@ Reloads the entities texture and shaders
 void Entity::reload()
 {
     if (shaders.get())
-        shaders->reload(true);
+        shaders->reload();
     if (texture.get())
         texture->reload();
 }

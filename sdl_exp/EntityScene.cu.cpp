@@ -1,6 +1,7 @@
 #include "EntityScene.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "visualisation/ComputeShader.h"
+#include <ctime>
 #define PARTICLE_COUNT 100
 /*
 Constructor, modify this to change what happens
@@ -70,8 +71,8 @@ Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
-    //colorModel->render();
-    //deerModel->render();
+    colorModel->render();
+    deerModel->render();
     //this->instancedSphere->renderInstances(100);
     renderParticles();
 }
@@ -161,9 +162,7 @@ void EntityScene::initParticles()
 	this->billboardShaders->addDynamicUniform("_up", reinterpret_cast<const GLfloat *>(this->visualisation.getCamera()->getUpPtr()), 3);
 	this->billboardShaders->addDynamicUniform("_right", reinterpret_cast<const GLfloat *>(this->visualisation.getCamera()->getRightPtr()), 3);
 	//Compute Shader
-	particleSort = new ComputeShader();
-	//particleSort->addShader("../shaders/bitonicMerge.comp");
-	particleSort->addShader("../shaders/bitonicNetwork.comp");
+	particleSort = new ComputeShader("../shaders/bitonicNetwork.comp");
 	float *tempData = (float*)malloc(sizeof(float) * 4 * PARTICLE_COUNT);
 	int j = 0;
 	for (int i = 0; i < PARTICLE_COUNT; i++)
@@ -190,7 +189,7 @@ void EntityScene::initParticles()
 
 	GL_CALL(glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0));
 
-	nextPow2 = ceil(log(PARTICLE_COUNT) / log(2));
+	nextPow2 = (int)ceil(log(PARTICLE_COUNT) / log(2));
 
 	//Find compute shader uniforms
 	particleCtLoc = GL_CALL(glGetUniformLocation(particleSort->getProgram(), "particleCount"));
@@ -246,7 +245,7 @@ void EntityScene::renderParticles()
 			//Update uniforms
 			int pc = PARTICLE_COUNT;
 			GL_CALL(glUniform1iv(particleCtLoc, 1, (GLint *)&pc));
-			int tc = pow(2, nextPow2 - 1);
+			int tc = (int)pow(2, nextPow2 - 1);
 			GL_CALL(glUniform1iv(threadCtLoc, 1, (GLint *)&tc));
 			GL_CALL(glUniform1iv(hopLoc, 1, (GLint *)&hop));
 			GL_CALL(glUniform1iv(hop2Loc, 1, (GLint *)&hop2));
@@ -254,7 +253,7 @@ void EntityScene::renderParticles()
 			int dir = 1;//Direction must be inverse throughout sequence for non 2^n populations to work
 			GL_CALL(glUniform1iv(directionLoc, 1, (GLint *)&dir));
 			GL_CALL(glUniform3fv(eyeLoc, 1, (GLfloat *)visualisation.getCamera()->getEyePtr()));
-			particleSort->launch(ceil((PARTICLE_COUNT / 2.0f) / 256.0));
+			particleSort->launch((unsigned int)ceil((PARTICLE_COUNT / 2.0f) / 256.0));
 			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 		}
 	}
@@ -267,7 +266,7 @@ void EntityScene::renderParticles()
 		//Update uniforms
 		int pc = PARTICLE_COUNT;
 		GL_CALL(glUniform1iv(particleCtLoc, 1, (GLint *)&pc));
-		int tc = pow(2, nextPow2 - 1);
+		int tc = (int)pow(2, nextPow2 - 1);
 		GL_CALL(glUniform1iv(threadCtLoc, 1, (GLint *)&tc));
 		GL_CALL(glUniform1iv(hopLoc, 1, (GLint *)&hop));
 		GL_CALL(glUniform1iv(hop2Loc, 1, (GLint *)&hop2));
@@ -275,7 +274,7 @@ void EntityScene::renderParticles()
 		GL_CALL(glUniform1iv(periodisationLoc, 1, (GLint *)&pc));//The particle count sets direction to 0 throughout
 		int dir = -1;//-1 Dir gives us them in descending order (+1 for asc)
 		GL_CALL(glUniform1iv(directionLoc, 1, (GLint *)&dir));
-		particleSort->launch(ceil((PARTICLE_COUNT / 2.0f) / 256.0));
+		particleSort->launch((unsigned int)ceil((PARTICLE_COUNT / 2.0f) / 256.0));
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 	//Render them

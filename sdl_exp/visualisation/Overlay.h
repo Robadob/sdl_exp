@@ -4,9 +4,10 @@
 #include <memory>
 #include "HUD.h"
 
-/*
-Represents a 2d quad rendered in orthographic over the screen.
-*/
+/**
+ * Represents a 2d quad rendered in orthographic over the screen.
+ * @todo Why doesn't the overlay hold it's own location and calculate it's own matrices?
+ */
 class Overlay
 {
 	friend class HUD;

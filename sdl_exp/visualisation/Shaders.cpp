@@ -347,7 +347,7 @@ void Shaders::_useProgram()
 	for (GenericVAD const &a : gvads)
 	{
 		//Set the generic vertex attributes
-		if (this->texcoords.location >= 0 && a.vbo > 0)
+		if (a.location >= 0 && a.vbo > 0)
 		{//If generic vertex attribute location and vbo are known
 			GL_CALL(glEnableVertexAttribArray(a.location));
 			GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, a.vbo));
@@ -383,7 +383,7 @@ void Shaders::_clearProgram(){
     {//If vertex attribute location and vbo are known
         glDisableVertexAttribArray(this->colors.location);
     }
-    //Vertex color
+    //Tex Coord
     if (this->vertexShaderVersion <= 140 && this->texcoords.vbo > 0)
     {//If old shaders where gl_Color is available
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -432,7 +432,7 @@ bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttribu
 bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 {
 	bool rtn = false;
-	for (auto a = lostGvads.begin(); a != lostGvads.end(); ++a)
+	for (auto a = lostGvads.begin(); a != lostGvads.end();)
 	{
 		if (std::string((*a).attributeName) == std::string(attributeName))
 		{
@@ -440,8 +440,10 @@ bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
-	for (auto a = gvads.begin(); a != gvads.end(); ++a)
+	for (auto a = gvads.begin(); a != gvads.end();)
 	{
 		if (std::string((*a).attributeName) == std::string(attributeName))
 		{
@@ -449,6 +451,8 @@ bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
 	return rtn;
 }

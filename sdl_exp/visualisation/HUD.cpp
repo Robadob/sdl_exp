@@ -222,14 +222,14 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	else if (anchorH == AnchorH::Center)
 		bottomLeft->x = floor((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorH == AnchorH::East)
-		bottomLeft->x = width - overlay->getWidth();
+		bottomLeft->x = static_cast<float>(width - overlay->getWidth());
 	//Anchor vertical
 	if (anchorV == AnchorV::South)
 		bottomLeft->y = 0;
 	else if (anchorV==AnchorV::Center)
 		bottomLeft->y = floor((height / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorV==AnchorV::North)
-		bottomLeft->y = height - overlay->getHeight();
+		bottomLeft->y = static_cast<float>(height - overlay->getHeight());
 	//Apply offsets
     bottomLeft->x += x;
     bottomLeft->y += y;

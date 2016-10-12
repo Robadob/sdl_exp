@@ -149,8 +149,14 @@ void ShaderCore::useProgram()
 {
 	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 	//Kill if shader isn't built
-	if (this->programId <= 0) reload();
+	if (this->programId <= 0)
+	{
+		reload();
+		if (this->programId <= 0)
+			return;
+	}
 
+	GL_CALL(glUseProgram(this->programId));
 
 	//Set any Texture buffers
 	for (auto utd: textures)
@@ -211,21 +217,25 @@ void ShaderCore::clearProgram()
 }
 void ShaderCore::destroyProgram()
 {
-	this->clearProgram();
-	GL_CALL(glDeleteProgram(this->programId));
-	this->programId = -1;
+	if (this->programId>0)
+	{
+		this->clearProgram();
+		GL_CALL(glDeleteProgram(this->programId));
+		this->programId = -1;
+	}
 }
 //Bindings
 int ShaderCore::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
 {
 	//Purge any existing buffer which matches
-	for (auto a = textures.begin(); a != textures.end(); ++a)
+	for (auto a = textures.begin(); a != textures.end();)
 	{
 		if ((*a).second.name == texture)
 		{
 			a = textures.erase(a);
-			--a;
 		}
+		else
+			++a;
 	}
 	//Find the first free key	
 	GLint bufferId = 0;
@@ -375,44 +385,47 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 bool ShaderCore::removeDynamicUniform(const char *uniformName)
 {
 	bool rtn = false;
-	for (auto a = lostDynamicUniforms.begin(); a != lostDynamicUniforms.end(); ++a)
+	for (auto a = lostDynamicUniforms.begin(); a != lostDynamicUniforms.end();)
 	{
 		if (std::string((*a).uniformName) == std::string(uniformName))
 		{
 			a = lostDynamicUniforms.erase(a);
-			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
-	for (auto a = dynamicUniforms.begin(); a != dynamicUniforms.end(); ++a)
+	for (auto a = dynamicUniforms.begin(); a != dynamicUniforms.end();)
 	{
 		if (std::string((*a).second.uniformName) == std::string(uniformName))
 		{
 			a = dynamicUniforms.erase(a);
-			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
 	return rtn;
 }
 bool ShaderCore::removeStaticUniform(const char *uniformName)
 {
 	bool rtn = false;
-	for (auto a = staticUniforms.begin(); a != staticUniforms.end(); ++a)
+	for (auto a = staticUniforms.begin(); a != staticUniforms.end();)
 	{
 		if (std::string((*a).uniformName) == std::string(uniformName))
 		{
 			a = staticUniforms.erase(a);
-			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
 	return rtn;
 }
 bool ShaderCore::removeTextureUniform(const char *uniformName)
 {
 	bool rtn = false;
-	for (auto a = staticUniforms.begin(); a != staticUniforms.end(); ++a)
+	for (auto a = staticUniforms.begin(); a != staticUniforms.end();)
 	{
 		if (std::string((*a).uniformName) == std::string(uniformName))
 		{
@@ -421,13 +434,15 @@ bool ShaderCore::removeTextureUniform(const char *uniformName)
 			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
 	return rtn;
 }
 bool ShaderCore::removeBuffer(const char *nameInShader)
 {
 	bool rtn = false;
-	for (auto a = lostBuffers.begin(); a != lostBuffers.end(); ++a)
+	for (auto a = lostBuffers.begin(); a != lostBuffers.end();)
 	{
 		if (std::string((*a).nameInShader) == std::string(nameInShader))
 		{
@@ -435,8 +450,10 @@ bool ShaderCore::removeBuffer(const char *nameInShader)
 			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
-	for (auto a = buffers.begin(); a != buffers.end(); ++a)
+	for (auto a = buffers.begin(); a != buffers.end();)
 	{
 		if (std::string((*a).second.nameInShader) == std::string(nameInShader))
 		{
@@ -444,6 +461,8 @@ bool ShaderCore::removeBuffer(const char *nameInShader)
 			--a;
 			rtn = true;
 		}
+		else
+			++a;
 	}
 	return rtn;
 }
@@ -633,15 +652,11 @@ std::string ShaderCore::getFilenameFromPath(const char* filePath)
 		std::find_if(pathname.rbegin(), pathname.rend(),
 		MatchPathSeparator()).base(),
 		pathname.end());
-	printf("File: %s\n", filePath);
-	printf("FileName: %s\n", result.c_str());
 	return result;
 }
 std::string ShaderCore::removeFileExt(const std::string &filename)
 {
 	size_t lastdot = filename.find_last_of(".");
 	if (lastdot == std::string::npos) return filename;
-	printf("File: %s\n", filename.c_str());
-	printf("FileName: %s\n", filename.substr(0, lastdot).c_str());
 	return filename.substr(0, lastdot);
 }

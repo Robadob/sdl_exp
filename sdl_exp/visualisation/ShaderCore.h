@@ -48,7 +48,7 @@ protected:
 	 */
 	virtual ~ShaderCore();
 public:
-	inline const char* getShaderTag(){ return this->shaderTag; }
+	inline const char* getShaderTag() const { return this->shaderTag; }
 	/**
      * Reloads the shader source from file, recompiles it and rebinds all bound items
 	 * @note It is expected that subclass constructors call this method after configuring their sources
@@ -333,13 +333,13 @@ private:
 	* If not overriden, does nothing
 	* Called by clearProgram()
 	*/
-	virtual void _clearProgram() {};
+	virtual void _clearProgram() {}
 	/**
 	* Subclasses should use this to apply any subclass specific shader bindings
 	* If not overriden, does nothing
 	* Called by useProgram()
 	*/
-	virtual void _useProgram() {};
+	virtual void _useProgram() {}
 	/**
 	* Subclasses should use this to call compileShader() with each shader src
 	* @param t_shaderProgram Temporary shader program ID which succesfully compiled shaders should be attatched to
@@ -355,7 +355,7 @@ private:
 	* Locates all subclass specific bound uniforms, attributes, textures and storage within the shader
 	* Called by setupBindings()
 	*/
-	virtual void _setupBindings()=0;
+	virtual void _setupBindings() {}
 protected:
 	/**
 	 * Compiles the specified shader source and attatches it to the provided program

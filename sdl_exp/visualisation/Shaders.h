@@ -34,6 +34,8 @@ namespace Stock
 /**
  * Abstracts compilation of Shaders, and attempts to automatically bind uniforms and attributes.
  * Each Shaders object is 'bound' to a single entity, so create a 2nd if you wish to use the same shaders with a seperate entity.
+ * @note There is an implementation specific limit of around 16 vertex attribute bindings you can have to any shader, this not enforced by this class
+ * @note Floating point attribute binding do not automatically normalise values (the parameter is always passed as false)
  * @todo Confirm that we do need re-call glVertexAttribPointer on shader re-use, or can we just bind it once
  * @todo Switch all pointers to weak_ptr
 */
@@ -73,7 +75,7 @@ public:
             , offset(0)
             , stride(0)
         {}
-        GLenum componentType;       //Type
+        GLenum componentType;       //Type: GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, and GL_UNSIGNED_INT
         unsigned int components;    //Number of vector components per attribute (Must be 2, 3 or 4)
         unsigned int componentSize; //Both:
         void *data;                 //Pointer to the attribute data in memory

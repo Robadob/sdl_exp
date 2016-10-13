@@ -273,8 +273,19 @@ void Shaders::_useProgram()
     if (this->positions.location >= 0 && this->positions.vbo > 0)
     {//If vertex attribute location and vbo are known
 		GL_CALL(glEnableVertexAttribArray(this->positions.location));
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->positions.vbo));
-		GL_CALL(glVertexAttribPointer(this->positions.location, this->positions.components, this->positions.componentType, GL_FALSE, this->positions.stride, static_cast<char *>(nullptr) + this->positions.offset));
+		GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->positions.vbo));
+		if (this->positions.componentType == GL_FLOAT || this->positions.componentType == GL_HALF_FLOAT)
+		{
+			GL_CALL(glVertexAttribPointer(this->positions.location, this->positions.components, this->positions.componentType, GL_FALSE, this->positions.stride, static_cast<char *>(nullptr) + this->positions.offset));
+		}
+		else if (this->positions.componentType == GL_DOUBLE)
+		{
+			GL_CALL(glVertexAttribLPointer(this->positions.location, this->positions.components, this->positions.componentType, this->positions.stride, static_cast<char *>(nullptr) + this->positions.offset));
+		}
+		else
+		{
+			GL_CALL(glVertexAttribIPointer(this->positions.location, this->positions.components, this->positions.componentType, this->positions.stride, static_cast<char *>(nullptr) + this->positions.offset));
+		}
         activeVBO = this->positions.vbo;
     }
 
@@ -296,8 +307,19 @@ void Shaders::_useProgram()
         {
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normals.vbo));
             activeVBO = this->normals.vbo;
-        }
-		GL_CALL(glVertexAttribPointer(this->normals.location, this->normals.components, this->positions.componentType, GL_FALSE, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+		}
+		if (this->normals.componentType == GL_FLOAT || this->normals.componentType == GL_HALF_FLOAT)
+		{
+			GL_CALL(glVertexAttribPointer(this->normals.location, this->normals.components, this->positions.componentType, GL_FALSE, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+		}
+		else if (this->normals.componentType == GL_DOUBLE)
+		{
+			GL_CALL(glVertexAttribLPointer(this->normals.location, this->normals.components, this->positions.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+		}
+		else
+		{
+			GL_CALL(glVertexAttribIPointer(this->normals.location, this->normals.components, this->positions.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+		}
     }
     //Set the vertex color attributes
     if (this->vertexShaderVersion <= 120 && this->colors.vbo > 0)
@@ -317,8 +339,19 @@ void Shaders::_useProgram()
         {
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->colors.vbo));
             activeVBO = this->colors.vbo;
-        }
-		GL_CALL(glVertexAttribPointer(this->colors.location, this->colors.components, this->colors.componentType, GL_FALSE, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset));
+		}
+		if (this->colors.componentType == GL_FLOAT || this->colors.componentType == GL_HALF_FLOAT)
+		{
+			GL_CALL(glVertexAttribPointer(this->colors.location, this->colors.components, this->colors.componentType, GL_FALSE, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset));
+		}
+		else if (this->colors.componentType == GL_DOUBLE)
+		{
+			GL_CALL(glVertexAttribLPointer(this->colors.location, this->colors.components, this->colors.componentType, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset));
+		}
+		else
+		{
+			GL_CALL(glVertexAttribIPointer(this->colors.location, this->colors.components, this->colors.componentType, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset));
+		}
     }
 
     //Set the vertex texture coord attributes
@@ -339,8 +372,19 @@ void Shaders::_useProgram()
         {
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
             activeVBO = this->texcoords.vbo;
-        }
-        GL_CALL(glVertexAttribPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, GL_FALSE, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset));
+		}
+		if (this->texcoords.componentType == GL_FLOAT || this->texcoords.componentType == GL_HALF_FLOAT)
+		{
+			GL_CALL(glVertexAttribPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, GL_FALSE, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset));
+		}
+		else if (this->texcoords.componentType == GL_DOUBLE)
+		{
+			GL_CALL(glVertexAttribLPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset));
+		}
+		else
+		{
+			GL_CALL(glVertexAttribIPointer(this->texcoords.location, this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset));
+		}
     }
 
 	//Generics
@@ -351,7 +395,18 @@ void Shaders::_useProgram()
 		{//If generic vertex attribute location and vbo are known
 			GL_CALL(glEnableVertexAttribArray(a.location));
 			GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, a.vbo));
-			GL_CALL(glVertexAttribPointer(a.location, a.components, a.componentType, GL_FALSE, a.stride, static_cast<char *>(nullptr) + a.offset));
+			if (a.componentType == GL_FLOAT || a.componentType == GL_HALF_FLOAT)
+			{
+				GL_CALL(glVertexAttribPointer(a.location, a.components, a.componentType, GL_FALSE, a.stride, static_cast<char *>(nullptr) + a.offset));
+			}
+			else if (a.componentType == GL_DOUBLE)
+			{
+				GL_CALL(glVertexAttribLPointer(a.location, a.components, a.componentType, a.stride, static_cast<char *>(nullptr) + a.offset));
+			}
+			else
+			{
+				GL_CALL(glVertexAttribIPointer(a.location, a.components, a.componentType, a.stride, static_cast<char *>(nullptr) + a.offset));
+			}
 		}
 	}
 }

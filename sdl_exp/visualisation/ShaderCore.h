@@ -250,7 +250,7 @@ private:
 	/**
 	* Holds dynamic uniforms that were not found within the shader
 	*/
-	std::list<DynamicUniformDetail> lostDynamicUniforms;//Ones that went missing after a shader reload
+	std::list<DynamicUniformDetail> lostDynamicUniforms;
 	/**
 	* Holds all the necessary information for binding static uniform int and float vectors
 	*/

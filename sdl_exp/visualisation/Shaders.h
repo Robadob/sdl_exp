@@ -32,10 +32,10 @@ namespace Stock
     };
 };
 /**
- * Abstracts compilation of Shaders, and attempts to automatically bind uniforms and attributes.
- * Each Shaders object is 'bound' to a single entity, so create a 2nd if you wish to use the same shaders with a seperate entity.
+ * Abstracts compilation of Shaders, and attempts to automatically bind provided uniforms and vertex attributes on useProgram()
+ * Bindings are tied to the specific shader, if you wish to use the same shader for 2 entities it might be best to make a 2nd instance
  * @note There is an implementation specific limit of around 16 vertex attribute bindings you can have to any shader, this not enforced by this class
- * @note Floating point attribute binding do not automatically normalise values (the parameter is always passed as false)
+ * @note Floating point attribute bindings do not automatically normalise values (the parameter is always passed as false)
  * @todo Confirm that we do need re-call glVertexAttribPointer on shader re-use, or can we just bind it once
  * @todo Switch all pointers to weak_ptr
 */
@@ -50,16 +50,34 @@ public:
 	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
 	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
 	static const char *TEXCOORD_ATTRIBUTE_NAME;// = "_texCoords";
-
+	/**
+	 * This structure represents the details necessary to correctly bind a uniform matrix (e.g. model view/projection)
+	 */
     struct UniformMatrixDetail
     {
 		UniformMatrixDetail(int location = -1, const glm::mat4 *matrixPtr = nullptr)
             :location(location), matrixPtr(matrixPtr) { }
-        int location; //Uniform location within shader
-		const glm::mat4 *matrixPtr; //Pointer to the matrix to be loaded
-    };
+		/**
+		 * This value is set internally when we detect that your shader has a suitable uniform location
+		 */
+        int location;
+		/**
+		 * Const pointer to the matrix to be loaded
+		 */
+		const glm::mat4 *matrixPtr;
+	};
+	/**
+	* This structure represents the details necessary to correctly bind a vertex attribute (e.g. vertex positions, normals, tex coords)
+	* Most of the member vars provide a specification of how the array of vertex attributes is stored in the vbo
+	* Each vertex attribute should be a vector [element of the array], and has 2-4 components
+	* Multiple vertex attributes can share a vbo, with their data either packed one after the other, or interleaved.
+	*/
     struct VertexAttributeDetail
     {
+		/**
+		 * Other values should be set after creation
+		 * location can be ignored as this is used internally
+		 */
         VertexAttributeDetail(
             GLenum componentType,
             unsigned int components, 
@@ -75,15 +93,47 @@ public:
             , offset(0)
             , stride(0)
         {}
-        GLenum componentType;       //Type: GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, and GL_UNSIGNED_INT
+		/**
+		 * Underlying component type expressed as GLenum
+		 * e.g. Most cases will be float4/glm::vec4 which are GL_FLOAT
+		 * Options: GL_HALF_FLOAT, GL_FLOAT, GL_DOUBLE, GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, and GL_UNSIGNED_INT
+		 */
+        GLenum componentType;
+		/**
+		 * Number of vector components (Must be 2,3 or 4)
+		 */
         unsigned int components;    //Number of vector components per attribute (Must be 2, 3 or 4)
+		/**
+		* Size of the component as specified in componentType
+		* e.g. sizeof(float)
+		*/
         unsigned int componentSize; //Both:
-        void *data;                 //Pointer to the attribute data in memory
-        unsigned int count;         //Number of attributes contained
-        GLuint vbo;                 //Vertex buffer object used
-        int location;               //Attribute location within shader
-        unsigned int offset;        //Specifies the offset within the vbo
-        unsigned int stride;        //Spacing between elements within the array
+		/**
+		 * Pointer to the attribute data in memory
+		 */
+        void *data;
+		/**
+		 * Number of attributes in the array
+		 */
+        unsigned int count;
+		/**
+		 * VBO name as returned by glGenBuffers()
+		 */
+        GLuint vbo;
+		/**
+		 * This value is internally set when the Shader object detects a suitable binding location
+		 */
+        int location; 
+		/**
+		 * The offset from the start of the vbo which attribute data begins
+		 * @note You store multiple vertex attribute arrays in the same vbo
+		 */
+        unsigned int offset;
+		/**
+		 * Spacing between elements within the array
+		 * @note This is value is 0 unless the data is interleaved
+		 */
+        unsigned int stride;
      };
 	/**
 	 * Constructs a shader object from one of the stock shader sets
@@ -108,7 +158,9 @@ public:
 	*/
 	Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath = {}, std::initializer_list <const char *> geometryShaderPath = {});
     ~Shaders();
-
+	/**
+	 * @return True if this shader object has a vertex shader
+	 */
     bool hasVertexShader() const;
     bool hasFragmentShader() const;
     bool hasGeometryShader() const;

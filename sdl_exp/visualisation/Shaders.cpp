@@ -1,13 +1,9 @@
-//Define EXIT_ON_ERROR to cause the program to exit when shader compilation fails
-
 #include "Shaders.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
-
-#include "Entity.h"
 
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
@@ -167,10 +163,10 @@ void Shaders::_setupBindings(){
 	t_gvad.splice(t_gvad.end(), gvads);
 	for (GenericVAD gvad : t_gvad)
 	{
-		std::pair<int, GLenum> a_N = findAttribute(gvad.attributeName, this->getProgram());
-		if (a_N.first >= 0)
+		std::pair<int, GLenum> a_G = findAttribute(gvad.attributeName, this->getProgram());
+		if (a_G.first >= 0)
 		{
-			gvad.location = a_N.first;
+			gvad.location = a_G.first;
 			gvads.push_back(gvad);
 		}
 		else
@@ -180,41 +176,6 @@ void Shaders::_setupBindings(){
 		}
 	}
 }
-/*
-Call to setup shader with external modelview and projection matrices
-@note Used by Overlay/HUD
-*/
-//void Shaders::useProgram(const glm::mat4 *mv, const glm::mat4 *proj)
-//{
-//	ShaderCore::useProgram();
-//
-//	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-//	if (this->vertexShaderVersion <= 120 && proj)
-//	{//If old shaders where gl_ModelViewProjectionMatrix is available
-//		glMatrixMode(GL_PROJECTION);
-//		GL_CALL(glLoadMatrixf(glm::value_ptr(*proj)));
-//	}
-//	if (this->projection.location >= 0 && proj )
-//	{//If projection matrix location and camera ptr are known
-//		GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*proj)));
-//	}
-//	//Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
-//	if (this->vertexShaderVersion <= 120 && mv )
-//	{//If old shaders where gl_ModelViewMatrix is available
-//		glMatrixMode(GL_MODELVIEW);
-//		GL_CALL(glLoadMatrixf(glm::value_ptr(*mv)));
-//	}
-//	if (this->modelview.location >= 0 && mv)
-//	{//If modeview matrix location and camera ptr are known
-//		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(*mv)));
-//	}
-//	//Set the model view projection matrix (e.g. projection * modelview)
-//	if (this->modelviewprojection >= 0 && mv && proj)
-//	{
-//		glm::mat4 mvp = *proj * *mv;
-//		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
-//	}
-//}
 //Overrides
 void Shaders::_useProgram()
 {
@@ -394,7 +355,11 @@ void Shaders::_useProgram()
 		if (a.location >= 0 && a.vbo > 0)
 		{//If generic vertex attribute location and vbo are known
 			GL_CALL(glEnableVertexAttribArray(a.location));
-			GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, a.vbo));
+			if (activeVBO != a.vbo)
+			{
+				GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, a.vbo));
+				activeVBO = a.vbo;
+			}
 			if (a.componentType == GL_FLOAT || a.componentType == GL_HALF_FLOAT)
 			{
 				GL_CALL(glVertexAttribPointer(a.location, a.components, a.componentType, GL_FALSE, a.stride, static_cast<char *>(nullptr) + a.offset));

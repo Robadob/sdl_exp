@@ -74,7 +74,7 @@ void EntityScene::render()
     colorModel->render();
     deerModel->render();
     //this->instancedSphere->renderInstances(100);
-    renderParticles();
+	renderParticles();
 }
 /*
 Called when the user requests a reload
@@ -280,7 +280,7 @@ void EntityScene::renderParticles()
 	//Render them
     GL_CALL(glEnable(GL_BLEND));
 	//GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    GL_CALL(glDisable(GL_DEPTH_TEST));
+    //GL_CALL(glDisable(GL_DEPTH_TEST));
     //Use Shader
     billboardShaders->useProgram();
     //Render quad
@@ -295,5 +295,5 @@ void EntityScene::renderParticles()
     billboardShaders->clearProgram();
 
     GL_CALL(glDisable(GL_BLEND));
-    GL_CALL(glEnable(GL_DEPTH_TEST));
+    //GL_CALL(glEnable(GL_DEPTH_TEST));
 }

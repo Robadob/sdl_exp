@@ -88,4 +88,4 @@ private:
 	std::initializer_list<const char *> shaderFilePaths;
 };
 
-#endif
+#endif //ifndef __ComputeShader_h__

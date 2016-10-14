@@ -48,6 +48,10 @@ protected:
 	 */
 	virtual ~ShaderCore();
 public:
+	/**
+	 * Returns the shader tag, this is a rough identifier of the shader
+	 * This value is produced by concatenating the file name (sans extension) of the final file provided for each shader attatched to the object
+	 */
 	inline const char* getShaderTag() const { return this->shaderTag; }
 	/**
      * Reloads the shader source from file, recompiles it and rebinds all bound items
@@ -409,4 +413,4 @@ private:
 	static std::string ShaderCore::removeFileExt(const std::string &filename);
 };
 
-#endif
+#endif //ifndef __ShaderCore_h__

@@ -157,14 +157,22 @@ public:
 	* @note You must provide atleast 1 shader path, however it can be of any of the 3 types
 	*/
 	Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath = {}, std::initializer_list <const char *> geometryShaderPath = {});
-    ~Shaders();
+	/**
+	 * Free the shader program
+	 */
+	~Shaders();
 	/**
 	 * @return True if this shader object has a vertex shader
 	 */
-    bool hasVertexShader() const;
-    bool hasFragmentShader() const;
-    bool hasGeometryShader() const;
-    
+	bool hasVertexShader() const;
+	/**
+	* @return True if this shader object has a fragment shader
+	*/
+	bool hasFragmentShader() const;
+	/**
+	* @return True if this shader object has a geometry shader
+	*/
+    bool hasGeometryShader() const;    
 	/**
 	 * Sets the pointer from which the ModelView matrix should be loaded from
 	 * @param modelViewMat A pointer to the projectionMatrix to be tracked
@@ -211,6 +219,10 @@ public:
 	* @param vad The VertexAttributeDetail object containing the attribute data
 	*/
 	void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
+	/**
+	 * Subclass of vertex attribute detail for generic vertex attributes
+	 * This attaches the name of the vertex attribute within the shader source
+	 */
 	struct GenericVAD :public VertexAttributeDetail
 	{
 		GenericVAD(
@@ -220,6 +232,9 @@ public:
 			: VertexAttributeDetail(vad)
 			, attributeName(attributeName)
 		{}
+		/**
+		 * Identifier of the vertex attribute within the shader source
+		 */
 		const char* attributeName;
 	};
 	/**
@@ -272,12 +287,16 @@ public:
 	* @param color The RGBA value of the color
 	*/
     void setColor(glm::vec4 color);
-
 private:
 	/**
-	 * Disables the attributes attached to this shader
+	 * Disables the vertex attributes attached to this shader
+	 * @note Uses glDisableClientState() and glDisableVertexAttribArray()
 	 */
 	void _clearProgram() override;
+	/**
+	 * Enables the necessary vertex attribute arrays when the shader is required
+	 * @note Called by ShaderCore::useProgram()
+	 */
 	void _useProgram() override;
 	/**
 	 * Compiles the shader sources specified at the objects creation
@@ -285,31 +304,90 @@ private:
 	 * @note This function simply calls return compileShader()&&compileShader().. with each init list of source files
 	**/
 	bool _compileShaders(const GLuint t_shaderProgram)override;
+	/**
+	 * Binds Shaders class specific bindings to the shader program
+	 * These are primarily vertex attributes and modelview/projection matrices
+	 * Textures, buffers and misc uniforms are handled by ShaderCore::setupBindings() as these are also used by ComputeShader
+	 */
 	void _setupBindings() override;
-    //Matrix uniform pointers
+	/**
+	 * Information for binding the modelview matrix
+	 */
     UniformMatrixDetail modelview;
+	/**
+	 * Information for binding the projection matrix
+	 */
     UniformMatrixDetail projection;
+	/**
+	 * When positive this variable holds the location of the (combined) modelviewprojection matrix in the shader
+	 */
     int modelviewprojection;
+	/**
+	 * When !nullptr, points to a vector containing a rotation applied to the modelview matrix before binding
+	 */
 	const glm::vec4 *rotationPtr;
+	/**
+	* When !nullptr, points to a vector containing a translation applied to the modelview matrix before binding
+	*/
 	const glm::vec3 *translationPtr;
-    VertexAttributeDetail positions;
-    VertexAttributeDetail normals;
-    VertexAttributeDetail colors;
+	/**
+	 * Holds information for binding the vertex positions attribute
+	 */
+	VertexAttributeDetail positions;
+	/**
+	* Holds information for binding the vertex normals attribute
+	*/
+	VertexAttributeDetail normals;
+	/**
+	* Holds information for binding the vertex colours attribute
+	*/
+	VertexAttributeDetail colors;
+	/**
+	* Holds information for binding the vertex texture coordinates attribute
+	*/
     VertexAttributeDetail texcoords;
+	/**
+	 * If the default color uniform identifier is found within the shader, it's location is stored here
+	 */
     int colorUniformLocation;
+	/**
+	 * The number of components in the colour uniform that was located
+	 */
     int colorUniformSize;
+	/**
+	 * The data to be passed to the colour uniform
+	 * This is static data, but we store the value so we can maintain it on reload
+	 */
 	glm::vec4 colorUniformValue;
-    //Shader file paths
+	/**
+	 * The path to the files which form the vertex shader
+	 * @note Used on shader reload
+	 */
 	std::initializer_list <const char *> vertexShaderFiles;
+	/**
+	* The path to the files which form the fragment shader
+	* @note Used on shader reload
+	*/
 	std::initializer_list <const char *> fragmentShaderFiles;
+	/**
+	* The path to the files which form the geometry shader
+	* @note Used on shader reload
+	*/
 	std::initializer_list <const char *> geometryShaderFiles;
-    //Shader module IDs
-    int vertexShaderId;
-    int fragmentShaderId;
-    int geometryShaderId;
-    //Detected shader versions
-    int vertexShaderVersion;
-    int fragmentShaderVersion;
+	/**
+	 * The GLSL version used within the vertex shader source
+	 * @note This value is detected from the #version define in the source file
+	 */
+	int vertexShaderVersion;
+	/**
+	* The GLSL version used within the fragment shader source
+	* @note This value is detected from the #version define in the source file
+	*/
+	int fragmentShaderVersion;
+	/**
+	* The GLSL version used within the geometry shader source
+	* @note This value is detected from the #version define in the source file
+	*/
     int geometryShaderVersion;
 };
 

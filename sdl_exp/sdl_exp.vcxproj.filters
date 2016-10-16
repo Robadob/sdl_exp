@@ -28,6 +28,21 @@
     <Filter Include="Source Files\Visualisation\Texture">
       <UniqueIdentifier>{edfb27b4-a483-4369-a69b-d87b2b21eec6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Entity">
+      <UniqueIdentifier>{80618798-482a-4c64-b60a-4db6f41f971c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Interfaces">
+      <UniqueIdentifier>{1a87ff27-df99-4bed-8e6b-28c9ebd0d204}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Entity">
+      <UniqueIdentifier>{f4862650-c007-4979-8fca-d656ef7bbebf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Shaders">
+      <UniqueIdentifier>{c98004d0-1f7e-47a7-ae39-a5b956f6c2ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Shaders">
+      <UniqueIdentifier>{cd2e0155-c2dd-48ce-b420-9880788db255}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -40,9 +55,6 @@
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Material.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
-    <ClCompile Include="visualisation\Shaders.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Skybox.cpp">
@@ -84,11 +96,23 @@
     <ClCompile Include="visualisation\Sprite2D.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\ComputeShader.cpp">
-      <Filter>Source Files\Visualisation</Filter>
+    <ClCompile Include="visualisation\EntityCore.cpp">
+      <Filter>Source Files\Visualisation\Entity</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\ShaderCore.cpp">
-      <Filter>Source Files\Visualisation</Filter>
+      <Filter>Source Files\Visualisation\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Shaders.cpp">
+      <Filter>Source Files\Visualisation\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\ComputeShader.cpp">
+      <Filter>Source Files\Visualisation\Shaders</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Model.cpp">
+      <Filter>Source Files\Visualisation\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\BoundingBox.cpp">
+      <Filter>Source Files\Visualisation\Entity</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -113,9 +137,6 @@
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Material.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Shaders.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Skybox.h">
@@ -157,14 +178,26 @@
     <ClInclude Include="visualisation\Sprite2D.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\ComputeShader.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\ShaderCore.h">
-      <Filter>Header Files\Visualisation</Filter>
+    <ClInclude Include="visualisation\EntityCore.h">
+      <Filter>Header Files\Visualisation\Entity</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Reloadable.h">
-      <Filter>Header Files\Visualisation</Filter>
+      <Filter>Header Files\Visualisation\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\ShaderCore.h">
+      <Filter>Header Files\Visualisation\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Shaders.h">
+      <Filter>Header Files\Visualisation\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\ComputeShader.h">
+      <Filter>Header Files\Visualisation\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Model.h">
+      <Filter>Header Files\Visualisation\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\BoundingBox.h">
+      <Filter>Header Files\Visualisation\Entity</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

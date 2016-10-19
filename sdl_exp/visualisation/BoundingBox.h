@@ -2,8 +2,15 @@
 #define __BoundingBox_h__
 #include <glm/glm.hpp>
 
+//Forward declare all ai types
 struct aiNode;
 struct aiScene;
+template <typename T>
+class aiVector3t;
+typedef aiVector3t<float> aiVector3D;
+template <typename T>
+class aiMatrix4x4t;
+typedef aiMatrix4x4t<float> aiMatrix4x4;
 
 class BoundingBox
 {

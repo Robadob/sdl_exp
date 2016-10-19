@@ -1,8 +1,8 @@
-
+#include "BoundingBox.h"
+#include <assimp/types.h>
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include "BoundingBox.h"
 
 
 BoundingBox::BoundingBox(const aiScene* scene)

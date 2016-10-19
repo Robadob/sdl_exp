@@ -5,7 +5,6 @@
 #include "BoundingBox.h"
 #include <memory>
 
-class aiScene;
 class Model : public Reloadable
 {
 protected:

@@ -9,3 +9,7 @@ void EntityCore::render()
 {
 	
 }
+void EntityCore::reload()
+{
+
+}

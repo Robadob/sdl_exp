@@ -368,7 +368,7 @@ protected:
 	 * @param shaderSourceFiles An initialiser list ({a,b,c}) of paths to shader sources
 	 * @return The shader version detected, -1 on compilation failure
 	 */
-	int compileShader(const GLuint t_shaderProgram, GLenum type, std::initializer_list<const char *> shaderSourceFiles);
+	int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<const std::string> *shaderSourceFiles);
 	/**
 	 * Loads the text from the provided filepath
 	 * @return A pointer to the loaded shader source
@@ -381,6 +381,11 @@ protected:
 	* @return The detected shader version, 0 if one was not found
 	*/
 	static unsigned int findShaderVersion(std::vector<const char*> shaderSources);
+	/**
+	* Copies the init list to a std::vector of std:strings on the heap
+	* @note You should delete the ptr returned by this yourself
+	*/
+	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
 private:
 	/**
 	* Checks whether the specified shader compiled succesfully.
@@ -404,7 +409,7 @@ private:
 	 * @return The filename extracted from the string
 	 * @note This has operating system dependent behaviour, Linux consider \\ a valid path
 	 */
-	static std::string getFilenameFromPath(const char* filePath);
+	static std::string getFilenameFromPath(const std::string &filePath);
 	/**
 	 * Returns the filename from the provided file path
 	 * @param filename A null terminated string holding a file name

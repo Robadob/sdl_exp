@@ -34,53 +34,42 @@ Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::ini
     , colors(GL_FLOAT, 3, sizeof(float))
     , texcoords(GL_FLOAT, 2, sizeof(float))
     , colorUniformValue(1,0,0,1)//Red
-    , vertexShaderFiles(vertexShaderPath)
-    , fragmentShaderFiles(fragmentShaderPath)
-    , geometryShaderFiles(geometryShaderPath)
+	, vertexShaderFiles(buildFileVector(vertexShaderPath))
+	, fragmentShaderFiles(buildFileVector(fragmentShaderPath))
+	, geometryShaderFiles(buildFileVector(geometryShaderPath))
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
 	, geometryShaderVersion(-1)
 {
 	reload();
 }
-/*
-Destructor, free's the shader program
-*/
 Shaders::~Shaders(){
     this->destroyProgram();
+	delete vertexShaderFiles;
+	delete fragmentShaderFiles;
+	delete geometryShaderFiles;
 }
-/*
-Returns whether a vertex shader has been loaded
-@return True if a vertex shader is present, else false
-*/
 bool Shaders::hasVertexShader() const
 {
-    return this->vertexShaderFiles.size()>0;
+    return this->vertexShaderFiles->size()>0;
 }
-/*
-Returns whether a fragment shader has been loaded
-@return True if a fragment shader is present, else false
-*/
 bool Shaders::hasFragmentShader() const
 {
-	return this->fragmentShaderFiles.size()>0;
+	return this->fragmentShaderFiles->size()>0;
 }
-/*
-Returns whether a geometry shader has been loaded
-@return True if a geometry shader is present, else false
-*/
-bool Shaders::hasGeometryShader() const{
-	return this->geometryShaderFiles.size()>0;
+bool Shaders::hasGeometryShader() const
+{
+	return this->geometryShaderFiles->size()>0;
 }
 bool Shaders::_compileShaders(const GLuint t_programId)
 {
-	if (vertexShaderFiles.size() > 0)
+	if (vertexShaderFiles->size() > 0)
 	{
 		this->vertexShaderVersion = compileShader(t_programId, GL_VERTEX_SHADER, vertexShaderFiles);
 		if (this->vertexShaderVersion < 0)
 			return false;
 	}
-	if (fragmentShaderFiles.size()>0)
+	if (fragmentShaderFiles->size()>0)
 	{
 		this->fragmentShaderVersion = compileShader(t_programId, GL_FRAGMENT_SHADER, fragmentShaderFiles);
 		if (this->fragmentShaderVersion < 0)
@@ -89,7 +78,7 @@ bool Shaders::_compileShaders(const GLuint t_programId)
 			return false;
 		}
 	}
-	if (geometryShaderFiles.size() > 0)
+	if (geometryShaderFiles->size() > 0)
 	{
 		this->geometryShaderVersion = compileShader(t_programId, GL_GEOMETRY_SHADER, geometryShaderFiles);
 		if (this->geometryShaderVersion < 0)

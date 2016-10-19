@@ -6,9 +6,14 @@ ComputeShader::ComputeShader(const char *path, glm::uvec3 defaultLaunchConfig)
 ComputeShader::ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig)
 	: ShaderCore()
 	, lastLaunchConfig(defaultLaunchConfig)
-	, shaderFilePaths(paths)
+	, shaderFilePaths(buildFileVector(paths))
 {
 	reload();
+}
+ComputeShader::~ComputeShader()
+{
+	this->destroyProgram();
+	delete shaderFilePaths;
 }
 void ComputeShader::launch()
 {

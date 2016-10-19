@@ -29,6 +29,11 @@ public:
 	 */
 	ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
 	/**
+	 * Cleans up shader files vector
+	 * Frees program
+	 */
+	~ComputeShader();
+	/**
 	* Launches the compute shader according to the provided launch configuration
 	* @param workGroupsX The number of work groups in the X axis
 	* @param workGroupsY The number of work groups in the Y axis
@@ -85,7 +90,7 @@ private:
 	*/
 	bool _compileShaders(const GLuint t_shaderProgram) override;
 	glm::uvec3 lastLaunchConfig; 	
-	std::initializer_list<const char *> shaderFilePaths;
+	std::vector<const std::string> *shaderFilePaths;
 };
 
 #endif //ifndef __ComputeShader_h__

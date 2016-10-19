@@ -13,12 +13,15 @@ ShaderCore::ShaderCore()
 { }
 ShaderCore::~ShaderCore()
 {
-	if (shaderTag[0] != '\0') delete[] shaderTag;
+	if (this->shaderTag[0]!='\0') delete[] this->shaderTag;
 }
 //Core
 void ShaderCore::reload()
 {
 	GL_CHECK();
+	//Clear shadertag
+	if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
+	this->shaderTag = "";
 	//Create temporary shader program
 	GLuint t_programId = GL_CALL(glCreateProgram());
 	//Pass it to subclass to compile shaders
@@ -491,14 +494,14 @@ std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, cons
 	return  std::pair<int, GLenum>(-1, 0);
 }
 //Util
-int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::initializer_list<const char *> shaderSourceFiles)
+int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<const std::string> *shaderSourceFiles)
 {
-	if (shaderSourceFiles.size() == 0) return false;
+	if (shaderSourceFiles->size() == 0) return false;
 	// Load shader files
 	std::vector<char*> shaderSources;
-	for (auto i : shaderSourceFiles)
+	for (auto i : *shaderSourceFiles)
 	{
-		shaderSources.push_back(loadShaderSource(i));
+		shaderSources.push_back(loadShaderSource(i.c_str()));
 	}
 	//Check for shaders that didn't load correctly
 	for (auto i : shaderSources)
@@ -516,7 +519,7 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::in
 	GLuint shaderId = createShader(type);
 	GL_CALL(glShaderSource(shaderId, shaderSources.size(), &shaderSources[0], nullptr));
 	GL_CALL(glCompileShader(shaderId));
-	std::string shaderName = getFilenameFromPath(*(shaderSourceFiles.end() - 1));
+	std::string shaderName = getFilenameFromPath(*(shaderSourceFiles->end() - 1));
 	//Check for compile errors
 	if (!this->checkShaderCompileError(shaderId, shaderName.c_str()))
 	{
@@ -536,7 +539,7 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::in
 	}
 	else
 	{
-		shaderName = std::string(shaderTag) + std::string(":") + removeFileExt(shaderName);
+		shaderName = std::string(shaderTag) + std::string("-") + removeFileExt(shaderName);
 		delete[] this->shaderTag;
 	}
 	this->shaderTag = new char[shaderName.length() + 1];
@@ -645,7 +648,7 @@ struct MatchPathSeparator
 	}
 };
 #endif
-std::string ShaderCore::getFilenameFromPath(const char* filePath)
+std::string ShaderCore::getFilenameFromPath(const std::string &filePath)
 {
 	std::string pathname(filePath);
 	std::string result = std::string(
@@ -659,4 +662,14 @@ std::string ShaderCore::removeFileExt(const std::string &filename)
 	size_t lastdot = filename.find_last_of(".");
 	if (lastdot == std::string::npos) return filename;
 	return filename.substr(0, lastdot);
+}
+std::vector<const std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
+{
+	std::vector<const std::string> *rtn = new std::vector<const std::string>();
+
+	for (auto i : sources)
+	{
+		rtn->push_back(std::string(i));
+	}
+	return rtn;
 }

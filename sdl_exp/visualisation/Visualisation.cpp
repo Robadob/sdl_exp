@@ -9,7 +9,7 @@
 #include "Skybox.h"
 
 #define FOVY 60.0f
-#define NEAR_CLIP 0.001f
+#define NEAR_CLIP 0.005f
 #define FAR_CLIP 500.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
@@ -78,7 +78,7 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 

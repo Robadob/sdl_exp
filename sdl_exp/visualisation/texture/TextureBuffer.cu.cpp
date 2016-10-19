@@ -84,7 +84,10 @@ template<class T>
 void TextureBuffer<T>::setData(T *data, unsigned int size, unsigned int offset){
     if (size == 0)
         size = sizeof(T)*elementCount*componentCount;
-    GL_CALL(glNamedBufferSubData(TBO, offset, size, (void*)data));
+    GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
+    GL_CALL(glBufferSubData(GL_TEXTURE_BUFFER, offset, size, (void*)data));
+    GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
+    //GL_CALL(glNamedBufferSubData(TBO, offset, size, (void*)data));//GL4.5+
 }
 /*
 Copies data out of the texture buffer
@@ -96,7 +99,10 @@ template<class T>
 void TextureBuffer<T>::getData(T *dataReturn, unsigned int size, unsigned int offset){
     if (size == 0)
         size = sizeof(T)*elementCount*componentCount;
-    GL_CALL(glGetNamedBufferSubData(TBO, offset, size, (void*)dataReturn));
+    GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
+    GL_CALL(glGetBufferSubData(GL_TEXTURE_BUFFER, offset, size, (void*)dataReturn));
+    GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
+    //GL_CALL(glGetNamedBufferSubData(TBO, offset, size, (void*)dataReturn));
 }
 /*
 Returns the internal format of a float buffer based on the componentCount

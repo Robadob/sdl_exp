@@ -1,4 +1,5 @@
 #include "EntityScene.h"
+#include <ctime>
 
 /*
 Constructor, modify this to change what happens

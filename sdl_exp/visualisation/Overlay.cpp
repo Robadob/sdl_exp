@@ -71,9 +71,13 @@ Renders the overlay using the provided details
 void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)
 {
     if (!visible)
-        return;
+		return;
 	if (this->shaders != nullptr)
-		shaders->useProgram(mv, proj);
+	{
+		shaders->setModelViewMatPtr(mv);
+		shaders->setProjectionMatPtr(proj);
+		shaders->useProgram();
+	}
 	else//Lets try fixed function, but no promises
 	{
 		//Update Projection Matrix

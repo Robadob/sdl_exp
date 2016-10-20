@@ -8,7 +8,7 @@
 #include "Axis.h"
 #include "HUD.h"
 #include "Text.h"
-#include "Viewport.h"
+#include "interface/Viewport.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 

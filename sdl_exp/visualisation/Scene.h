@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "Entity.h"
-#include "Shaders.h"
+#include "shader/Shaders.h"
 #include "Visualisation.h"
 
 class Scene

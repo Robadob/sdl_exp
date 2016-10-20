@@ -7,10 +7,10 @@
 #include <glm/glm.hpp>
 
 #include "Material.h"
-#include "Shaders.h"
+#include "shader/Shaders.h"
 #include "texture/Texture2D.h"
 #include "Camera.h"
-#include "Viewport.h"
+#include "interface/Viewport.h"
 
 namespace Stock
 {

@@ -28,6 +28,15 @@
     <Filter Include="Source Files\Visualisation\Texture">
       <UniqueIdentifier>{edfb27b4-a483-4369-a69b-d87b2b21eec6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\Shader">
+      <UniqueIdentifier>{b697edbe-acf8-43da-bcf8-185c7d9ab37f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Shader">
+      <UniqueIdentifier>{5fb2e91a-9452-437e-9aad-7ce3fa82485a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Interface">
+      <UniqueIdentifier>{94373e4a-57bc-419c-a322-19f1964dab63}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -40,9 +49,6 @@
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Material.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
-    <ClCompile Include="visualisation\Shaders.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Skybox.cpp">
@@ -84,6 +90,15 @@
     <ClCompile Include="visualisation\Sprite2D.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\shader\Shaders.cpp">
+      <Filter>Source Files\Visualisation\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\ComputeShader.cpp">
+      <Filter>Source Files\Visualisation\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\ShaderCore.cpp">
+      <Filter>Source Files\Visualisation\Shader</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -107,9 +122,6 @@
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Material.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Shaders.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Skybox.h">
@@ -151,8 +163,20 @@
     <ClInclude Include="visualisation\Sprite2D.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\Viewport.h">
-      <Filter>Header Files\Visualisation</Filter>
+    <ClInclude Include="visualisation\shader\ShaderCore.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\Shaders.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\ComputeShader.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Reloadable.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Viewport.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

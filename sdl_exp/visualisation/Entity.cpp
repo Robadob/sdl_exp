@@ -5,6 +5,8 @@
 #include <functional>
 #include <thread>
 #include <glm/gtx/component_wise.hpp>
+#include <algorithm>
+#include <locale>
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
@@ -97,7 +99,9 @@ Entity::Entity(
         this->shaders->setPositionsAttributeDetail(positions);
         this->shaders->setNormalsAttributeDetail(normals);
         this->shaders->setColorsAttributeDetail(colors);
-        this->shaders->setTexCoordsAttributeDetail(texcoords);
+		this->shaders->setTexCoordsAttributeDetail(texcoords);
+		this->shaders->setRotationPtr(&this->rotation);
+		this->shaders->setTranslationPtr(&this->location);
     }
     if (needsExport)
     {
@@ -125,7 +129,7 @@ Calls the necessary code to render a single instance of the entity
 */
 void Entity::render(){
     if (this->shaders != nullptr)
-        shaders->useProgram(this);
+        shaders->useProgram();
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
@@ -152,7 +156,7 @@ The index of the instance being rendered can be identified within the vertex sha
 */
 void Entity::renderInstances(int count){
     if (this->shaders != nullptr)
-        shaders->useProgram(this);
+        shaders->useProgram();
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
@@ -1342,7 +1346,7 @@ Reloads the entities texture and shaders
 void Entity::reload()
 {
     if (shaders.get())
-        shaders->reload(true);
+        shaders->reload();
     if (texture.get())
         texture->reload();
 }

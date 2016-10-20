@@ -167,7 +167,9 @@
     <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
-    <ClCompile Include="visualisation\Shaders.cpp" />
+    <ClCompile Include="visualisation\shader\ComputeShader.cpp" />
+    <ClCompile Include="visualisation\shader\ShaderCore.cpp" />
+    <ClCompile Include="visualisation\shader\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
     <ClCompile Include="visualisation\Sprite2D.cpp" />
     <ClCompile Include="visualisation\Text.cpp" />
@@ -193,9 +195,13 @@
     <ClInclude Include="visualisation\Entity.h" />
     <ClInclude Include="visualisation\GLcheck.h" />
     <ClInclude Include="visualisation\HUD.h" />
+    <ClInclude Include="visualisation\interface\Reloadable.h" />
+    <ClInclude Include="visualisation\interface\Viewport.h" />
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\Overlay.h" />
-    <ClInclude Include="visualisation\Shaders.h" />
+    <ClInclude Include="visualisation\shader\ComputeShader.h" />
+    <ClInclude Include="visualisation\shader\ShaderCore.h" />
+    <ClInclude Include="visualisation\shader\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
     <ClInclude Include="visualisation\Sprite2D.h" />
     <ClInclude Include="visualisation\Text.h" />
@@ -203,7 +209,6 @@
     <ClInclude Include="visualisation\texture\Texture2D.h" />
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
-    <ClInclude Include="visualisation\Viewport.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>

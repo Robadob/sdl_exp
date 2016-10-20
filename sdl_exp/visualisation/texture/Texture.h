@@ -2,7 +2,7 @@
 #define __Texture_h__
 
 #include "../GLcheck.h"
-#include "../Shaders.h"
+#include "../shader/Shaders.h"
 
 #include <SDL/SDL_image.h>
 /*

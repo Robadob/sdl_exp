@@ -471,13 +471,15 @@ bool ShaderCore::removeBuffer(const char *nameInShader)
 }
 std::pair<int, GLenum> ShaderCore::findUniform(const char *uniformName, const int shaderProgram)
 {
-	int result = shaderProgram<0 ? -1 : GL_CALL(glGetUniformLocation(shaderProgram, uniformName));
-	if (result > -1)
+	int uniformLocation = shaderProgram<0 ? -1 : GL_CALL(glGetUniformLocation(shaderProgram, uniformName));
+	GLuint uniformIndex;//UniformIndex!=UniformLocation (Index required to get info about uniform, Location required to set val)
+	GL_CALL(glGetUniformIndices(shaderProgram, 1, &uniformName, &uniformIndex));
+	if (uniformLocation > -1 && uniformIndex != GL_INVALID_INDEX)
 	{
 		GLenum type;
 		GLint size;//Collect size, because its not documented that you can pass 0
-		GL_CALL(glGetActiveUniform(shaderProgram, result, 0, nullptr, &size, &type, nullptr));
-		return std::pair<int, GLenum>(result, type);
+		GL_CALL(glGetActiveUniform(shaderProgram, uniformIndex, 0, nullptr, &size, &type, nullptr));
+		return std::pair<int, GLenum>(uniformLocation, type);
 	}
 	return  std::pair<int, GLenum>(-1, 0);
 }

@@ -6,7 +6,6 @@
 
 #include "GLcheck.h"
 #include "Scene.h"
-#include "Skybox.h"
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.005f
@@ -40,10 +39,7 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     , windowHeight(windowHeight)
 	, hud(windowWidth, windowHeight)
     , camera(glm::vec3(50,50,50))
-    , renderAxisState(false)
-    , axis(25)
     , msaaState(true)
-    , skybox(0)
     , scene(0)
     , fpsDisplay(0)
 {
@@ -176,15 +172,10 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F10:
         this->setMSAA(!this->msaaState);
         break;
-    case SDLK_F9:
-        this->setSkybox(!this->skybox);
-        break;
     case SDLK_F8:
         this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
         break;
     case SDLK_F5:
-        if (this->skybox)
-            this->skybox->reload();
         if (this->scene)
 			this->scene->_reload();
 		this->hud.reload();
@@ -284,7 +275,6 @@ void Visualisation::render()
     //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
     if (t_updateTime < updateTime)
     {
-
         this->scene->update(t_updateTime + (UINT_MAX - updateTime));
     }
     else
@@ -293,14 +283,7 @@ void Visualisation::render()
     }
     updateTime = t_updateTime;
     // render
-    this->clearFrame();
-    if (this->skybox)
-        this->skybox->render();
-    this->defaultProjection();
-    if (this->renderAxisState)
-        this->axis.render();
-    this->defaultLighting();
-    this->scene->render();
+    this->scene->executeRender();
 	this->hud.render();
 
     GL_CHECK();
@@ -340,7 +323,6 @@ Clears the frame
 @note This is called within the render loop before the frame is rendered
 */
 void Visualisation::clearFrame(){
-    glViewport(0, 0, this->windowWidth, this->windowHeight);
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -357,46 +339,6 @@ void Visualisation::defaultProjection(){
     glLoadMatrixf(glm::value_ptr(this->camera.view()));
 }
 /*
-Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
-*/
-void Visualisation::defaultLighting(){
-    glEnable(GL_LIGHT0);
-    glm::vec3 eye = this->camera.getEye();
-    float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
-    float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
-    float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
-    float white[4] = { 1, 1, 1, 1 };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, white);
-
-    // Spotlight stuff
-    //float angle = 180.0f;
-    //glm::vec3 look = this->camera.getLook();
-   // float direction[4] = { look.x, look.y, look.z, 0 };
-    //glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
-    //glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
-}
-/*
-Toggles whether the skybox should be used or not
-@param state The desired skybox state
-*/
-void Visualisation::setSkybox(bool state){
-    if (state&&!this->skybox)
-    {
-        this->skybox = new Skybox();
-        this->skybox->setModelViewMatPtr(&this->camera);
-        this->skybox->setProjectionMatPtr(this);
-        this->skybox->setYOffset(-1.0f);
-    }
-    else if (!state&&this->skybox)
-    {
-        delete this->skybox;
-        this->skybox = 0;
-    }
-}
-/*
 Toggles whether Multi-Sample Anti-Aliasing should be used or not
 @param state The desired MSAA state
 */
@@ -406,13 +348,6 @@ void Visualisation::setMSAA(bool state){
         glEnable(GL_MULTISAMPLE);
     else
         glDisable(GL_MULTISAMPLE);
-}
-/*
-Toggles whether the axis should be rendered or not
-@param state The desired axis rendering state
-*/
-void Visualisation::setRenderAxis(bool state){
-    this->renderAxisState = state;
 }
 /*
 @return The current window title (sans the FPS)
@@ -486,7 +421,9 @@ void Visualisation::resizeWindow(){
     float left = fAspect * bottom;
     float right = fAspect * top;
     this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
-	hud.resizeWindow(this->windowWidth, this->windowHeight);
+	//Notify other elements
+    this->hud.resizeWindow(this->windowWidth, this->windowHeight);
+    this->scene->resize(this->windowWidth, this->windowHeight);
 }
 /*
 @return True if the window is currently full screen

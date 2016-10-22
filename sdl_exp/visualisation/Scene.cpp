@@ -43,3 +43,31 @@ void Scene::_reload()
     }
     reload();
 }
+
+std::shared_ptr<RenderPass> Scene::addPass(int index, std::shared_ptr<RenderPass> rp)
+{
+    auto&& it = rpMap.find(index);//byRef
+    std::shared_ptr<RenderPass> rtn = std::shared_ptr<RenderPass>();
+    if (it != rpMap.end())
+    {
+        rtn = it->second;
+    }
+    rpMap[index] = rp;
+    return rtn;
+}
+
+void Scene::executeRender()
+{
+    for (auto&& it : rpMap)//byRef
+    {
+        it.second->executeRender();
+    }
+}
+void Scene::resize(const int width, const int height)
+{
+    for (auto&& it : rpMap)//byRef
+    {
+        it.second->resize(width, height);
+    }
+}
+

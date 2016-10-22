@@ -13,7 +13,6 @@
 #undef main //SDL breaks the regular main entry point, this fixes
 
 class Scene;
-class Skybox;
 
 /*
 This class provides an OpenGL window
@@ -38,10 +37,7 @@ public:
     bool isFullscreen() const;
 
     void defaultProjection();
-    void defaultLighting();
-    void setRenderAxis(bool state);
     void setMSAA(bool state); 
-    void Visualisation::setSkybox(bool state);
     const Camera *getCamera() const;
     const Scene *getScene() const;
 	const glm::mat4 *getFrustrumPtr() const override;
@@ -66,12 +62,7 @@ private:
     bool isInitialised;
     bool continueRender;
 
-    bool renderAxisState;
     bool msaaState;
-
-    //Default objects
-    Axis axis;
-    Skybox *skybox;
 
     const char* windowTitle;
     int windowWidth;

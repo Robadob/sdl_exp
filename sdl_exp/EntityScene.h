@@ -1,7 +1,7 @@
 #ifndef __EntityScene_h__
 #define __EntityScene_h__
 
-#include "visualisation/Scene.h"
+#include "visualisation/BasicScene.h"
 #include "visualisation/Entity.h"
 #include "visualisation/Text.h"
 
@@ -9,15 +9,15 @@
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
-class EntityScene : Scene
+class EntityScene : BasicScene
 {
 public:
     EntityScene(Visualisation &visualisation);
 
-    void render() override;
+    void _render() override;
     void reload() override;
     void update(unsigned int frameTime) override;
-    bool keypress(SDL_Keycode keycode, int x, int y) override;
+    bool _keypress(SDL_Keycode keycode, int x, int y) override;
 private:
 #ifdef __CUDACC__
     void cuInit();

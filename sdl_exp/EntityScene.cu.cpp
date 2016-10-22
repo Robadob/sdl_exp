@@ -21,9 +21,9 @@ EntityScene::EntityScene(Visualisation &visualisation)
     registerEntity(deerModel);
     registerEntity(colorModel);
     registerEntity(instancedSphere);
-    this->visualisation.setSkybox(true);
+    this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
-    this->visualisation.setRenderAxis(true); 
+    this->setRenderAxis(true); 
     srand((unsigned int)time(0));
     this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
     this->colorModel->setCullFace(false);
@@ -61,7 +61,7 @@ void EntityScene::update(unsigned int frameTime)
 /*
 Called once per frame when Scene render calls should be executed
 */
-void EntityScene::render()
+void EntityScene::_render()
 {
     colorModel->render();
     deerModel->render();
@@ -75,7 +75,7 @@ void EntityScene::reload()
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
 }
 
-bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
+bool EntityScene::_keypress(SDL_Keycode keycode, int x, int y)
 {
     switch (keycode)
     {

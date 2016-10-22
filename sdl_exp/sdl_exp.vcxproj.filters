@@ -37,6 +37,12 @@
     <Filter Include="Header Files\Visualisation\Interface">
       <UniqueIdentifier>{94373e4a-57bc-419c-a322-19f1964dab63}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\MultiPass">
+      <UniqueIdentifier>{23fd96e2-eb3c-4a23-9d6f-672f395de144}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\MultiPass">
+      <UniqueIdentifier>{cf6a1b89-eb49-48de-93cf-4227a5f4a0ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -98,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="visualisation\shader\ShaderCore.cpp">
       <Filter>Source Files\Visualisation\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\BasicScene.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -177,6 +186,15 @@
     </ClInclude>
     <ClInclude Include="visualisation\interface\Viewport.h">
       <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\RenderPass.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\BasicScene.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\FrameBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

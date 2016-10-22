@@ -162,6 +162,7 @@
     <ClCompile Include="EntityScene.cu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
+    <ClCompile Include="visualisation\BasicScene.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
@@ -191,6 +192,7 @@
   <ItemGroup>
     <ClInclude Include="EntityScene.h" />
     <ClInclude Include="visualisation\Axis.h" />
+    <ClInclude Include="visualisation\BasicScene.h" />
     <ClInclude Include="visualisation\Camera.h" />
     <ClInclude Include="visualisation\Entity.h" />
     <ClInclude Include="visualisation\GLcheck.h" />
@@ -198,6 +200,8 @@
     <ClInclude Include="visualisation\interface\Reloadable.h" />
     <ClInclude Include="visualisation\interface\Viewport.h" />
     <ClInclude Include="visualisation\Material.h" />
+    <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
+    <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
     <ClInclude Include="visualisation\shader\ShaderCore.h" />

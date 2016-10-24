@@ -1,15 +1,15 @@
-#ifndef __Scene_h__
-#define __Scene_h__
+#ifndef __MultiPassScene_h__
+#define __MultiPassScene_h__
 
 #include <memory>
 #include <vector>
-
+#include "interface/Scene.h"
 #include "Entity.h"
 #include "shader/Shaders.h"
 #include "Visualisation.h"
 #include "multipass/RenderPass.h"
 
-class Scene
+class MultiPassScene : public Scene
 {
     friend class Visualisation;
     friend class BasicScene;
@@ -50,11 +50,11 @@ public:
     // ReSharper disable once CppHiddenFunction
     void resize(int width, int height);
 protected:
-    Scene(Visualisation &vis);
+	MultiPassScene(Visualisation &vis);
     Visualisation &visualisation;
     Shaders *shaders;
     void registerEntity(std::shared_ptr<Entity> ent);
-    ~Scene(){};//Protected destructor prevents this object being created on the stack (you must create via new)
+	~MultiPassScene(){};//Protected destructor prevents this object being created on the stack (you must create via new)
     // ReSharper disable once CppHiddenFunction
     virtual void _reload();
 private:
@@ -62,4 +62,4 @@ private:
     std::map<int, std::shared_ptr<RenderPass>> rpMap;
 };
 
-#endif //ifndef __Scene_h__
+#endif //ifndef __MultiPassScene_h__

@@ -1,77 +1,91 @@
 #ifndef __BasicScene_h__
 #define __BasicScene_h__
-#include "Scene.h"
-#include "multipass/RenderPass.h"
+#include "interface/Scene.h"
 #include "Skybox.h"
-
-// ReSharper disable CppHidingFunction
-class BasicScene : protected Scene, private RenderPass
+#include "Axis.h"
+#include "Visualisation.h"
+/**
+ * This class provides a baseclass for Scenes which only require single pass rendering
+ * Natively includes a Skybox and Axis
+ * Allows registering of entities, so their shaders can be reloaded on reload events
+ */
+class BasicScene : protected Scene
 {
-    BasicScene(Visualisation& vis)
-        : Scene(vis)
-        , RenderPass()
-        , renderAxisState(false)
-        , axis(25)
-        , skybox(0)
-    {  }
-    void executeRender()override final
-    {
-        render();
-    }
-    virtual void render() override final
-    {
-        if (this->skybox)
-            this->skybox->render();
-        this->visualisation.defaultProjection();
-        if (this->renderAxisState)
-            this->axis.render();
-        this->defaultLighting();
-        _render();
-    }
-    virtual void _render();
-    void resize(const int width, const int height)override final
-    {
-        RenderPass::resize(width, height);
-    }
-    bool keypress(SDL_Keycode keycode, int x, int y) override final{
-        //Pass key events to the scene and skip handling if false is returned 
-        if (!_keypress(keycode, x, y))
-            return;
-        switch (keycode){
-        case SDLK_F9:
-            this->setSkybox(!this->skybox);
-            break;
-        default:
-            return true;
-            break;
-        }
-        return false;
-    }
-    void _reload() override final
-    {
-        printf("Reloading Shaders.\n");
-        for (std::vector<std::shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
-        {
-            (*i)->reload();
-        }
-        reload();
-    }
-    virtual void reload();
-    virtual bool _keypress(SDL_Keycode keycode, int x, int y);
-
-    //Default objects
+public:
+	BasicScene(Visualisation& vis);
+protected:
+	/**
+	 * Registers an entity, so the scene can setup it's modelview and projection matrices and trigger reloads
+	 */
+	void registerEntity(std::shared_ptr<Entity> ent);
+	/**
+	 * Override this method and do your rendering calls here
+	 */
+	virtual void render() = 0;
+	/**
+	 * Called when keys are pressed
+	 * @param keycode The key that was pressed
+	 * @param x X coordinate of the mouse when the keypress occurred
+	 * @param y Y coordinate of the mouse when the keypress occurred
+	 * @return True if you wish to allow the keypress to be handled elsewhere
+	 */
+	virtual bool keypress(SDL_Keycode keycode, int x, int y){ return true; };
+	/**
+	 * Called when the window is resized
+	 * @param width The new window width
+	 * @param height The new window height
+	 */
+	virtual void resize(int width, int height){};
+	/**
+	 * @return True if you wish to allow the keypress to be handled elsewhere
+     */
+	virtual void reload(){};
+	/**
+	 * @return True if you wish to allow the keypress to be handled elsewhere
+	 */
+	virtual void update(unsigned int frameTime){};
+	/**
+	 * Toggles whether the skybox should be used or not
+	 * @param state The desired skybox state
+	 */
+	void setSkybox(bool state);
+	/**
+	 * Toggles whether the axis should be rendered or not
+	 * @param state The desired axis rendering state
+	 */
+	void setRenderAxis(bool state);
+    
     Axis axis;
-    Skybox *skybox;
-
-
-    bool renderAxisState;
-
-
+    std::unique_ptr<Skybox> skybox;
+	bool renderAxisState;
+private:
+	/**
+	 * Internal render functionality, calls render()
+	 */
+	void _render() override final;
+	/**
+	 * Internal keypress functionality, calls keypress()
+	 */
+	bool _keypress(SDL_Keycode keycode, int x, int y) override final;
+	/**
+	 * Internal resize functionality, calls resize()
+	 */
+	inline virtual void _resize(int width, int height) override final { resize(width, height); };
+	/**
+	 * Internal reload functionality, calls reload()
+	 */
+	void _reload() override final;
+	/**
+	 * Internal update functionality, calls update()
+	 */
+	inline virtual void _update(unsigned int frameTime) override final { update(frameTime); };
+	/**
+	 * Holds registered entities so the BasicScene can automatically reload them
+	 */
+	std::vector<std::shared_ptr<Entity>> entities;
+	/**
+	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
+	 */
     void defaultLighting();
-
-    void setSkybox(bool state);
-
-    void setRenderAxis(bool state);
 };
-// ReSharper restore CppHidingFunction
 #endif //__BasicScene_h__

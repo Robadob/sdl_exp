@@ -5,7 +5,7 @@
 Constructor, modify this to change what happens
 */
 EntityScene::EntityScene(Visualisation &visualisation)
-    : Scene(visualisation)
+    : BasicScene(visualisation)
     , deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
     , tick(0.0f)
@@ -61,7 +61,7 @@ void EntityScene::update(unsigned int frameTime)
 /*
 Called once per frame when Scene render calls should be executed
 */
-void EntityScene::_render()
+void EntityScene::render()
 {
     colorModel->render();
     deerModel->render();
@@ -75,7 +75,7 @@ void EntityScene::reload()
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
 }
 
-bool EntityScene::_keypress(SDL_Keycode keycode, int x, int y)
+bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
 {
     switch (keycode)
     {
@@ -86,7 +86,7 @@ bool EntityScene::_keypress(SDL_Keycode keycode, int x, int y)
         this->colorModel->exportModel();
         this->deerModel->exportModel();
     default:
-        //Only permit the keycode to be processed if we haven't handled personally
+        //Permit the keycode to be processed if we haven't handled personally
         return true;
     }
     return false;

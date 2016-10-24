@@ -11,13 +11,14 @@ Example scene to demonstrate how to use SDL_EXP
 */
 class EntityScene : BasicScene
 {
+	friend class BasicScene;
 public:
     EntityScene(Visualisation &visualisation);
 
-    void _render() override;
+    void render() override;
     void reload() override;
     void update(unsigned int frameTime) override;
-    bool _keypress(SDL_Keycode keycode, int x, int y) override;
+    bool keypress(SDL_Keycode keycode, int x, int y) override;
 private:
 #ifdef __CUDACC__
     void cuInit();

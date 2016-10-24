@@ -1,32 +1,74 @@
 #include "BasicScene.h"
-/*
-Toggles whether the skybox should be used or not
-@param state The desired skybox state
-*/
+
+BasicScene::BasicScene(Visualisation& vis)
+	: Scene(vis)
+	, axis(25)
+	, skybox()
+	, renderAxisState(true)
+{  }
+void BasicScene::registerEntity(std::shared_ptr<Entity> ent)
+{
+	if (ent)
+	{
+		//Store value for later
+		entities.push_back(ent);
+		//Setup matrices
+		ent->setModelViewMatPtr(this->visualisation.getCamera());
+		ent->setProjectionMatPtr(&this->visualisation);
+	}
+	else
+		fprintf(stderr, "Can't register a null entity!\n");
+}
+void BasicScene::_render()
+{
+	//Bind back buffer
+	if (this->skybox)
+		this->skybox->render();
+	this->visualisation.defaultProjection();
+	if (this->renderAxisState)
+		this->axis.render();
+	this->defaultLighting();
+	render();
+}
+bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y) 
+{
+	//Pass key events to the scene and skip handling if false is returned 
+	if (!keypress(keycode, x, y))
+		return;
+	switch (keycode){
+	case SDLK_F9:
+		this->setSkybox(!this->skybox);
+		break;
+	default:
+		return true;
+		break;
+	}
+	return false;
+}
+void BasicScene::_reload() 
+{
+	for (std::vector<std::shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+	{
+		(*i)->reload();
+	}
+	reload();
+}
 void BasicScene::setSkybox(bool state){
     if (state&&!this->skybox)
     {
-        this->skybox = new Skybox();
+		this->skybox = std::make_unique<Skybox>();
         this->skybox->setModelViewMatPtr(this->visualisation.getCamera());
         this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
         this->skybox->setYOffset(-1.0f);
     }
     else if (!state&&this->skybox)
     {
-        delete this->skybox;
         this->skybox = nullptr;
     }
 }
-/*
-Toggles whether the axis should be rendered or not
-@param state The desired axis rendering state
-*/
 void BasicScene::setRenderAxis(bool state){
     this->renderAxisState = state;
 }
-/*
-Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
-*/
 void BasicScene::defaultLighting(){
     glEnable(GL_LIGHT0);
     glm::vec3 eye = this->visualisation.getCamera()->getEye();

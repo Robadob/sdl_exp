@@ -23,7 +23,7 @@ public:
     Visualisation(char *windowTitle, int windowWidth, int windowHeight);
     ~Visualisation();
 
-    Scene *setScene(Scene *scene);
+	std::shared_ptr<Scene> setScene(std::unique_ptr<Scene> scene);
     void Visualisation::render();
     void run(); // @todo - improve
 
@@ -39,7 +39,7 @@ public:
     void defaultProjection();
     void setMSAA(bool state); 
     const Camera *getCamera() const;
-    const Scene *getScene() const;
+	const std::weak_ptr<Scene> getScene() const;
 	const glm::mat4 *getFrustrumPtr() const override;
 	HUD* getHUD();
 private:
@@ -56,7 +56,7 @@ private:
 
 	HUD hud;
     Camera camera;
-    Scene* scene;
+	std::shared_ptr<Scene> scene;
     glm::mat4 frustum;
 
     bool isInitialised;

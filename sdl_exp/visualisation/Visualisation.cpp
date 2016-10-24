@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "GLcheck.h"
-#include "Scene.h"
+#include "interface/Scene.h"
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.005f
@@ -131,10 +131,10 @@ Sets the scene to be rendered
 @param scene The desired scene
 @return Returns the previously bound scene
 */
-Scene *Visualisation::setScene(Scene *scene)
+std::shared_ptr<Scene> Visualisation::setScene(std::unique_ptr<Scene> scene)
 {
-    Scene *oldScene = this->scene;
-    this->scene = scene;
+	std::shared_ptr<Scene> oldScene = this->scene;
+	this->scene = std::shared_ptr<Scene>(scene.release());
     return oldScene;
 }
 /*
@@ -157,7 +157,7 @@ Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F
 */
 void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     //Pass key events to the scene and skip handling if false is returned 
-    if (scene&&!scene->keypress(keycode, x, y))
+    if (scene&&!scene->_keypress(keycode, x, y))
         return;
     switch (keycode){
     case SDLK_ESCAPE:
@@ -194,17 +194,11 @@ void Visualisation::close(){
     this->hud.clear();
     if (this->scene)
     {
-        this->scene->kill();
-        this->scene = 0;
-    }
-    if (this->skybox)
-    {
-        delete this->skybox;
-        this->skybox = 0;
+        this->scene.reset();
     }
     SDL_GL_DeleteContext(this->context);
     SDL_DestroyWindow(this->window);
-    this->window = 0;
+    this->window = nullptr;
     SDL_Quit();
 }
 /*
@@ -275,15 +269,17 @@ void Visualisation::render()
     //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
     if (t_updateTime < updateTime)
     {
-        this->scene->update(t_updateTime + (UINT_MAX - updateTime));
+        this->scene->_update(t_updateTime + (UINT_MAX - updateTime));
     }
     else
     {
-        this->scene->update(t_updateTime - updateTime);
+        this->scene->_update(t_updateTime - updateTime);
     }
     updateTime = t_updateTime;
     // render
-    this->scene->executeRender();
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    this->scene->_render();
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	this->hud.render();
 
     GL_CHECK();
@@ -423,7 +419,7 @@ void Visualisation::resizeWindow(){
     this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
 	//Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
-    this->scene->resize(this->windowWidth, this->windowHeight);
+    this->scene->_resize(this->windowWidth, this->windowHeight);
 }
 /*
 @return True if the window is currently full screen
@@ -468,8 +464,9 @@ const Camera *Visualisation::getCamera() const{
 /*
 Returns a pointer to the visualisation's Scene
 @return The scene
+@note Preventing the Vis from deleting the Scene will cause GL errors to occur
 */
-const Scene *Visualisation::getScene() const{
+const std::weak_ptr<Scene> Visualisation::getScene() const{
     return this->scene;
 }
 /*

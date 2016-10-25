@@ -37,11 +37,12 @@ protected:
 	 */
 	virtual void resize(int width, int height){};
 	/**
-	 * @return True if you wish to allow the keypress to be handled elsewhere
+	 * Called when a reload event occurs
      */
 	virtual void reload(){};
 	/**
-	 * @return True if you wish to allow the keypress to be handled elsewhere
+	 * Called when you should update your scene
+	 * @param frameTime The number of milliseconds since the last time this method was called
 	 */
 	virtual void update(unsigned int frameTime){};
 	/**

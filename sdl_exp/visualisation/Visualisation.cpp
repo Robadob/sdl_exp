@@ -7,9 +7,8 @@
 #include "GLcheck.h"
 #include "interface/Scene.h"
 
-#include "Camera.h"
-#include "HUD.h"
 #include "Text.h"
+
 #define FOVY 60.0f
 #define NEAR_CLIP 0.005f
 #define FAR_CLIP 500.0f

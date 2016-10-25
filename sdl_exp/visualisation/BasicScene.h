@@ -16,8 +16,9 @@ public:
 protected:
 	/**
 	 * Registers an entity, so the scene can setup it's modelview and projection matrices and trigger reloads
+	 * @param ent The entity to be registered
 	 */
-	void registerEntity(std::shared_ptr<Entity> ent);
+	void registerEntity(std::shared_ptr<Renderable> ent);
 	/**
 	 * Override this method and do your rendering calls here
 	 */
@@ -83,7 +84,7 @@ private:
 	/**
 	 * Holds registered entities so the BasicScene can automatically reload them
 	 */
-	std::vector<std::shared_ptr<Entity>> entities;
+	std::vector<std::shared_ptr<Renderable>> entities;
 	/**
 	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	 */

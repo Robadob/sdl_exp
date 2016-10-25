@@ -1,17 +1,10 @@
 #include "MultiPassScene.h"
 
-/*
-Sets this scene within the visualisation
-@param visualisation The visualisation that is hosting the scene.
-*/
 MultiPassScene::MultiPassScene(Visualisation &visualisation)
     : Scene(visualisation)
 {
 
 }
-/*
-Registers an entity, so the scene can manage it's modelview and projection matrices and reloads
-*/
 void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
 {
     if (ent.get())
@@ -25,16 +18,11 @@ void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
     else
         fprintf(stderr, "Can't register a null entity!\n");
 }
-/*
-Reloads all registered entities, then calls reload on the subclassed scene
-*/
 void MultiPassScene::_reload()
 {
     printf("Reloading Shaders.\n");
-	for (std::vector<std::shared_ptr<Renderable>>::iterator i = entities.begin(); i != entities.end(); i++)
-    {
-        (*i)->reload();
-    }
+	for (auto&& it : entities)//byRef
+        it->reload();
     reload();
 }
 
@@ -50,18 +38,13 @@ std::shared_ptr<RenderPass> MultiPassScene::addPass(int index, std::shared_ptr<R
     return rtn;
 }
 
-void MultiPassScene::executeRender()
+void MultiPassScene::_render()
 {
     for (auto&& it : rpMap)//byRef
-    {
         it.second->executeRender();
-    }
 }
-void MultiPassScene::resize(const int width, const int height)
+void MultiPassScene::_resize(const int width, const int height)
 {
     for (auto&& it : rpMap)//byRef
-    {
         it.second->resize(width, height);
-    }
 }
-

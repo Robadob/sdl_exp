@@ -6,7 +6,7 @@ BasicScene::BasicScene(Visualisation& vis)
 	, skybox()
 	, renderAxisState(true)
 {  }
-void BasicScene::registerEntity(std::shared_ptr<Entity> ent)
+void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 {
 	if (ent)
 	{

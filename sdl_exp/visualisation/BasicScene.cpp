@@ -22,6 +22,11 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 void BasicScene::_render()
 {
 	//Bind back buffer
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	GL_CALL(glClearColor(0, 0, 0, 1));
+	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+	//Reset viewport
+	GL_CALL(glViewport(0, 0, visualisation.getWindowWidth(), visualisation.getWindowHeight()));
 	if (this->skybox)
 		this->skybox->render();
 	this->visualisation.defaultProjection();
@@ -41,13 +46,12 @@ bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y)
 		break;
 	default:
 		return true;
-		break;
 	}
 	return false;
 }
 void BasicScene::_reload() 
 {
-	for (std::vector<std::shared_ptr<Entity>>::iterator i = entities.begin(); i != entities.end(); i++)
+	for (std::vector<std::shared_ptr<Renderable>>::iterator i = entities.begin(); i != entities.end(); i++)
 	{
 		(*i)->reload();
 	}

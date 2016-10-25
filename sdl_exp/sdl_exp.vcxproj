@@ -167,6 +167,9 @@
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
+    <ClCompile Include="visualisation\multipass\FrameBuffer.cpp" />
+    <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
+    <ClCompile Include="visualisation\multipass\RenderPass.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
     <ClCompile Include="visualisation\shader\ComputeShader.cpp" />
     <ClCompile Include="visualisation\shader\ShaderCore.cpp" />
@@ -179,7 +182,6 @@
     <ClCompile Include="visualisation\texture\TextureBuffer.cu.cpp" />
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
-    <ClCompile Include="visualisation\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">
@@ -198,9 +200,12 @@
     <ClInclude Include="visualisation\GLcheck.h" />
     <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\interface\Reloadable.h" />
+    <ClInclude Include="visualisation\interface\Renderable.h" />
+    <ClInclude Include="visualisation\interface\Scene.h" />
     <ClInclude Include="visualisation\interface\Viewport.h" />
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
+    <ClInclude Include="visualisation\multipass\MultiPassScene.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
@@ -214,7 +219,6 @@
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
-    <ClInclude Include="visualisation\Scene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

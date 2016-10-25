@@ -240,6 +240,8 @@ void Visualisation::render()
     updateTime = t_updateTime;
     // render
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	GL_CALL(glClearColor(0, 0, 0, 1));
+	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     this->scene->_render();
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	this->hud.render();
@@ -334,7 +336,7 @@ void Visualisation::resizeWindow(){
     float fAspect = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
     double fovy = FOVY;
 
-    glViewport(0, 0, this->windowWidth, this->windowHeight);
+    //glViewport(0, 0, this->windowWidth, this->windowHeight);//This is now called by the scene each frame (because scaled render textures must call at their desired scale)
     float top = static_cast<float>(tan(glm::radians(fovy * 0.5)) * NEAR_CLIP);
     float bottom = -top;
     float left = fAspect * bottom;

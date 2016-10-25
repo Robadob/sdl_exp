@@ -2,6 +2,7 @@
 #define __RenderPass_h__
 #include "FrameBuffer.h"
 #include <memory>
+#include <glm/glm.hpp>
 
 /**
  * Base class that binds the named FrameBuffer before calling the subclasses render() to trigger rendering.
@@ -11,41 +12,21 @@ class RenderPass
 public:
     /**
      * Creates a RenderPass which renders to the default FrameBuffer (aka back buffer)
-     * This constructor creates one which has dimensions as a proportion of the viewport resolution
+     * The resolution of the backbuffer is controlled by the viewport
+     * @param clearColor The colour to clear the backBuffer with prior to render, each component is in the range 0-1
+     * @param doClear Whether to clear prior to render
      */
-    RenderPass(float scale=1, glm::vec3 clearColor=glm::vec3(0),bool doClear=true)
-        : fb()
-        , clearColor(clearColor)
-        , doClear(doClear)
-        , scale(scale)
-    { }
-    /**
-     * Creates a RenderPass which renders to the default FrameBuffer (aka back buffer)
-     * This constructor creates one which has fixed dimensions, and will not scale with
-     * @note This may not be required
-     */
-    RenderPass(glm::vec2 dimensions, glm::vec3 clearColor = glm::vec3(0), bool doClear = true)
-        : fb()
-        , clearColor(clearColor)
-        , doClear(doClear)
-        , scale(0)
-        , dimensions(dimensions)
-    { }
+	RenderPass(glm::vec3 clearColor = glm::vec3(0), bool doClear = true);
     /**
      * Creates a Renderpass which renders to a custom FrameBuffer
      * This constructor creates one which has dimensions as a proportion of the viewport resolution
      */
-    RenderPass(std::shared_ptr<FrameBuffer> fb, float scale = 1.0f, glm::vec3 clearColor = glm::vec3(0), bool doClear = true)
-        : fb(fb)
-        , clearColor(clearColor)
-        , doClear(doClear)
-        , scale(scale)
-    { }
+	RenderPass(std::shared_ptr<FrameBuffer> fb);
     /**
      * Creates a Renderpass which renders to a custom FrameBuffer
      * This constructor creates one which has fixed dimensions, and will not scale with
      */
-    RenderPass(std::shared_ptr<FrameBuffer> fb, glm::vec2 dimensions, glm::vec3 clearColor = glm::vec3(0), bool doClear = true)
+    RenderPass(std::shared_ptr<FrameBuffer> fb)
         : fb(fb)
         , clearColor(clearColor)
         , doClear(doClear)
@@ -125,7 +106,7 @@ public:
     /**
      * Triggered when the viewport resizes, such that attatched textures can be auto resized
      */
-    virtual void resize(const int width, const int height)
+    virtual void resize(int width, int height)
     {
         //TODO
     }

@@ -113,6 +113,14 @@ public:
 	 * @return The visualisation's scene
 	 */
 	HUD* getHUD();
+	/**
+	 * @return The current window/viewport width
+	 */
+	const int& getWindowWidth() const { return windowWidth; }
+	/**
+	 * @return The current window/viewport height
+	 */
+	const int& getWindowHeight() const { return windowHeight; }
 private:
 	/**
 	 * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)

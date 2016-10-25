@@ -63,9 +63,6 @@
     <ClCompile Include="visualisation\Visualisation.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\Scene.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\texture\Texture.cpp">
       <Filter>Source Files\Visualisation\Texture</Filter>
     </ClCompile>
@@ -108,6 +105,15 @@
     <ClCompile Include="visualisation\BasicScene.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\multipass\MultiPassScene.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\RenderPass.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\FrameBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -141,9 +147,6 @@
     </ClInclude>
     <ClInclude Include="visualisation\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Scene.h">
-      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\texture\Texture2D.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
@@ -195,6 +198,15 @@
     </ClInclude>
     <ClInclude Include="visualisation\multipass\FrameBuffer.h">
       <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Scene.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\MultiPassScene.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Renderable.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

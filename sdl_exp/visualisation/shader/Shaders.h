@@ -7,8 +7,6 @@
 
 #define NORMALS_SIZE 3
 
-class Entity;
-
 namespace Stock
 {
     namespace Shaders

@@ -1351,24 +1351,6 @@ void Entity::reload()
 		texture->reload();
 }
 /*
-Sets the modelview matrix to be tracked by this entitiy (in the shader)
-@param camera The camera holding the modelview matrix
-@note This function exists so that subclasses of Entity can intercept the matrix
-*/
-void Entity::setModelViewMatPtr(const Camera *camera)
-{
-	setModelViewMatPtr(camera->getViewMatPtr());
-}
-/*
-Sets the projection matrix to be tracked by this entitiy (in the shader)
-@param camera The visualisation holding the projection matrix
-@note This function exists so that subclasses of Entity can intercept the matrix
-*/
-void Entity::setProjectionMatPtr(const Viewport *visualisation)
-{
-	setProjectionMatPtr(visualisation->getFrustrumPtr());
-}
-/*
 Sets the pointer to the modelView matrix used by this entitiy (in the shader)
 @param modelViewMat A pointer to const of the modelView matrix to be tracked
 */

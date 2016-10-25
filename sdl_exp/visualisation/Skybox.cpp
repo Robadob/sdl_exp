@@ -43,19 +43,19 @@ void Skybox::render()
     glPopAttrib();
     glPopMatrix();
 }
-/*
-Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
-*/
+/**
+ * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
+ */
 void Skybox::setModelViewMatPtr(const Camera *camera)
 {
     if (shaders.get())
         shaders->setModelViewMatPtr(camera->getSkyboxViewMatPtr());
 }
-/*
-Adjusts the vertical offset of the skybox
-@param yOffset The desired offset
-@note Offsets large than -2.0f-2.0f can make the corners of the skybox visible
-*/
+/**
+ * Adjusts the vertical offset of the skybox
+ * @param yOffset The desired offset
+ * @note Offsets large than -2.0f-2.0f can make the corners of the skybox visible
+ */
 void Skybox::setYOffset(float yOffset)
 {
     setLocation(glm::vec3(0, yOffset, 0));

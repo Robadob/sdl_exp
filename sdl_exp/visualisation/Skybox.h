@@ -9,7 +9,8 @@ class Skybox : public Entity
 public:
     Skybox(const char *texturePath = TextureCubeMap::SKYBOX_PATH, float yOffset = 0.0f);
     void render() override;
-    void setModelViewMatPtr(const Camera *camera) override;
+	// ReSharper disable once CppHidingFunction
+    void setModelViewMatPtr(const Camera *camera);
     void setYOffset(float yOffset);
 };
 #endif //ifndef __Skybox_h__

@@ -3,18 +3,22 @@
 
 #include <memory>
 #include <vector>
-#include "interface/Scene.h"
-#include "Entity.h"
-#include "shader/Shaders.h"
-#include "Visualisation.h"
-#include "multipass/RenderPass.h"
+#include "../interface/Scene.h"
+#include "../interface/Renderable.h"
+//#include "Entity.h"
+#include "../shader/Shaders.h"
+#include "../Visualisation.h"
+#include "RenderPass.h"
 
 class MultiPassScene : public Scene
 {
     friend class Visualisation;
     friend class BasicScene;
 public:
-
+	/**
+	 * Creates a new MultiPassScene
+	 */
+	MultiPassScene(Visualisation &vis);
     /**
      * Called once per frame when Scene animation calls should be executed
      * @param frameTime The number of miliseconds since update was last called
@@ -27,10 +31,6 @@ public:
      */
     // ReSharper disable once CppHiddenFunction
     void executeRender();
-    /*
-    Manual destructor because the Scene MUST be destroyed prior to the Visualisation destroying the GL context
-    */
-    virtual void kill();
     /*
     Called when the user requests a reload
     @note You should call functions such as shaders->reload() here
@@ -50,15 +50,12 @@ public:
     // ReSharper disable once CppHiddenFunction
     void resize(int width, int height);
 protected:
-	MultiPassScene(Visualisation &vis);
-    Visualisation &visualisation;
-    Shaders *shaders;
-    void registerEntity(std::shared_ptr<Entity> ent);
+    void registerEntity(std::shared_ptr<Renderable> ent);
 	~MultiPassScene(){};//Protected destructor prevents this object being created on the stack (you must create via new)
     // ReSharper disable once CppHiddenFunction
     virtual void _reload();
 private:
-    std::vector<std::shared_ptr<Entity>> entities;
+	std::vector<std::shared_ptr<Renderable>> entities;
     std::map<int, std::shared_ptr<RenderPass>> rpMap;
 };
 

@@ -7,6 +7,9 @@
 #include "GLcheck.h"
 #include "interface/Scene.h"
 
+#include "Camera.h"
+#include "HUD.h"
+#include "Text.h"
 #define FOVY 60.0f
 #define NEAR_CLIP 0.005f
 #define FAR_CLIP 500.0f
@@ -25,22 +28,16 @@
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
 
-/*
-Creates a new window providing OpenGL functionality
-@param windowTitle The title of the window
-@param windowWidth The width of the contained graphics panel
-@param windowHeight The height of the contained graphics panel
-*/
 Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
-    : isInitialised(false)
+    : hud(windowWidth, windowHeight)
+    , camera(glm::vec3(50,50,50))
+    , scene(0)
+    , isInitialised(false)
     , continueRender(true)
+	, msaaState(true)
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
-	, hud(windowWidth, windowHeight)
-    , camera(glm::vec3(50,50,50))
-    , msaaState(true)
-    , scene(0)
     , fpsDisplay(0)
 {
     this->isInitialised = this->init();
@@ -53,16 +50,7 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     helpText->setVisible(false);
     hud.add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
 }
-/*
-Default destructor, destruction happens in close() to ensure objects are killed before the GL context
-@see close()
-*/
 Visualisation::~Visualisation(){}
-/*
-Initialises SDL and creates the window
-@return Returns true on success
-@note This method doesn't begin the render loop, use run() for that
-*/
 bool Visualisation::init(){
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -126,35 +114,17 @@ bool Visualisation::init(){
     }
     return false;
 }
-/*
-Sets the scene to be rendered
-@param scene The desired scene
-@return Returns the previously bound scene
-*/
 std::shared_ptr<Scene> Visualisation::setScene(std::unique_ptr<Scene> scene)
 {
 	std::shared_ptr<Scene> oldScene = this->scene;
 	this->scene = std::shared_ptr<Scene>(scene.release());
     return oldScene;
 }
-/*
-Moves the camera according to the motion of the mouse (whilst the mouse is attatched to the window via toggleMouseMode())
-@param x The horizontal distance moved
-@param y The vertical distance moved
-@note This is called within the render loop
-*/
 void Visualisation::handleMouseMove(int x, int y){
     if (SDL_GetRelativeMouseMode()){
         this->camera.turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
     }
 }
-/*
-Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
-@param keycode The keypress detected
-@param x The horizontal mouse position at the time of the KEY_DOWN event
-@param y The vertical mouse position at the time of the KEY_DOWN event
-@note Unsure whether the mouse position is relative to the window
-*/
 void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     //Pass key events to the scene and skip handling if false is returned 
     if (scene&&!scene->_keypress(keycode, x, y))
@@ -185,9 +155,6 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
         break;
     }
 }
-/*
-Provides destruction of the object, deletes child objects, removes the GL context, closes the window and calls SDL_quit()
-*/
 void Visualisation::close(){
     //Delete objects before we delete the GL context!
     fpsDisplay.reset();
@@ -201,10 +168,6 @@ void Visualisation::close(){
     this->window = nullptr;
     SDL_Quit();
 }
-/*
-Renders a single frame
-@note Also handle user inputs
-*/
 void Visualisation::render()
 {
     //Static fn var for tracking the time to send to scene->update()
@@ -287,10 +250,6 @@ void Visualisation::render()
     // update the screen
     SDL_GL_SwapWindow(window);
 }
-/*
-Executes the render loop
-@see setQuit() to externally kill the loop
-*/
 void Visualisation::run(){
     if (!this->isInitialised){
         printf("Visulisation not initialised yet.");
@@ -314,17 +273,6 @@ void Visualisation::run(){
 
     this->close();
 }
-/*
-Clears the frame
-@note This is called within the render loop before the frame is rendered
-*/
-void Visualisation::clearFrame(){
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-/*
-Loads the ModelView and Projection matrices using the old fixed function pipeline methods
-*/
 void Visualisation::defaultProjection(){
     glEnable(GL_CULL_FACE);
     glMatrixMode(GL_PROJECTION);
@@ -334,10 +282,6 @@ void Visualisation::defaultProjection(){
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(this->camera.view()));
 }
-/*
-Toggles whether Multi-Sample Anti-Aliasing should be used or not
-@param state The desired MSAA state
-*/
 void Visualisation::setMSAA(bool state){
     this->msaaState = state;
     if (this->msaaState)
@@ -345,28 +289,15 @@ void Visualisation::setMSAA(bool state){
     else
         glDisable(GL_MULTISAMPLE);
 }
-/*
-@return The current window title (sans the FPS)
-*/
 const char *Visualisation::getWindowTitle() const{
     return this->windowTitle;
 }
-/*
-Sets the window title (sans the FPS)
-@param windowTitle Desired title of the window
-*/
 void Visualisation::setWindowTitle(const char *windowTitle){
     this->windowTitle = windowTitle;
 }
-/*
-Sets a flag telling the render loop to exit
-*/
 void Visualisation::quit(){
     this->continueRender = false;
 }
-/*
-Toggles the window between borderless fullscreen and windowed states
-*/
 void Visualisation::toggleFullScreen(){
     if (this->isFullscreen()){
         // Update the window using the stored windowBounds
@@ -389,9 +320,6 @@ void Visualisation::toggleFullScreen(){
     }
     this->resizeWindow();
 }
-/*
-Toggles whether the mouse is hidden and returned relative to the window
-*/
 void Visualisation::toggleMouseMode(){
     if (SDL_GetRelativeMouseMode()){
         SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -400,10 +328,6 @@ void Visualisation::toggleMouseMode(){
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
 }
-/*
-Updates the viewport and projection matrix
-This should be called after window resize events, or simply if the viewport needs generating
-*/
 void Visualisation::resizeWindow(){
     // Use the sdl drawable size
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
@@ -421,18 +345,10 @@ void Visualisation::resizeWindow(){
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
     this->scene->_resize(this->windowWidth, this->windowHeight);
 }
-/*
-@return True if the window is currently full screen
-*/
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.
     return (SDL_GetWindowFlags(this->window) & SDL_WINDOW_BORDERLESS) == SDL_WINDOW_BORDERLESS;
 }
-/*
-Simple implementation of an FPS counter
-Appends the fps to the windows title
-@note This is called within the render loop
-*/
 void Visualisation::updateFPS(){
     // Update the current time
     this->currentTime = SDL_GetTicks();
@@ -454,33 +370,15 @@ void Visualisation::updateFPS(){
         this->frameCount = 0;
     }
 }
-/*
-Returns a const pointer to the visualisation's Camera
-@return The camera
-*/
 const Camera *Visualisation::getCamera() const{
     return &this->camera;
 }
-/*
-Returns a pointer to the visualisation's Scene
-@return The scene
-@note Preventing the Vis from deleting the Scene will cause GL errors to occur
-*/
-const std::weak_ptr<Scene> Visualisation::getScene() const{
+std::weak_ptr<Scene> Visualisation::getScene() const{
     return this->scene;
 }
-/*
-Returns a constant pointer to the visualisations view frustum
-This pointer can be used to continuously track the visualisations projection matrix
-@return A pointer to the projection matrix
-*/
 const glm::mat4 *Visualisation::getFrustrumPtr() const{
     return &this->frustum;
 }
-/*
-Returns the visusalisation's HUD, to be used to add overlays
-@return The visualisation's scene
-*/
 HUD* Visualisation::getHUD(){
 	return &hud;
 }

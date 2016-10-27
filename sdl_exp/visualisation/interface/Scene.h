@@ -36,10 +36,10 @@ public:
 	 */
 	virtual void _update(unsigned int frameTime) {};
 
+	virtual ~Scene(){};
 protected:
 	Scene(Visualisation &vis) :visualisation(vis){};
 	Visualisation &visualisation;
-	virtual ~Scene(){};
 };
 
 #endif //__Scene_h__

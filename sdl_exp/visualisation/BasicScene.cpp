@@ -39,7 +39,7 @@ bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y)
 {
 	//Pass key events to the scene and skip handling if false is returned 
 	if (!keypress(keycode, x, y))
-		return;
+		return false;
 	switch (keycode){
 	case SDLK_F9:
 		this->setSkybox(!this->skybox);

@@ -9,7 +9,7 @@
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
-class EntityScene : BasicScene
+class EntityScene : public BasicScene
 {
 	friend class BasicScene;
 public:

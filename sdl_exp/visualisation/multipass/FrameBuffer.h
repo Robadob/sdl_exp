@@ -2,6 +2,8 @@
 #define __FrameBuffer_h__
 #include "../GLcheck.h"
 #include "glm/glm.hpp"
+#include <map>
+
 /**
  * https://open.gl/framebuffers
  * Need to tie this to resize events somehow
@@ -35,12 +37,6 @@ public:
 		 * @see glTexImage2D() 
 		 */
 		GLenum colorType;//GL_UNSIGNED_BYTE
-		/**
-		 * Allows multiple colour attatchments to a FBO.
-		 * The limit is provided by GL_MAX_COLOR_ATTACHMENTS
-		 * @note Valid values range from 0 to GL_MAX_COLOR_ATTACHMENTS - 1 and should be unique
-		 */
-		unsigned int attachmentId;
 		/**
 		 * Number of samples required
 		 * If less than or equal to 1, multisample is disabled
@@ -141,18 +137,18 @@ public:
 	~FrameBuffer();
 	bool isValid();
     GLuint getName() const{ return name; }
-    /**
-     * Todo, probably 1 per attatchment may work better?
-     */
-    void addAttachment()
-    {
-        
-    }
+	/**
+	 * @return The color attachment point bound to. -1 if max color attachments already reached
+	 * @note GTX960 reported 8 max color attachments
+	 */
+	int addColorAttachment(FrameBuffer::Color attachment);
 	void resize(int width, int height);
 	bool use();
+	static int getMaxColorAttachments();
 private:
 	FrameBuffer(Color color, Depth depth, Stencil stencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear);
 	void makeColor();
+	void makeColor(GLuint attachPt);
 	void makeDepth();
 	void makeStencil();
 	static GLuint getActiveFB();
@@ -162,8 +158,11 @@ private:
     GLuint name;
 	glm::vec3 clearColor;
 	bool doClear;
-
-	const Color colorConf;
+	/**
+	 * Key: Color attachment point
+	 * Value: Color attachment configuration
+	 */
+	std::map<GLuint, const Color> colorConfs;
 	GLuint colorName;
 	const Depth depthConf;
 	const Stencil stencilConf;

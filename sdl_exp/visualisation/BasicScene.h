@@ -9,7 +9,7 @@
  * Natively includes a Skybox and Axis
  * Allows registering of entities, so their shaders can be reloaded on reload events
  */
-class BasicScene : protected Scene
+class BasicScene : public Scene
 {
 public:
 	BasicScene(Visualisation& vis);

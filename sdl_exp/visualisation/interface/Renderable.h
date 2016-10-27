@@ -4,8 +4,8 @@
 #include "Reloadable.h"
 #include <glm/mat4x4.hpp>
 
-#include "Viewport.h";
-#include "../Camera.h";
+#include "Viewport.h"
+#include "../Camera.h"
 
 /**
  * Represents things which hold shaders (and can be rendered)

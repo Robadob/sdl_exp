@@ -344,7 +344,8 @@ void Visualisation::resizeWindow(){
     this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
 	//Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
-    this->scene->_resize(this->windowWidth, this->windowHeight);
+	if (this->scene)
+		this->scene->_resize(this->windowWidth, this->windowHeight);
 }
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.

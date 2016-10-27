@@ -36,14 +36,7 @@ public:
     /**
      * Triggered when the viewport resizes, such that attatched textures can be auto resized
      */
-    virtual void resize(int width, int height)
-    {
-        //TODO
-    }
-    virtual void attachFBO() final
-    {
-        //TODO
-    }
+	virtual void resize(int width, int height);
 private:
     const std::shared_ptr<FrameBuffer> fb;
 protected:

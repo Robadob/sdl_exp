@@ -1,28 +1,64 @@
 #include "FrameBuffer.h"
 
 FrameBuffer::FrameBuffer(Color color, Depth depth, Stencil stencil, float scale, bool doClear, glm::vec3 clearColor)
+	: FrameBuffer({ color }, depth, stencil, scale, glm::uvec2(0), clearColor, doClear)
+{ }
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, Color color, Depth depth, Stencil stencil, bool doClear, glm::vec3 clearColor)
+	: FrameBuffer({ color }, depth, stencil, 0, dimensions, clearColor, doClear)
+{ }
+FrameBuffer::FrameBuffer(Color color, DepthStencil depthstencil, float scale, bool doClear, glm::vec3 clearColor)
+	: FrameBuffer({ color }, depthstencil, scale, glm::uvec2(0), clearColor, doClear)
+{ }
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, Color color, DepthStencil depthstencil, bool doClear, glm::vec3 clearColor)
+	: FrameBuffer({ color }, depthstencil, 0, dimensions, clearColor, doClear)
+{ }
+FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stencil stencil, float scale, bool doClear, glm::vec3 clearColor)
 	: FrameBuffer(color, depth, stencil, scale, glm::uvec2(0), clearColor, doClear)
 { }
-FrameBuffer::FrameBuffer(Color color, Depth depth, Stencil stencil, glm::uvec2 dimensions, bool doClear, glm::vec3 clearColor)
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<Color> color, Depth depth, Stencil stencil, bool doClear, glm::vec3 clearColor)
 	: FrameBuffer(color, depth, stencil, 0, dimensions, clearColor, doClear)
 { }
-FrameBuffer::FrameBuffer(Color color, Depth depth, Stencil stencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
+FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depthstencil, float scale, bool doClear, glm::vec3 clearColor)
+	: FrameBuffer(color, depthstencil, scale, glm::uvec2(0), clearColor, doClear)
+{ }
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<Color> color, DepthStencil depthstencil, bool doClear, glm::vec3 clearColor)
+	: FrameBuffer(color, depthstencil, 0, dimensions, clearColor, doClear)
+{ }
+
+FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stencil stencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
 	: scale(scale)
 	, dimensions(dimensions)
 	, clearColor(clearColor)
 	, doClear(doClear)
 	, colorName(0)
-	, depthStencilConf()
+	, depthStencilConf({ Disabled })
 	, depthConf(depth)
 	, depthName(0)
 	, stencilConf(stencil)
 	, stencilName(0)
 {
 	GL_CALL(glGenFramebuffers(1, &name));
-	addColorAttachment(color);
-	makeDepthStencil();
+	for (Color c : color)
+		addColorAttachment(c);
 	makeDepth();
 	makeStencil();
+}
+FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depthstencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
+	: scale(scale)
+	, dimensions(dimensions)
+	, clearColor(clearColor)
+	, doClear(doClear)
+	, colorName(0)
+	, depthStencilConf(depthstencil)
+	, depthConf({ Disabled })
+	, depthName(0)
+	, stencilConf({ Disabled })
+	, stencilName(0)
+{
+	GL_CALL(glGenFramebuffers(1, &name));
+	for (Color c : color)
+		addColorAttachment(c);
+	makeDepthStencil();
 }
 FrameBuffer::~FrameBuffer()
 {
@@ -99,14 +135,18 @@ void FrameBuffer::makeColor(GLuint attachPt)
 	}
 	else if (colorConfs[attachPt].type == RenderBuffer)
 	{
-		//If it doesn't exist, make
-		if (colorName == 0)
-			GL_CALL(glGenRenderbuffers(1, &colorName));
-		//Set storage
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, colorName));
-		GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y));
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-
+		if (colorConfs[attachPt].texName == 0)
+		{
+			//If it doesn't exist, make
+			if (colorName == 0)
+				GL_CALL(glGenRenderbuffers(1, &colorName));
+			//Set storage
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, colorName));
+			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y));
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		}
+		else
+			colorName = colorConfs[attachPt].texName;
 		//Bind to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
@@ -139,7 +179,11 @@ void FrameBuffer::makeDepthStencil()
 			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
 		}
 		else
+		{
 			depthName = depthStencilConf.texName;
+			stencilName = depthName;
+		}
+
 		//Bind the tex to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
@@ -148,16 +192,24 @@ void FrameBuffer::makeDepthStencil()
 	}
 	else if (depthStencilConf.type == RenderBuffer)
 	{
-		//If it doesn't exist, make
-		if (depthName == 0 && stencilName == 0)
+		if (depthStencilConf.texName == 0)
 		{
-			GL_CALL(glGenRenderbuffers(1, &depthName));
+			//If it doesn't exist, make
+			if (depthName == 0 && stencilName == 0)
+			{
+				GL_CALL(glGenRenderbuffers(1, &depthName));
+				stencilName = depthName;
+			}
+			//Set storage
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
+			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		}
+		else
+		{
+			depthName = depthStencilConf.texName;
 			stencilName = depthName;
 		}
-		//Set storage
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-		GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
 
 		//Bind to our framebuffer
 		GLuint prevFBO = getActiveFB();
@@ -197,13 +249,18 @@ void FrameBuffer::makeDepth()
 	}
 	else if (depthConf.type == RenderBuffer)
 	{
-		//If it doesn't exist, make
-		if (depthName == 0)
-			GL_CALL(glGenRenderbuffers(1, &depthName));
-		//Set storage
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-		GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthConf.colorInternalFormat, dimensions.x, dimensions.y));
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		if (depthConf.texName == 0)
+		{
+			//If it doesn't exist, make
+			if (depthName == 0)
+				GL_CALL(glGenRenderbuffers(1, &depthName));
+			//Set storage
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
+			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthConf.colorInternalFormat, dimensions.x, dimensions.y));
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		}
+		else
+			depthName = depthConf.texName;
 
 		//Bind to our framebuffer
 		GLuint prevFBO = getActiveFB();
@@ -225,7 +282,7 @@ void FrameBuffer::makeStencil()
 			GL_CALL(glBindTexture(GL_TEXTURE_2D, stencilName));
 
 			//Size the texture
-			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, stencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_STENCIL_INDEX8, GL_UNSIGNED_BYTE, nullptr));
+			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, dimensions.x, dimensions.y, 0, GL_STENCIL_INDEX8, GL_UNSIGNED_BYTE, nullptr));
 
 			//Config for mipmap access
 			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
@@ -243,13 +300,18 @@ void FrameBuffer::makeStencil()
 	}
 	else if (stencilConf.type == RenderBuffer)
 	{
-		//If it doesn't exist, make
-		if (stencilName == 0)
-			GL_CALL(glGenRenderbuffers(1, &stencilName));
-		//Set storage
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, stencilName));
-		GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, stencilConf.colorInternalFormat, dimensions.x, dimensions.y));
-		GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		if (stencilConf.texName == 0)
+		{
+			//If it doesn't exist, make
+			if (stencilName == 0)
+				GL_CALL(glGenRenderbuffers(1, &stencilName));
+			//Set storage
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, stencilName));
+			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, dimensions.x, dimensions.y));
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+		}
+		else
+			stencilName = stencilConf.texName;
 
 		//Bind to our framebuffer
 		GLuint prevFBO = getActiveFB();
@@ -263,10 +325,10 @@ GLuint FrameBuffer::getActiveFB()
 	GLuint prevFB = 0;
 	// GL_FRAMEBUFFER_BINDING Enum has MANY names based on extension/version
 	// but they all map to 0x8CA6
-	GL_CALL(glGetIntegerv(0x8CA6, (GLint*)&prevFB));
+	GL_CALL(glGetIntegerv(0x8CA6, reinterpret_cast<GLint*>(&prevFB)));
 	return prevFB;
 }
-bool FrameBuffer::isValid()
+bool FrameBuffer::isValid() const
 {
 	GLuint prevFBO = getActiveFB();
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
@@ -282,16 +344,14 @@ void FrameBuffer::resize(int width, int height)
 		makeColor();
 		makeDepth();
 		makeStencil();
+		makeDepthStencil();
 	}
 }
-bool FrameBuffer::use()
+bool FrameBuffer::use() const
 {
-	GLuint prevFBO = 0;
-	// GL_FRAMEBUFFER_BINDING Enum has MANY names based on extension/version
-	// but they all map to 0x8CA6
-	GL_CALL(glGetIntegerv(0x8CA6, (GLint*)&prevFBO));
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
 #if _DEBUG //Only do this check in debug
+	GLuint prevFBO = getActiveFB();
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
 	GLint st = GL_CALL(glCheckFramebufferStatus(GL_FRAMEBUFFER));
 	if (st != GL_FRAMEBUFFER_COMPLETE)
 	{
@@ -335,6 +395,8 @@ bool FrameBuffer::use()
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 		return false;
 	}
+#else
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
 #endif //_DEBUG
 
 	if (doClear)

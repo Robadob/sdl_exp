@@ -1,5 +1,4 @@
 #include "EntityScene.h"
-#include "visualisation/multipass/FrameBuffer.h"
 
 int main()
 {

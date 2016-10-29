@@ -163,6 +163,58 @@ public:
 	void resize(int width, int height);
 	bool use() const;
 	static int getMaxColorAttachments();
+	/**
+	 * @return The name of the contained GL_FRAMEBUFFER
+	 */
+	GLuint getFrameBufferName() { return name; };
+	/**
+	 * @param attachPt The attachment point required, these are 0-indexed in the order color attachments were bound
+	 * @return The name of the texture bound to the specified attachment point
+	 * @note 0 is returned if not bound or bound as renderbuffer
+	 */
+	GLuint getColorTextureName(GLuint attachPt = 0) const;
+	/**
+	 * @return The name of the texture bound to the specified attachment point
+	 * @note 0 is returned if not bound or bound as renderbuffer
+	 * @note This will return a value if you bound a Depth texture or a DepthStencil texture
+	 */
+	GLuint getDepthTextureName() const;
+	/**
+	* @return The name of the texture bound to the specified attachment point
+	* @note 0 is returned if not bound or bound as renderbuffer
+	 * @note This will return a value if you bound a Stencil texture or a DepthStencil texture
+	*/
+	GLuint getStencilTextureName() const;
+	/**
+	* @return The name of the texture bound to the specified attachment point
+	* @note 0 is returned if not bound or bound as renderbuffer
+	* @note This will only return a value if you bound a DepthStencil texture
+	*/
+	GLuint getDepthStencilTextureName() const;
+	/**
+	* @param attachPt The attachment point required, these are 0-indexed in the order color attachments were bound
+	* @return The name of the renderbuffer bound to the specified attachment point
+	* @note 0 is returned if not bound or bound as texture
+	*/
+	GLuint getColorRenderBufferName(GLuint attachPt = 0) const;
+	/**
+	* @return The name of the renderbuffer bound to the specified attachment point
+	* @note 0 is returned if not bound or bound as texture
+	* @note This will return a value if you bound a Depth renderbuffer or a DepthStencil renderbuffer
+	*/
+	GLuint getDepthRenderBufferName() const;
+	/**
+	* @return The name of the renderbuffer bound to the specified attachment point
+	* @note 0 is returned if not bound or bound as texture
+	* @note This will return a value if you bound a Stencil renderbuffer or a DepthStencil renderbuffer
+	*/
+	GLuint getStencilRenderBufferName() const;
+	/**
+	* @return The name of the renderbuffer bound to the specified attachment point
+	* @note 0 is returned if not bound or bound as texture
+	* @note This will only return a value if you bound a DepthStencil renderbuffer
+	*/
+	GLuint getDepthStencilRenderBufferName() const;
 private:
 	FrameBuffer(std::initializer_list<Color> color, Depth depth, Stencil stencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear);
 	FrameBuffer(std::initializer_list<Color> color, DepthStencil depthstencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear);
@@ -183,7 +235,11 @@ private:
 	 * Value: Color attachment configuration
 	 */
 	std::map<GLuint, const Color> colorConfs;
-	GLuint colorName;
+	/**
+	 * Holds the texture/render buffer name for each color attachment
+	 * @note Unless an issue occurs, every item in this map should have a corresponding item in colorConfs
+	 */
+	std::map<GLuint, GLuint> colorNames;
 	const DepthStencil depthStencilConf;
 	const Depth depthConf;
 	GLuint depthName;

@@ -30,7 +30,6 @@ FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stenci
 	, dimensions(dimensions)
 	, clearColor(clearColor)
 	, doClear(doClear)
-	, colorName(0)
 	, depthStencilConf({ Disabled })
 	, depthConf(depth)
 	, depthName(0)
@@ -48,7 +47,6 @@ FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depths
 	, dimensions(dimensions)
 	, clearColor(clearColor)
 	, doClear(doClear)
-	, colorName(0)
 	, depthStencilConf(depthstencil)
 	, depthConf({ Disabled })
 	, depthName(0)
@@ -65,10 +63,13 @@ FrameBuffer::~FrameBuffer()
 	//Color
 	for (auto &&it = colorConfs.begin(); it != colorConfs.end(); ++it)
 	{
-		if (it->second.type == Texture){
-			GL_CALL(glDeleteTextures(1, &colorName));
-		}else if (it->second.type == RenderBuffer)
-			GL_CALL(glDeleteRenderbuffers(1, &colorName));
+		auto &&it2 = colorNames.find(it->first);
+		if (it->second.type == Texture&&it2!=colorNames.end()){
+			GL_CALL(glDeleteTextures(1, &it2->second));
+		}
+		else if (it->second.type == RenderBuffer&&it2 != colorNames.end())
+			GL_CALL(glDeleteRenderbuffers(1, &it2->second));
+		colorNames.erase(it2);
 	}
 	colorConfs.clear();
 	//DepthStencil
@@ -111,10 +112,11 @@ void FrameBuffer::makeColor(GLuint attachPt)
 		if (colorConfs[attachPt].texName == 0)
 		{
 			//If it doesn't exist
-			if (colorName == 0)
-				GL_CALL(glGenTextures(1, &colorName));
+			auto&& it = colorNames.find(attachPt);
+			if (it==colorNames.end() || it->second == 0)
+				GL_CALL(glGenTextures(1, &it->second));
 
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, colorName));
+			GL_CALL(glBindTexture(GL_TEXTURE_2D, it->second));
 
 			//Size the texture
 			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, 0, colorConfs[attachPt].colorFormat, colorConfs[attachPt].colorType, nullptr));
@@ -126,11 +128,11 @@ void FrameBuffer::makeColor(GLuint attachPt)
 			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
 		}
 		else
-			colorName = colorConfs[attachPt].texName;
+			colorNames[attachPt] = colorConfs[attachPt].texName;
 		//Bind the tex to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D, colorName, 0));
+		GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D, colorNames[attachPt], 0));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 	else if (colorConfs[attachPt].type == RenderBuffer)
@@ -138,19 +140,20 @@ void FrameBuffer::makeColor(GLuint attachPt)
 		if (colorConfs[attachPt].texName == 0)
 		{
 			//If it doesn't exist, make
-			if (colorName == 0)
-				GL_CALL(glGenRenderbuffers(1, &colorName));
+			auto&& it = colorNames.find(attachPt);
+			if (it == colorNames.end() || it->second == 0)
+				GL_CALL(glGenRenderbuffers(1, &it->second));
 			//Set storage
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, colorName));
+			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, it->second));
 			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y));
 			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
 		}
 		else
-			colorName = colorConfs[attachPt].texName;
+			colorNames[attachPt] = colorConfs[attachPt].texName;
 		//Bind to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_RENDERBUFFER, colorName));
+		GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_RENDERBUFFER, colorNames[attachPt]));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
@@ -432,4 +435,64 @@ int FrameBuffer::getMaxColorAttachments()
 	int rtn = 0;
 	GL_CALL(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &rtn));
 	return rtn;
+}
+
+
+GLuint FrameBuffer::getColorTextureName(GLuint attachPt) const
+{
+	auto && it = colorConfs.find(attachPt);
+	if (it != colorConfs.end()&&it->second.type==Texture)
+	{
+		auto && it2 = colorNames.find(attachPt);
+		if (it2 != colorNames.end())
+			return it2->second;
+	}
+	return 0;
+}
+GLuint FrameBuffer::getDepthTextureName() const
+{
+	if (depthConf.type == Texture || depthStencilConf.type == Texture)
+		return depthName;
+	return 0;
+}
+GLuint FrameBuffer::getStencilTextureName() const
+{
+	if (stencilConf.type == Texture || depthStencilConf.type == Texture)
+		return stencilName;
+	return 0;
+}
+GLuint FrameBuffer::getDepthStencilTextureName() const
+{
+	if (depthStencilConf.type == Texture)
+		return depthName;
+	return 0;
+}
+GLuint FrameBuffer::getColorRenderBufferName(GLuint attachPt) const
+{
+	auto && it = colorConfs.find(attachPt);
+	if (it != colorConfs.end() && it->second.type == RenderBuffer)
+	{
+		auto && it2 = colorNames.find(attachPt);
+		if (it2 != colorNames.end())
+			return it2->second;
+	}
+	return 0;
+}
+GLuint FrameBuffer::getDepthRenderBufferName() const
+{
+	if (depthConf.type == RenderBuffer || depthStencilConf.type == RenderBuffer)
+		return depthName;
+	return 0;
+}
+GLuint FrameBuffer::getStencilRenderBufferName() const
+{
+	if (stencilConf.type == RenderBuffer || depthStencilConf.type == RenderBuffer)
+		return stencilName;
+	return 0;
+}
+GLuint FrameBuffer::getDepthStencilRenderBufferName() const
+{
+	if (depthStencilConf.type == RenderBuffer)
+		return depthName;
+	return 0;
 }

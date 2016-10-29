@@ -111,219 +111,223 @@ void FrameBuffer::makeColor()
 }
 void FrameBuffer::makeColor(GLuint attachPt)
 {
-	if (colorConfs[attachPt].type == Texture)
+	if (colorConfs[attachPt].type != Disabled)
 	{
-		if (colorConfs[attachPt].texName == 0)
-		{
-			//If it doesn't exist
-			auto&& it = colorNames.find(attachPt);
-			if (it==colorNames.end() || it->second == 0)
-				GL_CALL(glGenTextures(1, &it->second));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, it->second));
-
-			//Size the texture
-			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, 0, colorConfs[attachPt].colorFormat, colorConfs[attachPt].colorType, nullptr));
-
-			//Config for mipmap access
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-		}
-		else
-			colorNames[attachPt] = colorConfs[attachPt].texName;
-		//Bind the tex to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D, colorNames[attachPt], 0));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-	else if (colorConfs[attachPt].type == RenderBuffer)
-	{
-		if (colorConfs[attachPt].texName == 0)
+		if (colorConfs[attachPt].type == Texture)
 		{
-			//If it doesn't exist, make
-			auto&& it = colorNames.find(attachPt);
-			if (it == colorNames.end() || it->second == 0)
-				GL_CALL(glGenRenderbuffers(1, &it->second));
-			//Set storage
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, it->second));
-			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y));
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+			if (colorConfs[attachPt].texName == 0)
+			{
+				//If it doesn't exist
+				auto&& it = colorNames.find(attachPt);
+				if (it==colorNames.end() || it->second == 0)
+					GL_CALL(glGenTextures(1, &it->second));
+
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, it->second));
+
+				//Size the texture
+				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, 0, colorConfs[attachPt].colorFormat, colorConfs[attachPt].colorType, nullptr));
+
+				//Config for mipmap access
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+			}
+			else
+				colorNames[attachPt] = colorConfs[attachPt].texName;
+			//Bind the tex to our framebuffer
+			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D, colorNames[attachPt], 0));
 		}
-		else
-			colorNames[attachPt] = colorConfs[attachPt].texName;
-		//Bind to our framebuffer
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_RENDERBUFFER, colorNames[attachPt]));
+		else if (colorConfs[attachPt].type == RenderBuffer)
+		{
+			if (colorConfs[attachPt].texName == 0)
+			{
+				//If it doesn't exist, make
+				auto&& it = colorNames.find(attachPt);
+				if (it == colorNames.end() || it->second == 0)
+					GL_CALL(glGenRenderbuffers(1, &it->second));
+				//Set storage
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, it->second));
+				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y));
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+			}
+			else
+				colorNames[attachPt] = colorConfs[attachPt].texName;
+			//Bind to our framebuffer
+			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_RENDERBUFFER, colorNames[attachPt]));
+		}
+		drawBuffs.push_back(GL_COLOR_ATTACHMENT0 + attachPt);
+		GL_CALL(glDrawBuffers(drawBuffs.size(), drawBuffs.data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
 void FrameBuffer::makeDepthStencil()
 {
-	if (depthStencilConf.type == Texture)
+	if (depthStencilConf.type != Disabled)
 	{
-		if (depthStencilConf.texName == 0)
-		{
-			//If it doesn't exist
-			if (depthName == 0 && stencilName==0)
-			{
-				GL_CALL(glGenTextures(1, &depthName));
-				stencilName = depthName;
-			}
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
-
-			//Size the texture
-			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_BYTE, nullptr));
-
-			//Config for mipmap access
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-		}
-		else
-		{
-			depthName = depthStencilConf.texName;
-			stencilName = depthName;
-		}
-
-		//Bind the tex to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthName, 0));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-	else if (depthStencilConf.type == RenderBuffer)
-	{
-		if (depthStencilConf.texName == 0)
+		if (depthStencilConf.type == Texture)
 		{
-			//If it doesn't exist, make
-			if (depthName == 0 && stencilName == 0)
+			if (depthStencilConf.texName == 0)
 			{
-				GL_CALL(glGenRenderbuffers(1, &depthName));
+				//If it doesn't exist
+				if (depthName == 0 && stencilName==0)
+				{
+					GL_CALL(glGenTextures(1, &depthName));
+					stencilName = depthName;
+				}
+
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
+
+				//Size the texture
+				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_BYTE, nullptr));
+
+				//Config for mipmap access
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+			}
+			else
+			{
+				depthName = depthStencilConf.texName;
 				stencilName = depthName;
 			}
-			//Set storage
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+			//Bind the tex to our framebuffer
+			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthName, 0));
 		}
-		else
+		else if (depthStencilConf.type == RenderBuffer)
 		{
-			depthName = depthStencilConf.texName;
-			stencilName = depthName;
+			if (depthStencilConf.texName == 0)
+			{
+				//If it doesn't exist, make
+				if (depthName == 0 && stencilName == 0)
+				{
+					GL_CALL(glGenRenderbuffers(1, &depthName));
+					stencilName = depthName;
+				}
+				//Set storage
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
+				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+			}
+			else
+			{
+				depthName = depthStencilConf.texName;
+				stencilName = depthName;
+			}
+			//Bind to our framebuffer
+			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthName));
 		}
-
-		//Bind to our framebuffer
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthName));
+		drawBuffs.push_back(GL_DEPTH_STENCIL_ATTACHMENT);
+		GL_CALL(glDrawBuffers(drawBuffs.size(), drawBuffs.data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
 void FrameBuffer::makeDepth()
 {
-	if (depthConf.type == Texture)
+	if (depthConf.type != Disabled)
 	{
-		if (depthConf.texName == 0)
-		{
-			//If it doesn't exist
-			if (depthName == 0)
-				GL_CALL(glGenTextures(1, &depthName));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
-
-			//Size the texture
-			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr));
-
-			//Config for mipmap access
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-		}
-		else
-			depthName = depthConf.texName;
-		//Bind the tex to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthName, 0));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-	else if (depthConf.type == RenderBuffer)
-	{
-		if (depthConf.texName == 0)
+		if (depthConf.type == Texture)
 		{
-			//If it doesn't exist, make
-			if (depthName == 0)
-				GL_CALL(glGenRenderbuffers(1, &depthName));
-			//Set storage
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthConf.colorInternalFormat, dimensions.x, dimensions.y));
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-		}
-		else
-			depthName = depthConf.texName;
+			if (depthConf.texName == 0)
+			{
+				//If it doesn't exist
+				if (depthName == 0)
+					GL_CALL(glGenTextures(1, &depthName));
 
-		//Bind to our framebuffer
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthName));
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
+
+				//Size the texture
+				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr));
+
+				//Config for mipmap access
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+			}
+			else
+				depthName = depthConf.texName;
+			//Bind the tex to our framebuffer
+			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthName, 0));
+		}
+		else if (depthConf.type == RenderBuffer)
+		{
+			if (depthConf.texName == 0)
+			{
+				//If it doesn't exist, make
+				if (depthName == 0)
+					GL_CALL(glGenRenderbuffers(1, &depthName));
+				//Set storage
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
+				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthConf.colorInternalFormat, dimensions.x, dimensions.y));
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+			}
+			else
+				depthName = depthConf.texName;
+			//Bind to our framebuffer
+			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthName));
+		}
+		drawBuffs.push_back(GL_DEPTH_ATTACHMENT);
+		GL_CALL(glDrawBuffers(drawBuffs.size(), drawBuffs.data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
 void FrameBuffer::makeStencil()
 {
-	if (stencilConf.type == Texture)
+	if (stencilConf.type != Disabled)
 	{
-		if (stencilConf.texName == 0)
-		{
-			//If it doesn't exist
-			if (stencilName == 0)
-				GL_CALL(glGenTextures(1, &stencilName));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, stencilName));
-
-			//Size the texture
-			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, dimensions.x, dimensions.y, 0, GL_STENCIL_INDEX8, GL_UNSIGNED_BYTE, nullptr));
-
-			//Config for mipmap access
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-		}
-		else
-			stencilName = stencilConf.texName;
-		//Bind the tex to our framebuffer
 		GLuint prevFBO = getActiveFB();
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, stencilName, 0));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-	else if (stencilConf.type == RenderBuffer)
-	{
-		if (stencilConf.texName == 0)
+		if (stencilConf.type == Texture)
 		{
-			//If it doesn't exist, make
-			if (stencilName == 0)
-				GL_CALL(glGenRenderbuffers(1, &stencilName));
-			//Set storage
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, stencilName));
-			GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, dimensions.x, dimensions.y));
-			GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-		}
-		else
-			stencilName = stencilConf.texName;
+			if (stencilConf.texName == 0)
+			{
+				//If it doesn't exist
+				if (stencilName == 0)
+					GL_CALL(glGenTextures(1, &stencilName));
 
-		//Bind to our framebuffer
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencilName));
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, stencilName));
+
+				//Size the texture
+				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, dimensions.x, dimensions.y, 0, GL_STENCIL_INDEX8, GL_UNSIGNED_BYTE, nullptr));
+
+				//Config for mipmap access
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+			}
+			else
+				stencilName = stencilConf.texName;
+			//Bind the tex to our framebuffer
+			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, stencilName, 0));
+		}
+		else if (stencilConf.type == RenderBuffer)
+		{
+			if (stencilConf.texName == 0)
+			{
+				//If it doesn't exist, make
+				if (stencilName == 0)
+					GL_CALL(glGenRenderbuffers(1, &stencilName));
+				//Set storage
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, stencilName));
+				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, dimensions.x, dimensions.y));
+				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+			}
+			else
+				stencilName = stencilConf.texName;
+			//Bind the renderbuffer to our framebuffer
+			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencilName));
+		}
+		drawBuffs.push_back(GL_STENCIL_ATTACHMENT);
+		GL_CALL(glDrawBuffers(drawBuffs.size(), drawBuffs.data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
@@ -414,7 +418,6 @@ bool FrameBuffer::use()
 	GL_CALL(glViewport(0, 0, dimensions.x, dimensions.y));
 	return true;
 }
-
 int FrameBuffer::addColorAttachment(FrameBuffer::Color attachment)
 {	
 	//Find the first free key	
@@ -440,8 +443,7 @@ int FrameBuffer::getMaxColorAttachments()
 	GL_CALL(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &rtn));
 	return rtn;
 }
-
-
+//Name Getters
 GLuint FrameBuffer::getColorTextureName(GLuint attachPt) const
 {
 	auto && it = colorConfs.find(attachPt);

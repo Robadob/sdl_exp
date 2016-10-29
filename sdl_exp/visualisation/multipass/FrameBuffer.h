@@ -3,10 +3,12 @@
 #include "../GLcheck.h"
 #include "glm/glm.hpp"
 #include <map>
+#include <vector>
 
 /**
  * https://open.gl/framebuffers
  * @todo Include glDrawbuffers call at use?
+ * @todo Improve stencilbuffer (control when writing/clearing/using) //https://en.wikipedia.org/wiki/Stencil_buffer
  * @todo MultisampleFrameBuffer subclass (all attachments must be the same type (tex vs renderbuffer) + samples ct)
  */
 class FrameBuffer
@@ -319,6 +321,10 @@ private:
 	 * The GL texture/render buffer name for the stencil/depthstencil attachment (as returned by glGenTextures() or glGenRenderbuffers())
 	 */
 	GLuint stencilName;
+	/**
+	 *
+	 */
+	std::vector<GLenum> drawBuffs;
 };
 
 namespace Stock

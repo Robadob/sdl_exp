@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="EntityScene.cu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TwoPassScene.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
     <ClCompile Include="visualisation\BasicScene.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
@@ -193,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EntityScene.h" />
+    <ClInclude Include="TwoPassScene.h" />
     <ClInclude Include="visualisation\Axis.h" />
     <ClInclude Include="visualisation\BasicScene.h" />
     <ClInclude Include="visualisation\Camera.h" />

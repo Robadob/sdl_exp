@@ -174,6 +174,10 @@ public:
 	 * @return True if the framebuffer is 'complete' and was bound
 	 */
 	bool use();
+	/**
+	 * Returns the maximum number of colour attachments permitted by drivers
+	 * @note 8 is the minimum required by the spec
+	 */
 	static int getMaxColorAttachments();
 	/**
 	 * @return The name of the contained GL_FRAMEBUFFER

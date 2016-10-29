@@ -9,7 +9,7 @@ Constructs a skybox entity
 Skybox::Skybox(const char *texturePath, float yOffset)
     : Entity(
         Stock::Models::CUBE, 
-        50.0f,//Make it adequete distance away
+        50.0f,//Make it adequate distance away
         Stock::Shaders::SKYBOX,
         std::make_shared<TextureCubeMap>(texturePath)
     )
@@ -23,7 +23,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
 /*
 Renders the skybox
 */
-void Skybox::render()
+void Skybox::render(unsigned int shaderIndex)
 {
     glPushMatrix();
     ////Setup shaders
@@ -36,7 +36,7 @@ void Skybox::render()
     glDisable(GL_BLEND);
 
     glDepthMask(GL_FALSE);
-    Entity::render();
+	Entity::render(shaderIndex);
     glDepthMask(GL_TRUE);
 
     // Restore enable bits and matrix
@@ -48,8 +48,9 @@ void Skybox::render()
  */
 void Skybox::setModelViewMatPtr(const Camera *camera)
 {
-    if (shaders.get())
-        shaders->setModelViewMatPtr(camera->getSkyboxViewMatPtr());
+	for (auto &&it : shaders)
+		if (it)
+			it->setModelViewMatPtr(camera->getSkyboxViewMatPtr());
 }
 /**
  * Adjusts the vertical offset of the skybox

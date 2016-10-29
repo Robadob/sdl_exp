@@ -36,7 +36,7 @@ namespace Stock
  * @note Floating point attribute bindings do not automatically normalise values (the parameter is always passed as false)
  * @todo Confirm that we do need re-call glVertexAttribPointer on shader re-use, or can we just bind it once
  * @todo Switch all pointers to weak_ptr
-*/
+ */
 class Shaders : public ShaderCore
 {
 public:
@@ -67,11 +67,11 @@ public:
 		const glm::mat4 *matrixPtr;
 	};
 	/**
-	* This structure represents the details necessary to correctly bind a vertex attribute (e.g. vertex positions, normals, tex coords)
-	* Most of the member vars provide a specification of how the array of vertex attributes is stored in the vbo
-	* Each vertex attribute should be a vector [element of the array], and has 2-4 components
-	* Multiple vertex attributes can share a vbo, with their data either packed one after the other, or interleaved.
-	*/
+	 * This structure represents the details necessary to correctly bind a vertex attribute (e.g. vertex positions, normals, tex coords)
+	 * Most of the member vars provide a specification of how the array of vertex attributes is stored in the vbo
+	 * Each vertex attribute should be a vector [element of the array], and has 2-4 components
+	 * Multiple vertex attributes can share a vbo, with their data either packed one after the other, or interleaved.
+	 */
     struct VertexAttributeDetail
     {
 		/**
@@ -149,13 +149,13 @@ public:
 	 */
 	Shaders(const char *vertexShaderPath = nullptr, const char *fragmentShaderPath = nullptr, const char *geometryShaderPath = nullptr);
 	/*
-	* Constructs a shader program from the provided shader files
-	* Use this constructor if you wish to constructor a shader from multiple files (e.g. a common functions file)
-	* @param vertexShaderFiles Path to the GLSL vertex shader ({} if not required)
-	* @param fragmentShaderFiles Path to the GLSL fragment shader ({} if not required)
-	* @param geometryShaderFiles Path to the GLSL geometry shader ({} if not required)
-	* @note You must provide atleast 1 shader path, however it can be of any of the 3 types
-	*/
+	 * Constructs a shader program from the provided shader files
+	 * Use this constructor if you wish to constructor a shader from multiple files (e.g. a common functions file)
+	 * @param vertexShaderFiles Path to the GLSL vertex shader ({} if not required)
+	 * @param fragmentShaderFiles Path to the GLSL fragment shader ({} if not required)
+	 * @param geometryShaderFiles Path to the GLSL geometry shader ({} if not required)
+	 * @note You must provide atleast 1 shader path, however it can be of any of the 3 types
+	 */
 	Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath = {}, std::initializer_list <const char *> geometryShaderPath = {});
 	/**
 	 * Free the shader program
@@ -166,12 +166,12 @@ public:
 	 */
 	bool hasVertexShader() const;
 	/**
-	* @return True if this shader object has a fragment shader
-	*/
+	 * @return True if this shader object has a fragment shader
+	 */
 	bool hasFragmentShader() const;
 	/**
-	* @return True if this shader object has a geometry shader
-	*/
+	 * @return True if this shader object has a geometry shader
+	 */
     bool hasGeometryShader() const;    
 	/**
 	 * Sets the pointer from which the ModelView matrix should be loaded from
@@ -186,39 +186,49 @@ public:
 	 */
 	inline void setProjectionMatPtr(const glm::mat4 *projectionMat){ this->projection.matrixPtr = projectionMat; }
 	/**
-	* Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
-	* @param rotationPtr A pointer to the rotation will be tracked
-	* @note Setting this pointer to nullptr will disable rotation
-	* @note rotationPtr.xyz is the axis to rotate about
-	* @note rotationPtr.w is the rotation angle in degrees
-	*/
+	 * Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
+	 * @param rotationPtr A pointer to the rotation will be tracked
+	 * @note Setting this pointer to nullptr will disable rotation
+	 * @note rotationPtr.xyz is the axis to rotate about
+	 * @note rotationPtr.w is the rotation angle in degrees
+	 */
 	inline void setRotationPtr(glm::vec4 const *rotationPtr){ this->rotationPtr = rotationPtr; }
 	/**
-	* Sets the pointer which will apply a translation to the ModelView matrix, rotating items rendered by this shader
-	* @param translationPtr A pointer to the projectionMatrix to be tracked
-	* @note Setting this pointer to nullptr will disable translation
-	*/
+	 * Sets the pointer which will apply a translation to the ModelView matrix, rotating items rendered by this shader
+	 * @param translationPtr A pointer to the projectionMatrix to be tracked
+	 * @note Setting this pointer to nullptr will disable translation
+	 */
 	inline void setTranslationPtr(glm::vec3 const *translationPtr){ this->translationPtr = translationPtr; }
 	/**
-	* Stores the details necessary for passing vertex position attributes to the shader via the modern method
-	* @param vad The VertexAttributeDetail object containing the attribute data
-	*/
+	 * Stores the details necessary for passing vertex position attributes to the shader via the modern method
+	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 */
 	void setPositionsAttributeDetail(VertexAttributeDetail vad);
 	/**
-	* Stores the details necessary for passing vertex normal attributes
-	* @param vad The VertexAttributeDetail object containing the attribute data
-	*/
+	 * Stores the details necessary for passing vertex normal attributes
+	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 */
 	void setNormalsAttributeDetail(VertexAttributeDetail vad);
 	/**
-	* Stores the details necessary for passing vertex color attributes to the shader
-	* @param vad The VertexAttributeDetail object containing the attribute data
-	*/
+	 * Stores the details necessary for passing vertex color attributes to the shader
+	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 */
 	void setColorsAttributeDetail(VertexAttributeDetail vad);
 	/**
-	* Stores the details necessary for passing vertex texture attributes to the shader
-	* @param vad The VertexAttributeDetail object containing the attribute data
-	*/
+	 * Stores the details necessary for passing vertex texture attributes to the shader
+	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 */
 	void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
+	/**
+	 * Binds the named fragment shader output attribute to the specified framebuffer colour attachment point
+	 * @param attachmentPoint The GL_COLOR_ATTACHMENT value (likely in the range 0-7)
+	 * @param name the name of the data output as specified within the frag shader
+	 * @return Returns true if the re-linking of the shader was successful
+	 * @note If the framebuffer has only 1 color attachment, calling this is unnecessary.
+	 * @note Alternatively, you can hardcode attachment point 'n' in the shader, by preceding the output declaration with layout(location = n)
+	 * @note This function re-links the shader program, so may cause the shader to fail
+	 */
+	bool setFragOutAttribute(GLuint attachmentPoint, const char *name);
 	/**
 	 * Subclass of vertex attribute detail for generic vertex attributes
 	 * This attaches the name of the vertex attribute within the shader source
@@ -295,7 +305,8 @@ private:
 	void _clearProgram() override;
 	/**
 	 * Enables the necessary vertex attribute arrays when the shader is required
-	 * @note Called by ShaderCore::useProgram()
+	 * @note Called by ShaderCore::useProgram()	 
+	 * @note In future this could be improved with vertex array object's to store attribute configs at shader setup
 	 */
 	void _useProgram() override;
 	/**
@@ -368,6 +379,12 @@ private:
 	 * This is static data, but we store the value so we can maintain it on reload
 	 */
 	glm::vec4 colorUniformValue;
+	/**
+	 * The color attachment point to bind to each output identifier within the frag shader
+	 * key: attachment point
+	 * value: output variable identifier
+	 */
+	std::map<GLuint, std::string> fragShaderOutputLocations;
 	/**
 	 * The path to the files which form the vertex shader
 	 * @note Used on shader reload

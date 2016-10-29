@@ -387,6 +387,14 @@ protected:
 	* @note You should delete the ptr returned by this yourself
 	*/
 	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
+	/**
+	* Checks whether the specified shader program linked succesfully.
+	* Linking errors are printed to stderr and compileSuccessflag is set to false on failure.
+	* @param programId Location of the shader program to check
+	* @return True if no errors were detected
+	* @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
+	*/
+	bool checkProgramLinkError(const GLuint programId) const;
 private:
 	/**
 	* Checks whether the specified shader compiled succesfully.
@@ -396,14 +404,6 @@ private:
 	* @return True if no errors were detected
 	*/
 	static bool checkShaderCompileError(const GLuint shaderId, const char *shaderPath);
-	/**
-	 * Checks whether the specified shader program linked succesfully.
-	 * Linking errors are printed to stderr and compileSuccessflag is set to false on failure.
-	 * @param programId Location of the shader program to check
-	 * @return True if no errors were detected
-	 * @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
-	 */
-	bool checkProgramLinkError(const GLuint programId) const;
 	/**
 	 * Returns the filename from the provided file path
 	 * @param filePath A null terminated string holding a file path

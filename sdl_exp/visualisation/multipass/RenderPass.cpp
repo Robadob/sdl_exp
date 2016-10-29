@@ -17,7 +17,7 @@ void RenderPass::executeRender()
 			return;
 	}
 	else
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, fb ? fb->getName() : 0));
+		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, fb ? fb->getFrameBufferName() : 0));
 	render();
 }
 void RenderPass::resize(int width, int height)

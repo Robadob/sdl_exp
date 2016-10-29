@@ -64,6 +64,9 @@ FrameBuffer::~FrameBuffer()
 	for (auto &&it = colorConfs.begin(); it != colorConfs.end(); ++it)
 	{
 		auto &&it2 = colorNames.find(it->first);
+		//Skip if unmanaged
+		if (it->second.texName != 0)
+			continue;
 		if (it->second.type == Texture&&it2!=colorNames.end()){
 			GL_CALL(glDeleteTextures(1, &it2->second));
 		}
@@ -73,12 +76,12 @@ FrameBuffer::~FrameBuffer()
 	}
 	colorConfs.clear();
 	//DepthStencil
-	if (depthStencilConf.type == Texture)
+	if (depthStencilConf.type == Texture&&depthStencilConf.texName==0)
 	{
 		GL_CALL(glDeleteTextures(1, &depthName));
 		stencilName = depthName;
 	}
-	else if (depthStencilConf.type == RenderBuffer)
+	else if (depthStencilConf.type == RenderBuffer&&depthStencilConf.texName == 0)
 	{
 		GL_CALL(glDeleteRenderbuffers(1, &depthName));
 		stencilName = depthName;
@@ -86,15 +89,16 @@ FrameBuffer::~FrameBuffer()
 	else
 	{
 		//Depth
-		if (depthConf.type == Texture){
+		if (depthConf.type == Texture&&depthConf.texName == 0){
 			GL_CALL(glDeleteTextures(1, &depthName));
 		}
-		else if (depthConf.type == RenderBuffer)
+		else if (depthConf.type == RenderBuffer&&depthConf.texName == 0)
 			GL_CALL(glDeleteRenderbuffers(1, &depthName));
 		//Stencil
-		if (stencilConf.type == Texture){
+		if (stencilConf.type == Texture&&stencilConf.texName == 0){
 			GL_CALL(glDeleteTextures(1, &stencilName));
-		}else if (stencilConf.type == RenderBuffer)
+		}
+		else if (stencilConf.type == RenderBuffer&&stencilConf.texName == 0)
 			GL_CALL(glDeleteRenderbuffers(1, &stencilName));
 	}
 	//FrameBuffer
@@ -350,7 +354,7 @@ void FrameBuffer::resize(int width, int height)
 		makeDepthStencil();
 	}
 }
-bool FrameBuffer::use() const
+bool FrameBuffer::use() 
 {
 #if _DEBUG //Only do this check in debug
 	GLuint prevFBO = getActiveFB();

@@ -91,6 +91,11 @@ bool Shaders::_compileShaders(const GLuint t_programId)
 			return false;
 		}
 	}
+	//Bind any frag shader outputs prior to shader link
+	for (auto &&it : fragShaderOutputLocations)
+	{
+		GL_CALL(glBindFragDataLocation(this->getProgram(), it.first, it.second.c_str()));
+	}
 	return true;
 }
 void Shaders::_setupBindings(){
@@ -522,4 +527,14 @@ void Shaders::setColor(glm::vec4 color)
         }
         glUseProgram(0);
     }
+}
+bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name)
+{
+	//Log the attachment pt
+	fragShaderOutputLocations[attachmentPoint] = std::string(name);
+	//Bind
+	GL_CALL(glBindFragDataLocation(this->getProgram(), attachmentPoint, name));
+	//Relink the program and ensure the program re-linked correctly;
+	GL_CALL(glLinkProgram(this->getProgram()));
+	return this->checkProgramLinkError(this->getProgram());
 }

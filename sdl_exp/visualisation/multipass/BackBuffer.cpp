@@ -1,5 +1,5 @@
 #include "BackBuffer.h"
-BackBuffer::BackBuffer(bool doClear = true, glm::vec3 clearColor = glm::vec3(0))
+BackBuffer::BackBuffer(bool doClear, glm::vec3 clearColor)
 	: dimensions(800, 600)//Something simple and valid, resize() should really be called directly after construction
 	, doClear(doClear)
 	, clearColor(clearColor)

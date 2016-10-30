@@ -117,6 +117,9 @@
     <ClCompile Include="TwoPassScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\multipass\BackBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -213,6 +216,12 @@
     </ClInclude>
     <ClInclude Include="TwoPassScene.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\FBuffer.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\BackBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -13,7 +13,7 @@ public:
 	/**
 	 * Virtual to permit proper destruction of subclasses
 	 */
-	virtual ~FBuffer();
+	virtual ~FBuffer(){};
 	/**
 	 * @return The name of the contained GL_FRAMEBUFFER
 	 * @note This it the value created by glGenFramebuffer() and used with glBindBuffer()

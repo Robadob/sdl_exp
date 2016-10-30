@@ -1,9 +1,10 @@
 #ifndef __FrameBuffer_h__
 #define __FrameBuffer_h__
-#include "../GLcheck.h"
+
 #include "glm/glm.hpp"
 #include <map>
 #include <vector>
+#include "../interface/FBuffer.h"
 
 /**
  * https://open.gl/framebuffers
@@ -11,7 +12,7 @@
  * @todo Improve stencilbuffer (control when writing/clearing/using) //https://en.wikipedia.org/wiki/Stencil_buffer
  * @todo MultisampleFrameBuffer subclass (all attachments must be the same type (tex vs renderbuffer) + samples ct)
  */
-class FrameBuffer
+class FrameBuffer : public FBuffer
 {
 public:
 	enum AttatchType {Disabled, Texture, RenderBuffer};
@@ -170,21 +171,16 @@ public:
 	 * @param height The new viewport height
 	 * Resizes the internal images according to the specifed dimensions and the internal scaling factor
 	 */
-	void resize(int width, int height);
+	void resize(int width, int height) override final;
 	/**
 	 * Binds the framebuffer
 	 * @return True if the framebuffer is 'complete' and was bound
 	 */
-	bool use();
-	/**
-	 * Returns the maximum number of colour attachments permitted by drivers
-	 * @note 8 is the minimum required by the spec
-	 */
-	static int getMaxColorAttachments();
+	bool use() override final;
 	/**
 	 * @return The name of the contained GL_FRAMEBUFFER
 	 */
-	GLuint getFrameBufferName() { return name; };
+	GLuint getFrameBufferName() override { return name; };
 	/**
 	 * @param attachPt The attachment point required, these are 0-indexed in the order color attachments were bound
 	 * @return The name of the texture bound to the specified attachment point
@@ -263,10 +259,6 @@ private:
 	 * Generates and resizes the stencil attachment
 	 */
 	void makeStencil();
-	/**
-	 * @return The currently bound framebuffer
-	 */
-	static GLuint getActiveFB();
 	/**
 	 * Scale of images held by this framebuffer, with respect to the viewport
 	 * If the scale <= 0, Then the framebuffer has fixed dimensions

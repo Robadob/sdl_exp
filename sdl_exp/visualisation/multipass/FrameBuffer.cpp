@@ -1,5 +1,5 @@
 #include "FrameBuffer.h"
-
+//Constructors
 FrameBuffer::FrameBuffer(Color color, Depth depth, Stencil stencil, float scale, bool doClear, glm::vec3 clearColor)
 	: FrameBuffer({ color }, depth, stencil, scale, glm::uvec2(0), clearColor, doClear)
 { }
@@ -24,7 +24,6 @@ FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depths
 FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<Color> color, DepthStencil depthstencil, bool doClear, glm::vec3 clearColor)
 	: FrameBuffer(color, depthstencil, 0, dimensions, clearColor, doClear)
 { }
-
 FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stencil stencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
 	: scale(scale)
 	, dimensions(dimensions)
@@ -104,6 +103,7 @@ FrameBuffer::~FrameBuffer()
 	//FrameBuffer
 	glDeleteFramebuffers(1, &name);
 }
+//Internal loaders
 void FrameBuffer::makeColor()
 {
 	for (auto &&it = colorConfs.begin(); it != colorConfs.end(); ++it)
@@ -331,14 +331,7 @@ void FrameBuffer::makeStencil()
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
-GLuint FrameBuffer::getActiveFB()
-{
-	GLuint prevFB = 0;
-	// GL_FRAMEBUFFER_BINDING Enum has MANY names based on extension/version
-	// but they all map to 0x8CA6
-	GL_CALL(glGetIntegerv(0x8CA6, reinterpret_cast<GLint*>(&prevFB)));
-	return prevFB;
-}
+//Functional methods
 bool FrameBuffer::isValid() const
 {
 	GLuint prevFBO = getActiveFB();
@@ -351,11 +344,14 @@ void FrameBuffer::resize(int width, int height)
 {
 	if (scale > 0)
 	{
-		dimensions = glm::ivec2(ceil(width*scale), ceil(height*scale));
-		makeColor();
-		makeDepth();
-		makeStencil();
-		makeDepthStencil();
+		if (width>0 && height>0)
+		{
+			dimensions = glm::ivec2(ceil(width*scale), ceil(height*scale));
+			makeColor();
+			makeDepth();
+			makeStencil();
+			makeDepthStencil();
+		}
 	}
 }
 bool FrameBuffer::use() 
@@ -436,12 +432,6 @@ int FrameBuffer::addColorAttachment(FrameBuffer::Color attachment)
 	colorConfs.emplace(attachPt, attachment);
 	makeColor(attachPt);
 	return attachPt;
-}
-int FrameBuffer::getMaxColorAttachments()
-{
-	int rtn = 0;
-	GL_CALL(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &rtn));
-	return rtn;
 }
 //Name Getters
 GLuint FrameBuffer::getColorTextureName(GLuint attachPt) const

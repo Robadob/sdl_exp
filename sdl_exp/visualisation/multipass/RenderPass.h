@@ -20,13 +20,13 @@ public:
     /**
      * Creates a Renderpass which renders to a custom FrameBuffer
      */
-	RenderPass(std::shared_ptr<FrameBuffer> fb);
+	RenderPass(std::shared_ptr<FBuffer> fb);
     /**
      * Allow subclasses to be destroyed properly by RenderPass ptrs
      */
     virtual ~RenderPass()
     { }
-    std::shared_ptr<FrameBuffer> getFrameBuffer() { return fb; }
+	std::shared_ptr<FBuffer> getFrameBuffer() { return fb; }
     /**
      * Binds the contained FrameBuffer and then triggers render()
      * If the FrameBuffer is incomplete (invalid), the render will be skipped and the previous framebuffer bound
@@ -38,7 +38,7 @@ public:
      */
 	virtual void resize(int width, int height);
 private:
-    const std::shared_ptr<FrameBuffer> fb;
+	const std::shared_ptr<FBuffer> fb;
 protected:
     /**
      * Called by executeRender() after framebuffer has been bound

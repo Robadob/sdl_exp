@@ -26,23 +26,24 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
 	)
 { }
 Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath, std::initializer_list <const char *> geometryShaderPath)
-    : ShaderCore()
+	: ShaderCore()
 	, modelview()
-    , projection()
-    , modelviewprojection(-1)
+	, projection()
+	, modelviewprojection(-1)
 	, rotationPtr(nullptr)
 	, translationPtr(nullptr)
-    , positions(GL_FLOAT, 3, sizeof(float))
-    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
-    , colors(GL_FLOAT, 3, sizeof(float))
-    , texcoords(GL_FLOAT, 2, sizeof(float))
-    , colorUniformValue(1,0,0,1)//Red
+	, positions(GL_FLOAT, 3, sizeof(float))
+	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+	, colors(GL_FLOAT, 3, sizeof(float))
+	, texcoords(GL_FLOAT, 2, sizeof(float))
+	, colorUniformValue(1, 0, 0, 1)//Red
 	, vertexShaderFiles(buildFileVector(vertexShaderPath))
 	, fragmentShaderFiles(buildFileVector(fragmentShaderPath))
 	, geometryShaderFiles(buildFileVector(geometryShaderPath))
-    , vertexShaderVersion(-1)
-    , fragmentShaderVersion(-1)
+	, vertexShaderVersion(-1)
+	, fragmentShaderVersion(-1)
 	, geometryShaderVersion(-1)
+	, prevModelview()//Identity
 {
 	reload();
 }
@@ -166,6 +167,16 @@ void Shaders::_setupBindings(){
 		this->colorUniformLocation = -1;
 		this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
 	}
+	//Locate the previous modelview uniform
+	std::pair<int, GLenum> u_PMV = findUniform(PREV_MODELVIEW_MATRIX_UNIFORM_NAME, this->getProgram());
+	if (u_PMV.first >= 0 && u_C.second == GL_FLOAT_MAT4)
+	{
+		this->prevModelviewUniformLocation = u_C.first;
+	}
+	else
+	{
+		this->prevModelviewUniformLocation = -1;
+	}
 	//Refresh generic vertex attribs
 	std::list<GenericVAD> t_gvad;
 	t_gvad.splice(t_gvad.end(), lostGvads);
@@ -188,6 +199,12 @@ void Shaders::_setupBindings(){
 //Overrides
 void Shaders::_useProgram()
 {
+	//Set the previous modelview matrix (e.g. glFrustum, normally provided by the Visualisation)
+	if (this->projection.location >= 0)
+	{//If previous modelview matrix location is known
+		GL_CALL(glUniformMatrix4fv(prevModelviewUniformLocation, 1, GL_FALSE, glm::value_ptr(prevModelview)));
+	}
+
 	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
 	if (this->vertexShaderVersion <= 120 && this->projection.matrixPtr > nullptr)
 	{//If old shaders where gl_ModelViewProjectionMatrix is available
@@ -198,36 +215,38 @@ void Shaders::_useProgram()
 	{//If projection matrix location and camera ptr are known
 		GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*this->projection.matrixPtr)));
 	}
+	
 	//Calculate modelview matrix transformations
-	glm::mat4 mv;
+	prevModelview=glm::mat4();
 	if (this->modelview.matrixPtr)
 	{
-		mv = *this->modelview.matrixPtr;
+		prevModelview = *this->modelview.matrixPtr;
 		if (this->rotationPtr)
 		{
 			//Check we actually have a rotation (providing no axis == error)
 			if ((this->rotationPtr->x != 0 || this->rotationPtr->y != 0 || this->rotationPtr->z != 0) && this->rotationPtr->w != 0)
-				mv = glm::rotate(mv, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
+				prevModelview = glm::rotate(prevModelview, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
 		}
 		if (this->translationPtr)
 		{
-			mv = glm::translate(mv, *this->translationPtr);
+			prevModelview = glm::translate(prevModelview, *this->translationPtr);
 		}
 	}
+
 	//Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
 	if (this->vertexShaderVersion <= 120 && this->modelview.matrixPtr > nullptr)
 	{//If old shaders where gl_ModelViewMatrix is available
 		GL_CALL(glMatrixMode(GL_MODELVIEW));
-		GL_CALL(glLoadMatrixf(glm::value_ptr(mv)));
+		GL_CALL(glLoadMatrixf(glm::value_ptr(prevModelview)));
 	}
 	if (this->modelview.location >= 0 && this->modelview.matrixPtr > nullptr)
 	{//If modeview matrix location and camera ptr are known
-		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(mv)));
+		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(prevModelview)));
 	}
 	//Set the model view projection matrix (e.g. projection * modelview)
 	if (this->modelviewprojection >= 0 && this->modelview.matrixPtr && this->projection.matrixPtr)
 	{
-		glm::mat4 mvp = *this->projection.matrixPtr * mv;
+		glm::mat4 mvp = *this->projection.matrixPtr * prevModelview;
 		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
 	}
 	//Sets the normal matrix (this must occur after modelView transformations are calculated)

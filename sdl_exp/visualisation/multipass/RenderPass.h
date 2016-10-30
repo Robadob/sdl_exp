@@ -1,6 +1,6 @@
 #ifndef __RenderPass_h__
 #define __RenderPass_h__
-#include "FrameBuffer.h"
+#include "../interface/FBuffer.h"
 #include <memory>
 #include <glm/glm.hpp>
 

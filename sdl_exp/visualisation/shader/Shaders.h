@@ -50,6 +50,7 @@ public:
 	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
 	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
 	static const char *TEXCOORD_ATTRIBUTE_NAME;// = "_texCoords";
+	static const char *PREV_MODELVIEW_MATRIX_UNIFORM_NAME;// = "_prevModelViewMat";
 	/**
 	 * This structure represents the details necessary to correctly bind a uniform matrix (e.g. model view/projection)
 	 */
@@ -342,6 +343,12 @@ private:
 	 * When positive this vairable holds the location of the normal matrix in the shader
 	 */
 	int normalMatLoc;
+	/**
+	 * Cache's the previous frames modelview mat to be passed if _prevModelViewMat is required
+	 * @note Used for producing velocity map's
+	 */
+	glm::mat4 prevModelview;
+	int prevModelviewUniformLocation;
 	/**
 	 * When !nullptr, points to a vector containing a rotation applied to the modelview matrix before binding
 	 */

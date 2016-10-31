@@ -150,12 +150,9 @@ void ShaderCore::setupBindings()
 }
 void ShaderCore::useProgram()
 {
-	//glPushAttrib(GL_ALL_ATTRIB_BITS)? To shortern clearProgram?
 	//Kill if shader isn't built
 	if (this->programId <= 0)
 	{
-		reload();
-		if (this->programId <= 0)
 			return;
 	}
 
@@ -214,7 +211,6 @@ void ShaderCore::useProgram()
 }
 void ShaderCore::clearProgram()
 {
-	//Massively shorten this with glPopAttrib()?
 	this->_clearProgram();
 	GL_CALL(glUseProgram(0));
 }
@@ -485,13 +481,15 @@ std::pair<int, GLenum> ShaderCore::findUniform(const char *uniformName, const in
 }
 std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, const int shaderProgram)
 {
-	int result = shaderProgram<0 ? -1 : GL_CALL(glGetAttribLocation(shaderProgram, attributeName));
-	if (result > -1)
+	int attribLocation = shaderProgram<0 ? -1 : GL_CALL(glGetAttribLocation(shaderProgram, attributeName));
+	//attribLocation != attribIndex (Index required to get info, Location required to set val)
+	GLuint attribIndex = shaderProgram<0 ? -1 : GL_CALL(glGetProgramResourceIndex(shaderProgram, GL_PROGRAM_INPUT, attributeName));
+	if (attribLocation>-1 && attribIndex != GL_INVALID_INDEX)
 	{
 		GLenum type;
 		GLint size;//Collect size, because its not documented that you can pass 0
-		GL_CALL(glGetActiveAttrib(shaderProgram, result, 0, nullptr, &size, &type, nullptr));
-		return std::pair<int, GLenum>(result, type);
+		GL_CALL(glGetActiveAttrib(shaderProgram, attribIndex, 0, nullptr, &size, &type, nullptr));
+		return std::pair<int, GLenum>(attribLocation, type);
 	}
 	return  std::pair<int, GLenum>(-1, 0);
 }

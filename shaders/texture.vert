@@ -3,9 +3,9 @@
 uniform mat4 _modelViewProjectionMat;
 
 in vec3 _vertex;
-in vec3 _texCoords;
+in vec2 _texCoords;
 
-out vec3 texCoords;
+out vec2 texCoords;
 
 void main()
 {

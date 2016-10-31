@@ -131,7 +131,7 @@ void ShaderCore::setupBindings()
 	}
 	buffers.clear();
 	for (BufferDetail const &d : t_buffers)
-	{
+	{//Replace d.type with GL_SHADER_STORAGE_BLOCK or ? GL_BUFFER_VARIABLE
 		GLuint location = GL_CALL(glGetProgramResourceIndex(this->programId, d.type, d.nameInShader));
 		if (location != GL_INVALID_INDEX)
 		{			
@@ -202,7 +202,7 @@ void ShaderCore::useProgram()
 	}
 	//Set any buffers
 	for (std::map<GLuint, BufferDetail>::iterator i = buffers.begin(); i != buffers.end(); ++i)
-	{
+	{//Should we really hardcode GL_SHADER_STORAGE_BUFFER here?
 		//Don't think buffer bases are specific to shaders, so we treat them as dynamic
 		GL_CALL(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i->first, i->second.name));
 	}
@@ -468,8 +468,9 @@ bool ShaderCore::removeBuffer(const char *nameInShader)
 std::pair<int, GLenum> ShaderCore::findUniform(const char *uniformName, const int shaderProgram)
 {
 	int uniformLocation = shaderProgram<0 ? -1 : GL_CALL(glGetUniformLocation(shaderProgram, uniformName));
-	GLuint uniformIndex;//UniformIndex!=UniformLocation (Index required to get info about uniform, Location required to set val)
-	GL_CALL(glGetUniformIndices(shaderProgram, 1, &uniformName, &uniformIndex));
+	//UniformIndex!=UniformLocation (Index required to get info about uniform, Location required to set val)
+	GLuint uniformIndex = shaderProgram<0 ? -1 : GL_CALL(glGetProgramResourceIndex(shaderProgram, GL_UNIFORM, uniformName));
+	//GL_CALL(glGetUniformIndices(shaderProgram, 1, &uniformName, &uniformIndex));
 	if (uniformLocation > -1 && uniformIndex != GL_INVALID_INDEX)
 	{
 		GLenum type;

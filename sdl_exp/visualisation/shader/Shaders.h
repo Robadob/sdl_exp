@@ -26,7 +26,9 @@ namespace Stock
 		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", nullptr };
 		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", nullptr };
         const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", nullptr };
-        const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
+		const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
+		const ShaderSet VELOCITY{ "../shaders/velocity.vert", "../shaders/velocity.frag", nullptr };
+		const ShaderSet VELOCITY_COMPOSITOR{ "../shaders/default.vert", "../shaders/velocityCompositor.frag", nullptr };
     };
 };
 /**

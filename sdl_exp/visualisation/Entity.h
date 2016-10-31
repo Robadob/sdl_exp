@@ -30,6 +30,7 @@ namespace Stock
         const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0, Stock::Shaders::PHONG };
 		const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::TEXTURE };
 		const Model TEAPOT{ "../models/teapot.obj", 0, Stock::Shaders::PHONG };
+		const Model FRAME{ "../models/frame.obj", 0, Stock::Shaders::FLAT };
     };
 };
 /*

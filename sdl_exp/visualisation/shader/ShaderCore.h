@@ -89,7 +89,7 @@ public:
 	 * If a texture with the same uniformName is already bound, it will be replaced
 	 * @param texture The name of the texture (as returned by glGenTexture())
 	 * @param uniformName The name of the uniform within the shader this texture should be bound to
-	 * @param type The type of texture being bound (e.g. GL_TEXTURE2D)
+	 * @param type The type of texture being bound (e.g. GL_TEXTURE_2D)
 	 * @return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
 	 * @note Texture bindings for each shader are not unique, making them unique would save rebinding every shader call
 	 */

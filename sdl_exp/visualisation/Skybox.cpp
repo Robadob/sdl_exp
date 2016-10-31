@@ -10,7 +10,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
     : Entity(
         Stock::Models::CUBE, 
         50.0f,//Make it adequate distance away
-        Stock::Shaders::SKYBOX,
+		{ Stock::Shaders::SKYBOX, Stock::Shaders::VELOCITY },
         std::make_shared<TextureCubeMap>(texturePath)
     )
 {    

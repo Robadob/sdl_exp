@@ -1,7 +1,8 @@
 #include "RenderPass.h"
+#include "BackBuffer.h"
 
 RenderPass::RenderPass(glm::vec3 clearColor, bool doClear)
-	: fb(nullptr)
+	: fb(std::make_shared<BackBuffer>(doClear, clearColor))
 { }
 
 RenderPass::RenderPass(std::shared_ptr<FBuffer> fb)
@@ -9,15 +10,9 @@ RenderPass::RenderPass(std::shared_ptr<FBuffer> fb)
 { }
 void RenderPass::executeRender()
 {
-	//Bind back buffer if shared ptr is null
-	if (fb)
-	{
-		//Skip render if Framebuffer is incomplete
-		if (!fb->use())
-			return;
-	}
-	else
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	//Skip render if Framebuffer is incomplete
+	if (!fb->use())
+		return;
 	render();
 }
 void RenderPass::resize(int width, int height)

@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include "../interface/FBuffer.h"
+#include <unordered_set>
 
 /**
  * https://open.gl/framebuffers
@@ -229,6 +230,7 @@ public:
 	 * @note This will only return a value if you bound a DepthStencil renderbuffer
 	 */
 	GLuint getDepthStencilRenderBufferName() const;
+
 private:
 	/**
 	 * Internal constructor, triggered by public ones
@@ -316,7 +318,7 @@ private:
 	/**
 	 *
 	 */
-	std::vector<GLenum> drawBuffs;
+	std::unordered_set<GLenum> drawBuffs;
 };
 
 namespace Stock

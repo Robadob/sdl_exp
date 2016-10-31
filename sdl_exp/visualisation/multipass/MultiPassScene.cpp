@@ -35,6 +35,7 @@ std::shared_ptr<RenderPass> MultiPassScene::addPass(int index, std::shared_ptr<R
         rtn = it->second;
     }
     rpMap[index] = rp;
+	rp->resize(visualisation.getWindowWidth(), visualisation.getWindowHeight());
     return rtn;
 }
 

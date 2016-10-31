@@ -44,8 +44,18 @@ class TwoPassScene : public MultiPassScene
 	{
 	public:
 		MotionBlurCompositePass(std::shared_ptr<SceneContent> content);
+		void setVelocityTex(GLuint tex);
+		void setColorTex(GLuint tex);
+		void setDepthTex(GLuint tex);
 	protected:
+		GLuint vTex;
+		GLuint cTex;
+		GLuint dTex;
 		void render() override;
+		std::shared_ptr<SceneContent> content;
+		std::shared_ptr<Shaders> compositeShader;
+		glm::mat4 mvMat;
+		glm::mat4 projMat;
 
 	};
 public:

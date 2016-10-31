@@ -14,10 +14,10 @@ class TwoPassScene : public MultiPassScene
 		std::shared_ptr<Skybox> skybox;
 		std::shared_ptr<Axis> axis;
 	};
-	class ScenePass : public RenderPass
+	class VelocityPass : public RenderPass
 	{
 	public:
-		ScenePass(std::shared_ptr<SceneContent> content);
+		VelocityPass(std::shared_ptr<SceneContent> content);
 		void setSkybox(bool i){ renderSkybox = i; }
 		void setAxis(bool i){ renderAxis = i; }
 	protected:
@@ -27,8 +27,25 @@ class TwoPassScene : public MultiPassScene
 		bool renderAxis;
 		std::shared_ptr<SceneContent> content;
 	};
-	class PostProcessPass : public RenderPass
+	class ColorPass : public RenderPass
 	{
+	public:
+		ColorPass(std::shared_ptr<SceneContent> content);
+		void setSkybox(bool i){ renderSkybox = i; }
+		void setAxis(bool i){ renderAxis = i; }
+	protected:
+		void render() override;
+	private:
+		bool renderSkybox;
+		bool renderAxis;
+		std::shared_ptr<SceneContent> content;
+	};
+	class MotionBlurCompositePass : public RenderPass
+	{
+	public:
+		MotionBlurCompositePass(std::shared_ptr<SceneContent> content);
+	protected:
+		void render() override;
 
 	};
 public:
@@ -38,8 +55,10 @@ public:
 	void update(unsigned int frameTime) override;
 private:
 	std::shared_ptr<SceneContent> content;
-	std::shared_ptr<ScenePass> sPass;
-	std::shared_ptr<PostProcessPass> ppPass;
+
+	std::shared_ptr<VelocityPass> vPass;
+	std::shared_ptr<ColorPass> cPass;
+	std::shared_ptr<MotionBlurCompositePass> mbcPass;
 
 	float tick;
 	int polarity;

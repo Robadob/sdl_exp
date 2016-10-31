@@ -7,12 +7,23 @@ TwoPassScene::SceneContent::SceneContent()
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
 	, content(std::make_shared<SceneContent>())
+	, vPass(std::make_shared<VelocityPass>(content))
+	, cPass(std::make_shared<ColorPass>(content))
+	, mbcPass(std::make_shared<MotionBlurCompositePass>(content))
 	, tick(0.0f)
 	, polarity(-1)
 {
+	//Register models
 	registerEntity(content->deerModel);
-	sPass->setSkybox(true);
-	sPass->setAxis(true);
+	//Register render passes in correct order
+	addPass(0, vPass);
+	addPass(1, cPass);
+	addPass(2, mbcPass);
+	//Share render textures from vPass/cPass to mbcPass
+
+	//Enable defaults
+	vPass->setSkybox(true);
+	cPass->setAxis(true);
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
 	this->content->deerModel->flipVertexOrder();
 }

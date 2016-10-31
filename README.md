@@ -26,15 +26,16 @@ The easiest way to utilise this library appears to be:
 ```
 
 ### Shader Uniforms & Attributes
-The `Shaders` and `Entity` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your uniforms and vertex attributes. You can also configure your own static and dynamic uniform floats and ints by calling `addStaticUniform()` and `addDynamicUniform()` on the relevant `Shaders` object.
+The `Shaders` and `Entity` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your uniforms and vertex attributes. Each shader object should only be attached to a single entity, otherwise their bindings will all be shared. You can also configure your own static and dynamic uniform floats and ints by calling `addStaticUniform()` and `addDynamicUniform()` on the relevant `Shaders` object.
 
 * Uniforms:
   * `_modelViewMat` - ModelView Matrix[Mat4]
   * `_projectionMat` - Projection Matrix[Mat4]
   * `_modelViewProjectionMat` - ModelViewProjection Matrix[Mat4]
+  * `_normalMat` - Normal Matrix[Mat4]
   * `_texture` - Texture Sampler[sampler2D/samplerCube]
   * `_color` - gl_Color equivalent[Vec3/Vec4]
-* Atributes:
+* Attributes:
   * `_vertex` - Vertex Position[Vec3/Vec4]
   * `_normal` - Vertex Normal[Vec3/Vec4]
   * `_color` - Vertex Color[Vec3/Vec4]

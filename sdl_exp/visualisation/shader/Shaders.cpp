@@ -8,6 +8,7 @@
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
 const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
+const char *Shaders::NORMAL_MATRIX_UNIFORM_NAME = "_normalMat";
 const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
 const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
 const char *Shaders::COLOR_ATTRIBUTE_NAME = "_color";
@@ -109,6 +110,12 @@ void Shaders::_setupBindings(){
         this->modelviewprojection = u_MVP.first;
     else
         this->modelviewprojection = -1;
+	//Locate the normal matrix uniform
+	std::pair<int, GLenum> u_NP = findUniform(NORMAL_MATRIX_UNIFORM_NAME, this->getProgram());
+	if (u_NP.first >= 0 && u_NP.second == GL_FLOAT_MAT4)
+		this->normalMatLoc = u_NP.first;
+	else
+		this->normalMatLoc = -1;
     //Locate the vertexPosition attribute
     std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->getProgram());
     if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
@@ -209,6 +216,12 @@ void Shaders::_useProgram()
 	{
 		glm::mat4 mvp = *this->projection.matrixPtr * mv;
 		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
+	}
+	//Sets the normal matrix (this must occur after modelView transformations are calculated)
+	if (normalMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
+	{//If normal matrix location and modelview ptr are known
+		glm::mat4 nm = transpose(inverse(*this->modelview.matrixPtr));
+		GL_CALL(glUniformMatrix4fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
 	}
 
     GLuint activeVBO = 0;

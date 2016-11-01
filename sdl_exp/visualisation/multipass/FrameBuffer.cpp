@@ -40,6 +40,7 @@ FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stenci
 		addColorAttachment(c);
 	makeDepth();
 	makeStencil();
+	setDrawBuffers();
 }
 FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depthstencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
 	: scale(scale)
@@ -56,6 +57,7 @@ FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depths
 	for (Color c : color)
 		addColorAttachment(c);
 	makeDepthStencil();
+	setDrawBuffers();
 }
 FrameBuffer::~FrameBuffer()
 {
@@ -160,8 +162,8 @@ void FrameBuffer::makeColor(GLuint attachPt)
 			//Bind to our framebuffer
 			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_RENDERBUFFER, colorNames[attachPt]));
 		}
-		drawBuffs.insert(GL_COLOR_ATTACHMENT0 + attachPt);
-		GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
+		//drawBuffs.insert(GL_COLOR_ATTACHMENT0 + attachPt);
+		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
@@ -185,7 +187,7 @@ void FrameBuffer::makeDepthStencil()
 				GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
 
 				//Size the texture
-				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_BYTE, nullptr));
+				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr));
 
 				//Config for mipmap access
 				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
@@ -224,8 +226,8 @@ void FrameBuffer::makeDepthStencil()
 			//Bind to our framebuffer
 			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthName));
 		}
-		drawBuffs.insert(GL_DEPTH_STENCIL_ATTACHMENT);
-		GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
+		//drawBuffs.insert(GL_DEPTH_STENCIL_ATTACHMENT);
+		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
@@ -276,8 +278,8 @@ void FrameBuffer::makeDepth()
 			//Bind to our framebuffer
 			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthName));
 		}
-		drawBuffs.insert(GL_DEPTH_ATTACHMENT);
-		GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
+		//drawBuffs.insert(GL_DEPTH_ATTACHMENT);
+		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
 }
@@ -328,10 +330,35 @@ void FrameBuffer::makeStencil()
 			//Bind the renderbuffer to our framebuffer
 			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencilName));
 		}
-		drawBuffs.insert(GL_STENCIL_ATTACHMENT);
-		GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
+		//drawBuffs.insert(GL_STENCIL_ATTACHMENT);
+		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
 		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	}
+}
+void FrameBuffer::setDrawBuffers()
+{
+	GLuint prevFBO = getActiveFB();
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
+	//Allocate array
+	unsigned int itemCt = colorNames.size()>0 ? colorNames.size() : 1;
+	GLenum *drawBuffsArr = (GLenum *)malloc(sizeof(GLenum)*itemCt);
+	//Fill Array
+	if (colorNames.size()>0)
+	{
+		unsigned int i = 0;
+		for (auto && it: colorNames)
+		{
+			drawBuffsArr[i] = GL_COLOR_ATTACHMENT0 + it.first;
+			i++;
+		}
+	}
+	else
+		drawBuffsArr[0] = GL_NONE;
+	//Pass to GL
+	GL_CALL(glDrawBuffers(itemCt, drawBuffsArr));
+	//Free Array
+	free(drawBuffsArr);
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 }
 //Functional methods
 bool FrameBuffer::isValid() const

@@ -16,5 +16,5 @@ void main()
     vertex  = _projectionMat * _modelViewMat * vec4(_vertex,1.0f);
     prevVertex = _projectionMat * _prevModelViewMat * vec4(_vertex,1.0f);
 
-    gl_Position = v_vCurrentPosition;
+    gl_Position = _projectionMat * _modelViewMat * vec4(_vertex,1.0f);
 }

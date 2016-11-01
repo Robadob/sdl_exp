@@ -50,5 +50,5 @@ void main()
     
     vQX *= fWeight;
     
-    velocity = vec4(writeBiasScale(vQX), 0.5);
+    velocity = vec3(writeBiasScale(vQX), 0.5);
 }

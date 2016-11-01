@@ -315,10 +315,11 @@ private:
 	 * The GL texture/render buffer name for the stencil/depthstencil attachment (as returned by glGenTextures() or glGenRenderbuffers())
 	 */
 	GLuint stencilName;
+	void setDrawBuffers();
 	/**
 	 *
 	 */
-	std::unordered_set<GLenum> drawBuffs;
+	//std::unordered_set<GLenum> drawBuffs;
 };
 
 namespace Stock

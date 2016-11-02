@@ -54,6 +54,8 @@ class TwoPassScene : public MultiPassScene
 		void render() override;
 		std::shared_ptr<SceneContent> content;
 		std::shared_ptr<Shaders> compositeShader;
+		std::shared_ptr<Entity> frameEnt;
+		std::shared_ptr<Texture2D> sampleTex;
 		glm::mat4 mvMat;
 		glm::mat4 projMat;
 
@@ -71,6 +73,7 @@ private:
 	std::shared_ptr<MotionBlurCompositePass> mbcPass;
 
 	float tick;
+	float tick2;
 	int polarity;
 };
 

@@ -222,15 +222,15 @@ void Shaders::_useProgram()
 	if (this->modelview.matrixPtr)
 	{
 		prevModelview = *this->modelview.matrixPtr;
+		if (this->translationPtr)
+		{
+			prevModelview = glm::translate(prevModelview, *this->translationPtr);
+		}
 		if (this->rotationPtr)
 		{
 			//Check we actually have a rotation (providing no axis == error)
 			if ((this->rotationPtr->x != 0 || this->rotationPtr->y != 0 || this->rotationPtr->z != 0) && this->rotationPtr->w != 0)
 				prevModelview = glm::rotate(prevModelview, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
-		}
-		if (this->translationPtr)
-		{
-			prevModelview = glm::translate(prevModelview, *this->translationPtr);
 		}
 	}
 
@@ -258,7 +258,7 @@ void Shaders::_useProgram()
 	//Sets the normal matrix (this must occur after modelView transformations are calculated)
 	if (normalMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
 	{//If normal matrix location and modelview ptr are known
-		glm::mat3 nm = glm::inverseTranspose(glm::mat3(mv));
+        glm::mat3 nm = glm::inverseTranspose(glm::mat3(prevModelview));
 		GL_CALL(glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
 	}
 

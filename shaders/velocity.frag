@@ -50,5 +50,5 @@ void main()
     
     vQX *= fWeight;
     
-    velocity = vec3(writeBiasScale(vQX), 0.5);
+    velocity = vec3(normalize(vertex.xy-prevVertex.xy), 0.5);//vec3(writeBiasScale(vQX), 0.5);
 }

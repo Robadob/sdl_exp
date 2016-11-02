@@ -8,5 +8,5 @@ out vec3 fragColor;
 
 void main()
 {
-	fragColor = texelFetch(_velocityTex, gl_FragCoord.xy,0);
+	fragColor = vec3(1,0,0);//texelFetch(_velocityTex, ivec2(gl_FragCoord.xy),0).rgb;
 }

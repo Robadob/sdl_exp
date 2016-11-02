@@ -15,18 +15,26 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	, cPass(std::make_shared<ColorPass>(content))
 	, mbcPass(std::make_shared<MotionBlurCompositePass>(content))
 	, tick(0.0f)
+	, tick2(0.0f)
 	, polarity(-1)
 {
 	//Register models
 	registerEntity(content->deerModel);
+	registerEntity(content->skybox);
 	//Register render passes in correct order
 	addPass(0, vPass);
-	addPass(1, cPass);
-	addPass(2, mbcPass);
+	//addPass(1, cPass);
+	//addPass(2, mbcPass);
 	//Share render textures from vPass/cPass to mbcPass
-	mbcPass->setVelocityTex(std::dynamic_pointer_cast<FrameBuffer>(vPass->getFrameBuffer())->getColorTextureName());
-	mbcPass->setColorTex(std::dynamic_pointer_cast<FrameBuffer>(cPass->getFrameBuffer())->getColorTextureName());
-	mbcPass->setDepthTex(std::dynamic_pointer_cast<FrameBuffer>(cPass->getFrameBuffer())->getDepthStencilTextureName());
+	std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(vPass->getFrameBuffer());
+	if (t)
+		mbcPass->setVelocityTex(t->getColorTextureName());
+	t = std::dynamic_pointer_cast<FrameBuffer>(cPass->getFrameBuffer());
+	if (t)
+	mbcPass->setColorTex(t->getColorTextureName());
+	t = std::dynamic_pointer_cast<FrameBuffer>(cPass->getFrameBuffer());
+	if (t)
+	mbcPass->setDepthTex(t->getDepthStencilTextureName());
 	//Enable defaults
 	vPass->setSkybox(true);
 	cPass->setAxis(true);
@@ -40,14 +48,25 @@ Called once per frame when Scene animation calls should be
 void TwoPassScene::update(unsigned int frameTime)
 {
 	this->tick += this->polarity*((frameTime * 60) / 1000.0f)*0.01f;
+	this->tick2 += ((frameTime * 60) / 1000.0f)*0.05f;
 	this->tick = (float)fmod(this->tick, 360);
-	this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
+	this->tick2 = (float)fmod(this->tick2, 360);
+	//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
 	this->content->deerModel->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
 }
 
 bool TwoPassScene::keypress(SDL_Keycode keycode, int x, int y)
 {
-	return true;
+	switch (keycode)
+	{
+	case SDLK_p:
+		this->polarity = ++this->polarity>1 ? -1 : this->polarity;
+		break;
+	default:
+		//Permit the keycode to be processed if we haven't handled personally
+		return true;
+	}
+	return false;
 }
 
 void TwoPassScene::reload()
@@ -56,7 +75,8 @@ void TwoPassScene::reload()
 }
 
 TwoPassScene::VelocityPass::VelocityPass(std::shared_ptr<SceneContent> content)
-	: RenderPass(std::make_shared<FrameBuffer>(Stock::Attachments::COLOR_TEXTURE_RGB(), Stock::Attachments::DEPTH_STENCIL_RENDERBUFFER()))
+	: RenderPass(std::make_shared<BackBuffer>())
+	//: RenderPass(std::make_shared<FrameBuffer>(Stock::Attachments::COLOR_TEXTURE_RGB(), Stock::Attachments::DEPTH_STENCIL_RENDERBUFFER()))
 	, renderSkybox(false)
 	, renderAxis(false)
 	, content(content)
@@ -82,11 +102,12 @@ TwoPassScene::MotionBlurCompositePass::MotionBlurCompositePass(std::shared_ptr<S
 		glm::vec3(0, 0, 1)
 		);
 	//2 width, (-)2 height
-	this->projMat = glm::ortho(0, 2, 0, 1, -2, 0);
+	this->projMat = glm::ortho(0, 500, 0, 1, -600, 0);
 
 	compositeShader->setModelViewMatPtr(&mvMat);
 	compositeShader->setProjectionMatPtr(&projMat);
-	std::make_shared<Entity>(Stock::Models::FRAME, 1.0f, compositeShader);
+	frameEnt = std::make_shared<Entity>(Stock::Models::FRAME, 1.0f, compositeShader);
+	sampleTex = std::make_shared<Texture2D>("../textures/deer.tga");
 	//Make vertex and face vbos of this
 	//glBegin(GL_QUADS);
 	//glVertex3f((float)width, 0.5f, 0.0f);
@@ -99,7 +120,7 @@ void TwoPassScene::MotionBlurCompositePass::setVelocityTex(GLuint tex)
 {
 	vTex = tex;
 	//Bind to shader
-	compositeShader->addTextureUniform(tex, "_velocityTex", GL_TEXTURE_2D);
+	compositeShader->addTextureUniform(sampleTex->getName(), "_velocityTex", GL_TEXTURE_2D);
 };
 void TwoPassScene::MotionBlurCompositePass::setColorTex(GLuint tex)
 {
@@ -135,11 +156,15 @@ void TwoPassScene::ColorPass::render()
 void TwoPassScene::MotionBlurCompositePass::render()
 {
 	//Render a fullscreen rectangle, we only care about the fragshader
+	//compositeShader->useProgram();
+	GL_CALL(glDisable(GL_CULL_FACE));
+	frameEnt->render();
 	compositeShader->useProgram();
-	//bind vertex and face vbos
-	//TODO
-	//rENDER
-	glDrawArrays(GL_TRIANGLES,0,2);
-	
+	glBegin(GL_QUADS);
+	glVertex3f((float)800, 0.5f, 0.0f);
+	glVertex3f(0.0f, 0.5f, 0.0f);
+	glVertex3f(0.0f, 0.5f, (float)600);
+	glVertex3f((float)800, 0.5f, (float)600);
+	glEnd();
 	//Render any non motionblur elements
 }

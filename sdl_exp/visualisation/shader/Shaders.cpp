@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp> 
 
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
@@ -112,7 +113,7 @@ void Shaders::_setupBindings(){
         this->modelviewprojection = -1;
 	//Locate the normal matrix uniform
 	std::pair<int, GLenum> u_NP = findUniform(NORMAL_MATRIX_UNIFORM_NAME, this->getProgram());
-	if (u_NP.first >= 0 && u_NP.second == GL_FLOAT_MAT4)
+	if (u_NP.first >= 0 && u_NP.second == GL_FLOAT_MAT3)
 		this->normalMatLoc = u_NP.first;
 	else
 		this->normalMatLoc = -1;
@@ -220,8 +221,8 @@ void Shaders::_useProgram()
 	//Sets the normal matrix (this must occur after modelView transformations are calculated)
 	if (normalMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
 	{//If normal matrix location and modelview ptr are known
-		glm::mat4 nm = transpose(inverse(*this->modelview.matrixPtr));
-		GL_CALL(glUniformMatrix4fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
+		glm::mat3 nm = glm::inverseTranspose(glm::mat3(*this->modelview.matrixPtr));
+		GL_CALL(glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
 	}
 
     GLuint activeVBO = 0;

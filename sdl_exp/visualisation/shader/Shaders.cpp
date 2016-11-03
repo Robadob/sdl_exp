@@ -9,6 +9,7 @@
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
 const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
+const char *Shaders::CAMERA_MATRIX_UNIFORM_NAME = "_cameraMat";
 const char *Shaders::NORMAL_MATRIX_UNIFORM_NAME = "_normalMat";
 const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
 const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
@@ -110,7 +111,13 @@ void Shaders::_setupBindings(){
     if (u_MVP.first >= 0 && u_MVP.second == GL_FLOAT_MAT4)
         this->modelviewprojection = u_MVP.first;
     else
-        this->modelviewprojection = -1;
+		this->modelviewprojection = -1;
+	//Locate the camera matrix uniform (modelview matrix, before model-specific transformations are applied)
+	std::pair<int, GLenum> u_CM = findUniform(CAMERA_MATRIX_UNIFORM_NAME, this->getProgram());
+	if (u_CM.first >= 0 && u_CM.second == GL_FLOAT_MAT4)
+		this->cameraMatLoc = u_CM.first;
+	else
+		this->normalMatLoc = -1;
 	//Locate the normal matrix uniform
 	std::pair<int, GLenum> u_NP = findUniform(NORMAL_MATRIX_UNIFORM_NAME, this->getProgram());
 	if (u_NP.first >= 0 && u_NP.second == GL_FLOAT_MAT3)
@@ -219,9 +226,14 @@ void Shaders::_useProgram()
 		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
 	}
 	//Sets the normal matrix (this must occur after modelView transformations are calculated)
+	if (cameraMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
+	{//If camera matrix location and modelview ptr are known
+		GL_CALL(glUniformMatrix4fv(cameraMatLoc, 1, GL_FALSE, glm::value_ptr(*this->modelview.matrixPtr)));
+	}
+	//Sets the normal matrix (this must occur after modelView transformations are calculated)
 	if (normalMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
 	{//If normal matrix location and modelview ptr are known
-		glm::mat3 nm = glm::inverseTranspose(glm::mat3(*this->modelview.matrixPtr));
+		glm::mat3 nm = glm::inverseTranspose(glm::mat3(mv));
 		GL_CALL(glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
 	}
 

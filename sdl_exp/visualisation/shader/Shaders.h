@@ -47,6 +47,7 @@ public:
 	static const char *PROJECTION_MATRIX_UNIFORM_NAME;//="_projectionMat";
 	static const char *MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME;// "_modelViewProjectionMat";
 	static const char *NORMAL_MATRIX_UNIFORM_NAME;// = "_normalMat";
+	static const char *CAMERA_MATRIX_UNIFORM_NAME;// = "_cameraMat";
 	static const char *VERTEX_ATTRIBUTE_NAME;// = "_vertex";
 	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
 	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
@@ -322,9 +323,14 @@ private:
 	/**
 	 * When positive this variable holds the location of the (combined) modelviewprojection matrix in the shader
 	 */
-    int modelviewprojection;
+	int modelviewprojection;
 	/**
-	 * When positive this vairable holds the location of the uniform normal matrix in the shader
+	 * When positive this vairable holds the location of the camera matrix in the shader
+	 * This is simply the modelview mat provided by the camera, before transformations are applied
+	 */
+	int cameraMatLoc;
+	/**
+	 * When positive this vairable holds the location of the normal matrix in the shader
 	 */
 	int normalMatLoc;
 	/**

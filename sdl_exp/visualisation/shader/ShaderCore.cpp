@@ -249,14 +249,12 @@ int ShaderCore::addTextureUniform(GLuint texture, char *uniformName, GLenum type
 	if (bufferId>=maxTex)
 	{
 		printf("Max texture buffers (%d) exceeded for shader %s.\n", maxTex, shaderTag);
+		return -1;
 	}
-	if (addStaticUniform(uniformName, &bufferId))
-	{
-		UniformTextureDetail utd = { texture, type };
-		textures.emplace(bufferId, utd);
-		return bufferId;
-	}
-	return -1;
+	UniformTextureDetail utd = { texture, type };
+	textures.emplace(bufferId, utd);
+	addStaticUniform(uniformName, &bufferId);
+	return bufferId;
 }
 bool ShaderCore::addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count)
 {

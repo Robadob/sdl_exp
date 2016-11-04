@@ -8,8 +8,6 @@ out vec4 prevVertex;
 uniform mat4 _projectionMat;
 uniform mat4 _modelViewMat;  // In SceneVelocityShader
 uniform mat4 _prevModelViewMat; // In SceneVelocityShader
-uniform mat4 u_mCurrentViewMat;   // In SceneVelocityShader
-uniform mat4 u_mPreviousViewMat;  // In SceneVelocityShader
 
 void main()
 {

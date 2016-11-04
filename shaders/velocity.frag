@@ -18,8 +18,8 @@ out vec3 velocity;
 //                      less blur. Arbitrarily defined by paper authors' in
 //                      their source code as 75% and controlled by a slider
 //                      in their demo.
-uniform float u_fHalfExposureXFramerate;
-uniform float u_fK;
+float u_fHalfExposureXFramerate = 0.8; //0.5 * exposure(0-1)/framedelta(0.016 & 60fps) 0.008
+float u_fK=4;//Max motion blur radius
 
 // Constants
 #define EPSILON 0.001
@@ -50,5 +50,6 @@ void main()
     
     vQX *= fWeight;
     
-    velocity = vec3(normalize(vertex.xy-prevVertex.xy), 0.5);//vec3(writeBiasScale(vQX), 0.5);
+    velocity = vec3(writeBiasScale(vQX), 0.5);
+    //velocity = vec3(vertex.xy-prevVertex.xy,vertex.w-prevVertex.w);
 }

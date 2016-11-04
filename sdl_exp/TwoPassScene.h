@@ -13,25 +13,22 @@ class TwoPassScene : public MultiPassScene
 		std::shared_ptr<Entity> deerModel;
 		std::shared_ptr<Skybox> skybox;
 		std::shared_ptr<Axis> axis;
+		std::shared_ptr<Shaders> compositeShader;
 	};
 	class VelocityPass : public RenderPass
 	{
 	public:
 		VelocityPass(std::shared_ptr<SceneContent> content);
-		void setSkybox(bool i){ renderSkybox = i; }
-		void setAxis(bool i){ renderAxis = i; }
 	protected:
 		void render() override;
 	private:
-		bool renderSkybox;
-		bool renderAxis;
 		std::shared_ptr<SceneContent> content;
 	};
 	class ColorPass : public RenderPass
 	{
 	public:
 		ColorPass(std::shared_ptr<SceneContent> content);
-		void setSkybox(bool i){ renderSkybox = i; }
+		void toggleSkybox(){ renderSkybox = !renderSkybox; }
 		void setAxis(bool i){ renderAxis = i; }
 	protected:
 		void render() override;
@@ -53,7 +50,6 @@ class TwoPassScene : public MultiPassScene
 		GLuint dTex;
 		void render() override;
 		std::shared_ptr<SceneContent> content;
-		std::shared_ptr<Shaders> compositeShader;
 		std::shared_ptr<Entity> frameEnt;
 		std::shared_ptr<Texture2D> sampleTex;
 		glm::mat4 mvMat;

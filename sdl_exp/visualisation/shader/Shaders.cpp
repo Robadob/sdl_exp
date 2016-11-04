@@ -170,9 +170,9 @@ void Shaders::_setupBindings(){
 	}
 	//Locate the previous modelview uniform
 	std::pair<int, GLenum> u_PMV = findUniform(PREV_MODELVIEW_MATRIX_UNIFORM_NAME, this->getProgram());
-	if (u_PMV.first >= 0 && u_C.second == GL_FLOAT_MAT4)
+	if (u_PMV.first >= 0 && u_PMV.second == GL_FLOAT_MAT4)
 	{
-		this->prevModelviewUniformLocation = u_C.first;
+		this->prevModelviewUniformLocation = u_PMV.first;
 	}
 	else
 	{
@@ -201,7 +201,7 @@ void Shaders::_setupBindings(){
 void Shaders::_useProgram()
 {
 	//Set the previous modelview matrix (e.g. glFrustum, normally provided by the Visualisation)
-	if (this->projection.location >= 0)
+	if (prevModelviewUniformLocation >= 0)
 	{//If previous modelview matrix location is known
 		GL_CALL(glUniformMatrix4fv(prevModelviewUniformLocation, 1, GL_FALSE, glm::value_ptr(prevModelview)));
 	}

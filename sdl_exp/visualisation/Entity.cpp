@@ -7,10 +7,11 @@
 #include <glm/gtx/component_wise.hpp>
 #include <algorithm>
 #include <locale>
+#include <sparsehash/dense_hash_map>
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
-#define VN_PAIR std::tuple<unsigned int, unsigned int, unsigned int>
+#define VN_PAIR(a,b,c) ((unsigned long long)c<<43)|((unsigned long long)b<<22)|(unsigned long long)a
 
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
@@ -192,23 +193,6 @@ Deallocates the specified vertex buffer object
 */
 void Entity::deleteVertexBufferObject(GLuint *vbo){
 	GL_CALL(glDeleteBuffers(1, vbo));
-}
-/*
-Used by loadModelFromFile() in a hashmap of vertex-normal pairs
-*/
-unsigned long hashing_func(VN_PAIR key)
-{
-	static int offset = sizeof(unsigned long) / 3;
-	return (std::get<2>(key) << offset * 2) & (std::get<1>(key) << offset) & std::get<0>(key);
-}
-/*
-Used by loadModelFromFile() in a hashmap of vertex-normal pairs
-*/
-bool key_equal_fn(VN_PAIR t1, VN_PAIR t2)
-{
-	return std::get<0>(t1) == std::get<0>(t2) &&
-		std::get<1>(t1) == std::get<1>(t2) &&
-		std::get<2>(t1) == std::get<2>(t2);
 }
 /*
 Loads and scales the specified model into this classes primitive storage
@@ -746,14 +730,13 @@ exit_loop:;
 	}
 exit_loop2:;
 	//Cleanup buffer
-	delete buffer;
+	delete[] buffer;
 	printf("\rLoading Model: %s [Calculating Pairs]", modelPath);
-	auto vn_pairs = new std::unordered_map <
-		VN_PAIR,
-		unsigned int,
-		std::function<unsigned long(VN_PAIR)>,
-		std::function < bool(VN_PAIR, VN_PAIR) >
-	>(faces.count*faces.components, hashing_func, key_equal_fn);
+
+	auto vn_pairs = new google::dense_hash_map<unsigned long long, unsigned int>();
+	unsigned long long emptykey = VN_PAIR(UINT_MAX, UINT_MAX, UINT_MAX);
+	vn_pairs->set_empty_key(emptykey);
+	vn_pairs->resize(faces.count*faces.components);
 	//Calculate the number of unique vertex-normal pairs
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
 	{

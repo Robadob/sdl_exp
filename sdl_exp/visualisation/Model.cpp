@@ -124,10 +124,10 @@ std::shared_ptr<ModelNode> Model::buildHierarchy(const struct aiScene* scene, co
 			for (unsigned int i = 0; i < face->mNumIndices; ++i) {
 				int index = face->mIndices[i];
 				//printf("%d:%d\n", vfc.f + (t*mNumFaceIndices) + i, vfc.v + index);
-				printf("(%.4f,%.4f,%.4f)", data->vertices[vfc.v + index].x, data->vertices[vfc.v + index].y, data->vertices[vfc.v + index].z);
+				//printf("(%.4f,%.4f,%.4f)", data->vertices[vfc.v + index].x, data->vertices[vfc.v + index].y, data->vertices[vfc.v + index].z);
 				data->faces[vfc.f + (t*mNumFaceIndices) + i] = vfc.v + index;
 			}
-			printf("\n");
+			//printf("\n");
 		}
 		//printf("---------------------------------------\n");
 
@@ -229,16 +229,19 @@ void Model::loadModel()
 	if (data->normals)
 	{
 		GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, vboSize, this->vfc.v*sizeof(glm::vec3), data->normals));
+		normals.offset = vboSize;
 		vboSize += this->vfc.v*sizeof(glm::vec3);
 	}
 	if (data->colors)
 	{
 		GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, vboSize, this->vfc.v*sizeof(glm::vec4), data->colors));
+		colors.offset = vboSize;
 		vboSize += this->vfc.v*sizeof(glm::vec4);
 	}
 	if (data->texcoords)
 	{
 		GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, vboSize, this->vfc.v*sizeof(glm::vec3), data->texcoords));
+		texcoords.offset = vboSize;
 		vboSize += this->vfc.v*sizeof(glm::vec3);
 	}
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -261,15 +264,19 @@ void Model::loadModel()
 
 void Model::render(std::shared_ptr<Shaders> shaders)
 {
+	static int i = 0;
 	//Configure shader
 	if (shaders != nullptr)
 	{
-		shaders->useProgram();
 
-		shaders->setPositionsAttributeDetail(positions);
-		shaders->setNormalsAttributeDetail(normals);
-		shaders->setColorsAttributeDetail(colors);
-		shaders->setTexCoordsAttributeDetail(texcoords);
+		if (i==0)
+		{
+			shaders->setPositionsAttributeDetail(positions);
+			shaders->setNormalsAttributeDetail(normals);
+			shaders->setColorsAttributeDetail(colors);
+			shaders->setTexCoordsAttributeDetail(texcoords);
+			i++;
+		}
 	}
 	//Bind the faces to be rendered
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo));
@@ -282,6 +289,14 @@ void Model::render(std::shared_ptr<Shaders> shaders)
 		modelMat = glm::rotate(modelMat, glm::radians(this->rotation.w), glm::vec3(this->rotation));
 	modelMat = glm::translate(modelMat, this->location);
 
+	//GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+	//glGetBufferSubData(GL_ARRAY_BUFFER,0, this->vfc.v*sizeof(glm::vec3), data->vertices);
+	//GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+	//GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo));
+	//glGetBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, this->vfc.f*sizeof(unsigned int), data->faces);
+	//GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 	//Trigger recursive render
 	root->render(shaders, modelMat);
+	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+	shaders->clearProgram();
 }

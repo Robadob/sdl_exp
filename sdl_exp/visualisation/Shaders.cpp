@@ -182,7 +182,7 @@ void Shaders::_useProgram()
 	glm::mat4 mv;
 	if (this->modelview.matrixPtr)
 	{
-		mv = modelMat * *this->modelview.matrixPtr;
+		mv = *this->modelview.matrixPtr * modelMat;
 		if (this->rotationPtr)
 		{
 			//Check we actually have a rotation (providing no axis == error)

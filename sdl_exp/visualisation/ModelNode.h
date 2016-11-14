@@ -27,8 +27,8 @@ private:
 	{
 		return me.lock();
 	}
-	Mesh(std::shared_ptr<ModelData> data, unsigned int fo, unsigned int fs, unsigned int mi, GLenum ft)
-		: faceOffset(fo)
+	Mesh(std::shared_ptr<ModelData> data, unsigned int bo, unsigned int fs, unsigned int mi, GLenum ft)
+		: byteOffset(bo)
 		, faceSize(fs)
 		, materialIndex(mi)
 		, faceType(ft)
@@ -39,7 +39,7 @@ private:
 		this->parent = parent;
 	}
 private:
-	unsigned int faceOffset;
+	unsigned int byteOffset;
 	unsigned int faceSize;
 	unsigned int materialIndex;
 

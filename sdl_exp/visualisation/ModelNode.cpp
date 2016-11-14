@@ -16,10 +16,10 @@ void Mesh::render(std::shared_ptr<Shaders> shaders)
 		/*	if (i % 3 == 0)
 				printf("\n");
 			printf("(%.4f,%.4f,%.4f)"
-				, data->vertices[data->faces[faceOffset + i]].x
-				, data->vertices[data->faces[faceOffset + i]].y
-				, data->vertices[data->faces[faceOffset + i]].z);*/
-			//glVertex3fv(glm::value_ptr(data->vertices[data->faces[faceOffset + i]]));
+				, data->vertices[data->faces[byteOffset/4 + i]].x
+				, data->vertices[data->faces[byteOffset/4 + i]].y
+				, data->vertices[data->faces[byteOffset/4 + i]].z);*/
+			//glVertex3fv(glm::value_ptr(data->vertices[data->faces[byteOffset/4 + i]]));
 		}
 		glEnd();
 		GL_CHECK();
@@ -27,8 +27,8 @@ void Mesh::render(std::shared_ptr<Shaders> shaders)
 	//Apply material
 
 	//Render
-	GL_CALL(glDrawElements(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, (void *)(faceOffset)));
-	//GL_CALL(glDrawRangeElements(faceType, faceOffset, faceOffset + faceSize, faceSize, GL_UNSIGNED_INT, (void *)faceOffset));
+		GL_CALL(glDrawElements(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, (void *)(byteOffset)));
+	//GL_CALL(glDrawRangeElements(faceType, byteOffset, faceOffset + faceSize, faceSize, GL_UNSIGNED_INT, (void *)faceOffset));
 	//char *a="";
 	//if (faceType == GL_POINTS)
 	//	a = "points";

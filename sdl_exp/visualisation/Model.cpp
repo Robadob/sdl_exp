@@ -93,7 +93,7 @@ std::shared_ptr<ModelNode> Model::buildHierarchy(const struct aiScene* scene, co
 			fprintf(stderr, "Warning: GL_POLYGON is deprecated, this should be replaced with GL_PATCH and tesselation shader.\n");
 			break;
 		}
-		std::shared_ptr<Mesh> mesh = Mesh::make_shared(this->data, vfc.f*4, aiMesh->mNumFaces*mNumFaceIndices, aiMesh->mMaterialIndex, faceType);
+		std::shared_ptr<Mesh> mesh = Mesh::make_shared(this->data, vfc.f*sizeof(unsigned int), aiMesh->mNumFaces*mNumFaceIndices, aiMesh->mMaterialIndex, faceType);
 
 #ifdef _DEBUG
 		//aiVector3D is type float

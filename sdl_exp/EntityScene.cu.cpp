@@ -49,10 +49,10 @@ EntityScene::EntityScene(Visualisation &visualisation)
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
    // initParticles();
 
-	//assimpTest = std::make_shared<Model>("C:\\Users\\rob\\Desktop\\assimp models\\X\\dwarf.x");
+	assimpTest = std::make_shared<Model>("C:\\Users\\rob\\Desktop\\assimp models\\X\\dwarf.x");
 	//assimpTest = std::make_shared<Model>("C:\\Users\\rob\\Desktop\\assimp models\\B3D\\dwarf2.b3d");
 	//assimpTest = std::make_shared<Model>("C:\\Users\\rob\\Desktop\\assimp models\\X\\Testwuson.X");
-	assimpTest = std::make_shared<Model>("C:\\Users\\rob\\Desktop\\assimp models\\X\\BCN_Epileptic.X");
+	//assimpTest = std::make_shared<Model>("C:\\Users\\rob\\Desktop\\assimp models\\X\\BCN_Epileptic.X");
 	flatShader = std::make_shared<Shaders>(Stock::Shaders::FLAT);
 	flatShader->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
 	flatShader->setProjectionMatPtr(this->visualisation.getFrustrumPtr());

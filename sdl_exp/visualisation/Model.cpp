@@ -64,7 +64,7 @@ std::shared_ptr<ModelNode> Model::buildHierarchy(const struct aiScene* scene, co
 	printf("Node(#%d, %s, M%d, C%d)\n", qi, nd->mName.C_Str(), nd->mNumMeshes, nd->mNumChildren);
 	//Copy transformation matrix
 	aiMatrix4x4 m = nd->mTransformation;
-	aiTransposeMatrix4(&m);
+	//aiTransposeMatrix4(&m);
 #ifdef _DEBUG
 	//aiMatrix4x4 is type float
 	assert(sizeof(glm::mat4) == sizeof(aiMatrix4x4));
@@ -93,7 +93,7 @@ std::shared_ptr<ModelNode> Model::buildHierarchy(const struct aiScene* scene, co
 			fprintf(stderr, "Warning: GL_POLYGON is deprecated, this should be replaced with GL_PATCH and tesselation shader.\n");
 			break;
 		}
-		std::shared_ptr<Mesh> mesh = Mesh::make_shared(this->data, vfc.f, aiMesh->mNumFaces*mNumFaceIndices, aiMesh->mMaterialIndex, faceType);
+		std::shared_ptr<Mesh> mesh = Mesh::make_shared(this->data, vfc.f*4, aiMesh->mNumFaces*mNumFaceIndices, aiMesh->mMaterialIndex, faceType);
 
 #ifdef _DEBUG
 		//aiVector3D is type float

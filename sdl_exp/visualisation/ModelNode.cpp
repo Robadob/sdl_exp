@@ -19,7 +19,7 @@ void Mesh::render(std::shared_ptr<Shaders> shaders)
 				, data->vertices[data->faces[faceOffset + i]].x
 				, data->vertices[data->faces[faceOffset + i]].y
 				, data->vertices[data->faces[faceOffset + i]].z);*/
-			glVertex3fv(glm::value_ptr(data->vertices[data->faces[faceOffset + i]]));
+			//glVertex3fv(glm::value_ptr(data->vertices[data->faces[faceOffset + i]]));
 		}
 		glEnd();
 		GL_CHECK();
@@ -27,7 +27,7 @@ void Mesh::render(std::shared_ptr<Shaders> shaders)
 	//Apply material
 
 	//Render
-	//GL_CALL(glDrawElements(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, (void *)faceOffset));
+	GL_CALL(glDrawElements(GL_TRIANGLES, faceSize, GL_UNSIGNED_INT, (void *)(faceOffset)));
 	//GL_CALL(glDrawRangeElements(faceType, faceOffset, faceOffset + faceSize, faceSize, GL_UNSIGNED_INT, (void *)faceOffset));
 	//char *a="";
 	//if (faceType == GL_POINTS)
@@ -42,7 +42,7 @@ void Mesh::render(std::shared_ptr<Shaders> shaders)
 void ModelNode::render(std::shared_ptr<Shaders> shaders, glm::mat4 transform)
 {
 	//Calculate & apply transform
-	transform = glm::mat4();// data->transforms[transformOffset] * transform;
+	data->transforms[transformOffset] * transform;//transform = glm::mat4();// 
 	//transform = transform * data->transforms[transformOffset];
 	shaders->setModelMat(transform);
 

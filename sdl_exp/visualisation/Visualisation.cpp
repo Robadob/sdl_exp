@@ -9,7 +9,7 @@
 #include "Skybox.h"
 
 #define FOVY 60.0f
-#define NEAR_CLIP 0.001f
+#define NEAR_CLIP 0.01f
 #define FAR_CLIP 500.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f

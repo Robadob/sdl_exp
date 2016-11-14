@@ -6,6 +6,7 @@
 
 #include "visualisation/texture/TextureBuffer.h"
 #include "visualisation/ComputeShader.h"
+#include "visualisation/Model.h"
 
 /*
 Example scene to demonstrate how to use SDL_EXP
@@ -36,7 +37,9 @@ private:
     std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> deerModel;
     std::shared_ptr<Entity> colorModel;
-    std::shared_ptr<Shaders> billboardShaders;
+	std::shared_ptr<Shaders> billboardShaders;
+	std::shared_ptr<Model> assimpTest; 
+	std::shared_ptr<Shaders> flatShader;
     float tick;
     int polarity;
 

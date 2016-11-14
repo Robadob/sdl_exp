@@ -170,6 +170,7 @@
     <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
     <ClCompile Include="visualisation\Model.cpp" />
+    <ClCompile Include="visualisation\ModelNode.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
     <ClCompile Include="visualisation\ShaderCore.cpp" />
     <ClCompile Include="visualisation\Shaders.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\Model.h" />
+    <ClInclude Include="visualisation\ModelNode.h" />
     <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\Reloadable.h" />
     <ClInclude Include="visualisation\ShaderCore.h" />

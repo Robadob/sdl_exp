@@ -114,6 +114,9 @@
     <ClCompile Include="visualisation\BoundingBox.cpp">
       <Filter>Source Files\Visualisation\Entity</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\ModelNode.cpp">
+      <Filter>Source Files\Visualisation\Entity</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="glsl\main.frag">
@@ -197,6 +200,9 @@
       <Filter>Header Files\Visualisation\Entity</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\BoundingBox.h">
+      <Filter>Header Files\Visualisation\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\ModelNode.h">
       <Filter>Header Files\Visualisation\Entity</Filter>
     </ClInclude>
   </ItemGroup>

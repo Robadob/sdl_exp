@@ -68,7 +68,7 @@ public:
     void setRotation(glm::vec4 rotation);
     glm::vec3 getLocation() const;
     glm::vec4 getRotation() const;
-    inline void clearMaterial();
+    void clearMaterial();
     void exportModel() const;
     virtual void reload();
     std::shared_ptr<Shaders> getShaders() const;

@@ -48,6 +48,15 @@ EntityScene::EntityScene(Visualisation &visualisation)
     texBuf.bindToShader(this->instancedSphere->getShaders().get());
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
     initParticles();
+
+	assimpTest = std::make_shared<Model>("C:\\Users\\Robadob\\Downloads\\assimp-3.3.1\\test\\models-nonbsd\\X\\dwarf.x");
+	//assimpTest = std::make_shared<Model>("C:\\Users\\Robadob\\Downloads\\assimp-3.3.1\\test\\models-nonbsd\\B3D\\dwarf2.b3d");
+	//assimpTest = std::make_shared<Model>("C:\\Users\\Robadob\\Downloads\\assimp-3.3.1\\test\\models\\X\\Testwuson.X");
+	//assimpTest = std::make_shared<Model>("C:\\Users\\Robadob\\Downloads\\assimp-3.3.1\\test\\models\\X\\BCN_Epileptic.X");
+	flatShader = std::make_shared<Shaders>(Stock::Shaders::FLAT);
+	flatShader->setModelViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
+	flatShader->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+	flatShader->setColor(glm::vec3(1));
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -71,10 +80,14 @@ Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
-    colorModel->render();
-    deerModel->render();
+	glDisable(GL_CULL_FACE);
+	assimpTest->render(flatShader);
+	glEnable(GL_CULL_FACE);
+
+    //colorModel->render();
+    //deerModel->render();
     //this->instancedSphere->renderInstances(100);
-	renderParticles();
+	//renderParticles();
 }
 /*
 Called when the user requests a reload
@@ -83,6 +96,9 @@ void EntityScene::reload()
 {
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
     this->billboardShaders->reload();
+	flatShader->reload();
+	assimpTest->reload();
+	flatShader->setColor(glm::vec3(1));
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)

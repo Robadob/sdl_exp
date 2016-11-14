@@ -249,7 +249,7 @@ public:
 	*/
 	std::list<GenericVAD> lostGvads;
 	bool addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad);
-
+	void setModelMat(glm::mat4 mm){ this->modelMat = mm; }
 	inline void clearModelViewMatPtr(){ this->modelview.matrixPtr = nullptr; }
 	inline void clearProjectionMatPtr(){ this->projection.matrixPtr = nullptr; }
 	inline void clearPositionsAttributeDetail()
@@ -288,6 +288,7 @@ public:
 	*/
     void setColor(glm::vec4 color);
 private:
+	glm::mat4 modelMat;
 	/**
 	 * Disables the vertex attributes attached to this shader
 	 * @note Uses glDisableClientState() and glDisableVertexAttribArray()

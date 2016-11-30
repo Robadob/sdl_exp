@@ -1,6 +1,6 @@
 #ifndef __GLcheck_h__
 #define __GLcheck_h__
-
+#define EXIT_ON_ERROR
 #include <GL/glew.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +14,7 @@ inline static void HandleGLError(const char *file, int line) {
     if (error != GL_NO_ERROR)
     {
         printf("%s(%i) GL Error Occurred;\n%s\n", file, line, gluErrorString(error));
-#if EXIT_ON_ERROR
+#ifdef EXIT_ON_ERROR
         getchar();
         exit(1);
 #endif
@@ -41,6 +41,7 @@ inline static void InitGlew() {
         getchar();
         exit(1);
     }
+    GLuint error = glGetError();//This error can be ignored, GL_INVALID_ENUMERANT
 }
 #define GLEW_INIT() (InitGlew())
 

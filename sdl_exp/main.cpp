@@ -1,5 +1,6 @@
 #include "EntityScene.h"
 #include "TwoPassScene.h"
+#include "visualisation/multipass/FrameBufferAttachment.h"
 
 int main()
 {

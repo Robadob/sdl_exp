@@ -30,7 +30,7 @@
 Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
     : hud(windowWidth, windowHeight)
     , camera(glm::vec3(50,50,50))
-    , scene(0)
+    , scene(nullptr)
     , isInitialised(false)
     , continueRender(true)
 	, msaaState(true)

@@ -78,12 +78,12 @@ void TwoPassScene::reload()
 
 TwoPassScene::VelocityPass::VelocityPass(std::shared_ptr<SceneContent> content)
 	//: RenderPass(std::make_shared<BackBuffer>(true, glm::vec3(0.5)))
-	: RenderPass(std::make_shared<FrameBuffer>(Stock::Attachments::COLOR_TEXTURE_RGB(), Stock::Attachments::DEPTH_STENCIL_RENDERBUFFER(),1.0f,true, glm::vec3(0.5)))
+    : RenderPass(std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGB(), FBAFactory::ManagedDepthStencilRenderBuffer24()))
 	, content(content)
 {
 }
 TwoPassScene::ColorPass::ColorPass(std::shared_ptr<SceneContent> content)
-	: RenderPass(std::make_shared<FrameBuffer>(Stock::Attachments::COLOR_TEXTURE_RGB(), Stock::Attachments::DEPTH_STENCIL_TEXTURE()))
+    : RenderPass(std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGB(), FBAFactory::ManagedDepthStencilTexture32()))
 	, renderSkybox(true)
 	, renderAxis(false)
 	, content(content)
@@ -91,7 +91,8 @@ TwoPassScene::ColorPass::ColorPass(std::shared_ptr<SceneContent> content)
 TwoPassScene::MotionBlurCompositePass::MotionBlurCompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
 	, vTex(0)
-	, cTex(0)
+    , cTex(0)
+    , dTex(0)
 	, content(content)
 	
 {

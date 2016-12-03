@@ -210,6 +210,7 @@
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\multipass\BackBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
+    <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h" />
     <ClInclude Include="visualisation\multipass\MultiPassScene.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />

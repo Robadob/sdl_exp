@@ -1,364 +1,216 @@
 #include "FrameBuffer.h"
 //Constructors
-FrameBuffer::FrameBuffer(Color color, Depth depth, Stencil stencil, float scale, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer({ color }, depth, stencil, scale, glm::uvec2(1), clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(glm::uvec2 dimensions, Color color, Depth depth, Stencil stencil, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer({ color }, depth, stencil, 0, dimensions, clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(Color color, DepthStencil depthstencil, float scale, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer({ color }, depthstencil, scale, glm::uvec2(1), clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(glm::uvec2 dimensions, Color color, DepthStencil depthstencil, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer({ color }, depthstencil, 0, dimensions, clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stencil stencil, float scale, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer(color, depth, stencil, scale, glm::uvec2(1), clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<Color> color, Depth depth, Stencil stencil, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer(color, depth, stencil, 0, dimensions, clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depthstencil, float scale, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer(color, depthstencil, scale, glm::uvec2(1), clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<Color> color, DepthStencil depthstencil, bool doClear, glm::vec3 clearColor)
-	: FrameBuffer(color, depthstencil, 0, dimensions, clearColor, doClear)
-{ }
-FrameBuffer::FrameBuffer(std::initializer_list<Color> color, Depth depth, Stencil stencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
+
+typedef FrameBufferAttachment FBA;
+//Scaling FrameBuffers
+FrameBuffer::FrameBuffer(FBA color, FBA depth, FBA stencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+    : FrameBuffer({ color }, depth, stencil, FBAFactory::Disabled(), scale, glm::uvec2(1), samples, clearColor, doClear)
+{}
+FrameBuffer::FrameBuffer(FBA color, FBA depthstencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+: FrameBuffer({ color }, FBAFactory::Disabled(), FBAFactory::Disabled(), depthstencil, scale, glm::uvec2(1), samples, clearColor, doClear)
+{}
+FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+: FrameBuffer(color, depth, stencil, FBAFactory::Disabled(), scale, glm::uvec2(1), samples, clearColor, doClear)
+{}
+FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depthstencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+: FrameBuffer(color, FBAFactory::Disabled(), FBAFactory::Disabled(), depthstencil, scale, glm::uvec2(1), samples, clearColor, doClear)
+{}
+//Fixed FrameBuffers
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, FBA color, FBA depth, FBA stencil, unsigned int samples, bool doClear, glm::vec3 clearColor)
+    : FrameBuffer({ color }, depth, stencil, FBAFactory::Disabled(), 0, dimensions, samples, clearColor, doClear)
+{}
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, FBA color, FBA depthstencil, unsigned int samples, bool doClear, glm::vec3 clearColor)
+    : FrameBuffer({ color }, FBAFactory::Disabled(), FBAFactory::Disabled(), depthstencil, 0, dimensions, samples, clearColor, doClear)
+{}
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<FBA> color, FBA depth, FBA stencil, unsigned int samples, bool doClear, glm::vec3 clearColor)
+    : FrameBuffer(color, depth, stencil, FBAFactory::Disabled(), 0, dimensions, samples, clearColor, doClear)
+{}
+FrameBuffer::FrameBuffer(glm::uvec2 dimensions, std::initializer_list<FBA> color, FBA depthstencil, unsigned int samples, bool doClear, glm::vec3 clearColor)
+    : FrameBuffer(color, FBAFactory::Disabled(), FBAFactory::Disabled(), depthstencil, 0, dimensions, samples, clearColor, doClear)
+{}
+//Actual constructor
+FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stencil, FBA depthstencil, float scale, glm::uvec2 dimensions, unsigned int samples, glm::vec3 clearColor, bool doClear)
 	: scale(scale)
-	, dimensions(dimensions)
+    , dimensions(dimensions)
+    , samples(samples)
 	, clearColor(clearColor)
-	, doClear(doClear)
-	, depthStencilConf({ Disabled })
-	, depthConf(depth)
-	, depthName(0)
-	, stencilConf(stencil)
-	, stencilName(0)
+    , doClear(doClear)
+    , depthStencil(depthstencil)
+	, depth(depth)
+	, stencil(stencil)
 {
-	GL_CALL(glGenFramebuffers(1, &name));
-	for (Color c : color)
-		addColorAttachment(c);
-	makeDepth();
-	makeStencil();
-	setDrawBuffers();
-}
-FrameBuffer::FrameBuffer(std::initializer_list<Color> color, DepthStencil depthstencil, float scale, glm::uvec2 dimensions, glm::vec3 clearColor, bool doClear)
-	: scale(scale)
-	, dimensions(dimensions)
-	, clearColor(clearColor)
-	, doClear(doClear)
-	, depthStencilConf(depthstencil)
-	, depthConf({ Disabled })
-	, depthName(0)
-	, stencilConf({ Disabled })
-	, stencilName(0)
-{
-	GL_CALL(glGenFramebuffers(1, &name));
-	for (Color c : color)
-		addColorAttachment(c);
-	makeDepthStencil();
+#ifdef _DEBUG
+    int r;
+    glGetIntegerv(GL_MAX_COLOR_TEXTURE_SAMPLES, &r);
+    assert(static_cast<unsigned int>(r) >= samples);
+    glGetIntegerv(GL_MAX_DEPTH_TEXTURE_SAMPLES, &r);
+    assert(static_cast<unsigned int>(r) >= samples);
+    glGetIntegerv(GL_MAX_INTEGER_SAMPLES, &r);
+    assert(static_cast<unsigned int>(r) >= samples);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &r);
+    assert(static_cast<unsigned int>(r) >= dimensions.x);
+    assert(static_cast<unsigned int>(r) >= dimensions.y);
+#endif
+    assert(depthstencil.Type() == FBA::Disabled || (depth.Type() == FBA::Disabled &&stencil.Type() == FBA::Disabled));
+    assert(color.size() <= static_cast<unsigned int>(getMaxColorAttachments()));
+    GL_CALL(glGenFramebuffers(1, &name));    
+    {//Assign an attachment point to each color attachment
+        unsigned int i = 0;
+        for (FBA c : color)
+        {
+            if (c.Class() != FBA::Disabled)
+            {
+                colors.emplace(i++, c);
+            }
+        }
+    }
+    makeAttachments();
 	setDrawBuffers();
 }
 FrameBuffer::~FrameBuffer()
 {
 	//Color
-	for (auto &&it = colorConfs.begin(); it != colorConfs.end(); ++it)
+	for (auto &&it = colors.begin(); it != colors.end(); ++it)
 	{
-		auto &&it2 = colorNames.find(it->first);
 		//Skip if unmanaged
-		if (it->second.texName != 0)
+		if (it->second.conf.TexName() != 0)
 			continue;
-		if (it->second.type == Texture&&it2!=colorNames.end()){
-			GL_CALL(glDeleteTextures(1, &it2->second));
+        if (it->second.conf.Type() == FBA::Texture){
+            GL_CALL(glDeleteTextures(1, &it->second.texName));
 		}
-		else if (it->second.type == RenderBuffer&&it2 != colorNames.end())
-			GL_CALL(glDeleteRenderbuffers(1, &it2->second));
-		colorNames.erase(it2);
+        else if (it->second.conf.Type() == FBA::RenderBuffer){
+            GL_CALL(glDeleteRenderbuffers(1, &it->second.texName));
+        }
 	}
-	colorConfs.clear();
+	colors.clear();
 	//DepthStencil
-	if (depthStencilConf.type == Texture&&depthStencilConf.texName==0)
+    if (depthStencil.conf.Type() == FBA::Texture&&depthStencil.conf.TexName() == 0)
 	{
-		GL_CALL(glDeleteTextures(1, &depthName));
-		stencilName = depthName;
+        GL_CALL(glDeleteTextures(1, &depthStencil.texName));
 	}
-	else if (depthStencilConf.type == RenderBuffer&&depthStencilConf.texName == 0)
+    else if (depthStencil.conf.Type() == FBA::RenderBuffer&&depthStencil.conf.TexName() == 0)
 	{
-		GL_CALL(glDeleteRenderbuffers(1, &depthName));
-		stencilName = depthName;
+        GL_CALL(glDeleteRenderbuffers(1, &depthStencil.texName));
 	}
-	else
-	{
-		//Depth
-		if (depthConf.type == Texture&&depthConf.texName == 0){
-			GL_CALL(glDeleteTextures(1, &depthName));
-		}
-		else if (depthConf.type == RenderBuffer&&depthConf.texName == 0)
-			GL_CALL(glDeleteRenderbuffers(1, &depthName));
-		//Stencil
-		if (stencilConf.type == Texture&&stencilConf.texName == 0){
-			GL_CALL(glDeleteTextures(1, &stencilName));
-		}
-		else if (stencilConf.type == RenderBuffer&&stencilConf.texName == 0)
-			GL_CALL(glDeleteRenderbuffers(1, &stencilName));
+    else
+    {
+        //Depth
+        if (depth.conf.Type() == FBA::Texture&&depth.conf.TexName() == 0){
+            GL_CALL(glDeleteTextures(1, &depth.texName));
+        }
+        else if (depth.conf.Type() == FBA::RenderBuffer&&depth.conf.TexName() == 0) {
+            GL_CALL(glDeleteRenderbuffers(1, &depth.texName));
+        }
+        //Stencil
+        if (stencil.conf.Type() == FBA::Texture&&stencil.conf.TexName() == 0){
+            GL_CALL(glDeleteTextures(1, &stencil.texName));
+        }
+        else if (stencil.conf.Type() == FBA::RenderBuffer&&stencil.conf.TexName() == 0){
+            GL_CALL(glDeleteRenderbuffers(1, &stencil.texName));
+        }
 	}
 	//FrameBuffer
     GL_CALL(glDeleteFramebuffers(1, &name));
 }
 //Internal loaders
-void FrameBuffer::makeColor()
+void FrameBuffer::makeAttachments()
 {
-	for (auto &&it = colorConfs.begin(); it != colorConfs.end(); ++it)
-		makeColor(it->first);
+	for (auto &&it = colors.begin(); it != colors.end(); ++it)
+    {
+        assert(it->second.conf.Class() == FBA::Color);
+        makeAttachment(it->second.conf, GL_COLOR_ATTACHMENT0 + it->first, &it->second.texName);
+    }
+    if (depthStencil.conf.Type() != FBA::Disabled)
+    {
+        assert(depthStencil.conf.Class() == FBA::DepthStencil);
+        makeAttachment(depthStencil.conf, GL_DEPTH_STENCIL_ATTACHMENT, &depthStencil.texName);
+    }
+    else
+    {
+        if (depth.conf.Type() != FBA::Disabled)
+        {
+            assert(depth.conf.Class() == FBA::Depth);
+            makeAttachment(depth.conf, GL_DEPTH_ATTACHMENT, &depth.texName);
+        }
+        if (stencil.conf.Type() != FBA::Disabled)
+        {
+            assert(stencil.conf.Class() == FBA::Stencil);
+            makeAttachment(stencil.conf, GL_STENCIL_ATTACHMENT, &stencil.texName);
+        }
+    }
 }
-void FrameBuffer::makeColor(GLuint attachPt)
+void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint, GLuint *texNameOut) const
 {
-	if (colorConfs[attachPt].type != Disabled)
-	{
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		if (colorConfs[attachPt].type == Texture)
-		{
-			if (colorConfs[attachPt].texName == 0)
-			{
-				//If it doesn't exist, make, 1st if potentially redundant
-				if (colorNames.find(attachPt) == colorNames.end())
-					colorNames[attachPt] = 0;
-				if (colorNames[attachPt] == 0)
-					GL_CALL(glGenTextures(1, &colorNames[attachPt]));
+    if (attachmentConfig.Type() != FBA::Disabled)
+    {
+        GLuint prevFBO = getActiveFB();
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
+        if (attachmentConfig.Type() == FBA::Texture)
+        {
+            if (attachmentConfig.TexName() == 0)
+            {
+                if (*texNameOut==0)//Don't generate a new texture if resizing
+                    GL_CALL(glGenTextures(1, texNameOut));
 
-				GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, colorNames[attachPt]));
+                GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), *texNameOut));
 
-				//Size the texture
-				//GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, 0, colorConfs[attachPt].colorFormat, colorConfs[attachPt].colorType, nullptr));
-                int r;
-			    glGetIntegerv(GL_MAX_COLOR_TEXTURE_SAMPLES, &r);
-                printf("GL_MAX_COLOR_TEXTURE_SAMPLES: %d\n", r);
-                glGetIntegerv(GL_MAX_DEPTH_TEXTURE_SAMPLES, &r);
-                printf("GL_MAX_DEPTH_TEXTURE_SAMPLES: %d\n", r);
-                glGetIntegerv(GL_MAX_INTEGER_SAMPLES, &r);
-                printf("GL_MAX_INTEGER_SAMPLES: %d\n", r);
-                glGetIntegerv(GL_MAX_TEXTURE_SIZE, &r);
-                printf("GL_MAX_TEXTURE_SIZE: %d\n", r);
-                GL_CALL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, true));//MultiSample
-
-				//Config for mipmap access
-                //GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-                //GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-                GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
-			}
-			else
-				colorNames[attachPt] = colorConfs[attachPt].texName;
-			//Bind the tex to our framebuffer
-            GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D_MULTISAMPLE, colorNames[attachPt], 0));
-		}
-		else if (colorConfs[attachPt].type == RenderBuffer)
-		{
-			if (colorConfs[attachPt].texName == 0)
-			{
-				//If it doesn't exist, make, 1st if potentially redundant
-				if (colorNames.find(attachPt) == colorNames.end())
-					colorNames[attachPt] = 0;
-				if (colorNames[attachPt] == 0)
-					GL_CALL(glGenRenderbuffers(1, &colorNames[attachPt]));
-				//Set storage
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, colorNames[attachPt]));
-				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y));
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-			}
-			else
-				colorNames[attachPt] = colorConfs[attachPt].texName;
-			//Bind to our framebuffer
-			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_RENDERBUFFER, colorNames[attachPt]));
-		}
-		//drawBuffs.insert(GL_COLOR_ATTACHMENT0 + attachPt);
-		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-}
-void FrameBuffer::makeDepthStencil()
-{
-	if (depthStencilConf.type != Disabled)
-	{
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		if (depthStencilConf.type == Texture)
-		{
-			if (depthStencilConf.texName == 0)
-			{
-				//If it doesn't exist
-				if (depthName == 0 && stencilName==0)
-				{
-					GL_CALL(glGenTextures(1, &depthName));
-					stencilName = depthName;
-				}
-
-                GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthName));
-
-				//Size the texture
-				//GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr));
-                GL_CALL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, true));//MultiSample
-			    printf("####Warning depth stencil internal format hardcoded.\n");
-				//Config for mipmap access
-                //GL_CALL(glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-               // GL_CALL(glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-                GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
-			}
-			else
-			{
-				depthName = depthStencilConf.texName;
-				stencilName = depthName;
-			}
-			//Bind the tex to our framebuffer
-            GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depthName, 0));
-		}
-		else if (depthStencilConf.type == RenderBuffer)
-		{
-			if (depthStencilConf.texName == 0)
-			{
-				//If it doesn't exist, make
-				if (depthName == 0 && stencilName == 0)
-				{
-					GL_CALL(glGenRenderbuffers(1, &depthName));
-					stencilName = depthName;
-				}
-				//Set storage
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-               // GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
-                GL_CALL(glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, 4, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-			}
-			else
-			{
-				depthName = depthStencilConf.texName;
-				stencilName = depthName;
-			}
-			//Bind to our framebuffer
-			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthName));
-		}
-		//drawBuffs.insert(GL_DEPTH_STENCIL_ATTACHMENT);
-		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-}
-void FrameBuffer::makeDepth()
-{
-	if (depthConf.type != Disabled)
-	{
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		if (depthConf.type == Texture)
-		{
-			if (depthConf.texName == 0)
-			{
-				//If it doesn't exist
-				if (depthName == 0)
-					GL_CALL(glGenTextures(1, &depthName));
-
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
-
-				//Size the texture
-				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr));
-
-				//Config for mipmap access
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-			}
-			else
-				depthName = depthConf.texName;
-			//Bind the tex to our framebuffer
-			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthName, 0));
-		}
-		else if (depthConf.type == RenderBuffer)
-		{
-			if (depthConf.texName == 0)
-			{
-				//If it doesn't exist, make
-				if (depthName == 0)
-					GL_CALL(glGenRenderbuffers(1, &depthName));
-				//Set storage
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthConf.colorInternalFormat, dimensions.x, dimensions.y));
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-			}
-			else
-				depthName = depthConf.texName;
-			//Bind to our framebuffer
-			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthName));
-		}
-		//drawBuffs.insert(GL_DEPTH_ATTACHMENT);
-		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
-}
-void FrameBuffer::makeStencil()
-{
-	if (stencilConf.type != Disabled)
-	{
-		GLuint prevFBO = getActiveFB();
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-		if (stencilConf.type == Texture)
-		{
-			if (stencilConf.texName == 0)
-			{
-				//If it doesn't exist
-				if (stencilName == 0)
-					GL_CALL(glGenTextures(1, &stencilName));
-
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, stencilName));
-
-				//Size the texture
-				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_STENCIL_INDEX8, dimensions.x, dimensions.y, 0, GL_STENCIL_INDEX8, GL_UNSIGNED_BYTE, nullptr));
-
-				//Config for mipmap access
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
-			}
-			else
-				stencilName = stencilConf.texName;
-			//Bind the tex to our framebuffer
-			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, stencilName, 0));
-		}
-		else if (stencilConf.type == RenderBuffer)
-		{
-			if (stencilConf.texName == 0)
-			{
-				//If it doesn't exist, make
-				if (stencilName == 0)
-					GL_CALL(glGenRenderbuffers(1, &stencilName));
-				//Set storage
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, stencilName));
-				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8, dimensions.x, dimensions.y));
-				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-			}
-			else
-				stencilName = stencilConf.texName;
-			//Bind the renderbuffer to our framebuffer
-			GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencilName));
-		}
-		//drawBuffs.insert(GL_STENCIL_ATTACHMENT);
-		//GL_CALL(glDrawBuffers(drawBuffs.size(), std::vector<GLenum>(drawBuffs.begin(), drawBuffs.end()).data()));
-		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
-	}
+                //Size the texture
+                if (samples)
+                {//Multisampling
+                    GL_CALL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y, true));
+                }
+                else
+                {//No Multisampling
+                    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y, 0, attachmentConfig.PixelFormat(), attachmentConfig.StorageType(), nullptr));
+                    //Config for mipmap access
+                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+                }
+                GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
+            }
+            else
+                *texNameOut = attachmentConfig.TexName();
+            //Bind the tex to our framebuffer
+            GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, attachPoint, GL_TEXTURE_TYPE(), *texNameOut, 0));
+        }
+        else if (attachmentConfig.Type() == FBA::RenderBuffer)
+        {
+            if (attachmentConfig.TexName() == 0)
+            {
+                if (*texNameOut == 0)//Don't generate a new renderbuffer if resizing
+                    GL_CALL(glGenRenderbuffers(1, texNameOut));
+                //Set storage
+                GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, *texNameOut));
+                if (samples)
+                {
+                    GL_CALL(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y));
+                }
+                else
+                {
+                    GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y));
+                }
+                GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+            }
+            else
+                *texNameOut = attachmentConfig.TexName();
+            //Bind to our framebuffer
+            GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, *texNameOut));
+        }
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
+    }
 }
 void FrameBuffer::setDrawBuffers()
 {
 	GLuint prevFBO = getActiveFB();
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
 	//Allocate array
-	unsigned int itemCt = colorNames.size()>0 ? colorNames.size() : 1;
+	unsigned int itemCt = colors.size()>0 ? colors.size() : 1;
 	GLenum *drawBuffsArr = (GLenum *)malloc(sizeof(GLenum)*itemCt);
 	//Fill Array
-	if (colorNames.size()>0)
+	if (colors.size()>0)
 	{
 		unsigned int i = 0;
-		for (auto && it: colorNames)
+		for (auto && it: colors)
 		{
 			drawBuffsArr[i] = GL_COLOR_ATTACHMENT0 + it.first;
 			i++;
@@ -387,11 +239,8 @@ void FrameBuffer::resize(int width, int height)
 	{
 		if (width>0 && height>0)
 		{
-			dimensions = glm::ivec2(ceil(width*scale), ceil(height*scale));
-			makeColor();
-			makeDepth();
-			makeStencil();
-			makeDepthStencil();
+            dimensions = glm::ivec2(ceil(width*scale), ceil(height*scale));
+            makeAttachments();
 		}
 	}
 }
@@ -455,81 +304,62 @@ bool FrameBuffer::use()
 	GL_CALL(glViewport(0, 0, dimensions.x, dimensions.y));
 	return true;
 }
-int FrameBuffer::addColorAttachment(FrameBuffer::Color attachment)
-{	
-	//Find the first free key	
-	GLint attachPt = 0;
-	GLint maxColorAttach = getMaxColorAttachments();
-	for (attachPt; attachPt < maxColorAttach; ++attachPt)
-	{
-		//If key doesn't exist, break
-		if (colorConfs.count(attachPt) == 0)
-			break;
-	}
-	if (attachPt >= maxColorAttach)
-	{
-		return -1;
-	}
-	colorConfs.emplace(attachPt, attachment);
-	makeColor(attachPt);
-	return attachPt;
-}
 //Name Getters
 GLuint FrameBuffer::getColorTextureName(GLuint attachPt) const
 {
-	auto && it = colorConfs.find(attachPt);
-	if (it != colorConfs.end()&&it->second.type==Texture)
-	{
-		auto && it2 = colorNames.find(attachPt);
-		if (it2 != colorNames.end())
-			return it2->second;
-	}
+	auto && it = colors.find(attachPt);
+    if (it != colors.end() && it->second.conf.Type() == FBA::Texture)
+			return it->second.texName;
 	return 0;
 }
 GLuint FrameBuffer::getDepthTextureName() const
 {
-	if (depthConf.type == Texture || depthStencilConf.type == Texture)
-		return depthName;
+    if (depth.conf.Type() == FBA::Texture)
+		return depth.texName;
+    if (depthStencil.conf.Type() == FBA::Texture)
+        return depthStencil.texName;
 	return 0;
 }
 GLuint FrameBuffer::getStencilTextureName() const
 {
-	if (stencilConf.type == Texture || depthStencilConf.type == Texture)
-		return stencilName;
+    if (stencil.conf.Type() == FBA::Texture)
+        return stencil.texName;
+    if (depthStencil.conf.Type() == FBA::Texture)
+        return depthStencil.texName;
 	return 0;
 }
 GLuint FrameBuffer::getDepthStencilTextureName() const
 {
-	if (depthStencilConf.type == Texture)
-		return depthName;
+    if (depthStencil.conf.Type() == FBA::Texture)
+        return depthStencil.texName;
 	return 0;
 }
 GLuint FrameBuffer::getColorRenderBufferName(GLuint attachPt) const
 {
-	auto && it = colorConfs.find(attachPt);
-	if (it != colorConfs.end() && it->second.type == RenderBuffer)
-	{
-		auto && it2 = colorNames.find(attachPt);
-		if (it2 != colorNames.end())
-			return it2->second;
-	}
-	return 0;
+    auto && it = colors.find(attachPt);
+    if (it != colors.end() && it->second.conf.Type() == FBA::RenderBuffer)
+        return it->second.texName;
+    return 0;
 }
 GLuint FrameBuffer::getDepthRenderBufferName() const
 {
-	if (depthConf.type == RenderBuffer || depthStencilConf.type == RenderBuffer)
-		return depthName;
-	return 0;
+    if (depth.conf.Type() == FBA::RenderBuffer)
+        return depth.texName;
+    if (depthStencil.conf.Type() == FBA::RenderBuffer)
+        return depthStencil.texName;
+    return 0;
 }
 GLuint FrameBuffer::getStencilRenderBufferName() const
 {
-	if (stencilConf.type == RenderBuffer || depthStencilConf.type == RenderBuffer)
-		return stencilName;
-	return 0;
+    if (stencil.conf.Type() == FBA::RenderBuffer)
+        return stencil.texName;
+    if (depthStencil.conf.Type() == FBA::RenderBuffer)
+        return depthStencil.texName;
+    return 0;
 }
 GLuint FrameBuffer::getDepthStencilRenderBufferName() const
 {
-	if (depthStencilConf.type == RenderBuffer)
-		return depthName;
-	return 0;
+    if (depthStencil.conf.Type() == FBA::RenderBuffer)
+        return depthStencil.texName;
+    return 0;
 }

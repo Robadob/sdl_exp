@@ -223,6 +223,9 @@
     <ClInclude Include="visualisation\multipass\BackBuffer.h">
       <Filter>Header Files\Visualisation\MultiPass</Filter>
     </ClInclude>
+    <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">

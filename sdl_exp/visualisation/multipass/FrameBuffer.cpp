@@ -103,7 +103,7 @@ FrameBuffer::~FrameBuffer()
 			GL_CALL(glDeleteRenderbuffers(1, &stencilName));
 	}
 	//FrameBuffer
-	glDeleteFramebuffers(1, &name);
+    GL_CALL(glDeleteFramebuffers(1, &name));
 }
 //Internal loaders
 void FrameBuffer::makeColor()
@@ -127,21 +127,31 @@ void FrameBuffer::makeColor(GLuint attachPt)
 				if (colorNames[attachPt] == 0)
 					GL_CALL(glGenTextures(1, &colorNames[attachPt]));
 
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, colorNames[attachPt]));
+				GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, colorNames[attachPt]));
 
 				//Size the texture
-				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, 0, colorConfs[attachPt].colorFormat, colorConfs[attachPt].colorType, nullptr));
+				//GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, 0, colorConfs[attachPt].colorFormat, colorConfs[attachPt].colorType, nullptr));
+                int r;
+			    glGetIntegerv(GL_MAX_COLOR_TEXTURE_SAMPLES, &r);
+                printf("GL_MAX_COLOR_TEXTURE_SAMPLES: %d\n", r);
+                glGetIntegerv(GL_MAX_DEPTH_TEXTURE_SAMPLES, &r);
+                printf("GL_MAX_DEPTH_TEXTURE_SAMPLES: %d\n", r);
+                glGetIntegerv(GL_MAX_INTEGER_SAMPLES, &r);
+                printf("GL_MAX_INTEGER_SAMPLES: %d\n", r);
+                glGetIntegerv(GL_MAX_TEXTURE_SIZE, &r);
+                printf("GL_MAX_TEXTURE_SIZE: %d\n", r);
+                GL_CALL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, colorConfs[attachPt].colorInternalFormat, dimensions.x, dimensions.y, true));//MultiSample
 
 				//Config for mipmap access
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+                //GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+                //GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+                GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
 			}
 			else
 				colorNames[attachPt] = colorConfs[attachPt].texName;
 			//Bind the tex to our framebuffer
-			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D, colorNames[attachPt], 0));
+            GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachPt, GL_TEXTURE_2D_MULTISAMPLE, colorNames[attachPt], 0));
 		}
 		else if (colorConfs[attachPt].type == RenderBuffer)
 		{
@@ -184,16 +194,17 @@ void FrameBuffer::makeDepthStencil()
 					stencilName = depthName;
 				}
 
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, depthName));
+                GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthName));
 
 				//Size the texture
-				GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr));
-				printf("####Warning depth stencil internal format hardcoded.\n");
+				//GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr));
+                GL_CALL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y, true));//MultiSample
+			    printf("####Warning depth stencil internal format hardcoded.\n");
 				//Config for mipmap access
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-				GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+                //GL_CALL(glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+               // GL_CALL(glTexParameteri(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-				GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+                GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
 			}
 			else
 			{
@@ -201,7 +212,7 @@ void FrameBuffer::makeDepthStencil()
 				stencilName = depthName;
 			}
 			//Bind the tex to our framebuffer
-			GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthName, 0));
+            GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depthName, 0));
 		}
 		else if (depthStencilConf.type == RenderBuffer)
 		{
@@ -215,7 +226,8 @@ void FrameBuffer::makeDepthStencil()
 				}
 				//Set storage
 				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, depthName));
-				GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
+               // GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
+                GL_CALL(glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, 4, depthStencilConf.colorInternalFormat, dimensions.x, dimensions.y));
 				GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
 			}
 			else

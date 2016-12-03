@@ -299,7 +299,7 @@ void Shaders::_useProgram()
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normals.vbo));
             activeVBO = this->normals.vbo;
         }
-        glNormalPointer(this->normals.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset);
+        GL_CALL(glNormalPointer(this->normals.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
     }
     if (this->normals.location >= 0 && this->normals.vbo > 0)
     {//If vertex attribute location and vbo are known
@@ -331,7 +331,7 @@ void Shaders::_useProgram()
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->colors.vbo));
             activeVBO = this->colors.vbo;
         }
-        glColorPointer(this->colors.components, this->colors.componentType, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset);
+        GL_CALL(glColorPointer(this->colors.components, this->colors.componentType, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset));
     }
     if (this->colors.location >= 0 && this->colors.vbo > 0)
     {//If color attribute location and vbo are known
@@ -364,7 +364,7 @@ void Shaders::_useProgram()
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
             activeVBO = this->texcoords.vbo;
         }
-        glTexCoordPointer(this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset);
+        GL_CALL(glTexCoordPointer(this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset));
     }
     if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
     {//If texture attribute location and vbo are known
@@ -419,42 +419,42 @@ void Shaders::_clearProgram(){
     //Vertex location
     if (this->vertexShaderVersion <= 140 && this->positions.vbo > 0)
     {//If old shaders where gl_Vertex is available
-        glDisableClientState(GL_VERTEX_ARRAY);
+        GL_CALL(glDisableClientState(GL_VERTEX_ARRAY));
     }
     if (this->positions.location >= 0 && this->positions.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->positions.location);
+        GL_CALL(glDisableVertexAttribArray(this->positions.location));
     }
     //Vertex normal
     if (this->vertexShaderVersion <= 140 && this->normals.vbo > 0)
     {//If old shaders where gl_Normal is available
-        glDisableClientState(GL_NORMAL_ARRAY);
+        GL_CALL(glDisableClientState(GL_NORMAL_ARRAY));
     }
     if (this->normals.location >= 0 && this->normals.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->normals.location);
+        GL_CALL(glDisableVertexAttribArray(this->normals.location));
     }
     //Vertex color
     if (this->vertexShaderVersion <= 140 && this->colors.vbo > 0)
     {//If old shaders where gl_Color is available
-        glDisableClientState(GL_COLOR_ARRAY);
+        GL_CALL(glDisableClientState(GL_COLOR_ARRAY));
     }
     if (this->colors.location >= 0 && this->colors.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->colors.location);
+        GL_CALL(glDisableVertexAttribArray(this->colors.location));
     }
     //Tex Coord
     if (this->vertexShaderVersion <= 140 && this->texcoords.vbo > 0)
     {//If old shaders where gl_Color is available
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        GL_CALL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
     }
     if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
     {//If vertex attribute location and vbo are known
-        glDisableVertexAttribArray(this->texcoords.location);
+        GL_CALL(glDisableVertexAttribArray(this->texcoords.location));
     }
 	for (GenericVAD const &gvad : gvads)
 	{
-		glDisableVertexAttribArray(gvad.location);
+        GL_CALL(glDisableVertexAttribArray(gvad.location));
 	}
 }
 //Bindings
@@ -536,7 +536,7 @@ void Shaders::setColor(glm::vec4 color)
     //Set the color uniform if present
     if (this->getProgram()>0 && this->colorUniformLocation >= 0)
     {//If projection matrix location and camera ptr are known
-		glUseProgram(this->getProgram());
+        GL_CALL(glUseProgram(this->getProgram()));
         if (this->colorUniformSize == 3)
         {
             GL_CALL(glUniform3fv(this->colorUniformLocation, 1, glm::value_ptr(color)));
@@ -545,7 +545,7 @@ void Shaders::setColor(glm::vec4 color)
         {
             GL_CALL(glUniform4fv(this->colorUniformLocation, 1, glm::value_ptr(color)));
         }
-        glUseProgram(0);
+        GL_CALL(glUseProgram(0));
     }
 }
 bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name)

@@ -78,7 +78,7 @@ void ShaderCore::setupBindings()
 		}
 	}
 	//Refresh static uniforms
-	glUseProgram(this->programId);
+    GL_CALL(glUseProgram(this->programId));
 	for (std::list<StaticUniformDetail>::iterator i = staticUniforms.begin(); i != staticUniforms.end(); ++i)
 	{
 		GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
@@ -146,7 +146,7 @@ void ShaderCore::setupBindings()
 	}
 	//Refresh subclass specific bindings
 	this->_setupBindings();
-	glUseProgram(0);
+    GL_CALL(glUseProgram(0));
 }
 void ShaderCore::useProgram()
 {
@@ -161,8 +161,8 @@ void ShaderCore::useProgram()
 	//Set any Texture buffers
 	for (auto utd: textures)
 	{
-		glActiveTexture(GL_TEXTURE0 + utd.first);
-		glBindTexture(utd.second.type, utd.second.name);
+        GL_CALL(glActiveTexture(GL_TEXTURE0 + utd.first));
+        GL_CALL(glBindTexture(utd.second.type, utd.second.name));
 	}
 
 	//Set any dynamic uniforms
@@ -245,7 +245,7 @@ int ShaderCore::addTextureUniform(GLuint texture, char *uniformName, GLenum type
 			break;
 	}
 	GLint maxTex;
-	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex);
+    GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex));
 	if (bufferId>=maxTex)
 	{
 		printf("Max texture buffers (%d) exceeded for shader %s.\n", maxTex, shaderTag);
@@ -298,7 +298,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLfloat *arry, 
 		GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
 		if (location != -1)
 		{
-			glUseProgram(this->programId);
+            GL_CALL(glUseProgram(this->programId));
 			if (count == 1){
 				GL_CALL(glUniform1fv(location, 1, arry));
 			}
@@ -311,7 +311,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLfloat *arry, 
 			else if (count == 4){
 				GL_CALL(glUniform4fv(location, 1, arry));
 			}
-			glUseProgram(0);
+            GL_CALL(glUseProgram(0));
 			return true;
 		}
 		else
@@ -331,7 +331,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, un
 		GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
 		if (location != -1)
 		{
-			glUseProgram(this->programId);
+            GL_CALL(glUseProgram(this->programId));
 			if (count == 1){
 				GL_CALL(glUniform1iv(location, 1, arry));
 			}
@@ -344,7 +344,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, un
 			else if (count == 4){
 				GL_CALL(glUniform4iv(location, 1, arry));
 			}
-			glUseProgram(0);
+            GL_CALL(glUseProgram(0));
 			return true;
 		}
 		else

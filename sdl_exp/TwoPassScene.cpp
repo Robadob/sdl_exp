@@ -114,19 +114,19 @@ void TwoPassScene::MotionBlurCompositePass::setVelocityTex(GLuint tex)
 {
 	vTex = tex;
 	//Bind to shader
-	content->compositeShader->addTextureUniform(tex, "_velocityTex", GL_TEXTURE_2D);
+	content->compositeShader->addTextureUniform(tex, "_velocityTex", GL_TEXTURE_2D_MULTISAMPLE);
 };
 void TwoPassScene::MotionBlurCompositePass::setColorTex(GLuint tex)
 {
 	cTex = tex;
 	//Bind to shader
-	content->compositeShader->addTextureUniform(tex, "_colorTex", GL_TEXTURE_2D);
+    content->compositeShader->addTextureUniform(tex, "_colorTex", GL_TEXTURE_2D_MULTISAMPLE);
 };
 void TwoPassScene::MotionBlurCompositePass::setDepthTex(GLuint tex)
 {
 	dTex = tex;
 	//Bind to shader
-	content->compositeShader->addTextureUniform(tex, "_depthTex", GL_TEXTURE_2D);
+    content->compositeShader->addTextureUniform(tex, "_depthTex", GL_TEXTURE_2D_MULTISAMPLE);
 };
 //Renders the scene in order with the velocity shader to a texture
 void TwoPassScene::VelocityPass::render()

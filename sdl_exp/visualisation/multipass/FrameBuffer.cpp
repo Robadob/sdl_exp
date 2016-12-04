@@ -3,16 +3,16 @@
 
 typedef FrameBufferAttachment FBA;
 //Scaling FrameBuffers
-FrameBuffer::FrameBuffer(FBA color, FBA depth, FBA stencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+FrameBuffer::FrameBuffer(FBA color, FBA depth, FBA stencil, unsigned int samples, float scale, bool doClear, glm::vec3 clearColor)
     : FrameBuffer({ color }, depth, stencil, FBAFactory::Disabled(), scale, glm::uvec2(1), samples, clearColor, doClear)
 {}
-FrameBuffer::FrameBuffer(FBA color, FBA depthstencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+FrameBuffer::FrameBuffer(FBA color, FBA depthstencil, unsigned int samples, float scale, bool doClear, glm::vec3 clearColor)
 : FrameBuffer({ color }, FBAFactory::Disabled(), FBAFactory::Disabled(), depthstencil, scale, glm::uvec2(1), samples, clearColor, doClear)
 {}
-FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stencil, unsigned int samples, float scale, bool doClear, glm::vec3 clearColor)
 : FrameBuffer(color, depth, stencil, FBAFactory::Disabled(), scale, glm::uvec2(1), samples, clearColor, doClear)
 {}
-FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depthstencil, float scale, unsigned int samples, bool doClear, glm::vec3 clearColor)
+FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depthstencil, unsigned int samples, float scale, bool doClear, glm::vec3 clearColor)
 : FrameBuffer(color, FBAFactory::Disabled(), FBAFactory::Disabled(), depthstencil, scale, glm::uvec2(1), samples, clearColor, doClear)
 {}
 //Fixed FrameBuffers
@@ -165,6 +165,8 @@ void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint
                     //Config for mipmap access
                     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
                     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
                 }
                 GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
             }

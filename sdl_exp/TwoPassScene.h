@@ -4,6 +4,7 @@
 #include "visualisation/Entity.h"
 #include "visualisation/Skybox.h"
 #include "visualisation/Axis.h"
+#include "visualisation/Sprite2D.h"
 
 class TwoPassScene : public MultiPassScene
 {
@@ -11,41 +12,23 @@ class TwoPassScene : public MultiPassScene
 	{
 		SceneContent();
 		std::shared_ptr<Entity> deerModel;
-		std::shared_ptr<Skybox> skybox;
-		std::shared_ptr<Axis> axis;
-		std::shared_ptr<Shaders> compositeShader;
 	};
-	class VelocityPass : public RenderPass
+	class ShadowPass : public RenderPass
 	{
 	public:
-		VelocityPass(std::shared_ptr<SceneContent> content);
+        ShadowPass(std::shared_ptr<SceneContent> content);
 	protected:
 		void render() override;
 	private:
 		std::shared_ptr<SceneContent> content;
 	};
-	class ColorPass : public RenderPass
+	class CompositePass : public RenderPass
 	{
 	public:
-		ColorPass(std::shared_ptr<SceneContent> content);
-		void toggleSkybox(){ renderSkybox = !renderSkybox; }
-		void setAxis(bool i){ renderAxis = i; }
+        CompositePass(std::shared_ptr<SceneContent> content);
+		void setShadowMap(GLuint tex);
 	protected:
-		void render() override;
-	private:
-		bool renderSkybox;
-		bool renderAxis;
-		std::shared_ptr<SceneContent> content;
-	};
-	class MotionBlurCompositePass : public RenderPass
-	{
-	public:
-		MotionBlurCompositePass(std::shared_ptr<SceneContent> content);
-		void setVelocityTex(GLuint tex);
-		void setColorTex(GLuint tex);
-		void setDepthTex(GLuint tex);
-	protected:
-		GLuint vTex;
+		GLuint shadowMap;
 		GLuint cTex;
 		GLuint dTex;
 		void render() override;
@@ -64,9 +47,9 @@ public:
 private:
 	std::shared_ptr<SceneContent> content;
 
-	std::shared_ptr<VelocityPass> vPass;
-	std::shared_ptr<ColorPass> cPass;
-	std::shared_ptr<MotionBlurCompositePass> mbcPass;
+    std::shared_ptr<ShadowPass> sPass;
+    std::shared_ptr<CompositePass> cPass;
+    std::shared_ptr<Sprite2D> shadowMapPreview;
 
 	float tick;
 	float tick2;

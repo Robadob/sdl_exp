@@ -4,41 +4,34 @@
 #include <glm/gtc/matrix_transform.inl>
 //Create content struct
 TwoPassScene::SceneContent::SceneContent()
-	: deerModel(new Entity(Stock::Models::DEER, 10.0f, { Stock::Shaders::TEXTURE, Stock::Shaders::VELOCITY }))
-	, skybox(new Skybox())
-	, axis(new Axis(1))
-	, compositeShader(std::make_shared<Shaders>(Stock::Shaders::VELOCITY_COMPOSITOR))
+    : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::SHADOW_SPOT, Stock::Shaders::TEXTURE }))
+    , sphereModel(new Entity(Stock::Models::SPHERE, 25.0f, { Stock::Shaders::SHADOW_SPOT, Stock::Shaders::PHONG }))
+    , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::SHADOW_SPOT, Stock::Shaders::PHONG }))
 { }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
 	, content(std::make_shared<SceneContent>())
-	, vPass(std::make_shared<VelocityPass>(content))
-	, cPass(std::make_shared<ColorPass>(content))
-	, mbcPass(std::make_shared<MotionBlurCompositePass>(content))
+    , sPass(std::make_shared<ShadowPass>(content))
+    , cPass(std::make_shared<CompositePass>(content))
 	, tick(0.0f)
 	, tick2(0.0f)
 	, polarity(-1)
 {
 	//Register models
 	registerEntity(content->deerModel);
-	registerEntity(content->skybox);
 	//Register render passes in correct order
-	addPass(0, vPass);
+	addPass(0, sPass);
 	addPass(1, cPass);
-	addPass(2, mbcPass);
-	//Share render textures from vPass/cPass to mbcPass
-	std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(vPass->getFrameBuffer());
+	//Share render textures from sPass to cPass
+    std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(sPass->getFrameBuffer());
+    shadowMapPreview = std::make_shared<Sprite2D>(t->getDepthTextureName(), 256, 256);
 	if (t)
-		mbcPass->setVelocityTex(t->getColorTextureName());
-	t = std::dynamic_pointer_cast<FrameBuffer>(cPass->getFrameBuffer());
-	if (t)
-	mbcPass->setColorTex(t->getColorTextureName());
-	t = std::dynamic_pointer_cast<FrameBuffer>(cPass->getFrameBuffer());
-	if (t)
-	mbcPass->setDepthTex(t->getDepthStencilTextureName());
+		cPass->setShadowMap(t->getDepthTextureName());
+
+    this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
-	this->content->deerModel->flipVertexOrder();
+	//this->content->deerModel->flipVertexOrder();
 }
 /*
 Called once per frame when Scene animation calls should be
@@ -58,9 +51,6 @@ bool TwoPassScene::keypress(SDL_Keycode keycode, int x, int y)
 {
 	switch (keycode)
 	{
-	case SDLK_F9:
-		cPass->toggleSkybox();
-		break;
 	case SDLK_p:
 		this->polarity = ++this->polarity>1 ? -1 : this->polarity;
 		break;
@@ -76,23 +66,14 @@ void TwoPassScene::reload()
 	content->compositeShader->reload();
 }
 
-TwoPassScene::VelocityPass::VelocityPass(std::shared_ptr<SceneContent> content)
-	//: RenderPass(std::make_shared<BackBuffer>(true, glm::vec3(0.5)))
-    : RenderPass(std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGB(), FBAFactory::ManagedDepthStencilRenderBuffer24()))
+TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
+    : RenderPass(std::make_shared<FrameBuffer>(glm::uvec2(1024,1024), FBAFactory::Disabled(), FBAFactory::ManagedDepthTexture(), FBAFactory::Disabled(),1.0f,0))
 	, content(content)
 {
 }
-TwoPassScene::ColorPass::ColorPass(std::shared_ptr<SceneContent> content)
-    : RenderPass(std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGB(), FBAFactory::ManagedDepthStencilTexture32()))
-	, renderSkybox(true)
-	, renderAxis(false)
-	, content(content)
-{ }
-TwoPassScene::MotionBlurCompositePass::MotionBlurCompositePass(std::shared_ptr<SceneContent> content)
+TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
-	, vTex(0)
-    , cTex(0)
-    , dTex(0)
+    , shadowMap(0)
 	, content(content)
 	
 {
@@ -111,46 +92,19 @@ TwoPassScene::MotionBlurCompositePass::MotionBlurCompositePass(std::shared_ptr<S
 	//sampleTex = std::make_shared<Texture2D>("../textures/deer.tga");
 	//Make vertex and face vbos of this
 }
-void TwoPassScene::MotionBlurCompositePass::setVelocityTex(GLuint tex)
+void TwoPassScene::ShadowPass::setShadowMap(GLuint tex)
 {
-	vTex = tex;
+    shadowMap = tex;
 	//Bind to shader
-	content->compositeShader->addTextureUniform(tex, "_velocityTex", GL_TEXTURE_2D_MULTISAMPLE);
+	content->compositeShader->addTextureUniform(tex, "_shadowMap", GL_TEXTURE_2D);
 };
-void TwoPassScene::MotionBlurCompositePass::setColorTex(GLuint tex)
+//Renders the scene to a depth texture from the lights perspective
+void TwoPassScene::CompositePass::render()
 {
-	cTex = tex;
-	//Bind to shader
-    content->compositeShader->addTextureUniform(tex, "_colorTex", GL_TEXTURE_2D_MULTISAMPLE);
-};
-void TwoPassScene::MotionBlurCompositePass::setDepthTex(GLuint tex)
-{
-	dTex = tex;
-	//Bind to shader
-    content->compositeShader->addTextureUniform(tex, "_depthTex", GL_TEXTURE_2D_MULTISAMPLE);
-};
-//Renders the scene in order with the velocity shader to a texture
-void TwoPassScene::VelocityPass::render()
-{
-	//if (renderSkybox)
-	//	content->skybox->render(1);
-	//if (renderAxis)
-	//content->axis->render(1);
-	content->deerModel->render(1);
-}
-//Renders the scene normally to a texture
-void TwoPassScene::ColorPass::render()
-{
-	if (renderSkybox)
-		content->skybox->render(0);
-	if (renderAxis)
-		content->axis->render();
 	content->deerModel->render(0);
 }
-//Uses the velocity texture to blend the previously rendered frame
-void TwoPassScene::MotionBlurCompositePass::render()
+//Uses the shadow map to render the normal scene
+void TwoPassScene::CompositePass::render()
 {
-	//Render a fullscreen rectangle
-	frameEnt->render();
-	////Render any non motionblur elements
+    content->deerModel->render(1);
 }

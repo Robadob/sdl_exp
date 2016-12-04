@@ -19,17 +19,17 @@ public:
     ////////////////////////////
     //  Scaling FrameBuffers  //
     ////////////////////////////
-    FrameBuffer(FrameBufferAttachment color, FrameBufferAttachment depth, FrameBufferAttachment stencil, float scale = 1.0f, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
-    FrameBuffer(FrameBufferAttachment color, FrameBufferAttachment depthstencil, float scale = 1.0f, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
-    FrameBuffer(std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depth, FrameBufferAttachment stencil, float scale = 1.0f, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
-    FrameBuffer(std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depthstencil, float scale = 1.0f, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(FrameBufferAttachment color, FrameBufferAttachment depth, FrameBufferAttachment stencil, unsigned int samples = 0, float scale = 1.0f, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(FrameBufferAttachment color, FrameBufferAttachment depthstencil,unsigned int samples = 0, float scale = 1.0f, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depth, FrameBufferAttachment stencil, unsigned int samples = 0, float scale = 1.0f, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depthstencil, unsigned int samples = 0, float scale = 1.0f, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
     ////////////////////////////
     //   Fixed FrameBuffers   //
     ////////////////////////////
-    FrameBuffer(glm::uvec2 dimensions, FrameBufferAttachment color, FrameBufferAttachment depth, FrameBufferAttachment stencil, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
-    FrameBuffer(glm::uvec2 dimensions, FrameBufferAttachment color, FrameBufferAttachment depthstencil, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
-    FrameBuffer(glm::uvec2 dimensions, std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depth, FrameBufferAttachment stencil, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
-    FrameBuffer(glm::uvec2 dimensions, std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depthstencil, unsigned int samples = 4, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(glm::uvec2 dimensions, FrameBufferAttachment color, FrameBufferAttachment depth, FrameBufferAttachment stencil, unsigned int samples = 0, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(glm::uvec2 dimensions, FrameBufferAttachment color, FrameBufferAttachment depthstencil, unsigned int samples = 0, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(glm::uvec2 dimensions, std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depth, FrameBufferAttachment stencil, unsigned int samples = 0, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
+    FrameBuffer(glm::uvec2 dimensions, std::initializer_list<FrameBufferAttachment> color, FrameBufferAttachment depthstencil, unsigned int samples = 0, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
 	~FrameBuffer();
 	/**
 	 * @return Whether the framebuffer is 'complete' and ready to be rendered to

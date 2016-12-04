@@ -10,7 +10,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
     : Entity(
         Stock::Models::CUBE, 
         50.0f,//Make it adequate distance away
-		{ Stock::Shaders::SKYBOX, Stock::Shaders::VELOCITY },
+		{ Stock::Shaders::SKYBOX },
         std::make_shared<TextureCubeMap>(texturePath)
     )
 {    
@@ -46,11 +46,11 @@ void Skybox::render(unsigned int shaderIndex)
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
  */
-void Skybox::setModelViewMatPtr(const Camera *camera)
+void Skybox::setViewMatPtr(const Camera *camera)
 {
 	for (auto &&it : shaders)
 		if (it)
-			it->setModelViewMatPtr(camera->getSkyboxViewMatPtr());
+			it->setViewMatPtr(camera->getSkyboxViewMatPtr());
 }
 /**
  * Adjusts the vertical offset of the skybox

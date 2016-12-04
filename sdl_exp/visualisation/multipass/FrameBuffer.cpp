@@ -167,6 +167,9 @@ void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint
                     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
                     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
                     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+                    //Disable depth comparison by default
+                    //if (attachPoint == GL_DEPTH_ATTACHMENT || attachPoint == GL_DEPTH_STENCIL_ATTACHMENT)
+                    //    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE));
                 }
                 GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
             }
@@ -203,28 +206,28 @@ void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint
 }
 void FrameBuffer::setDrawBuffers()
 {
-	GLuint prevFBO = getActiveFB();
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-	//Allocate array
-	unsigned int itemCt = colors.size()>0 ? colors.size() : 1;
-	GLenum *drawBuffsArr = (GLenum *)malloc(sizeof(GLenum)*itemCt);
-	//Fill Array
-	if (colors.size()>0)
-	{
-		unsigned int i = 0;
-		for (auto && it: colors)
-		{
-			drawBuffsArr[i] = GL_COLOR_ATTACHMENT0 + it.first;
-			i++;
-		}
-	}
-	else
-		drawBuffsArr[0] = GL_NONE;
-	//Pass to GL
-	GL_CALL(glDrawBuffers(itemCt, drawBuffsArr));
-	//Free Array
-	free(drawBuffsArr);
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
+    GLuint prevFBO = getActiveFB();
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
+    //Allocate array
+    unsigned int itemCt = colors.size()>0 ? colors.size() : 1;
+    GLenum *drawBuffsArr = (GLenum *)malloc(sizeof(GLenum)*itemCt);
+    //Fill Array
+    if (colors.size()>0)
+    {
+        unsigned int i = 0;
+        for (auto && it : colors)
+        {
+            drawBuffsArr[i] = GL_COLOR_ATTACHMENT0 + it.first;
+            i++;
+        }
+    }
+    else
+        drawBuffsArr[0] = GL_NONE;
+    //Pass to GL
+    GL_CALL(glDrawBuffers(itemCt, drawBuffsArr));
+    //Free Array
+    free(drawBuffsArr);
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 }
 //Functional methods
 bool FrameBuffer::isValid() const
@@ -300,7 +303,7 @@ bool FrameBuffer::use()
 
 	if (doClear)
 	{
-		GL_CALL(glClearColor(clearColor.x, clearColor.y, clearColor.z, 1));
+        GL_CALL(glClearColor(clearColor.x, clearColor.y, clearColor.z, 1));
 		GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
 	GL_CALL(glViewport(0, 0, dimensions.x, dimensions.y));

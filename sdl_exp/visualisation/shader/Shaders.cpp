@@ -9,13 +9,14 @@
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
 const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
-const char *Shaders::CAMERA_MATRIX_UNIFORM_NAME = "_cameraMat";
+const char *Shaders::MODEL_MATRIX_UNIFORM_NAME = "_modelMat";
+const char *Shaders::VIEW_MATRIX_UNIFORM_NAME = "_viewMat";
 const char *Shaders::NORMAL_MATRIX_UNIFORM_NAME = "_normalMat";
 const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
 const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
 const char *Shaders::COLOR_ATTRIBUTE_NAME = "_color";
 const char *Shaders::TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
-const char *Shaders::PREV_MODELVIEW_MATRIX_UNIFORM_NAME = "_prevModelViewMat";
+//const char *Shaders::PREV_MODELVIEW_MATRIX_UNIFORM_NAME = "_prevModelViewMat";
 
 Shaders::Shaders(Stock::Shaders::ShaderSet set)
     :Shaders(set.vertex, set.fragment, set.geometry){}
@@ -27,24 +28,27 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
 	)
 { }
 Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath, std::initializer_list <const char *> geometryShaderPath)
-	: ShaderCore()
-	, modelview()
-	, projection()
-	, modelviewprojection(-1)
-	, rotationPtr(nullptr)
-	, translationPtr(nullptr)
-	, positions(GL_FLOAT, 3, sizeof(float))
-	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
-	, colors(GL_FLOAT, 3, sizeof(float))
-	, texcoords(GL_FLOAT, 2, sizeof(float))
-	, colorUniformValue(1, 0, 0, 1)//Red
-	, vertexShaderFiles(buildFileVector(vertexShaderPath))
-	, fragmentShaderFiles(buildFileVector(fragmentShaderPath))
-	, geometryShaderFiles(buildFileVector(geometryShaderPath))
-	, vertexShaderVersion(-1)
-	, fragmentShaderVersion(-1)
-	, geometryShaderVersion(-1)
-	, prevModelview()//Identity
+    : ShaderCore()
+    , modelMat()
+    , viewMat()
+    , projectionMat()
+    , modelviewprojectionMatLoc(-1)
+    , modelviewMatLoc(-1)
+    , normalMatLoc(-1)
+    , rotationPtr(nullptr)
+    , translationPtr(nullptr)
+    , positions(GL_FLOAT, 3, sizeof(float))
+    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+    , colors(GL_FLOAT, 3, sizeof(float))
+    , texcoords(GL_FLOAT, 2, sizeof(float))
+    , colorUniformValue(1, 0, 0, 1)//Red
+    , vertexShaderFiles(buildFileVector(vertexShaderPath))
+    , fragmentShaderFiles(buildFileVector(fragmentShaderPath))
+    , geometryShaderFiles(buildFileVector(geometryShaderPath))
+    , vertexShaderVersion(-1)
+    , fragmentShaderVersion(-1)
+    , geometryShaderVersion(-1)
+    //, prevModelview()//Identity
 {
 	reload();
 }
@@ -100,167 +104,170 @@ bool Shaders::_compileShaders(const GLuint t_programId)
 	}
 	return true;
 }
+
+void Shaders::bindUniform(int *rtn, const char *uniformName, GLenum uniformType) const
+{
+    //Locate the view matrix uniform (modelview matrix, before model-specific transformations are applied)
+    std::pair<int, GLenum> u_M = findUniform(uniformName, this->getProgram());
+    if (u_M.first >= 0 && u_M.second == uniformType)
+        *rtn = u_M.first;
+    else
+        *rtn = -1;
+}
+void Shaders::bindAttribute(int *rtn, const char *attributeName, GLenum attributeType1, GLenum attributeType2) const
+{
+    std::pair<int, GLenum> a_V = findAttribute(attributeName, this->getProgram());
+    if (a_V.first >= 0 && (a_V.second == attributeType1 || a_V.second == attributeType2))
+        *rtn = a_V.first;
+    else
+        *rtn = -1;
+}
 void Shaders::_setupBindings(){
-    //Locate the modelView matrix uniform
-	std::pair<int, GLenum> u_MV = findUniform(MODELVIEW_MATRIX_UNIFORM_NAME, this->getProgram());
-    if (u_MV.first >= 0 && u_MV.second == GL_FLOAT_MAT4)
-        this->modelview.location = u_MV.first;
-    else
-        this->modelview.location = -1;
-    //Locate the projection matrix uniform
-	std::pair<int, GLenum> u_PM = findUniform(PROJECTION_MATRIX_UNIFORM_NAME, this->getProgram());
-    if (u_PM.first >= 0 && u_PM.second == GL_FLOAT_MAT4)
-        this->projection.location = u_PM.first;
-    else
-        this->projection.location = -1;
-    //Locate the modelViewProjection matrix uniform
-	std::pair<int, GLenum> u_MVP = findUniform(MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME, this->getProgram());
-    if (u_MVP.first >= 0 && u_MVP.second == GL_FLOAT_MAT4)
-        this->modelviewprojection = u_MVP.first;
-    else
-		this->modelviewprojection = -1;
-	//Locate the camera matrix uniform (modelview matrix, before model-specific transformations are applied)
-	std::pair<int, GLenum> u_CM = findUniform(CAMERA_MATRIX_UNIFORM_NAME, this->getProgram());
-	if (u_CM.first >= 0 && u_CM.second == GL_FLOAT_MAT4)
-		this->cameraMatLoc = u_CM.first;
-	else
-		this->normalMatLoc = -1;
-	//Locate the normal matrix uniform
-	std::pair<int, GLenum> u_NP = findUniform(NORMAL_MATRIX_UNIFORM_NAME, this->getProgram());
-	if (u_NP.first >= 0 && u_NP.second == GL_FLOAT_MAT3)
-		this->normalMatLoc = u_NP.first;
-	else
-		this->normalMatLoc = -1;
-    //Locate the vertexPosition attribute
-    std::pair<int, GLenum> a_V = findAttribute(VERTEX_ATTRIBUTE_NAME, this->getProgram());
-    if (a_V.first >= 0 && (a_V.second == GL_FLOAT_VEC3 || a_V.second == GL_FLOAT_VEC4))
-        this->positions.location = a_V.first;
-    else
-        this->positions.location = -1;
-    //Locate the vertexNormal attribute
-	std::pair<int, GLenum> a_N = findAttribute(NORMAL_ATTRIBUTE_NAME, this->getProgram());
-    if (a_N.first >= 0 && (a_N.second == GL_FLOAT_VEC3 || a_N.second == GL_FLOAT_VEC4))
-        this->normals.location = a_N.first;
-    else
-        this->normals.location = -1;
-    //Locate the vertexColor attribute
-	std::pair<int, GLenum> a_C = findAttribute(COLOR_ATTRIBUTE_NAME, this->getProgram());
-    if (a_C.first >= 0 && (a_C.second == GL_FLOAT_VEC3 || a_C.second == GL_FLOAT_VEC4))
-        this->colors.location = a_C.first;
-    else
-        this->colors.location = -1;
-    //Locate the vertexTexCoords attribute
-	std::pair<int, GLenum> a_T = findAttribute(TEXCOORD_ATTRIBUTE_NAME, this->getProgram());
-    if (a_T.first >= 0 && (a_T.second == GL_FLOAT_VEC2 || a_T.second == GL_FLOAT_VEC3))
-        this->texcoords.location = a_T.first;
-    else
-        this->texcoords.location = -1;
-    //Locate the color uniform   
-	std::pair<int, GLenum> u_C = findUniform(COLOR_ATTRIBUTE_NAME, this->getProgram());
+    //MVP
+    bindUniform(&this->modelMat.location, MODEL_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    bindUniform(&this->viewMat.location, VIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    bindUniform(&this->projectionMat.location, PROJECTION_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    //MVP - Convenience
+    bindUniform(&this->modelviewprojectionMatLoc, MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    bindUniform(&this->modelviewMatLoc, MODELVIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    bindUniform(&this->normalMatLoc, NORMAL_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT3);
+    //bindUniform(&this->prevModelviewUniformLocation, PREV_MODELVIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    //Vertex attribs
+    bindAttribute(&this->positions.location, VERTEX_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
+    bindAttribute(&this->normals.location, NORMAL_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
+    bindAttribute(&this->colors.location, COLOR_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
+    bindAttribute(&this->texcoords.location, TEXCOORD_ATTRIBUTE_NAME, GL_FLOAT_VEC2, GL_FLOAT_VEC3);
+    //Locate the color uniform
+    std::pair<int, GLenum> u_C = findUniform(COLOR_ATTRIBUTE_NAME, this->getProgram());
     if (u_C.first >= 0 && (u_C.second == GL_FLOAT_VEC3 || u_C.second == GL_FLOAT_VEC4))
-	{
-		this->colorUniformLocation = u_C.first;
-		this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
-		setColor(this->colorUniformValue);
+    {
+        this->colorUniformLocation = u_C.first;
+        this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
+        setColor(this->colorUniformValue);
     }
     else
-	{
-		this->colorUniformLocation = -1;
-		this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
-	}
-	//Locate the previous modelview uniform
-	std::pair<int, GLenum> u_PMV = findUniform(PREV_MODELVIEW_MATRIX_UNIFORM_NAME, this->getProgram());
-	if (u_PMV.first >= 0 && u_PMV.second == GL_FLOAT_MAT4)
-	{
-		this->prevModelviewUniformLocation = u_PMV.first;
-	}
-	else
-	{
-		this->prevModelviewUniformLocation = -1;
-	}
-	//Refresh generic vertex attribs
-	std::list<GenericVAD> t_gvad;
-	t_gvad.splice(t_gvad.end(), lostGvads);
-	t_gvad.splice(t_gvad.end(), gvads);
-	for (GenericVAD gvad : t_gvad)
-	{
-		std::pair<int, GLenum> a_G = findAttribute(gvad.attributeName, this->getProgram());
-		if (a_G.first >= 0)
-		{
-			gvad.location = a_G.first;
-			gvads.push_back(gvad);
-		}
-		else
-		{
-			lostGvads.push_front(gvad);
-			fprintf(stderr, "%s: Generic vertex attrib named: %s could not be located on shader reload.\n", this->getShaderTag(), gvad.attributeName);
-		}
-	}
+    {
+        this->colorUniformLocation = -1;
+        this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
+    }
+    //Refresh generic vertex attribs
+    std::list<GenericVAD> t_gvad;
+    t_gvad.splice(t_gvad.end(), lostGvads);
+    t_gvad.splice(t_gvad.end(), gvads);
+    for (GenericVAD gvad : t_gvad)
+    {
+        std::pair<int, GLenum> a_G = findAttribute(gvad.attributeName, this->getProgram());
+        if (a_G.first >= 0)
+        {
+            gvad.location = a_G.first;
+            gvads.push_back(gvad);
+        }
+        else
+        {
+            lostGvads.push_front(gvad);
+            fprintf(stderr, "%s: Generic vertex attrib named: %s could not be located on shader reload.\n", this->getShaderTag(), gvad.attributeName);
+        }
+    }
+}
+void Shaders::overrideModelMat(const glm::mat4 *force)
+{
+#ifdef _DEBUG
+    int currProgram = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
+    if (currProgram != getProgram())
+    {
+        fprintf(stderr, "Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
+        return;
+    }
+#endif
+    _useProgramModelMatrices(force);
+}
+void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
+{
+    ////Set the previous modelview matrix (e.g. glFrustum, normally provided by the Visualisation)
+    //if (prevModelviewUniformLocation >= 0)
+    //{//If previous modelview matrix location is known
+    //	GL_CALL(glUniformMatrix4fv(prevModelviewUniformLocation, 1, GL_FALSE, glm::value_ptr(prevModelview)));
+    //}
+    //Calculate model matrix transformations
+    glm::mat4 m;
+    //If this has been triggered as an override, ignore this->modelMat.matrixPtr
+    if (force)
+    {
+        m = *force;
+    }
+    //Else calculate the required modelMat
+    else
+    {
+        if (this->modelMat.matrixPtr)
+        {
+            m = *this->modelMat.matrixPtr;
+        }
+        if (this->rotationPtr)
+        {
+            //Check we actually have a rotation (providing no axis == error)
+            if ((this->rotationPtr->x != 0 || this->rotationPtr->y != 0 || this->rotationPtr->z != 0) && this->rotationPtr->w != 0)
+                m = glm::rotate(m, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
+        }
+        if (this->translationPtr)
+        {
+            m = glm::translate(m, *this->translationPtr);
+        }
+    }
+
+    //Set Model matrix
+    if (this->modelMat.location >= 0 && this->modelMat.matrixPtr > nullptr)
+    {//If model matrix location is known
+        GL_CALL(glUniformMatrix4fv(this->modelMat.location, 1, GL_FALSE, glm::value_ptr(m)));
+    }
+
+    //Convert model matrix into modelview
+    if (this->viewMat.matrixPtr)
+        m = *this->viewMat.matrixPtr * m;
+    //Set the model view matrix
+    if (this->vertexShaderVersion <= 120)
+    {//If old shaders where gl_ModelViewMatrix is available
+        GL_CALL(glMatrixMode(GL_MODELVIEW));
+        GL_CALL(glLoadMatrixf(glm::value_ptr(m)));
+    }
+    if (this->modelviewMatLoc >= 0)
+    {//If modeview matrix location and camera ptr are known
+        GL_CALL(glUniformMatrix4fv(this->modelviewMatLoc, 1, GL_FALSE, glm::value_ptr(m)));
+    }
+
+    //Sets the normal matrix (this must occur after modelView transformations are calculated)
+    if (normalMatLoc >= 0)
+    {//If normal matrix location and modelview ptr are known
+        glm::mat3 nm = glm::inverseTranspose(glm::mat3(m));
+        GL_CALL(glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
+    }
+
+    //Set the model view projection matrix (e.g. projection * modelview)
+    if (this->modelviewprojectionMatLoc >= 0 && this->projectionMat.matrixPtr)
+    {
+        m = *this->projectionMat.matrixPtr * m;
+        GL_CALL(glUniformMatrix4fv(this->modelviewprojectionMatLoc, 1, GL_FALSE, glm::value_ptr(m)));
+    }
 }
 //Overrides
 void Shaders::_useProgram()
 {
-	//Set the previous modelview matrix (e.g. glFrustum, normally provided by the Visualisation)
-	if (prevModelviewUniformLocation >= 0)
-	{//If previous modelview matrix location is known
-		GL_CALL(glUniformMatrix4fv(prevModelviewUniformLocation, 1, GL_FALSE, glm::value_ptr(prevModelview)));
-	}
-
-	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-	if (this->vertexShaderVersion <= 120 && this->projection.matrixPtr > nullptr)
-	{//If old shaders where gl_ModelViewProjectionMatrix is available
-		GL_CALL(glMatrixMode(GL_PROJECTION));
-		GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projection.matrixPtr)));
-	}
-	if (this->projection.location >= 0 && this->projection.matrixPtr > nullptr)
-	{//If projection matrix location and camera ptr are known
-		GL_CALL(glUniformMatrix4fv(this->projection.location, 1, GL_FALSE, glm::value_ptr(*this->projection.matrixPtr)));
-	}
-	
-	//Calculate modelview matrix transformations
-	prevModelview=glm::mat4();
-	if (this->modelview.matrixPtr)
-	{
-		prevModelview = *this->modelview.matrixPtr;
-		if (this->translationPtr)
-		{
-			prevModelview = glm::translate(prevModelview, *this->translationPtr);
-		}
-		if (this->rotationPtr)
-		{
-			//Check we actually have a rotation (providing no axis == error)
-			if ((this->rotationPtr->x != 0 || this->rotationPtr->y != 0 || this->rotationPtr->z != 0) && this->rotationPtr->w != 0)
-				prevModelview = glm::rotate(prevModelview, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
-		}
-	}
-
-	//Set the model view matrix (e.g. gluLookAt, normally provided by the Camera)
-	if (this->vertexShaderVersion <= 120 && this->modelview.matrixPtr > nullptr)
-	{//If old shaders where gl_ModelViewMatrix is available
-		GL_CALL(glMatrixMode(GL_MODELVIEW));
-		GL_CALL(glLoadMatrixf(glm::value_ptr(prevModelview)));
-	}
-	if (this->modelview.location >= 0 && this->modelview.matrixPtr > nullptr)
-	{//If modeview matrix location and camera ptr are known
-		GL_CALL(glUniformMatrix4fv(this->modelview.location, 1, GL_FALSE, glm::value_ptr(prevModelview)));
-	}
-	//Set the model view projection matrix (e.g. projection * modelview)
-	if (this->modelviewprojection >= 0 && this->modelview.matrixPtr && this->projection.matrixPtr)
-	{
-		glm::mat4 mvp = *this->projection.matrixPtr * prevModelview;
-		GL_CALL(glUniformMatrix4fv(this->modelviewprojection, 1, GL_FALSE, glm::value_ptr(mvp)));
-	}
-	//Sets the normal matrix (this must occur after modelView transformations are calculated)
-	if (cameraMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
-	{//If camera matrix location and modelview ptr are known
-		GL_CALL(glUniformMatrix4fv(cameraMatLoc, 1, GL_FALSE, glm::value_ptr(*this->modelview.matrixPtr)));
-	}
-	//Sets the normal matrix (this must occur after modelView transformations are calculated)
-	if (normalMatLoc >= 0 && this->modelview.matrixPtr > nullptr)
-	{//If normal matrix location and modelview ptr are known
-        glm::mat3 nm = glm::inverseTranspose(glm::mat3(prevModelview));
-		GL_CALL(glUniformMatrix3fv(normalMatLoc, 1, GL_FALSE, glm::value_ptr(nm)));
-	}
+    _useProgramModelMatrices();
+    //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
+    if (this->vertexShaderVersion <= 120 && this->projectionMat.matrixPtr > nullptr)
+    {//If old shaders where gl_ModelViewProjectionMatrix is available
+        GL_CALL(glMatrixMode(GL_PROJECTION));
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projectionMat.matrixPtr)));
+    }
+    if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr > nullptr)
+    {//If projection matrix location and camera ptr are known
+        GL_CALL(glUniformMatrix4fv(this->projectionMat.location, 1, GL_FALSE, glm::value_ptr(*this->projectionMat.matrixPtr)));
+    }	
+    //Set the view matrix (e.g. gluLookAt, normally provided by the Camera)
+    if (this->viewMat.location >= 0 && this->viewMat.matrixPtr > nullptr)
+    {//If view matrix location and camera ptr are known
+        GL_CALL(glUniformMatrix4fv(this->viewMat.location, 1, GL_FALSE, glm::value_ptr(*this->viewMat.matrixPtr)));
+    }
 
     GLuint activeVBO = 0;
     //Set the vertex (location) attribute
@@ -550,10 +557,22 @@ void Shaders::setColor(glm::vec4 color)
 }
 bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name)
 {
-	//Log the attachment pt
-	fragShaderOutputLocations[attachmentPoint] = std::string(name);
 	//Bind
-	GL_CALL(glBindFragDataLocation(this->getProgram(), attachmentPoint, name));
+	glBindFragDataLocation(this->getProgram(), attachmentPoint, name);
+    //Manually check for error
+    GLuint error = glGetError();
+    if (error != GL_NO_ERROR)
+    {
+        if (error == GL_INVALID_VALUE)
+            printf("%s(%i) GL Error Occurred;\n%s\n", __FILE__, __LINE__, (char*)(gluErrorString(error)));
+#if EXIT_ON_ERROR
+        getchar();
+        exit(1);
+#endif
+        return false;
+    }
+    //If successful, log the attachment pt
+    fragShaderOutputLocations[attachmentPoint] = std::string(name);
 	//Relink the program and ensure the program re-linked correctly;
 	GL_CALL(glLinkProgram(this->getProgram()));
 	return this->checkProgramLinkError(this->getProgram());

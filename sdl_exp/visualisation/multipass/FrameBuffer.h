@@ -8,10 +8,12 @@
 #include <unordered_set>
 
 /**
- * https://open.gl/framebuffers
- * @todo Include glDrawbuffers call at use?
+ * This class represents a Framebuffer with custom 2D texture and renderbuffer attachments
+ * The class supports multisampling, however that required you to instead use Sampler2DMS to sample any textures inside shaders
+ * If a scaling framebuffer is used, it will be resized whenever the viewport dimensions are changed
+ * You can use Shaders::setFragOutAttribute() to bind the attachment point to a named output
  * @todo Improve stencilbuffer (control when writing/clearing/using) //https://en.wikipedia.org/wiki/Stencil_buffer
- * @todo MultisampleFrameBuffer subclass (all attachments must be the same type (tex vs renderbuffer) + samples ct)
+ * @todo Add support for cubemap framebuffers
  */
 class FrameBuffer : public FBuffer
 {
@@ -104,25 +106,25 @@ public:
      */
     unsigned int getSampleCount(){ return samples; }
     /**
-    * @return The current dimensions of the FrameBuffer
-    * @note If this is a scaling FrameBuffer this value may change over time
-    */
+     * @return The current dimensions of the FrameBuffer
+     * @note If this is a scaling FrameBuffer this value may change over time
+     */
     glm::uvec2 getDimensions(){ return dimensions; }
     /**
-    * Sets whether the Framebuffer is to be automatically cleared before use
-    */
+     * Sets whether the Framebuffer is to be automatically cleared before use
+     */
     void setDoClear(bool doClear){ this->doClear = doClear; }
     /**
-    * @return Whether the Framebuffer is to be automatically cleared before use
-    */
+     * @return Whether the Framebuffer is to be automatically cleared before use
+     */
     bool getDoClear(){ return doClear; }
     /**
-    * Sets the clear color to be used
-    */
+     * Sets the clear color to be used
+     */
     void setClearColor(glm::vec3 doClear){ this->clearColor = clearColor; }
     /**
-    * @return The clear color to be used
-    */
+     * @return The clear color to be used
+     */
     glm::vec3 getClearColor(){ return clearColor; }
 
 private:
@@ -188,13 +190,13 @@ private:
 	 */
     ConfNamePair depthStencil;
     /**
-    * Config for the stencil attachment
-    */
+     * Config for the stencil attachment
+     */
     ConfNamePair depth;
 	/**
 	 * Config for the stencil attachment
 	 */
-     ConfNamePair stencil;
+    ConfNamePair stencil;
     /**
      * Notifies the framebuffer which color attachments are used
      * @note This method can only be called once per framebuffer

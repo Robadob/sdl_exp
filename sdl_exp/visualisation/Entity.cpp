@@ -1409,14 +1409,14 @@ void Entity::reload()
         texture->reload();
 }
 /*
-Sets the pointer to the modelView matrix used by this entitiy (in the shader)
-@param modelViewMat A pointer to const of the modelView matrix to be tracked
+Sets the pointer to the view matrix used by this entitiy (in the shader)
+@param viewMat A pointer to const of the modelView matrix to be tracked
 */
-void Entity::setModelViewMatPtr(glm::mat4 const *modelViewMat)
+void Entity::setViewMatPtr(glm::mat4 const *viewMat)
 {
 	for (auto &&it : shaders)
 		if (it)
-			it->setModelViewMatPtr(modelViewMat);
+            it->setViewMatPtr(viewMat);
 }
 /*
 Sets the pointer to the projection matrix used by this entitiy (in the shader)

@@ -16,10 +16,10 @@ class Renderable : public Reloadable
 public:
 	/**
 	 * Binds the provided modelview matrix to the internal shader
-	 * @param modelViewMat Ptr to modelview matrix
+	 * @param viewMat Ptr to modelview matrix
 	 * @note This is normally found within the Camera object
 	 */
-	virtual void setModelViewMatPtr(glm::mat4 const *modelViewMat)=0;
+    virtual void setViewMatPtr(glm::mat4 const *viewMat) = 0;
 	/**
 	 * Binds the provided projection matrix to the internal shader
 	 * @param projectionMat Ptr to model view matrix
@@ -27,20 +27,20 @@ public:
 	 */
 	virtual void setProjectionMatPtr(glm::mat4 const *projectionMat) = 0;
 	/**
-	* Binds the provided modelview matrix to the internal shader
-	* @param camera Ptr to modelview matrix
-	* @note This is normally found within the Camera object
-	* @note This method is overriden by Skybox as it required modelview sans translation
-	*/
-	virtual void setModelViewMatPtr(const Camera *camera)
+	 * Binds the provided view matrix to the internal shader
+	 * @param camera Ptr to view matrix
+	 * @note This is normally found within the Camera object
+	 * @note This method is overriden by Skybox as it required modelview sans translation
+	 */
+	virtual void setViewMatPtr(const Camera *camera)
 	{
-		setModelViewMatPtr(camera->getViewMatPtr());
+		setViewMatPtr(camera->getViewMatPtr());
 	}
 	/**
-	* Binds the provided projection matrix to the internal shader
-	* @param visualisation Ptr to model view matrix
-	* @note Convenience wrapper
-	*/
+	 * Binds the provided projection matrix to the internal shader
+	 * @param visualisation Ptr to model view matrix
+	 * @note Convenience wrapper
+	 */
 	virtual void setProjectionMatPtr(const Viewport *visualisation) final
 	{
 		setProjectionMatPtr(visualisation->getFrustrumPtr());

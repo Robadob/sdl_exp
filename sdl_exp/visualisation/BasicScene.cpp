@@ -13,7 +13,7 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 		//Store value for later
 		entities.push_back(ent);
 		//Setup matrices
-		ent->setModelViewMatPtr(this->visualisation.getCamera());
+		ent->setViewMatPtr(this->visualisation.getCamera());
 		ent->setProjectionMatPtr(&this->visualisation);
 	}
 	else
@@ -61,7 +61,7 @@ void BasicScene::setSkybox(bool state){
     if (state&&!this->skybox)
     {
 		this->skybox = std::make_unique<Skybox>();
-        this->skybox->setModelViewMatPtr(this->visualisation.getCamera());
+        this->skybox->setViewMatPtr(this->visualisation.getCamera());
         this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
         this->skybox->setYOffset(-1.0f);
     }

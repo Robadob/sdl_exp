@@ -2,8 +2,6 @@
 #define __TwoPassScene_h__
 #include "visualisation/multipass/MultiPassScene.h"
 #include "visualisation/Entity.h"
-#include "visualisation/Skybox.h"
-#include "visualisation/Axis.h"
 #include "visualisation/Sprite2D.h"
 
 class TwoPassScene : public MultiPassScene
@@ -11,13 +9,18 @@ class TwoPassScene : public MultiPassScene
 	struct SceneContent
 	{
 		SceneContent();
-		std::shared_ptr<Entity> deerModel;
+        std::shared_ptr<Entity> deerModel;
+        std::shared_ptr<Entity> sphereModel;
+        std::shared_ptr<Entity> planeModel;
+        glm::vec3 spotlightPos, spotlightTarget;
 	};
 	class ShadowPass : public RenderPass
 	{
 	public:
         ShadowPass(std::shared_ptr<SceneContent> content);
-	protected:
+    protected:
+        glm::mat4 mvMat;
+        glm::mat4 projMat;
 		void render() override;
 	private:
 		std::shared_ptr<SceneContent> content;
@@ -26,18 +29,9 @@ class TwoPassScene : public MultiPassScene
 	{
 	public:
         CompositePass(std::shared_ptr<SceneContent> content);
-		void setShadowMap(GLuint tex);
 	protected:
-		GLuint shadowMap;
-		GLuint cTex;
-		GLuint dTex;
 		void render() override;
 		std::shared_ptr<SceneContent> content;
-		std::shared_ptr<Entity> frameEnt;
-		std::shared_ptr<Texture2D> sampleTex;
-		glm::mat4 mvMat;
-		glm::mat4 projMat;
-
 	};
 public:
 	TwoPassScene(Visualisation &visualisation);

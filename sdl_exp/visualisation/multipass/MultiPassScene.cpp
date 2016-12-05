@@ -14,7 +14,6 @@ void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
         //Setup matrices
         ent->setViewMatPtr(this->visualisation.getCamera());
 		ent->setProjectionMatPtr(&this->visualisation);
-
     }
     else
         fprintf(stderr, "Can't register a null entity!\n");

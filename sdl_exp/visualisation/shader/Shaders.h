@@ -28,6 +28,7 @@ namespace Stock
         const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", nullptr };
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
         const ShaderSet DEPTH{ "../shaders/default.vert", nullptr, nullptr };
+        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/phongShadow.frag", nullptr };
     };
 };
 /**

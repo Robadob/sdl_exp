@@ -216,7 +216,7 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
     }
 
     //Set Model matrix
-    if (this->modelMat.location >= 0 && this->modelMat.matrixPtr > nullptr)
+    if (this->modelMat.location >= 0)
     {//If model matrix location is known
         GL_CALL(glUniformMatrix4fv(this->modelMat.location, 1, GL_FALSE, glm::value_ptr(m)));
     }

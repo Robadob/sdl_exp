@@ -86,36 +86,40 @@ void ShaderCore::setupBindings()
 		{
 			if (i->type == GL_FLOAT)
 			{
-				if (sizeof(int) != sizeof(float))
-					fprintf(stderr,"Error: int and float sizes differ, static float uniforms may be corrupted.\n");
-				if (i->count == 1){
-					GL_CALL(glUniform1fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
-				}
-				else if (i->count == 2){
-					GL_CALL(glUniform2fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
-				}
-				else if (i->count == 3){
-					GL_CALL(glUniform3fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
-				}
-				else if (i->count == 4){
-					GL_CALL(glUniform4fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
-				}
-			}
-			else if (i->type == GL_INT)
-			{
-				if (i->count == 1){
-					GL_CALL(glUniform1iv(location, 1, glm::value_ptr(i->data)));
-				}
-				else if (i->count == 2){
-					GL_CALL(glUniform2iv(location, 1, glm::value_ptr(i->data)));
-				}
-				else if (i->count == 3){
-					GL_CALL(glUniform3iv(location, 1, glm::value_ptr(i->data)));
-				}
-				else if (i->count == 4){
-					GL_CALL(glUniform4iv(location, 1, glm::value_ptr(i->data)));
-				}
-			}
+                if (sizeof(int) != sizeof(float))
+                    fprintf(stderr, "Error: int and float sizes differ, static float uniforms may be corrupted.\n");
+                if (i->count == 1){
+                    GL_CALL(glUniform1fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
+                }
+                else if (i->count == 2){
+                    GL_CALL(glUniform2fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
+                }
+                else if (i->count == 3){
+                    GL_CALL(glUniform3fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
+                }
+                else if (i->count == 4){
+                    GL_CALL(glUniform4fv(location, 1, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
+                }
+            }
+            else if (i->type == GL_INT)
+            {
+                if (i->count == 1){
+                    GL_CALL(glUniform1iv(location, 1, glm::value_ptr(i->data)));
+                }
+                else if (i->count == 2){
+                    GL_CALL(glUniform2iv(location, 1, glm::value_ptr(i->data)));
+                }
+                else if (i->count == 3){
+                    GL_CALL(glUniform3iv(location, 1, glm::value_ptr(i->data)));
+                }
+                else if (i->count == 4){
+                    GL_CALL(glUniform4iv(location, 1, glm::value_ptr(i->data)));
+                }
+            }
+            else if (i->type == GL_FLOAT_MAT4)
+            {
+                GL_CALL(glUniformMatrix4fv(location, 1, false, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
+            }
 		}
 		else//If the uniform isn't found again, remind the user
 		{
@@ -170,35 +174,39 @@ void ShaderCore::useProgram()
 	{
 		if (i->second.type == GL_FLOAT)
 		{
-			if (i->second.count == 1)
-			{
-				GL_CALL(glUniform1fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
-			}
-			else if (i->second.count == 2){
-				GL_CALL(glUniform2fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
-			}
-			else if (i->second.count == 3){
-				GL_CALL(glUniform3fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
-			}
-			else if (i->second.count == 4){
-				GL_CALL(glUniform4fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
-			}
-		}
-		else if (i->second.type == GL_INT)
-		{
-			if (i->second.count == 1){
-				GL_CALL(glUniform1iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
-			}
-			else if (i->second.count == 2){
-				GL_CALL(glUniform2iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
-			}
-			else if (i->second.count == 3){
-				GL_CALL(glUniform3iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
-			}
-			else if (i->second.count == 4){
-				GL_CALL(glUniform4iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
-			}
-		}
+            if (i->second.count == 1)
+            {
+                GL_CALL(glUniform1fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
+            }
+            else if (i->second.count == 2){
+                GL_CALL(glUniform2fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
+            }
+            else if (i->second.count == 3){
+                GL_CALL(glUniform3fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
+            }
+            else if (i->second.count == 4){
+                GL_CALL(glUniform4fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
+            }
+        }
+        else if (i->second.type == GL_INT)
+        {
+            if (i->second.count == 1){
+                GL_CALL(glUniform1iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
+            }
+            else if (i->second.count == 2){
+                GL_CALL(glUniform2iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
+            }
+            else if (i->second.count == 3){
+                GL_CALL(glUniform3iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
+            }
+            else if (i->second.count == 4){
+                GL_CALL(glUniform4iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
+            }
+        }
+        else if (i->second.type == GL_FLOAT_MAT4)
+        {
+            GL_CALL(glUniformMatrix4fv(i->first, 1, false, reinterpret_cast<const GLfloat *>(i->second.data)));
+        }
 	}
 	//Set any buffers
 	for (std::map<GLuint, BufferDetail>::iterator i = buffers.begin(); i != buffers.end(); ++i)
@@ -263,6 +271,10 @@ bool ShaderCore::addDynamicUniform(const char *uniformName, const GLint *arry, u
 bool ShaderCore::addDynamicUniform(const char *uniformName, const GLfloat *arry, unsigned int count)
 {
 	return addDynamicUniform({ GL_FLOAT, reinterpret_cast<const void*>(arry), count, uniformName });
+}
+bool ShaderCore::addDynamicUniform(const char *uniformName, const glm::mat4 *mat)
+{
+    return addDynamicUniform({ GL_FLOAT_MAT4, reinterpret_cast<const void*>(mat), 1, uniformName });
 }
 bool ShaderCore::addDynamicUniform(DynamicUniformDetail d)
 {
@@ -353,6 +365,28 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, un
 		}
 	}
 	return false;
+}
+bool ShaderCore::addStaticUniform(const char *uniformName, const glm::mat4 *mat)
+{
+    //Purge any existing buffer which matches
+    removeStaticUniform(uniformName);
+    staticUniforms.push_front({ GL_FLOAT_MAT4, *reinterpret_cast<const glm::ivec4*>(mat), 1, uniformName });
+    if (this->programId > 0)
+    {
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
+        if (location != -1)
+        {
+            GL_CALL(glUseProgram(this->programId));
+            GL_CALL(glUniformMatrix4fv(location, 1, false, glm::value_ptr(*mat)));
+            GL_CALL(glUseProgram(0));
+            return true;
+        }
+        else
+        {
+            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag, uniformName);
+        }
+    }
+    return false;
 }
 bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName)
 {

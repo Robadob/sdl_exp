@@ -7,6 +7,8 @@
 #include <map>
 #include <list>
 #include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+
 /**
  * This class is is a wrapper for the core OpenGL shader operations
  * Uniforms, textures and buffers can be automatically bound using the addXXX() methods, so they are provided to the shader
@@ -115,7 +117,17 @@ public:
 	 * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 	 * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
 	 */
-	bool addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    bool addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    /**
+    * Remembers a pointer to a mat4 that will be updated everytime useProgram() is called on this Shaders object
+    * If a dynamic uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param mat Pointer to the mat4
+    * @returns false if the uniform name was not found
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
+    */
+    bool addDynamicUniform(const char *uniformName, const glm::mat4 *mat);
 	/**
 	 * Sets the value of a vector of upto 4 floats within the shader
 	 * If a static uniform with the same uniformName is already bound, it will be replaced
@@ -135,7 +147,17 @@ public:
 	 * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
 	 * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 	 */
-	bool addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    bool addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    /**
+    * Sets the value of a mat4 within the shader
+	* If a static uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param mat Pointer to the mat4
+    * @returns false if the uniform name was not found
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
+    */
+    bool addStaticUniform(const char *uniformName, const glm::mat4 *mat);
 	/**
 	 * Attatches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced

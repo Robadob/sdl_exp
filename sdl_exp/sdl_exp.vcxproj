@@ -189,8 +189,6 @@
     <CudaCompile Include="EntityScene.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <None Include="glsl\main.frag" />
-    <None Include="glsl\main.vert" />
     <None Include="visualisation\util\cuda.cuh" />
   </ItemGroup>
   <ItemGroup>

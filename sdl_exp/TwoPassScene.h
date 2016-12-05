@@ -12,15 +12,16 @@ class TwoPassScene : public MultiPassScene
         std::shared_ptr<Entity> deerModel;
         std::shared_ptr<Entity> sphereModel;
         std::shared_ptr<Entity> planeModel;
+        std::shared_ptr<Entity> lightModel;
         glm::vec3 spotlightPos, spotlightTarget;
+        glm::mat4 spotlightV;
+        glm::mat4 spotlightP;
 	};
 	class ShadowPass : public RenderPass
 	{
 	public:
         ShadowPass(std::shared_ptr<SceneContent> content);
     protected:
-        glm::mat4 mvMat;
-        glm::mat4 projMat;
 		void render() override;
 	private:
 		std::shared_ptr<SceneContent> content;

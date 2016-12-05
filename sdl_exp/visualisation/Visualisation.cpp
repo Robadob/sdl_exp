@@ -58,9 +58,9 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
     //Configure GL buffer settings
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -96,6 +96,7 @@ bool Visualisation::init(){
         // Setup gl stuff
         glEnable(GL_DEPTH_TEST);
         glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
         glShadeModel(GL_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_LIGHTING);
@@ -275,7 +276,6 @@ void Visualisation::run(){
     this->close();
 }
 void Visualisation::defaultProjection(){
-    glEnable(GL_CULL_FACE);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(this->frustum));
@@ -294,7 +294,8 @@ const char *Visualisation::getWindowTitle() const{
     return this->windowTitle;
 }
 void Visualisation::setWindowTitle(const char *windowTitle){
-    this->windowTitle = windowTitle;
+    this->windowTitle = windowTitle; 
+    SDL_SetWindowTitle(this->window, this->windowTitle);
 }
 void Visualisation::quit(){
     this->continueRender = false;

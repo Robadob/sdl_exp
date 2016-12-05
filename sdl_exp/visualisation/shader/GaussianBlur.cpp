@@ -15,12 +15,12 @@ GaussianBlur::GaussianBlur(unsigned int filterRadius, float sigma)
     this->inBufferBind = --maxTex;
     this->outBufferBind = --maxTex;
     //Generate the Gaussian filter (manually at current)
-    this->filter = (float*)malloc(filterWidth*filterWidth*sizeof(float));
+    this->filter = (float*)malloc(filterWidth*sizeof(float));
     generateFilter();
     //Copy that to a uniform buffer
     GL_CALL(glGenBuffers(1, &this->filterBuffer));
     GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, this->filterBuffer));
-    GL_CALL(glBufferData(GL_UNIFORM_BUFFER, filterRadius*filterRadius*sizeof(float), this->filter, GL_STATIC_READ));
+    GL_CALL(glBufferData(GL_UNIFORM_BUFFER, filterWidth*sizeof(float), this->filter, GL_STATIC_READ));
     GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, 0));
     //Configure uniforms
     blurShader->addBuffer("_filterWeights", GL_UNIFORM_BUFFER, this->filterBuffer);
@@ -37,17 +37,13 @@ GaussianBlur::~GaussianBlur()
 }
 void GaussianBlur::generateFilter()
 {
-    float sum = 0.0f;
     //Fill filter
+    unsigned int i = 0;
     for (unsigned int x = 0; x < filterWidth; ++x)
-        for (unsigned int y = 0; y < filterWidth; ++y) {
-            filter[x*filterWidth + y] = (float)exp(-0.5 * (pow((x - filterRadius) / sigma, 2.0) + pow((y - filterRadius) / sigma, 2.0))) / (2 * glm::pi<float>() * sigma * sigma);
-            sum += filter[x*filterWidth + y];
-        }
-    //Normalize filter
-    for (unsigned int x = 0; x < filterWidth; ++x)
-        for (unsigned int y = 0; y < filterWidth; ++y)
-            filter[x*filterWidth + y] /= sum;
+    {
+        filter[x] = x <= filterRadius ? ++i : --i;
+        //filter[x] /= pow(2,filterRadius+1);//Normalize
+    }
 }
 void GaussianBlur::blur2D(GLuint inTex, GLuint outTex, glm::uvec2 texDims)
 {

@@ -1,7 +1,7 @@
 #version 430
 //https://github.com/chmaruni/nsight-gtc/blob/master/nsight-gtc.cu#L568
-//Execute in 64x64 blocks
-const int blockWidth = 64;
+//Execute in 32x32 sized thread blocks, 1024 pixels
+const int blockWidth = 32;
 layout(local_size_x=blockWidth,local_size_y=blockWidth) in;
 
 uniform _filterWeights
@@ -15,18 +15,32 @@ uniform uvec2 _imageDimensions;
 uniform readonly  image2D _imageIn;
 uniform writeonly image2D _imageOut;
 
-shared float v[3*blockWidth*blockWidth];
+shared float v[3*blockWidth*blockWidth];//Needs to be compile time sized, limit 32kb, 8k floats
 uint indexG(int x, int y);
+/**
+ * Todo: Thread level parallelism x4, x8?
+ */
 void main () 
 {
 	//Locate threads location within the image
 	const int x = blockIdx.x*blockDim.x + threadIdx.x;
 	const int y = blockIdx.y*blockDim.y + threadIdx.y;
 
+	//Horizontal convolution
 	//Load working area into shared
+	//Each thread loads 1 texel
+	//_filterRadius*2 additional texels are loaded
 
 	//Sync
-	barrier();
+	groupMemoryBarrier();	
+	
+	//Vertical convolution
+	//Load working area into shared
+	//Each thread loads 1 texel
+	//_filterRadius*2 additional texels are loaded
+
+	//Sync
+	groupMemoryBarrier();	
 	
 	//Compute & store
 	float sum = 0.0f;

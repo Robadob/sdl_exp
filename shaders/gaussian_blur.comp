@@ -1,0 +1,42 @@
+#version 430
+//https://github.com/chmaruni/nsight-gtc/blob/master/nsight-gtc.cu#L568
+//Execute in 64x64 blocks
+const int blockWidth = 64;
+layout(local_size_x=blockWidth,local_size_y=blockWidth) in;
+
+uniform _filterWeights
+{
+	float bias[];
+};
+//Total particles
+uniform uint _filterRadius;
+uniform uint _filterWidth;
+uniform uvec2 _imageDimensions;
+uniform readonly  image2D _imageIn;
+uniform writeonly image2D _imageOut;
+
+shared float v[3*blockWidth*blockWidth];
+uint indexG(int x, int y);
+void main () 
+{
+	//Locate threads location within the image
+	const int x = blockIdx.x*blockDim.x + threadIdx.x;
+	const int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	//Load working area into shared
+
+	//Sync
+	barrier();
+	
+	//Compute & store
+	float sum = 0.0f;
+	
+	imageStore(_imageOut,,vec4(sum));
+}
+/**
+ * Returns the relevant global array index, clamping out of bounds index's
+ */
+uint indexG(int x, int y)
+{
+	return clamp(x,0,_imageDimensions.x)*_filterWidth+clamp(y,0,_imageDimensions.y);
+}

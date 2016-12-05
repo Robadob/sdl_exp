@@ -27,9 +27,26 @@ void main (void)
     vec3 E = normalize(-eyeVertex); // we are in Eye Coordinates, so EyePos is (0,0,0)  
     vec3 R = normalize(reflect(-L,eyeNormal));  
 	
+	/*
+	//Basic shadow with bias
 	const float bias = 0.005;
-	float visibility = texture(_shadowMap, shadowCoord.xy ).r<shadowCoord.z-bias?0.0f:1.0f;//>shadowCoord.z? 0 : 1.0;
-
+	float visibility = texture(_shadowMap, shadowCoord.xy ).r<shadowCoord.z-bias?0.0f:1.0f;
+	*/
+	
+	//Exponential Shadow Maps - Thomas Allen (http://discovery.ucl.ac.uk/10001/1/10001.pdf)
+	//Todo: Linearise depth value
+	//Todo: divide values by shadowCoord.w to support projection matrices/spot lights
+	//Higher exponent value is closer to the hard-shadow step function
+	//Too high and the visibility will overflow
+	const float LIGHT_EXPONENT = 80.0f;//Fig 2.0
+	//d, Distance of point from the camera
+	float reciever = shadowCoord.z;
+	//cz, corresponding shadow map value
+	//(we should really precompute this when creating the shadow map)
+	float occluder = exp(LIGHT_EXPONENT*texture(_shadowMap, shadowCoord.xy).r);
+	//visibility = e^(-cd)e^(cz), clamped to bounds
+	float visibility = clamp(exp(-LIGHT_EXPONENT * reciever) *occluder,0.0,1.0);
+		
     //calculate Ambient Term:  
     vec4 Iamb = ambientColor * ambient;
 

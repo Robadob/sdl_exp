@@ -119,6 +119,17 @@ public:
 	 */
     bool addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
     /**
+    * Remembers a pointer to an array of upto 4 unsigned integers that will be updated everytime useProgram() is called on this Shaders object
+    * If a dynamic uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param arry A pointer to the array of unsigned integers
+    * @param count The number of unsigned integers provided in the array (a maximum of 4)
+    * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
+    */
+    bool addDynamicUniform(const char *uniformName, const GLuint *arry, unsigned int count = 1);
+    /**
     * Remembers a pointer to a mat4 that will be updated everytime useProgram() is called on this Shaders object
     * If a dynamic uniform with the same uniformName is already bound, it will be replaced
     * @param uniformName The name of the uniform within the shader
@@ -148,6 +159,16 @@ public:
 	 * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 	 */
     bool addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    /**
+    * Sets the value of a vector of upto 4 unsigned ints within the shader
+    * If a static uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param arry A pointer to the array of unsigned integers
+    * @param count The number of unsigned integers provided in the array (a maximum of 4)
+    * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    */
+    bool addStaticUniform(const char *uniformName, const GLuint *arry, unsigned int count = 1);
     /**
     * Sets the value of a mat4 within the shader
 	* If a static uniform with the same uniformName is already bound, it will be replaced
@@ -246,7 +267,7 @@ private:
 	struct DynamicUniformDetail
 	{
 		/**
-		 * GL_INT or GL_FLOAT
+		 * GL_INT, GL_UNSIGNED_INT GL_FLOAT
 		 */
 		const GLenum type;
 		/**
@@ -284,7 +305,7 @@ private:
 	struct StaticUniformDetail
 	{
 		/**
-		* GL_INT or GL_FLOAT
+		* GL_INT, GL_UNSIGNED_INT or GL_FLOAT
 		*/
 		const GLenum type;
 		/**

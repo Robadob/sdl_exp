@@ -39,6 +39,9 @@
     <Filter Include="Header Files\Visualisation\MultiPass">
       <UniqueIdentifier>{cf6a1b89-eb49-48de-93cf-4227a5f4a0ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Shader\util">
+      <UniqueIdentifier>{9dccb61a-e260-42d0-99a4-0ad24c7f75cc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -115,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="visualisation\multipass\BackBuffer.cpp">
       <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\GaussianBlur.cpp">
+      <Filter>Source Files\Visualisation\Shader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -215,6 +221,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h">
       <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\GaussianBlur.h">
+      <Filter>Header Files\Visualisation\Shader\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -116,6 +116,21 @@ void ShaderCore::setupBindings()
                     GL_CALL(glUniform4iv(location, 1, glm::value_ptr(i->data)));
                 }
             }
+            else if (i->type == GL_UNSIGNED_INT)
+            {
+                if (i->count == 1){
+                    GL_CALL(glUniform1uiv(location, 1, reinterpret_cast<const GLuint *>(glm::value_ptr(i->data))));
+                }
+                else if (i->count == 2){
+                    GL_CALL(glUniform2uiv(location, 1, reinterpret_cast<const GLuint *>(glm::value_ptr(i->data))));
+                }
+                else if (i->count == 3){
+                    GL_CALL(glUniform3uiv(location, 1, reinterpret_cast<const GLuint *>(glm::value_ptr(i->data))));
+                }
+                else if (i->count == 4){
+                    GL_CALL(glUniform4uiv(location, 1, reinterpret_cast<const GLuint *>(glm::value_ptr(i->data))));
+                }
+            }
             else if (i->type == GL_FLOAT_MAT4)
             {
                 GL_CALL(glUniformMatrix4fv(location, 1, false, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
@@ -203,6 +218,21 @@ void ShaderCore::useProgram()
                 GL_CALL(glUniform4iv(i->first, 1, reinterpret_cast<const GLint *>(i->second.data)));
             }
         }
+        else if (i->second.type == GL_UNSIGNED_INT)
+        {
+            if (i->second.count == 1){
+                GL_CALL(glUniform1uiv(i->first, 1, reinterpret_cast<const GLuint *>(i->second.data)));
+            }
+            else if (i->second.count == 2){
+                GL_CALL(glUniform2uiv(i->first, 1, reinterpret_cast<const GLuint *>(i->second.data)));
+            }
+            else if (i->second.count == 3){
+                GL_CALL(glUniform3uiv(i->first, 1, reinterpret_cast<const GLuint *>(i->second.data)));
+            }
+            else if (i->second.count == 4){
+                GL_CALL(glUniform4uiv(i->first, 1, reinterpret_cast<const GLuint *>(i->second.data)));
+            }
+        }
         else if (i->second.type == GL_FLOAT_MAT4)
         {
             GL_CALL(glUniformMatrix4fv(i->first, 1, false, reinterpret_cast<const GLfloat *>(i->second.data)));
@@ -267,6 +297,10 @@ int ShaderCore::addTextureUniform(GLuint texture, char *uniformName, GLenum type
 bool ShaderCore::addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count)
 {
 	return addDynamicUniform({ GL_INT, reinterpret_cast<const void*>(arry), count, uniformName });
+}
+bool ShaderCore::addDynamicUniform(const char *uniformName, const GLuint *arry, unsigned int count)
+{
+    return addDynamicUniform({ GL_UNSIGNED_INT, reinterpret_cast<const void*>(arry), count, uniformName });
 }
 bool ShaderCore::addDynamicUniform(const char *uniformName, const GLfloat *arry, unsigned int count)
 {
@@ -365,6 +399,39 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, un
 		}
 	}
 	return false;
+}
+bool ShaderCore::addStaticUniform(const char *uniformName, const GLuint *arry, unsigned int count)
+{
+    //Purge any existing buffer which matches
+    removeStaticUniform(uniformName);
+    staticUniforms.push_front({ GL_UNSIGNED_INT, *reinterpret_cast<const glm::ivec4*>(arry), count, uniformName });
+    if (this->programId > 0 && count > 0 && count <= 4)
+    {
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, uniformName));
+        if (location != -1)
+        {
+            GL_CALL(glUseProgram(this->programId));
+            if (count == 1){
+                GL_CALL(glUniform1uiv(location, 1, arry));
+            }
+            else if (count == 2){
+                GL_CALL(glUniform2uiv(location, 1, arry));
+            }
+            else if (count == 3){
+                GL_CALL(glUniform3uiv(location, 1, arry));
+            }
+            else if (count == 4){
+                GL_CALL(glUniform4uiv(location, 1, arry));
+            }
+            GL_CALL(glUseProgram(0));
+            return true;
+        }
+        else
+        {
+            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag, uniformName);
+        }
+    }
+    return false;
 }
 bool ShaderCore::addStaticUniform(const char *uniformName, const glm::mat4 *mat)
 {

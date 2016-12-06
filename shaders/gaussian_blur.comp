@@ -1,56 +1,88 @@
 #version 430
 //https://github.com/chmaruni/nsight-gtc/blob/master/nsight-gtc.cu#L568
-//Execute in 32x32 sized thread blocks, 1024 pixels
-const int blockWidth = 32;
-layout(local_size_x=blockWidth,local_size_y=blockWidth) in;
+//Execute in 16x16 sized thread blocks
+layout(local_size_x=16,local_size_y=16) in;
 
 uniform _filterWeights
 {
-	float bias[];
+	float bias[17];//Max width +1
 };
 //Total particles
 uniform uint _filterRadius;
 uniform uint _filterWidth;
 uniform uvec2 _imageDimensions;
-uniform readonly  image2D _imageIn;
-uniform writeonly image2D _imageOut;
+layout (r32f) uniform readonly  image2D _imageIn;
+layout (r32f) uniform writeonly image2D _imageOut;
 
-shared float v[3*blockWidth*blockWidth];//Needs to be compile time sized, limit 32kb, 8k floats
-uint indexG(int x, int y);
+shared float pixels[48][48];//16+16+16x16+16+16=2304
+shared float hoz[16][48];//0+16+0x16x16x16=768, Horizontal convolution, central column x full height
+ivec2 indexG(ivec2 index);
 /**
  * Todo: Thread level parallelism x4, x8?
  */
 void main () 
 {
-	//Locate threads location within the image
-	const int x = blockIdx.x*blockDim.x + threadIdx.x;
-	const int y = blockIdx.y*blockDim.y + threadIdx.y;
-
+	//if(gl_GlobalInvocationID.x<_imageDimensions.x
+	//||gl_GlobalInvocationID.y<_imageDimensions.y)
+	//{//gl_GlobalInvocationID.x*8192+gl_GlobalInvocationID.y/(8192*8192)
+		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(0));
+	//}//gl_GlobalInvocationID.x*8192+gl_GlobalInvocationID.y/(8192.0f*8192)
+	/* //Load blockWidth+2*_filterRadius pixels into shared
+	//###
+	//###
+	//###
+	const uint loadWidth = gl_WorkGroupSize.x + 2*_filterRadius;
+	const ivec2 topLeftLoad = ivec2(gl_GlobalInvocationID.xy) - ivec2(_filterRadius);
+	for(uint x = 0;x<loadWidth;x+=gl_WorkGroupSize.x)
+	{
+		for(uint y = 0;y<loadWidth;y+=gl_WorkGroupSize.y)
+		{
+			pixels[x+gl_LocalInvocationID.x][y+gl_LocalInvocationID.y] = imageLoad(_imageIn, indexG(topLeftLoad + ivec2(x,y))).r;
+		}
+	}
+	//Sync
+	groupMemoryBarrier();	
+	
 	//Horizontal convolution
-	//Load working area into shared
-	//Each thread loads 1 texel
-	//_filterRadius*2 additional texels are loaded
-
+	//_#_
+	//_#_
+	//_#_
+	const uvec2 centerLeftLoad = gl_LocalInvocationID.xy + uvec2(_filterRadius,0);
+	for(uint y = 0;y<loadWidth;y+=gl_WorkGroupSize.y)
+	{
+		float h_sum = 0.0f;
+		for(uint x = 0;x<_filterWidth;x++)
+		{
+			h_sum += bias[x] * pixels[centerLeftLoad.x+x-_filterRadius][centerLeftLoad.y+y];
+		}
+		hoz[gl_LocalInvocationID.x][y+gl_LocalInvocationID.y] = h_sum;
+	}
 	//Sync
 	groupMemoryBarrier();	
 	
-	//Vertical convolution
-	//Load working area into shared
-	//Each thread loads 1 texel
-	//_filterRadius*2 additional texels are loaded
-
-	//Sync
-	groupMemoryBarrier();	
-	
-	//Compute & store
-	float sum = 0.0f;
-	
-	imageStore(_imageOut,,vec4(sum));
+	//Kill out of bounds threads (after the last sync)
+	if(gl_GlobalInvocationID.x<_imageDimensions.x
+	||gl_GlobalInvocationID.y<_imageDimensions.y)
+	{
+		//Vertical convolution
+		//___
+		//_#_
+		//___
+		float v_sum = 0.0f;
+		for(uint y = 0;y<=_filterWidth;y++)
+		{
+			v_sum += bias[y] * hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+_filterRadius-gl_LocalInvocationID.x];
+		}
+		//Normalize
+		v_sum /= bias[_filterWidth];
+		//Store result		
+		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(v_sum));
+	} */
 }
 /**
  * Returns the relevant global array index, clamping out of bounds index's
  */
-uint indexG(int x, int y)
+ivec2 indexG(ivec2 index)
 {
-	return clamp(x,0,_imageDimensions.x)*_filterWidth+clamp(y,0,_imageDimensions.y);
+	return clamp(index,ivec2(0),ivec2(_imageDimensions));
 }

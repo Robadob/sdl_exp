@@ -3,6 +3,7 @@
 #include "visualisation/multipass/MultiPassScene.h"
 #include "visualisation/Entity.h"
 #include "visualisation/Sprite2D.h"
+#include "visualisation/shader/GaussianBlur.h"
 
 class TwoPassScene : public MultiPassScene
 {
@@ -13,9 +14,13 @@ class TwoPassScene : public MultiPassScene
         std::shared_ptr<Entity> sphereModel;
         std::shared_ptr<Entity> planeModel;
         std::shared_ptr<Entity> lightModel;
+        std::shared_ptr<GaussianBlur> blur;
+        std::shared_ptr<Texture2D> gaussTex;
         glm::vec3 spotlightPos, spotlightTarget;
         glm::mat4 spotlightV;
         glm::mat4 spotlightP;
+        glm::uvec2 shadowDims;
+        GLuint shadowIn, shadowOut;
 	};
 	class ShadowPass : public RenderPass
 	{

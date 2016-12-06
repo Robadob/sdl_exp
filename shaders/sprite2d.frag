@@ -37,5 +37,25 @@ void main()
 {
 	//Render depth as HSV, giving us better contrast
 	float depthColor = texture(_texture, vec2(texCoords.x,texCoords.y)).r;
-	fragColor = vec4(hsv2rgb(vec3(depthColor*360,1,1)),1);
+	if(depthColor>0.1&&depthColor<0.15)//floatBitsToInt(depthColor)==12
+	{
+		fragColor = vec4(1);
+	}
+	else if(depthColor>0.22&&depthColor<0.27)//floatBitsToInt(depthColor)==12
+	{
+		fragColor = vec4(1,0,0,1);
+	}
+	else if(depthColor>0.6&&depthColor<0.65)//floatBitsToInt(depthColor)==12
+	{
+		fragColor = vec4(0,0,0,1);
+	}
+	else if(depthColor>0.78&&depthColor<0.82)//floatBitsToInt(depthColor)==12
+	{
+		fragColor = vec4(0,0,1,1);
+	}
+	else
+	{
+	depthColor = clamp(depthColor,0.0f,1.0f);
+			fragColor = vec4(hsv2rgb(vec3(depthColor*360,1,1)),1);
+	}
 }

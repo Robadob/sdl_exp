@@ -6,7 +6,7 @@
 /**
  * Provides convenient compute shader Gaussian blur functionality
  */
-class GaussianBlur
+class GaussianBlur : public Reloadable
 {
     const char *GAUSSIAN_BLUR_SHADER_PATH = "../shaders/gaussian_blur.comp";
 public:
@@ -16,6 +16,7 @@ public:
     GaussianBlur(unsigned int filterRadius, float sigma=1.0f);
     ~GaussianBlur();
     void blur2D(GLuint inTex, GLuint outTex, glm::uvec2 texDims);
+    virtual void reload() override;
 private:
     void generateFilter();
     //These are mapped to the shader uniforms

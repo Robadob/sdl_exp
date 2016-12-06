@@ -143,7 +143,19 @@ public:
      * @note GL_DEPTH_COMPONENT is unique in being able to utilise 'shadow' texture lookup functions 
      */
     static FrameBufferAttachment ManagedDepthTexture(GLint internalFormat = GL_DEPTH_COMPONENT32F, GLenum storageType = GL_UNSIGNED_BYTE)
-    {
+    {//https://www.khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
+        if (internalFormat == GL_DEPTH_COMPONENT32F)
+        {
+            storageType = GL_UNSIGNED_SHORT;
+        }
+        else if (internalFormat == GL_DEPTH_COMPONENT24)
+        {
+            storageType = GL_UNSIGNED_INT;
+        }
+        else if (internalFormat == GL_DEPTH_COMPONENT24)
+        {
+            storageType = GL_FLOAT;
+        }
         return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::Texture, internalFormat, GL_DEPTH_COMPONENT, storageType, 0);
     }
     /**
@@ -181,14 +193,14 @@ public:
      * Defines a FBA capable of representing combined 24 bit depth, 8 bit stencil texture FBAs
      */
     static FrameBufferAttachment ManagedDepthStencilTexture24()
-    {
+    {//https://www.khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
         return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::Texture, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
     }
     /**
      * Defines a FBA capable of representing combined 32 bit depth, 8 bit stencil texture FBAs
      */
     static FrameBufferAttachment ManagedDepthStencilTexture32()
-    {
+    {//https://www.khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
         return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::Texture, GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, 0);
     }
     /**

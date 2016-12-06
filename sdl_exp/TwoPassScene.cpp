@@ -9,12 +9,33 @@ TwoPassScene::SceneContent::SceneContent()
     , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
+    , blur(new GaussianBlur(16,1.0f))
     , spotlightPos(75, 100, 0)//100 units up, radius of 75
     , spotlightTarget(0)
+    , shadowDims(256)
+    , shadowIn(0)
 {
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
+    //Create the gauss tex manually
+    GL_CALL(glGenTextures(1, &shadowOut));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, shadowOut));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    //GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    float *testImage = (float*)malloc(shadowDims.x*shadowDims.y*sizeof(float));
+    float testVal = 0.65f;//glm::intBitsToFloat(12)
+    testImage[0] = 0.63f;
+    for (int i = 0; i < shadowDims.x*shadowDims.y; i+=4)
+    {
+        testImage[i + 0] = 0.5f;// i / (float)(shadowDims.x*shadowDims.y);// i;// % 256 / 256.0;// (float)(shadowDims.x*shadowDims.y);
+        testImage[i + 1] = 0.5f;// i / (float)(shadowDims.x*shadowDims.y);// i;// % 256 / 256.0;// (float)(shadowDims.x*shadowDims.y);
+    }
+    //memset(testImage, *reinterpret_cast<int*>(&testVal), shadowDims.x*shadowDims.y*sizeof(float));
+    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowDims.x, shadowDims.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, testImage));
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
@@ -34,9 +55,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	addPass(0, sPass);
 	addPass(1, cPass);
     //Put a preview of the depth texture on the HUD
-    std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(sPass->getFrameBuffer());
-    if (t)
-        shadowMapPreview = std::make_shared<Sprite2D>(t->getDepthTextureName(), 256, 256);
+    shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 256, 256);
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
@@ -104,22 +123,24 @@ bool TwoPassScene::keypress(SDL_Keycode keycode, int x, int y)
 
 void TwoPassScene::reload()
 {
-    //Nothing required
+    content->blur->reload();
 }
 
 TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
-    : RenderPass(std::make_shared<FrameBuffer>(glm::uvec2(8192, 8192), FBAFactory::Disabled(), FBAFactory::ManagedDepthTexture(), FBAFactory::Disabled()))
+    : RenderPass(std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::Disabled(), FBAFactory::ManagedDepthTexture(), FBAFactory::Disabled()))
 	, content(content)
 {
     //Pass the shadow texture to the second shader of each model
     std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(getFrameBuffer());
     if (t)
     {
-        GLuint shadowMap = t->getDepthTextureName();
-        content->deerModel->getShaders(1)->addTextureUniform(shadowMap, "_shadowMap", GL_TEXTURE_2D);
-        content->sphereModel->getShaders(1)->addTextureUniform(shadowMap, "_shadowMap", GL_TEXTURE_2D);
-        content->planeModel->getShaders(1)->addTextureUniform(shadowMap, "_shadowMap", GL_TEXTURE_2D);
+        content->shadowIn = t->getDepthTextureName();
+        //content->shadowOut = content->shadowIn;
     }
+
+    content->deerModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
+    content->sphereModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
+    content->planeModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
 }
 TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
@@ -137,6 +158,7 @@ void TwoPassScene::ShadowPass::render()
 //Uses the shadow map to render the normal scene
 void TwoPassScene::CompositePass::render()
 {
+    content->blur->blur2D(content->shadowIn, content->shadowOut, content->shadowDims);
     content->deerModel->render(1);
     content->sphereModel->render(1);
     content->planeModel->render(1);

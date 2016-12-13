@@ -11,8 +11,8 @@ uniform _filterWeights
 uniform uint _filterRadius;
 uniform uint _filterWidth;
 uniform uvec2 _imageDimensions;
-layout (r32f) uniform readonly  image2D _imageIn;
-layout (r32f) uniform writeonly image2D _imageOut;
+uniform layout (r32f) readonly  image2D _imageIn;
+uniform layout (r32f) writeonly image2D _imageOut;
 
 shared float pixels[48][48];//16+16+16x16+16+16=2304
 shared float hoz[16][48];//0+16+0x16x16x16=768, Horizontal convolution, central column x full height
@@ -22,11 +22,12 @@ ivec2 indexG(ivec2 index);
  */
 void main () 
 {
-	//if(gl_GlobalInvocationID.x<_imageDimensions.x
-	//||gl_GlobalInvocationID.y<_imageDimensions.y)
-	//{//gl_GlobalInvocationID.x*8192+gl_GlobalInvocationID.y/(8192*8192)
-		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(0));
-	//}//gl_GlobalInvocationID.x*8192+gl_GlobalInvocationID.y/(8192.0f*8192)
+	if(gl_GlobalInvocationID.x<_imageDimensions.x
+	&&gl_GlobalInvocationID.y<_imageDimensions.y)
+	{//gl_GlobalInvocationID.x*8192+gl_GlobalInvocationID.y/(8192*8192)
+        float f = imageLoad(_imageIn, ivec2(gl_GlobalInvocationID.xy)).r;
+		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(float(f)));
+	}
 	/* //Load blockWidth+2*_filterRadius pixels into shared
 	//###
 	//###

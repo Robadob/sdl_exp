@@ -5,15 +5,16 @@
 #include <glm/gtc/type_ptr.hpp>
 //Create content struct
 TwoPassScene::SceneContent::SceneContent()
-    : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::DEPTH, Stock::Shaders::PHONG_SHADOW }))
-    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::DEPTH, Stock::Shaders::PHONG_SHADOW }))
-    , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::DEPTH, Stock::Shaders::PHONG_SHADOW }))
+    : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+    , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
     , blur(new GaussianBlur(16,1.0f))
     , spotlightPos(75, 100, 0)//100 units up, radius of 75
     , spotlightTarget(0)
-    , shadowDims(256)
+    , shadowDims(4096)
     , shadowIn(0)
+    , shadowOut(0)
 {
     deerModel->exportModel();
     sphereModel->exportModel();
@@ -25,17 +26,8 @@ TwoPassScene::SceneContent::SceneContent()
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    //GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    float *testImage = (float*)malloc(shadowDims.x*shadowDims.y*sizeof(float));
-    float testVal = 0.65f;//glm::intBitsToFloat(12)
-    testImage[0] = 0.63f;
-    for (int i = 0; i < shadowDims.x*shadowDims.y; i+=4)
-    {
-        testImage[i + 0] = 0.5f;// i / (float)(shadowDims.x*shadowDims.y);// i;// % 256 / 256.0;// (float)(shadowDims.x*shadowDims.y);
-        testImage[i + 1] = 0.5f;// i / (float)(shadowDims.x*shadowDims.y);// i;// % 256 / 256.0;// (float)(shadowDims.x*shadowDims.y);
-    }
-    //memset(testImage, *reinterpret_cast<int*>(&testVal), shadowDims.x*shadowDims.y*sizeof(float));
-    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, shadowDims.x, shadowDims.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, testImage));
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, shadowDims.x, shadowDims.y, 0, GL_RED, GL_FLOAT, nullptr));
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
@@ -127,17 +119,16 @@ void TwoPassScene::reload()
 }
 
 TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
-    : RenderPass(std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::Disabled(), FBAFactory::ManagedDepthTexture(), FBAFactory::Disabled()))
+    : RenderPass(std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled()))
 	, content(content)
 {
     //Pass the shadow texture to the second shader of each model
     std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(getFrameBuffer());
     if (t)
     {
-        content->shadowIn = t->getDepthTextureName();
+        content->shadowIn = t->getColorTextureName();
         //content->shadowOut = content->shadowIn;
     }
-
     content->deerModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
     content->sphereModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
     content->planeModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);

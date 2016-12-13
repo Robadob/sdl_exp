@@ -49,17 +49,11 @@ void GaussianBlur::generateFilter()
 }
 void GaussianBlur::blur2D(GLuint inTex, GLuint outTex, glm::uvec2 texDims)
 {
-    GL_CALL(glBindImageTexture(this->inBufferBind, inTex, 0, 0, 0, GL_READ_ONLY, GL_R32F));
-    GL_CALL(glBindImageTexture(this->outBufferBind, outTex, 0, 0, 0, GL_WRITE_ONLY, GL_R32F));
     //Update shader config
     this->imageDimensions = texDims;
-    //Bind textures (manually atm)
-    // (GL_TEXTURE0 + this->inBufferBind));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, inTex));
-    GL_CALL(glActiveTexture(GL_TEXTURE0 + this->outBufferBind));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, outTex));
-    //Launch shader
-    //Split the image into work groups of size 16x16
+    blurShader->useProgram();
+    GL_CALL(glBindImageTexture(this->inBufferBind, inTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F));
+    GL_CALL(glBindImageTexture(this->outBufferBind, outTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F));
     blurShader->launch((texDims / glm::uvec2(16)) + glm::uvec2(1));
     //Synchronise written memory
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

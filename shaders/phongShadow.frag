@@ -34,7 +34,6 @@ void main (void)
 	*/
 	
 	//Exponential Shadow Maps - Thomas Allen (http://discovery.ucl.ac.uk/10001/1/10001.pdf)
-	//Todo: Linearise depth value
 	//Todo: divide values by shadowCoord.w to support projection matrices/spot lights
 	//Higher exponent value is closer to the hard-shadow step function
 	//Too high and the visibility will overflow

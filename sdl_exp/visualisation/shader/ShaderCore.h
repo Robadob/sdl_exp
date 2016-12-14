@@ -235,6 +235,7 @@ public:
 	*/
 	static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
 private:
+    static GLenum getResourceBlock(GLenum bufferType);
 	/**
 	 * Holds shaders thats have been compiled, so that they can be deleted
 	 * @see deleteShaders()

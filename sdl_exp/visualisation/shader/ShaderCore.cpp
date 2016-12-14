@@ -151,7 +151,10 @@ void ShaderCore::setupBindings()
 	buffers.clear();
 	for (BufferDetail const &d : t_buffers)
 	{//Replace d.type with GL_SHADER_STORAGE_BLOCK or ? GL_BUFFER_VARIABLE
-		GLuint location = GL_CALL(glGetProgramResourceIndex(this->programId, d.type, d.nameInShader));
+        GLenum blockType = getResourceBlock(d.type);
+        if (blockType == GL_INVALID_ENUM)
+            continue;
+        GLuint location = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, d.nameInShader));
 		if (location != GL_INVALID_INDEX)
 		{			
 			auto rtn = buffers.emplace(location, d);
@@ -242,7 +245,8 @@ void ShaderCore::useProgram()
 	for (std::map<GLuint, BufferDetail>::iterator i = buffers.begin(); i != buffers.end(); ++i)
 	{//Should we really hardcode GL_SHADER_STORAGE_BUFFER here?
 		//Don't think buffer bases are specific to shaders, so we treat them as dynamic
-		GL_CALL(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i->first, i->second.name));
+        //We are passing the 2nd parameter incorrectly, should be what we pass to glUniformBlockBinding()
+		GL_CALL(glBindBufferBase(i->second.type, i->first, i->second.name));
 	}
 	//Set any subclass specific stuff
 	this->_useProgram();
@@ -455,19 +459,38 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const glm::mat4 *mat)
     }
     return false;
 }
-bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName)
+GLenum ShaderCore::getResourceBlock(GLenum bufferType)
 {
+    if (bufferType == GL_UNIFORM_BUFFER)
+        return GL_UNIFORM_BLOCK;
+    else if (bufferType == GL_SHADER_STORAGE_BUFFER)
+        return GL_SHADER_STORAGE_BLOCK;
+    else if (bufferType == GL_TRANSFORM_FEEDBACK_BUFFER)
+        return GL_TRANSFORM_FEEDBACK_BUFFER;
+    else//(bufferType == GL_ATOMIC_COUNTER_BUFFER)
+    {
+        fprintf(stderr, "Buffer type was unexpected.\n");
+        return GL_INVALID_ENUM;
+    }
+}
+bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName)
+{//Really need to track and call glUniformBlockBinding() here rather than using blockIndex, https://www.opengl.org/wiki/GLAPI/glUniformBlockBinding
+ //Treat it similar to texture binding points
 	//Purge any existing buffer which matches
 	removeBuffer(bufferNameInShader);
 	if (this->programId > 0)
 	{
-		GLuint blockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, bufferType, bufferNameInShader));
+        //Get the uniform buffers index within the shader program
+        GLenum blockType = getResourceBlock(bufferType);
+        if (blockType == GL_INVALID_ENUM)
+            return false;
+        GLuint blockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, bufferNameInShader));
 		if (blockIndex != GL_INVALID_INDEX)
 		{
 			//Replace with new one
 			//Can't use[] assignment constructor due to const elements
 			BufferDetail bd = { bufferNameInShader, bufferType, bufferName };
-			dynamicUniforms.erase(blockIndex);
+			//dynamicUniforms.erase(blockIndex);//Why?
 			auto rtn = buffers.emplace(blockIndex, bd);
 			if (!rtn.second)fprintf(stderr, "%s: Buffer named: %s is already bound.\n", shaderTag, bufferNameInShader);
 			return true;

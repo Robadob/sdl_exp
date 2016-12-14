@@ -12,7 +12,7 @@ TwoPassScene::SceneContent::SceneContent()
     , blur(new GaussianBlur(16,1.0f))
     , spotlightPos(75, 100, 0)//100 units up, radius of 75
     , spotlightTarget(0)
-    , shadowDims(4096)
+    , shadowDims(512)
     , shadowIn(0)
     , shadowOut(0)
 {
@@ -47,7 +47,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	addPass(0, sPass);
 	addPass(1, cPass);
     //Put a preview of the depth texture on the HUD
-    shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 256, 256);
+    shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 512, 512);
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
@@ -119,7 +119,7 @@ void TwoPassScene::reload()
 }
 
 TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
-    : RenderPass(std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled()))
+    : RenderPass(std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 0, true, glm::vec3(1.0f)))
 	, content(content)
 {
     //Pass the shadow texture to the second shader of each model

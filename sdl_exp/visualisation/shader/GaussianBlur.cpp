@@ -25,7 +25,7 @@ GaussianBlur::GaussianBlur(unsigned int filterRadius, float sigma)
     GL_CALL(glBufferData(GL_UNIFORM_BUFFER, (filterWidth + 1)*sizeof(float), this->filter, GL_STATIC_READ));
     GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, 0));
     //Configure uniforms
-    blurShader->addBuffer("_filterWeights", GL_UNIFORM_BLOCK, this->filterBuffer);
+    blurShader->addBuffer("_filterWeights", GL_UNIFORM_BUFFER, this->filterBuffer);
     blurShader->addStaticUniform("_filterRadius", &this->filterRadius);
     blurShader->addStaticUniform("_filterWidth", &this->filterWidth);
     blurShader->addStaticUniform("_imageIn", &this->inBufferBind);
@@ -44,6 +44,7 @@ void GaussianBlur::generateFilter()
     for (unsigned int x = 0; x < filterWidth; ++x)
     {
         filter[x] = (float)(x <= filterRadius ? ++i : --i);
+        printf("%d ", i);
     }
     filter[filterWidth] /= (float)pow(2,filterRadius+1);//Normalize divisor
 }

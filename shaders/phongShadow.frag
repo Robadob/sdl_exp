@@ -9,9 +9,9 @@ uniform sampler2D _shadowMap;
 out vec4 fragColor;
 
 uniform vec3 _color;
-uniform float zNear = 0.005;
-uniform float zFar = 500.0;
 
+uniform mat4 spotlightProjectionMat;
+float makeLinearDepth(float depthNorm);
 void main (void)  
 {
     float ambient = 0.3f;
@@ -38,8 +38,8 @@ void main (void)
 	//Higher exponent value is closer to the hard-shadow step function
 	//Too high and the visibility will overflow
 	const float LIGHT_EXPONENT = 80.0f;//Fig 2.0
-	//d, Distance of point from the camera
-	float reciever = shadowCoord.z;
+    //Make linear (same as shadowMap)
+	float reciever = makeLinearDepth(shadowCoord.z);
 	//cz, corresponding shadow map value
 	//(we should really precompute this when creating the shadow map)
 	float occluder = exp(LIGHT_EXPONENT*texture(_shadowMap, shadowCoord.xy).r);
@@ -59,4 +59,23 @@ void main (void)
 	
     // write Total Color:    
     fragColor = Iamb + Idiff + Ispec;     
+}
+float makeLinearDepth(float depthNorm)
+{
+    //Depth in the normalised range 0 to +1
+    //depthNorm
+    //Depth in device range -1 to +1
+    float depthDevice = (depthNorm * 2.0) - 1.0;
+    //Linear depth in range znear - zfar
+    //http://stackoverflow.com/a/16597492/1646387
+    vec4 unprojected = inverse(spotlightProjectionMat) * vec4(0, 0, depthDevice, 1.0);
+    float depthView = -(unprojected.z / unprojected.w);//Negate why? Is it because using ortho matrix
+    //Get projection near/far planes from column major matrices
+    //http://stackoverflow.com/a/12926655/1646387
+    int isOrtho = 1;//int(_projectionMat[3][3]);//This coord is 1 for ortho, 0 for proj
+    int isProj = 0;//int(-_projectionMat[2][3]);//This coord is -1 for proj, 0 for ortho
+    float zNear = (isOrtho*((1.0f + spotlightProjectionMat[3][2]) / spotlightProjectionMat[2][2]))+(isProj*(spotlightProjectionMat[3][2] / (spotlightProjectionMat[2][2] - 1.0f)));
+    float zFar = (isOrtho*(-(1.0f - spotlightProjectionMat[3][2]) / spotlightProjectionMat[2][2]))+(isProj*(spotlightProjectionMat[3][2] / (spotlightProjectionMat[2][2] + 1.0f)));
+    //Linear depth in range 0-1
+	return (depthView-zNear)/(zFar-zNear);
 }

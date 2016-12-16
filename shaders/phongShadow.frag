@@ -13,7 +13,7 @@ uniform vec3 _color;
 uniform mat4 spotlightProjectionMat;
 float makeLinearDepth(float depthNorm);
 void main (void)  
-{
+{    
     float ambient = 0.3f;
     float diffuse = 0.85f;
 	float specular = 0.2f;
@@ -54,7 +54,7 @@ void main (void)
     Idiff = clamp(Idiff, 0.0f, 1.0f);     
 
     // calculate Specular Term:
-    vec4 Ispec = int(visibility>=1.0f) * specularColor * specular * pow(max(dot(R,E),0.0f),shiny);
+    vec4 Ispec = visibility * specularColor * specular * pow(max(dot(R,E),0.0f),shiny);
     Ispec = clamp(Ispec, 0.0f, 1.0f); 
 	
     // write Total Color:    
@@ -62,6 +62,10 @@ void main (void)
 }
 float makeLinearDepth(float depthNorm)
 {
+    int isOrtho = int(spotlightProjectionMat[3][3]);//This coord is 1 for ortho, 0 for proj
+    int isProj = int(-spotlightProjectionMat[2][3]);//This coord is -1 for proj, 0 for ortho
+    if(isOrtho==1)//Ortho starts out with linear depth
+        return depthNorm;
     //Depth in the normalised range 0 to +1
     //depthNorm
     //Depth in device range -1 to +1
@@ -72,10 +76,8 @@ float makeLinearDepth(float depthNorm)
     float depthView = -(unprojected.z / unprojected.w);//Negate why? Is it because using ortho matrix
     //Get projection near/far planes from column major matrices
     //http://stackoverflow.com/a/12926655/1646387
-    int isOrtho = 1;//int(_projectionMat[3][3]);//This coord is 1 for ortho, 0 for proj
-    int isProj = 0;//int(-_projectionMat[2][3]);//This coord is -1 for proj, 0 for ortho
-    float zNear = (isOrtho*((1.0f + spotlightProjectionMat[3][2]) / spotlightProjectionMat[2][2]))+(isProj*(spotlightProjectionMat[3][2] / (spotlightProjectionMat[2][2] - 1.0f)));
-    float zFar = (isOrtho*(-(1.0f - spotlightProjectionMat[3][2]) / spotlightProjectionMat[2][2]))+(isProj*(spotlightProjectionMat[3][2] / (spotlightProjectionMat[2][2] + 1.0f)));
+    float zNear = (spotlightProjectionMat[3][2] / (spotlightProjectionMat[2][2] - 1.0f));
+    float zFar = (spotlightProjectionMat[3][2] / (spotlightProjectionMat[2][2] + 1.0f));
     //Linear depth in range 0-1
 	return (depthView-zNear)/(zFar-zNear);
 }

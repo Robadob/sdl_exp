@@ -16,6 +16,7 @@ TwoPassScene::SceneContent::SceneContent()
     , shadowIn(0)
     , shadowOut(0)
 {
+    planeModel->setColor(glm::vec3(1));//White
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));

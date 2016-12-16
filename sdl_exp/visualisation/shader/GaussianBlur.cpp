@@ -15,12 +15,12 @@ GaussianBlur::GaussianBlur(unsigned int filterRadius, float sigma)
     this->inBufferBind = 0;
     this->outBufferBind = 1;
     //Generate the Gaussian filter (manually at current)
-    this->filter = (float*)malloc((filterWidth + 1)*sizeof(float));
+    this->filter = (float*)malloc(filterWidth*sizeof(float));
     generateFilter();
     //Copy that to a uniform buffer
     GL_CALL(glGenBuffers(1, &this->filterBuffer));
     GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, this->filterBuffer));
-    GL_CALL(glBufferData(GL_UNIFORM_BUFFER, (filterWidth + 1)*sizeof(float), this->filter, GL_STATIC_READ));
+    GL_CALL(glBufferData(GL_UNIFORM_BUFFER, filterWidth*sizeof(float), this->filter, GL_STATIC_READ));
     GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, 0));
     //Configure uniforms
     blurShader->addBuffer("_filterWeights", GL_UNIFORM_BUFFER, this->filterBuffer);
@@ -36,16 +36,29 @@ GaussianBlur::~GaussianBlur()
     free(filter);
 }
 void GaussianBlur::generateFilter()
-{
-    //Fill filter
-    unsigned int i = 0;
-    unsigned int c = 0;
-    for (unsigned int x = 0; x < filterWidth; ++x)
-    {
-        filter[x] = (float)(x <= filterRadius ? ++i : --i);
-        c += filter[x];
-    }
-    filter[filterWidth] = (float)pow(c,2);//Normalize divisor
+{//http://www.stat.wisc.edu/~mchung/teaching/MIA/reading/diffusion.gaussian.kernel.pdf.pdf
+	//Count filter, so it can be normalised
+	float c = 0.0f;
+    //Fill filter without sigma
+    //unsigned int i = 0;
+    //for (unsigned int x = 0; x < filterWidth; ++x)
+    //{
+    //    filter[x] = (float)(x <= filterRadius ? ++i : --i);
+    //    c += filter[x];
+    //}
+	//Fill filter with sigma
+	int i = filterRadius;
+	for (unsigned int x = 0; x < filterWidth; ++x)
+	{
+		float _j = (x < filterRadius ? i-- : i++);
+		filter[x] = (1.0f / (sqrt(2.0f*glm::pi<float>())*this->sigma))*glm::exp(-(_j*_j) / (2 * this->sigma*this->sigma));
+		c += filter[x];
+	}
+	//Normalise filter
+	for (unsigned int x = 0; x < filterWidth; ++x)
+	{
+		filter[x] /= c;
+	}
 }
 void GaussianBlur::blur2D(GLuint inTex, GLuint outTex, glm::uvec2 texDims)
 {

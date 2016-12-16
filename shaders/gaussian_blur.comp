@@ -34,7 +34,7 @@ void main ()
 	}
 	//Sync
 	memoryBarrierShared();
-    barrier();
+  barrier();
 	//Horizontal convolution
 	//_#_
 	//_#_
@@ -46,13 +46,12 @@ void main ()
 		for(uint x = 0;x<_filterWidth;x++)
 		{
 			h_sum += bias[x] * pixels[gl_LocalInvocationID.x+x][gl_LocalInvocationID.y+y];
-        }
+    }
 		hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+y] = h_sum;
 	}
 	//Sync
 	memoryBarrierShared();
-    barrier();
-	
+  barrier();	
 	//Kill out of bounds threads (after the last sync)
 	if(gl_GlobalInvocationID.x<_imageDimensions.x
 	&&gl_GlobalInvocationID.y<_imageDimensions.y)
@@ -64,16 +63,14 @@ void main ()
 		float v_sum = 0.0f;
 		for(uint y = 0;y<_filterWidth;y++)
 		{
-            v_sum += bias[y] * hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+y];
-        }
-		//Normalize
-		v_sum /= bias[_filterWidth];
+      v_sum += bias[y] * hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+y];
+    }
 		//Store result
 		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(v_sum));
 	}
 }
 /**
- * Returns the relevant global array index, clamping out of bounds index's
+ * Returns the relevant global array index, clamping out of bounds indexes
  */
 ivec2 indexG(ivec2 index)
 {

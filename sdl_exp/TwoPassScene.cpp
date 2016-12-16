@@ -9,10 +9,10 @@ TwoPassScene::SceneContent::SceneContent()
     , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
-    , blur(new GaussianBlur(16,1.0f))
+    , blur(new GaussianBlur(16,6.65f))
     , spotlightPos(75, 100, 0)//100 units up, radius of 75
     , spotlightTarget(0)
-    , shadowDims(512)
+    , shadowDims(256)
     , shadowIn(0)
     , shadowOut(0)
 {

@@ -54,7 +54,7 @@ void main (void)
     Idiff = clamp(Idiff, 0.0f, 1.0f);     
 
     // calculate Specular Term:
-    vec4 Ispec = visibility * specularColor * specular * pow(max(dot(R,E),0.0f),shiny);
+    vec4 Ispec = int(visibility>=1.0f) * specularColor * specular * pow(max(dot(R,E),0.0f),shiny);
     Ispec = clamp(Ispec, 0.0f, 1.0f); 
 	
     // write Total Color:    

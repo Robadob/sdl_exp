@@ -17,18 +17,8 @@ uniform layout (r32f) writeonly image2D _imageOut;
 shared float pixels[48][48];//16+16+16x16+16+16=2304
 shared float hoz[16][48];//0+16+0x16x16x16=768, Horizontal convolution, central column x full height
 ivec2 indexG(ivec2 index);
-/**
- * Todo: Thread level parallelism x4, x8?
- */
 void main () 
 {
-	/*
-    if(gl_GlobalInvocationID.x<_imageDimensions.x
-	&&gl_GlobalInvocationID.y<_imageDimensions.y)
-	{//gl_GlobalInvocationID.x*8192+gl_GlobalInvocationID.y/(8192*8192)
-        float f = imageLoad(_imageIn, ivec2(gl_GlobalInvocationID.xy)).r;
-		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(float(f)));
-	}*/
 	//Load blockWidth+2*_filterRadius pixels into shared
 	//###
 	//###
@@ -40,11 +30,11 @@ void main ()
 		for(uint y = 0;y<loadWidth;y+=gl_WorkGroupSize.y)
 		{
 			pixels[gl_LocalInvocationID.x+x][gl_LocalInvocationID.y+y] = imageLoad(_imageIn, indexG(topLeftLoad + ivec2(x,y))).r;
-            //imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), imageLoad(_imageIn, indexG(topLeftLoad + ivec2(x,y))));
 		}
 	}
 	//Sync
-	groupMemoryBarrier();
+	memoryBarrierShared();
+    barrier();
 	//Horizontal convolution
 	//_#_
 	//_#_
@@ -62,11 +52,12 @@ void main ()
 		hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+y] = h_sum/biasC;
 	}
 	//Sync
-	groupMemoryBarrier();	
+	memoryBarrierShared();
+    barrier();
 	
 	//Kill out of bounds threads (after the last sync)
 	if(gl_GlobalInvocationID.x<_imageDimensions.x
-	||gl_GlobalInvocationID.y<_imageDimensions.y)
+	&&gl_GlobalInvocationID.y<_imageDimensions.y)
 	{
 		//Vertical convolution
 		//___
@@ -74,8 +65,7 @@ void main ()
 		//___
 		float v_sum = 0.0f;
         float biasC = 0.0f;
-        uint hack = 0;//REMOVE THIS WHEN WORKING
-		for(uint y = 0+hack;y<_filterWidth-hack;y++)
+		for(uint y = 0;y<_filterWidth;y++)
 		{
             v_sum += bias[y] * hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+y];
             biasC += bias[y];
@@ -83,9 +73,7 @@ void main ()
 		//Normalize
 		v_sum /= biasC;//bias[_filterWidth];
 		//Store result
-		//imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+11]));
 		imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(v_sum));
-		//imageStore(_imageOut, ivec2(gl_GlobalInvocationID.xy), vec4(hoz[gl_LocalInvocationID.x][gl_LocalInvocationID.y+_filterWidth-1]));
 	}
 }
 /**

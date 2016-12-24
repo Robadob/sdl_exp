@@ -27,7 +27,6 @@ EntityScene::EntityScene(Visualisation &visualisation)
     srand((unsigned int)time(0));
     this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
     this->colorModel->setCullFace(false);
-    this->deerModel->flipVertexOrder();
 #ifdef __CUDACC__
     cuInit();
 #else

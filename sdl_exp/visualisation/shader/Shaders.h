@@ -29,6 +29,7 @@ namespace Stock
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
         const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
         const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/phongShadow.frag", nullptr };
+        const ShaderSet TEXTURE_SHADOW{ "../shaders/textureShadow.vert", "../shaders/textureShadow.frag", nullptr };
     };
 };
 /**

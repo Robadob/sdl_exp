@@ -3,10 +3,10 @@
 in vec3 _vertex;
 in vec3 _normal;
 
-out varying vec3 eyeVertex;
-out varying vec3 eyeNormal;
-out varying vec3 eyeLightSource;
-out highp varying vec4 shadowCoord;
+out vec3 eyeVertex;
+out vec3 eyeNormal;
+out vec3 eyeLightSource;
+out vec4 shadowCoord;
 
 uniform mat4 _modelMat;
 uniform mat4 _viewMat;

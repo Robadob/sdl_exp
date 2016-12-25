@@ -18,7 +18,7 @@ void main (void)
     float diffuse = 0.85f;
 	float specular = 0.2f;
     float shiny = 25.0f;
-	vec3 _color = texture( _texture, vec2(texCoords.x, -texCoords.y)).rgb;
+	vec3 _color = texture( _texture, vec2(texCoords.x, texCoords.y)).rgb;
 	vec4 ambientColor = vec4(_color.xyz/2.0f,1);
 	vec4 diffuseColor = vec4(_color,1.0f);
 	vec4 specularColor = vec4(_color,1.0f);

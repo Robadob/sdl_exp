@@ -67,7 +67,61 @@ void Texture2D::_reload()
         SDL_Surface *img = readImage(texturePath);
         if (!img)
             return;
+		flipRows(img);
         dimensions = glm::uvec2((unsigned int)img->w, (unsigned int)img->h);
         Texture::setTexture(img);
     }
+}
+/**
+ * We use this when loading an image with SDL_Image to invert the image rows.
+ * This is because most image formats label images with the origin in the top left corner
+ * Whereas glTexImage2D expects the origin to be in the bottom left corner.
+ * We could handle this by negating Y when using texcoords, however this better allows us to standardise shaders
+ * @param img The SDL_Surface to be flipped
+ * @return 0 on success, else failure
+ * @note original source: http://www.gribblegames.com/articles/game_programming/sdlgl/invert_sdl_surfaces.html
+ */
+int Texture2D::flipRows(SDL_Surface *img)
+{
+	if (!img)
+	{
+		SDL_SetError("Surface is NULL");
+		return -1;
+	}
+	int pitch = img->pitch;
+	int height = img->h;
+	void* image_pixels = img->pixels;
+	int index;
+	void* temp_row;
+	int height_div_2;
+
+	temp_row = (void *)malloc(pitch);
+	if (NULL == temp_row)
+	{
+		SDL_SetError("Not enough memory for image inversion");
+		return -1;
+	}
+	//if height is odd, don't need to swap middle row
+	height_div_2 = (int)(height * .5);
+	for (index = 0; index < height_div_2; index++) 	{
+		//uses string.h
+		memcpy((Uint8 *)temp_row,
+			(Uint8 *)(image_pixels)+
+			pitch * index,
+			pitch);
+
+		memcpy(
+			(Uint8 *)(image_pixels)+
+			pitch * index,
+			(Uint8 *)(image_pixels)+
+			pitch * (height - index - 1),
+			pitch);
+		memcpy(
+			(Uint8 *)(image_pixels)+
+			pitch * (height - index - 1),
+			temp_row,
+			pitch);
+	}
+	free(temp_row);
+	return 0;
 }

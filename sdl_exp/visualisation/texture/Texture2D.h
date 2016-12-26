@@ -12,6 +12,7 @@ public:
     unsigned int getWidth() { return dimensions.x; }
     unsigned int getHeight() { return dimensions.y; }
 private:
+	static int flipRows(SDL_Surface *img);
     void _reload();//Used so we don't call a virtual fn from the constructor
     const char *texturePath;
     glm::uvec2 dimensions;

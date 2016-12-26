@@ -1,7 +1,7 @@
 #ifndef __EntityScene_h__
 #define __EntityScene_h__
 
-#include "visualisation/Scene.h"
+#include "visualisation/BasicScene.h"
 #include "visualisation/Entity.h"
 #include "visualisation/Text.h"
 
@@ -9,7 +9,7 @@
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
-class EntityScene : Scene
+class EntityScene : public BasicScene
 {
 public:
     EntityScene(Visualisation &visualisation);

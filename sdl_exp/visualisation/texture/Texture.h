@@ -19,6 +19,7 @@ public:
     //void deleteTextureBufferObject(GLuint *tbo); 
     
     bool bindToShader(Shaders *s, char *uniformName = 0);
+	GLuint getName() const { return texName; }
 protected:
     Texture(GLenum type, const char *texPath = 0, char *uniformName = 0);
     virtual ~Texture();

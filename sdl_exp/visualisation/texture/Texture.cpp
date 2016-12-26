@@ -142,7 +142,10 @@ void Texture::setTexture(SDL_Surface *image, GLuint target, bool dontFreeImage)
     {
         GLint sizedIF = image->format->BytesPerPixel == 3 ? GL_RGB8 : GL_RGBA8;
         GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+        GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));//Tri linear filtering
+		GLfloat fLargest;
+		GL_CALL(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest));
+		GL_CALL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest));//Anistropic filtering (improves texture sampling at steep angle, especially visible with tiling patterns)
         //Only call glTexStorage2D once.
         if (!storageAllocated)
         {

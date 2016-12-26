@@ -5,8 +5,9 @@
 #include <glm/gtc/matrix_transform.inl>
 
 #include "GLcheck.h"
-#include "Scene.h"
-#include "Skybox.h"
+#include "interface/Scene.h"
+
+#include "Text.h"
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.005f
@@ -26,25 +27,16 @@
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
 
-/*
-Creates a new window providing OpenGL functionality
-@param windowTitle The title of the window
-@param windowWidth The width of the contained graphics panel
-@param windowHeight The height of the contained graphics panel
-*/
 Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
-    : isInitialised(false)
+    : hud(windowWidth, windowHeight)
+    , camera(glm::vec3(50,50,50))
+    , scene(nullptr)
+    , isInitialised(false)
     , continueRender(true)
+	, msaaState(true)
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
-	, hud(windowWidth, windowHeight)
-    , camera(glm::vec3(50,50,50))
-    , renderAxisState(false)
-    , axis(25)
-    , msaaState(true)
-    , skybox(0)
-    , scene(0)
     , fpsDisplay(0)
 {
     this->isInitialised = this->init();
@@ -57,16 +49,7 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     helpText->setVisible(false);
     hud.add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
 }
-/*
-Default destructor, destruction happens in close() to ensure objects are killed before the GL context
-@see close()
-*/
 Visualisation::~Visualisation(){}
-/*
-Initialises SDL and creates the window
-@return Returns true on success
-@note This method doesn't begin the render loop, use run() for that
-*/
 bool Visualisation::init(){
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -75,9 +58,9 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 
     //Configure GL buffer settings
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -113,6 +96,7 @@ bool Visualisation::init(){
         // Setup gl stuff
         glEnable(GL_DEPTH_TEST);
         glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE);
         glShadeModel(GL_SMOOTH);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glEnable(GL_LIGHTING);
@@ -130,38 +114,20 @@ bool Visualisation::init(){
     }
     return false;
 }
-/*
-Sets the scene to be rendered
-@param scene The desired scene
-@return Returns the previously bound scene
-*/
-Scene *Visualisation::setScene(Scene *scene)
+std::shared_ptr<Scene> Visualisation::setScene(std::unique_ptr<Scene> scene)
 {
-    Scene *oldScene = this->scene;
-    this->scene = scene;
+	std::shared_ptr<Scene> oldScene = this->scene;
+	this->scene = std::shared_ptr<Scene>(scene.release());
     return oldScene;
 }
-/*
-Moves the camera according to the motion of the mouse (whilst the mouse is attatched to the window via toggleMouseMode())
-@param x The horizontal distance moved
-@param y The vertical distance moved
-@note This is called within the render loop
-*/
 void Visualisation::handleMouseMove(int x, int y){
     if (SDL_GetRelativeMouseMode()){
         this->camera.turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
     }
 }
-/*
-Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
-@param keycode The keypress detected
-@param x The horizontal mouse position at the time of the KEY_DOWN event
-@param y The vertical mouse position at the time of the KEY_DOWN event
-@note Unsure whether the mouse position is relative to the window
-*/
 void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     //Pass key events to the scene and skip handling if false is returned 
-    if (scene&&!scene->keypress(keycode, x, y))
+    if (scene&&!scene->_keypress(keycode, x, y))
         return;
     switch (keycode){
     case SDLK_ESCAPE:
@@ -176,15 +142,10 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F10:
         this->setMSAA(!this->msaaState);
         break;
-    case SDLK_F9:
-        this->setSkybox(!this->skybox);
-        break;
     case SDLK_F8:
         this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
         break;
     case SDLK_F5:
-        if (this->skybox)
-            this->skybox->reload();
         if (this->scene)
 			this->scene->_reload();
 		this->hud.reload();
@@ -194,32 +155,19 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
         break;
     }
 }
-/*
-Provides destruction of the object, deletes child objects, removes the GL context, closes the window and calls SDL_quit()
-*/
 void Visualisation::close(){
     //Delete objects before we delete the GL context!
     fpsDisplay.reset();
     this->hud.clear();
     if (this->scene)
     {
-        this->scene->kill();
-        this->scene = 0;
-    }
-    if (this->skybox)
-    {
-        delete this->skybox;
-        this->skybox = 0;
+        this->scene.reset();
     }
     SDL_GL_DeleteContext(this->context);
     SDL_DestroyWindow(this->window);
-    this->window = 0;
+    this->window = nullptr;
     SDL_Quit();
 }
-/*
-Renders a single frame
-@note Also handle user inputs
-*/
 void Visualisation::render()
 {
     //Static fn var for tracking the time to send to scene->update()
@@ -284,23 +232,19 @@ void Visualisation::render()
     //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
     if (t_updateTime < updateTime)
     {
-
-        this->scene->update(t_updateTime + (UINT_MAX - updateTime));
+        this->scene->_update(t_updateTime + (UINT_MAX - updateTime));
     }
     else
     {
-        this->scene->update(t_updateTime - updateTime);
+        this->scene->_update(t_updateTime - updateTime);
     }
     updateTime = t_updateTime;
     // render
-    this->clearFrame();
-    if (this->skybox)
-        this->skybox->render();
-    this->defaultProjection();
-    if (this->renderAxisState)
-        this->axis.render();
-    this->defaultLighting();
-    this->scene->render();
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	GL_CALL(glClearColor(0, 0, 0, 1));
+	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    this->scene->_render();
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	this->hud.render();
 
     GL_CHECK();
@@ -308,10 +252,6 @@ void Visualisation::render()
     // update the screen
     SDL_GL_SwapWindow(window);
 }
-/*
-Executes the render loop
-@see setQuit() to externally kill the loop
-*/
 void Visualisation::run(){
     if (!this->isInitialised){
         printf("Visulisation not initialised yet.");
@@ -335,20 +275,7 @@ void Visualisation::run(){
 
     this->close();
 }
-/*
-Clears the frame
-@note This is called within the render loop before the frame is rendered
-*/
-void Visualisation::clearFrame(){
-    glViewport(0, 0, this->windowWidth, this->windowHeight);
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-/*
-Loads the ModelView and Projection matrices using the old fixed function pipeline methods
-*/
 void Visualisation::defaultProjection(){
-    glEnable(GL_CULL_FACE);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(this->frustum));
@@ -356,50 +283,6 @@ void Visualisation::defaultProjection(){
     glLoadIdentity();
     glLoadMatrixf(glm::value_ptr(this->camera.view()));
 }
-/*
-Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
-*/
-void Visualisation::defaultLighting(){
-    glEnable(GL_LIGHT0);
-    glm::vec3 eye = this->camera.getEye();
-    float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
-    float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
-    float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
-    float white[4] = { 1, 1, 1, 1 };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, white);
-
-    // Spotlight stuff
-    //float angle = 180.0f;
-    //glm::vec3 look = this->camera.getLook();
-   // float direction[4] = { look.x, look.y, look.z, 0 };
-    //glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
-    //glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
-}
-/*
-Toggles whether the skybox should be used or not
-@param state The desired skybox state
-*/
-void Visualisation::setSkybox(bool state){
-    if (state&&!this->skybox)
-    {
-        this->skybox = new Skybox();
-        this->skybox->setModelViewMatPtr(&this->camera);
-        this->skybox->setProjectionMatPtr(this);
-        this->skybox->setYOffset(-1.0f);
-    }
-    else if (!state&&this->skybox)
-    {
-        delete this->skybox;
-        this->skybox = 0;
-    }
-}
-/*
-Toggles whether Multi-Sample Anti-Aliasing should be used or not
-@param state The desired MSAA state
-*/
 void Visualisation::setMSAA(bool state){
     this->msaaState = state;
     if (this->msaaState)
@@ -407,35 +290,16 @@ void Visualisation::setMSAA(bool state){
     else
         glDisable(GL_MULTISAMPLE);
 }
-/*
-Toggles whether the axis should be rendered or not
-@param state The desired axis rendering state
-*/
-void Visualisation::setRenderAxis(bool state){
-    this->renderAxisState = state;
-}
-/*
-@return The current window title (sans the FPS)
-*/
 const char *Visualisation::getWindowTitle() const{
     return this->windowTitle;
 }
-/*
-Sets the window title (sans the FPS)
-@param windowTitle Desired title of the window
-*/
 void Visualisation::setWindowTitle(const char *windowTitle){
-    this->windowTitle = windowTitle;
+    this->windowTitle = windowTitle; 
+    SDL_SetWindowTitle(this->window, this->windowTitle);
 }
-/*
-Sets a flag telling the render loop to exit
-*/
 void Visualisation::quit(){
     this->continueRender = false;
 }
-/*
-Toggles the window between borderless fullscreen and windowed states
-*/
 void Visualisation::toggleFullScreen(){
     if (this->isFullscreen()){
         // Update the window using the stored windowBounds
@@ -458,9 +322,6 @@ void Visualisation::toggleFullScreen(){
     }
     this->resizeWindow();
 }
-/*
-Toggles whether the mouse is hidden and returned relative to the window
-*/
 void Visualisation::toggleMouseMode(){
     if (SDL_GetRelativeMouseMode()){
         SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -469,10 +330,6 @@ void Visualisation::toggleMouseMode(){
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
 }
-/*
-Updates the viewport and projection matrix
-This should be called after window resize events, or simply if the viewport needs generating
-*/
 void Visualisation::resizeWindow(){
     // Use the sdl drawable size
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
@@ -480,26 +337,21 @@ void Visualisation::resizeWindow(){
     float fAspect = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
     double fovy = FOVY;
 
-    glViewport(0, 0, this->windowWidth, this->windowHeight);
+    //glViewport(0, 0, this->windowWidth, this->windowHeight);//This is now called by the scene each frame (because scaled render textures must call at their desired scale)
     float top = static_cast<float>(tan(glm::radians(fovy * 0.5)) * NEAR_CLIP);
     float bottom = -top;
     float left = fAspect * bottom;
     float right = fAspect * top;
     this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
-	hud.resizeWindow(this->windowWidth, this->windowHeight);
+	//Notify other elements
+    this->hud.resizeWindow(this->windowWidth, this->windowHeight);
+	if (this->scene)
+		this->scene->_resize(this->windowWidth, this->windowHeight);
 }
-/*
-@return True if the window is currently full screen
-*/
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.
     return (SDL_GetWindowFlags(this->window) & SDL_WINDOW_BORDERLESS) == SDL_WINDOW_BORDERLESS;
 }
-/*
-Simple implementation of an FPS counter
-Appends the fps to the windows title
-@note This is called within the render loop
-*/
 void Visualisation::updateFPS(){
     // Update the current time
     this->currentTime = SDL_GetTicks();
@@ -521,32 +373,15 @@ void Visualisation::updateFPS(){
         this->frameCount = 0;
     }
 }
-/*
-Returns a const pointer to the visualisation's Camera
-@return The camera
-*/
 const Camera *Visualisation::getCamera() const{
     return &this->camera;
 }
-/*
-Returns a pointer to the visualisation's Scene
-@return The scene
-*/
-const Scene *Visualisation::getScene() const{
+std::weak_ptr<Scene> Visualisation::getScene() const{
     return this->scene;
 }
-/*
-Returns a constant pointer to the visualisations view frustum
-This pointer can be used to continuously track the visualisations projection matrix
-@return A pointer to the projection matrix
-*/
 const glm::mat4 *Visualisation::getFrustrumPtr() const{
     return &this->frustum;
 }
-/*
-Returns the visusalisation's HUD, to be used to add overlays
-@return The visualisation's scene
-*/
 HUD* Visualisation::getHUD(){
 	return &hud;
 }

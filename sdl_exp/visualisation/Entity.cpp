@@ -14,7 +14,6 @@
 
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
-
 /*
 Convenience constructor.
 */
@@ -23,12 +22,7 @@ Entity::Entity(
 	float modelScale,
 	std::shared_ptr<Shaders> shaders,
 	std::shared_ptr<Texture> texture
-	) : Entity(
-	model.modelPath,
-	modelScale,
-	shaders.get() ? shaders : std::make_shared<Shaders>(model.defaultShaders.vertex, model.defaultShaders.fragment, model.defaultShaders.geometry),
-	texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
-	){ }
+	) : Entity(model, modelScale, { shaders }, texture){ }
 /*
 Convenience constructor.
 */
@@ -37,12 +31,7 @@ Entity::Entity(
 	float modelScale,
 	Stock::Shaders::ShaderSet const ss,
 	std::shared_ptr<Texture> texture
-	) : Entity(
-	model.modelPath,
-	modelScale,
-	std::make_shared<Shaders>(ss.vertex, ss.fragment, ss.geometry),
-	texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
-	) { }
+	) : Entity(model, modelScale, { ss }, texture){ }
 /*
 Convenience constructor.
 */
@@ -51,10 +40,67 @@ Entity::Entity(
 	float modelScale,
 	Stock::Shaders::ShaderSet const ss,
 	std::shared_ptr<Texture> texture
+	) : Entity(modelPath, modelScale, { ss }, texture){ }
+/*
+Convenience constructor.
+*/
+Entity::Entity(
+	const char *modelPath,
+	float modelScale,
+	std::shared_ptr<Shaders> shaders,
+	std::shared_ptr<Texture> texture
+	) : Entity(modelPath, modelScale, { shaders }, texture){ }
+/*
+Convenience constructor.
+*/
+Entity::Entity(
+    Stock::Models::Model const model,
+    float modelScale,
+	std::initializer_list<std::shared_ptr<Shaders>> shaders,
+    std::shared_ptr<Texture> texture
+    ) : Entity(
+    model.modelPath,
+    modelScale,
+	shaders.size() > 0 ? shaders : std::vector<std::shared_ptr<Shaders>>({std::make_shared<Shaders>(model.defaultShaders)}),
+    texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
+    ){ }
+/*
+Convenience constructor.
+*/
+Entity::Entity(
+    Stock::Models::Model const model,
+    float modelScale,
+	std::initializer_list<const Stock::Shaders::ShaderSet> ss,
+    std::shared_ptr<Texture> texture
+    ) : Entity(
+    model.modelPath,
+    modelScale,
+	convertToShader(ss),
+    texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
+    ) { }
+/*
+Convenience constructor.
+*/
+Entity::Entity(
+    const char *modelPath,
+    float modelScale,
+	std::initializer_list<const Stock::Shaders::ShaderSet> ss,
+    std::shared_ptr<Texture> texture
+    ): Entity(
+    modelPath,
+	modelScale,
+	convertToShader(ss),
+    texture
+    ) { }
+Entity::Entity(
+	const char *modelPath,
+	float modelScale,
+	std::initializer_list<std::shared_ptr<Shaders>> shaders,
+	std::shared_ptr<Texture> texture
 	) : Entity(
 	modelPath,
 	modelScale,
-	std::make_shared<Shaders>(ss.vertex, ss.fragment, ss.geometry),
+	std::vector<std::shared_ptr<Shaders>>(shaders),
 	texture
 	) { }
 /*
@@ -65,49 +111,58 @@ Constructs an entity from the provided .obj model
 @param texture Pointer to the texture to be used
 */
 Entity::Entity(
-	const char *modelPath,
-	float modelScale,
-	std::shared_ptr<Shaders> shaders,
-	std::shared_ptr<Texture> texture
-	)
-	: positions(GL_FLOAT, 3, sizeof(float))
-	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
-	, colors(GL_FLOAT, 3, sizeof(float))
-	, texcoords(GL_FLOAT, 2, sizeof(float))
-	, faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
-	, vn_count(0)
-	, SCALE(modelScale)
-	, modelPath(modelPath)
-	, material(0)
-	, color(1, 0, 0, 1)
-	, location(0.0f)
-	, rotation(0.0f, 0.0f, 1.0f, 0.0f)
-	, shaders(shaders)
-	, texture(texture)
-	, cullFace(true)
+    const char *modelPath,
+    float modelScale,
+	std::vector<std::shared_ptr<Shaders>> shaders,
+    std::shared_ptr<Texture> texture
+    )
+    : positions(GL_FLOAT, 3, sizeof(float))
+    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+    , colors(GL_FLOAT, 3, sizeof(float))
+    , texcoords(GL_FLOAT, 2, sizeof(float))
+    , faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
+    , vn_count(0)
+    , SCALE(modelScale)
+    , modelPath(modelPath)
+    , material(0)
+    , color(1, 0, 0, 1)
+    , location(0.0f)
+    , rotation(0.0f, 0.0f, 1.0f, 0.0f)
+    , shaders(shaders)
+    , texture(texture)
+    , cullFace(true)
 {
-	GL_CHECK();
-	loadModelFromFile();
-	//If texture has been provided, set up
-	if (texture.get())
+    GL_CHECK();
+    loadModelFromFile();
+    //If texture has been provided, set up
+    if (texture.get())
+    {
+		for (auto &&it : this->shaders)
+		{
+			if (it)
+			{
+				texture->bindToShader(it.get());
+			}
+		}
+    }
+    //If shaders have been provided, set them up
+	for (auto &&it : this->shaders)
 	{
-		texture->bindToShader(shaders.get());
+		if (positions.data&&it)
+		{
+			it->setPositionsAttributeDetail(positions);
+			it->setNormalsAttributeDetail(normals);
+			it->setColorsAttributeDetail(colors);
+			it->setTexCoordsAttributeDetail(texcoords);
+			it->setRotationPtr(&this->rotation);
+			it->setTranslationPtr(&this->location);
+		}
 	}
-	//If shaders have been provided, set them up
-	if (positions.data&&this->shaders != nullptr)
-	{
-		this->shaders->setPositionsAttributeDetail(positions);
-		this->shaders->setNormalsAttributeDetail(normals);
-		this->shaders->setColorsAttributeDetail(colors);
-		this->shaders->setTexCoordsAttributeDetail(texcoords);
-		this->shaders->setRotationPtr(&this->rotation);
-		this->shaders->setTranslationPtr(&this->location);
-	}
-	if (needsExport)
-	{
-		exportModel();
-		printf("Model '%s' export was updated.\n", modelPath);
-	}
+    if (needsExport)
+    {
+        exportModel();
+        printf("Model '%s' export was updated.\n", modelPath);
+    }
 }
 
 /*
@@ -127,25 +182,25 @@ Calls the necessary code to render a single instance of the entity
 @param vertLocation The shader attribute location to pass vertices
 @param normalLocation The shader attribute location to pass normals
 */
-void Entity::render(){
-	if (this->shaders != nullptr)
-		shaders->useProgram();
-	//Bind the faces to be rendered
-	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+void Entity::render(unsigned int shaderIndex){
+	if (shaderIndex<shaders.size())
+		shaders[shaderIndex]->useProgram();
+    //Bind the faces to be rendered
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
-	glPushMatrix();
-	if (!cullFace)
-		glDisable(GL_CULL_FACE);
-	//Translate the model according to it's location
-	if (this->material)
-		this->material->useMaterial();
-	GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-	GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
-	if (!cullFace)
-		glEnable(GL_CULL_FACE);
-	glPopMatrix();
-	if (this->shaders != nullptr)
-		shaders->clearProgram();
+    glPushMatrix();
+    if (!cullFace)
+        glDisable(GL_CULL_FACE);
+    //Translate the model according to it's location
+    if (this->material)
+        this->material->useMaterial();
+    GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
+    GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
+    if (!cullFace)
+        glEnable(GL_CULL_FACE);
+    glPopMatrix();
+	if (shaderIndex<shaders.size())
+		shaders[shaderIndex]->clearProgram();
 }
 /*
 Calls the necessary code to render count instances of the entity
@@ -154,25 +209,25 @@ The index of the instance being rendered can be identified within the vertex sha
 @param vertLocation The shader attribute location to pass vertices
 @param normalLocation The shader attribute location to pass normals
 */
-void Entity::renderInstances(int count){
-	if (this->shaders != nullptr)
-		shaders->useProgram();
-	//Bind the faces to be rendered
-	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+void Entity::renderInstances(int count, unsigned int shaderIndex){
+	if (shaderIndex<shaders.size())
+		shaders[shaderIndex]->useProgram();
+    //Bind the faces to be rendered
+    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
-	glPushMatrix();
-	if (!cullFace)
-		glEnable(GL_CULL_FACE);
-	//Set the color and material
-	if (this->material)
-		this->material->useMaterial();
-	GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
-	GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
-	if (!cullFace)
-		glDisable(GL_CULL_FACE);
-	glPopMatrix();
-	if (this->shaders != nullptr)
-		shaders->clearProgram();
+    glPushMatrix();
+    if (!cullFace)
+        glEnable(GL_CULL_FACE);
+    //Set the color and material
+    if (this->material)
+        this->material->useMaterial();
+    GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
+    GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
+    if (!cullFace)
+        glDisable(GL_CULL_FACE);
+    glPopMatrix();
+	if (shaderIndex<shaders.size())
+		shaders[shaderIndex]->clearProgram();
 }
 /*
 Creates a vertex buffer object of the specified size
@@ -975,10 +1030,13 @@ Set the color of the model
 If the model has an associated material this value will be ignored
 */
 void Entity::setColor(glm::vec3 color){
-	this->color = glm::vec4(color, 1.0f);
-	if (this->shaders.get())
+    this->color = glm::vec4(color,1.0f);
+	for (auto &&it: shaders)
 	{
-		this->shaders->setColor(this->color);
+		if (it)
+		{
+			it->setColor(this->color);
+		}
 	}
 }
 /*
@@ -1333,49 +1391,32 @@ void Entity::generateVertexBufferObjects()
 /*
 Returns a shared pointer to this entities shaders
 */
-std::shared_ptr<Shaders> Entity::getShaders() const
+std::shared_ptr<Shaders> Entity::getShaders(unsigned int shaderIndex) const
 {
-	if (shaders.get())
-		return shaders;
-	else
-		return std::shared_ptr<Shaders>(0);
+	if (shaderIndex < shaders.size())
+		return shaders[shaderIndex];
+    return std::shared_ptr<Shaders>(0);
 }
 /*
 Reloads the entities texture and shaders
 */
 void Entity::reload()
 {
-	if (shaders.get())
-		shaders->reload();
-	if (texture.get())
-		texture->reload();
+	for (auto &&it:shaders)
+		if (it)
+			it->reload();
+    if (texture.get())
+        texture->reload();
 }
 /*
-Sets the modelview matrix to be tracked by this entitiy (in the shader)
-@param camera The camera holding the modelview matrix
-@note This function exists so that subclasses of Entity can intercept the matrix
+Sets the pointer to the view matrix used by this entitiy (in the shader)
+@param viewMat A pointer to const of the modelView matrix to be tracked
 */
-void Entity::setModelViewMatPtr(const Camera *camera)
+void Entity::setViewMatPtr(glm::mat4 const *viewMat)
 {
-	setModelViewMatPtr(camera->getViewMatPtr());
-}
-/*
-Sets the projection matrix to be tracked by this entitiy (in the shader)
-@param camera The visualisation holding the projection matrix
-@note This function exists so that subclasses of Entity can intercept the matrix
-*/
-void Entity::setProjectionMatPtr(const Viewport *visualisation)
-{
-	setProjectionMatPtr(visualisation->getFrustrumPtr());
-}
-/*
-Sets the pointer to the modelView matrix used by this entitiy (in the shader)
-@param modelViewMat A pointer to const of the modelView matrix to be tracked
-*/
-void Entity::setModelViewMatPtr(glm::mat4 const *modelViewMat)
-{
-	if (shaders.get())
-		shaders->setModelViewMatPtr(modelViewMat);
+	for (auto &&it : shaders)
+		if (it)
+            it->setViewMatPtr(viewMat);
 }
 /*
 Sets the pointer to the projection matrix used by this entitiy (in the shader)
@@ -1383,8 +1424,9 @@ Sets the pointer to the projection matrix used by this entitiy (in the shader)
 */
 void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
-	if (shaders.get())
-		shaders->setProjectionMatPtr(projectionMat);
+	for (auto &&it : shaders)
+		if (it)
+			it->setProjectionMatPtr(projectionMat);
 }
 /*
 Switches the vertex order of the model

@@ -9,8 +9,8 @@ Constructs a skybox entity
 Skybox::Skybox(const char *texturePath, float yOffset)
     : Entity(
         Stock::Models::CUBE, 
-        50.0f,//Make it adequete distance away
-        Stock::Shaders::SKYBOX,
+        50.0f,//Make it adequate distance away
+		{ Stock::Shaders::SKYBOX },
         std::make_shared<TextureCubeMap>(texturePath)
     )
 {    
@@ -23,7 +23,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
 /*
 Renders the skybox
 */
-void Skybox::render()
+void Skybox::render(unsigned int shaderIndex)
 {
     glPushMatrix();
     ////Setup shaders
@@ -36,26 +36,27 @@ void Skybox::render()
     glDisable(GL_BLEND);
 
     glDepthMask(GL_FALSE);
-    Entity::render();
+	Entity::render(shaderIndex);
     glDepthMask(GL_TRUE);
 
     // Restore enable bits and matrix
     glPopAttrib();
     glPopMatrix();
 }
-/*
-Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
-*/
-void Skybox::setModelViewMatPtr(const Camera *camera)
+/**
+ * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
+ */
+void Skybox::setViewMatPtr(const Camera *camera)
 {
-    if (shaders.get())
-        shaders->setModelViewMatPtr(camera->getSkyboxViewMatPtr());
+	for (auto &&it : shaders)
+		if (it)
+			it->setViewMatPtr(camera->getSkyboxViewMatPtr());
 }
-/*
-Adjusts the vertical offset of the skybox
-@param yOffset The desired offset
-@note Offsets large than -2.0f-2.0f can make the corners of the skybox visible
-*/
+/**
+ * Adjusts the vertical offset of the skybox
+ * @param yOffset The desired offset
+ * @note Offsets large than -2.0f-2.0f can make the corners of the skybox visible
+ */
 void Skybox::setYOffset(float yOffset)
 {
     setLocation(glm::vec3(0, yOffset, 0));

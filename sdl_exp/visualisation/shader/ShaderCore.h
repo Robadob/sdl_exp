@@ -7,6 +7,8 @@
 #include <map>
 #include <list>
 #include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+
 /**
  * This class is is a wrapper for the core OpenGL shader operations
  * Uniforms, textures and buffers can be automatically bound using the addXXX() methods, so they are provided to the shader
@@ -89,7 +91,7 @@ public:
 	 * If a texture with the same uniformName is already bound, it will be replaced
 	 * @param texture The name of the texture (as returned by glGenTexture())
 	 * @param uniformName The name of the uniform within the shader this texture should be bound to
-	 * @param type The type of texture being bound (e.g. GL_TEXTURE2D)
+	 * @param type The type of texture being bound (e.g. GL_TEXTURE_2D)
 	 * @return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
 	 * @note Texture bindings for each shader are not unique, making them unique would save rebinding every shader call
 	 */
@@ -115,7 +117,28 @@ public:
 	 * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 	 * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
 	 */
-	bool addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    bool addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    /**
+    * Remembers a pointer to an array of upto 4 unsigned integers that will be updated everytime useProgram() is called on this Shaders object
+    * If a dynamic uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param arry A pointer to the array of unsigned integers
+    * @param count The number of unsigned integers provided in the array (a maximum of 4)
+    * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
+    */
+    bool addDynamicUniform(const char *uniformName, const GLuint *arry, unsigned int count = 1);
+    /**
+    * Remembers a pointer to a mat4 that will be updated everytime useProgram() is called on this Shaders object
+    * If a dynamic uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param mat Pointer to the mat4
+    * @returns false if the uniform name was not found
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
+    */
+    bool addDynamicUniform(const char *uniformName, const glm::mat4 *mat);
 	/**
 	 * Sets the value of a vector of upto 4 floats within the shader
 	 * If a static uniform with the same uniformName is already bound, it will be replaced
@@ -135,7 +158,27 @@ public:
 	 * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
 	 * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
 	 */
-	bool addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    bool addStaticUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
+    /**
+    * Sets the value of a vector of upto 4 unsigned ints within the shader
+    * If a static uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param arry A pointer to the array of unsigned integers
+    * @param count The number of unsigned integers provided in the array (a maximum of 4)
+    * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    */
+    bool addStaticUniform(const char *uniformName, const GLuint *arry, unsigned int count = 1);
+    /**
+    * Sets the value of a mat4 within the shader
+	* If a static uniform with the same uniformName is already bound, it will be replaced
+    * @param uniformName The name of the uniform within the shader
+    * @param mat Pointer to the mat4
+    * @returns false if the uniform name was not found
+    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+    * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
+    */
+    bool addStaticUniform(const char *uniformName, const glm::mat4 *mat);
 	/**
 	 * Attatches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
@@ -192,6 +235,7 @@ public:
 	*/
 	static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
 private:
+    static GLenum getResourceBlock(GLenum bufferType);
 	/**
 	 * Holds shaders thats have been compiled, so that they can be deleted
 	 * @see deleteShaders()
@@ -224,7 +268,7 @@ private:
 	struct DynamicUniformDetail
 	{
 		/**
-		 * GL_INT or GL_FLOAT
+		 * GL_INT, GL_UNSIGNED_INT GL_FLOAT
 		 */
 		const GLenum type;
 		/**
@@ -262,7 +306,7 @@ private:
 	struct StaticUniformDetail
 	{
 		/**
-		* GL_INT or GL_FLOAT
+		* GL_INT, GL_UNSIGNED_INT or GL_FLOAT
 		*/
 		const GLenum type;
 		/**
@@ -387,6 +431,14 @@ protected:
 	* @note You should delete the ptr returned by this yourself
 	*/
 	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
+	/**
+	* Checks whether the specified shader program linked succesfully.
+	* Linking errors are printed to stderr and compileSuccessflag is set to false on failure.
+	* @param programId Location of the shader program to check
+	* @return True if no errors were detected
+	* @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
+	*/
+	bool checkProgramLinkError(const GLuint programId) const;
 private:
 	/**
 	* Checks whether the specified shader compiled succesfully.
@@ -396,14 +448,6 @@ private:
 	* @return True if no errors were detected
 	*/
 	static bool checkShaderCompileError(const GLuint shaderId, const char *shaderPath);
-	/**
-	 * Checks whether the specified shader program linked succesfully.
-	 * Linking errors are printed to stderr and compileSuccessflag is set to false on failure.
-	 * @param programId Location of the shader program to check
-	 * @return True if no errors were detected
-	 * @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
-	 */
-	bool checkProgramLinkError(const GLuint programId) const;
 	/**
 	 * Returns the filename from the provided file path
 	 * @param filePath A null terminated string holding a file path

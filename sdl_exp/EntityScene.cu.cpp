@@ -5,7 +5,7 @@
 Constructor, modify this to change what happens
 */
 EntityScene::EntityScene(Visualisation &visualisation)
-    : Scene(visualisation)
+    : BasicScene(visualisation)
     , deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
     , tick(0.0f)
@@ -21,13 +21,12 @@ EntityScene::EntityScene(Visualisation &visualisation)
     registerEntity(deerModel);
     registerEntity(colorModel);
     registerEntity(instancedSphere);
-    this->visualisation.setSkybox(true);
+    this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
-    this->visualisation.setRenderAxis(true); 
+    this->setRenderAxis(true); 
     srand((unsigned int)time(0));
     this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
     this->colorModel->setCullFace(false);
-    this->deerModel->flipVertexOrder();
 #ifdef __CUDACC__
     cuInit();
 #else
@@ -86,7 +85,7 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
         this->colorModel->exportModel();
         this->deerModel->exportModel();
     default:
-        //Only permit the keycode to be processed if we haven't handled personally
+        //Permit the keycode to be processed if we haven't handled personally
         return true;
     }
     return false;

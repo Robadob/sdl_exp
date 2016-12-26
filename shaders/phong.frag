@@ -39,4 +39,3 @@ void main (void)
     // write Total Color:  
     fragColor = Iamb + Idiff + Ispec;     
 }
-      

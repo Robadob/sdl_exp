@@ -23,7 +23,7 @@ void ComputeShader::launch()
 		//Setup shader
 		this->useProgram();
 		//Launch
-		glDispatchCompute(lastLaunchConfig.x, lastLaunchConfig.y, lastLaunchConfig.z);
+        GL_CALL(glDispatchCompute(lastLaunchConfig.x, lastLaunchConfig.y, lastLaunchConfig.z));
 	}
 }
 glm::uvec3 ComputeShader::getMaxWorkGroupDims()

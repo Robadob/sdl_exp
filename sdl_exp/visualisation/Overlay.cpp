@@ -74,7 +74,7 @@ void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)
 		return;
 	if (this->shaders != nullptr)
 	{
-		shaders->setModelViewMatPtr(mv);
+		shaders->setViewMatPtr(mv);
 		shaders->setProjectionMatPtr(proj);
 		shaders->useProgram();
 	}

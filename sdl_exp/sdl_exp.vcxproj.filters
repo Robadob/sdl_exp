@@ -9,10 +9,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{8719067d-b56a-41f9-919a-b59f3ab89bcb}</UniqueIdentifier>
-      <Extensions>frag;vert;geom</Extensions>
-    </Filter>
     <Filter Include="Header Files\Visualisation">
       <UniqueIdentifier>{9f06c0e5-b4a5-4a33-bec3-1788504027f8}</UniqueIdentifier>
     </Filter>
@@ -37,6 +33,18 @@
     <Filter Include="Header Files\Visualisation\Interface">
       <UniqueIdentifier>{94373e4a-57bc-419c-a322-19f1964dab63}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\MultiPass">
+      <UniqueIdentifier>{23fd96e2-eb3c-4a23-9d6f-672f395de144}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\MultiPass">
+      <UniqueIdentifier>{cf6a1b89-eb49-48de-93cf-4227a5f4a0ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Shader\util">
+      <UniqueIdentifier>{9dccb61a-e260-42d0-99a4-0ad24c7f75cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Shader\util">
+      <UniqueIdentifier>{a1ff9809-bae0-47a2-b6bb-6d5b6f329b1b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -55,9 +63,6 @@
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Visualisation.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
-    <ClCompile Include="visualisation\Scene.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\texture\Texture.cpp">
@@ -99,14 +104,29 @@
     <ClCompile Include="visualisation\shader\ShaderCore.cpp">
       <Filter>Source Files\Visualisation\Shader</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\BasicScene.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\MultiPassScene.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\RenderPass.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\FrameBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="TwoPassScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\BackBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\GaussianBlur.cpp">
+      <Filter>Source Files\Visualisation\Shader\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="glsl\main.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="glsl\main.vert">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="visualisation\util\cuda.cuh">
       <Filter>Header Files\Visualisation\Util</Filter>
     </None>
@@ -132,9 +152,6 @@
     </ClInclude>
     <ClInclude Include="visualisation\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Scene.h">
-      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\texture\Texture2D.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
@@ -177,6 +194,39 @@
     </ClInclude>
     <ClInclude Include="visualisation\interface\Viewport.h">
       <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\RenderPass.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\BasicScene.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\FrameBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Scene.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\MultiPassScene.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Renderable.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="TwoPassScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\FBuffer.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\BackBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\GaussianBlur.h">
+      <Filter>Header Files\Visualisation\Shader\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

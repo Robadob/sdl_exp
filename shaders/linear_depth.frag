@@ -24,11 +24,14 @@ void main()
     //Linear depth in range znear - zfar
     //http://stackoverflow.com/a/16597492/1646387
     vec4 unprojected = inverse(_projectionMat) * vec4(0, 0, depthDevice, 1.0);
-    float depthView = (unprojected.z / unprojected.w);//Required negated if ortho is passed
+    float depthView = -(unprojected.z / unprojected.w);//Required negated, why? (also negated in shadow.frag shaders)
     //Get projection near/far planes from column major matrices
     //http://stackoverflow.com/a/12926655/1646387
     float zNear = (_projectionMat[3][2] / (_projectionMat[2][2] - 1.0f));
     float zFar = (_projectionMat[3][2] / (_projectionMat[2][2] + 1.0f));
     //Linear depth in range 0-1
-	fragColor = (depthView-zNear)/(zFar-zNear);
+	  fragColor = depthNorm;//(depthView-zNear)/(zFar-zNear);
+    //Alternate linear depth formula?
+    //http://www.learnopengl.com/#!Advanced%20OpenGL/Depth%20testing
+    //fragColor = ((2.0 * zNear * zFar) / (zFar + zNear - depthDevice * (zFar - zNear)))/zFar;
 }

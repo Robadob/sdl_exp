@@ -23,10 +23,13 @@ TwoPassScene::SceneContent::SceneContent()
     //Create the gauss tex manually
     GL_CALL(glGenTextures(1, &shadowOut));
     GL_CALL(glBindTexture(GL_TEXTURE_2D, shadowOut));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));//Tri-linear filtering
+	GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+	GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)); 
+	GLfloat fLargest;
+	GL_CALL(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest));
+	GL_CALL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest));//Anistropic filtering (improves texture sampling at steep angle)
     GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, shadowDims.x, shadowDims.y, 0, GL_RED, GL_FLOAT, nullptr));
 }
@@ -150,9 +153,16 @@ void TwoPassScene::ShadowPass::render()
 //Uses the shadow map to render the normal scene
 void TwoPassScene::CompositePass::render()
 {
-    content->blur->blur2D(content->shadowIn, content->shadowOut, content->shadowDims);
+	//Slightly blur shadow map to reduce harshness of edges
+	content->blur->blurR32F(content->shadowIn, content->shadowOut, content->shadowDims);
+	//Generate mip-map
+	GL_CALL(glBindTexture(GL_TEXTURE_2D, content->shadowOut));
+	GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
+	GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+	//Render models using shadow map
     content->deerModel->render(1);
     content->sphereModel->render(1);
     content->planeModel->render(1);
+	//Render something at the lights location
     content->lightModel->render();
 }

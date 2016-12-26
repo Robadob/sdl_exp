@@ -60,7 +60,7 @@ void GaussianBlur::generateFilter()
 		filter[x] /= c;
 	}
 }
-void GaussianBlur::blur2D(GLuint inTex, GLuint outTex, glm::uvec2 texDims)
+void GaussianBlur::blurR32F(GLuint inTex, GLuint outTex, glm::uvec2 texDims)
 {
     //Update shader config
     this->imageDimensions = texDims;

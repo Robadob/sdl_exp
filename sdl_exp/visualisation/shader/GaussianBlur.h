@@ -5,6 +5,10 @@
 
 /**
  * Provides convenient compute shader Gaussian blur functionality
+ * Currently only supports 2D textures of format R32F (single channel textures)
+ * Following the existing code it would be trivial to add multi-channel versions
+ * The max filter width is limited by the max permitted shader shared memory, work group size and channels.
+ * The minimum required shared memory is 32kb, aka 8k single precision floating point values
  */
 class GaussianBlur : public Reloadable
 {
@@ -13,9 +17,9 @@ public:
     /**
      * Builds the compute shader and preconfigures the weights
      */
-    GaussianBlur(unsigned int filterRadius, float sigma=1.0f);
-    ~GaussianBlur();
-    void blur2D(GLuint inTex, GLuint outTex, glm::uvec2 texDims);
+	GaussianBlur(unsigned int filterRadius, float sigma = 1.0f);
+	~GaussianBlur();
+	void blurR32F(GLuint inTex, GLuint outTex, glm::uvec2 texDims);
     virtual void reload() override;
 private:
     void generateFilter();

@@ -42,6 +42,9 @@
     <Filter Include="Header Files\Visualisation\Shader\util">
       <UniqueIdentifier>{9dccb61a-e260-42d0-99a4-0ad24c7f75cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\Shader\util">
+      <UniqueIdentifier>{a1ff9809-bae0-47a2-b6bb-6d5b6f329b1b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -120,7 +123,7 @@
       <Filter>Source Files\Visualisation\MultiPass</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\shader\GaussianBlur.cpp">
-      <Filter>Source Files\Visualisation\Shader</Filter>
+      <Filter>Source Files\Visualisation\Shader\util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -24,8 +24,8 @@ void main()
 	//Lighting attribs
 	eyeLightSource = vec3(_viewMat*vec4(_lightSource,1));  
 	vec4 tVertex = _viewMat * _modelMat * vec4(_vertex,1);   
-    eyeVertex = vec3(tVertex);	
-    eyeNormal = normalize(_normalMat * _normal);
+  eyeVertex = vec3(tVertex);	
+  eyeNormal = normalize(_normalMat * _normal);
 	shadowCoord = spotlightProjectionMat * spotlightViewMat * _modelMat * vec4(_vertex,1.0f);
 	//Convert screen coords to normalised/tex coords (-1 - 1 to 0 - 1)
 	shadowCoord /= 2.0f;

@@ -531,8 +531,10 @@ void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders) {
 Frees the texture's data
 */
 Text::TextureString::~TextureString() {
-    free(texture[0]);
-    free(texture);
+	if (texture){
+		free(texture[0]);
+		free(texture);
+	}
 }
 /*
 Paints a single character glyph to the texture at the specified location from a 1-byte texture

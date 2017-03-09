@@ -333,17 +333,9 @@ void Visualisation::toggleMouseMode(){
 void Visualisation::resizeWindow(){
     // Use the sdl drawable size
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
-
-    float fAspect = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
-    double fovy = FOVY;
-
-    //glViewport(0, 0, this->windowWidth, this->windowHeight);//This is now called by the scene each frame (because scaled render textures must call at their desired scale)
-    float top = static_cast<float>(tan(glm::radians(fovy * 0.5)) * NEAR_CLIP);
-    float bottom = -top;
-    float left = fAspect * bottom;
-    float right = fAspect * top;
-    this->frustum = glm::frustum<float>(left, right, bottom, top, NEAR_CLIP, FAR_CLIP);
-	//Notify other elements
+	// Get the view frustum using GLM. Alternatively glm::perspective could be used.
+	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), this->windowWidth, this->windowHeight, NEAR_CLIP, FAR_CLIP);
+	// Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
 	if (this->scene)
 		this->scene->_resize(this->windowWidth, this->windowHeight);

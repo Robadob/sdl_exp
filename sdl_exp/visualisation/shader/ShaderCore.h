@@ -396,16 +396,16 @@ private:
 	*/
 	virtual bool _compileShaders(const GLuint t_shaderProgram) = 0;
 	/**
-	 * Locates all bound uniforms, attributes, textures and storage within the shader
-	 * Calls _setupBindings()
-	 */
-	void setupBindings();
-	/**
 	* Locates all subclass specific bound uniforms, attributes, textures and storage within the shader
 	* Called by setupBindings()
 	*/
 	virtual void _setupBindings() {}
 protected:
+	/**
+	 * Locates all bound uniforms, attributes, textures and storage within the shader
+	 * Calls _setupBindings()
+	 */
+	void setupBindings();
 	/**
 	 * Compiles the specified shader source and attatches it to the provided program
 	 * @param t_shaderProgram The shader program to attach the compiled shader to

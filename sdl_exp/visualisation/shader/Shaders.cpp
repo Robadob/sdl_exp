@@ -573,5 +573,10 @@ bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name)
     fragShaderOutputLocations[attachmentPoint] = std::string(name);
 	//Relink the program and ensure the program re-linked correctly;
 	GL_CALL(glLinkProgram(this->getProgram()));
-	return this->checkProgramLinkError(this->getProgram());
+	if (this->checkProgramLinkError(this->getProgram()))
+	{
+		setupBindings();
+		return true;
+	}
+	return false;
 }

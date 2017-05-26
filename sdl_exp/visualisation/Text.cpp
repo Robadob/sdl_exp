@@ -41,7 +41,8 @@ Creates a text overlay with the provided string
 */
 Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile, unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
-	, padding(5)
+	, printMono(false)
+    , padding(5)
     , lineSpacing(-0.1f)
     , color(color)
     , backgroundColor(0.0f)
@@ -50,7 +51,6 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     , string(0)
     , fontHeight(fontHeight)
     , wrapDistance(800)
-    , printMono(false)
     , tex(std::make_unique<TextureString>())
 {
     getShaders()->addDynamicUniform("_col", glm::value_ptr(this->color), 4);

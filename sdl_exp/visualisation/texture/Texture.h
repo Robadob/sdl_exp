@@ -18,10 +18,10 @@ public:
     //void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
     //void deleteTextureBufferObject(GLuint *tbo); 
     
-    bool bindToShader(Shaders *s, char *uniformName = 0);
+	bool bindToShader(Shaders *s, const char *uniformName = 0);
 	GLuint getName() const { return texName; }
 protected:
-    Texture(GLenum type, const char *texPath = 0, char *uniformName = 0);
+	Texture(GLenum type, const char *texPath = 0, const char *uniformName = 0);
     virtual ~Texture();
     static SDL_Surface *readImage(const char *texturePath, bool printErr = true);
     void setTexture(SDL_Surface *image, GLuint target = 0, bool dontFreeImage = false);
@@ -29,7 +29,7 @@ protected:
     const GLenum texType;
 private:
     static SDL_Surface *Texture::findImage(const char *imagePath);
-    char *uniformName;
+    const char *uniformName;
     void createGLTex();
     void deleteGLTex();
     bool storageAllocated;

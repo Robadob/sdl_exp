@@ -25,7 +25,8 @@ namespace Stock
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
 		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", nullptr };
 		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", nullptr };
-        const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", nullptr };
+		const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", nullptr };
+		const ShaderSet SPRITE2D_HEAT{ "../shaders/texture.vert", "../shaders/sprite2dHeat.frag", nullptr };
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
         const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
         const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/phongShadow.frag", nullptr };

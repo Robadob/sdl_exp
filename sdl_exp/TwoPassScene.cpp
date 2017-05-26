@@ -51,7 +51,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	addPass(0, sPass);
 	addPass(1, cPass);
     //Put a preview of the depth texture on the HUD
-    shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 256, 256);
+    shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 256, 256, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_HEAT));
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");

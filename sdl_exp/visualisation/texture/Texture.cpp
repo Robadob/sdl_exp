@@ -16,7 +16,7 @@ const char* Texture::IMAGE_EXTS[] = {
 @param texPath This value is only used to block null textures (to save generating unused textures), any value that evaluates to true will suffice
 @param uniformName The name of the uniform sampler within the shader, this defaults to TEXTURE_UNIFORM_NAME from this classes header
 */
-Texture::Texture(GLenum type, const char *texPath, char *uniformName)
+Texture::Texture(GLenum type, const char *texPath, const char *uniformName)
     : texName(0)
     , texType(type)
     , uniformName(uniformName == 0 ? TEXTURE_UNIFORM_NAME : uniformName)
@@ -175,7 +175,7 @@ Binds the texture to the passed shader so it will be used at render
 @param shaders The shader to bind to
 @param uniformName The uniform name within the shader to bind to (defaults to the value of TEXTURE_UNIFORM_NAME)
 */
-bool Texture::bindToShader(Shaders *shaders, char *uniformName)
+bool Texture::bindToShader(Shaders *shaders, const char *uniformName)
 {
     if (!this->texName)
         return false;

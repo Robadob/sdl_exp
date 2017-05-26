@@ -266,7 +266,7 @@ void ShaderCore::destroyProgram()
 	}
 }
 //Bindings
-int ShaderCore::addTextureUniform(GLuint texture, char *uniformName, GLenum type)
+int ShaderCore::addTextureUniform(GLuint texture, const char *uniformName, GLenum type)
 {
 	//Purge any existing buffer which matches
 	for (auto a = textures.begin(); a != textures.end();)

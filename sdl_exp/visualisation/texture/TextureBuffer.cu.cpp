@@ -7,7 +7,7 @@ Creates the texture buffer
 @param componentCount The number of components per element (1-4)
 */
 template<class T>
-TextureBuffer<T>::TextureBuffer(char *uniformName, const unsigned int elementCount, const unsigned int componentCount, T *data)
+TextureBuffer<T>::TextureBuffer(const char *uniformName, const unsigned int elementCount, const unsigned int componentCount, T *data)
     : Texture(GL_TEXTURE_BUFFER, 0, uniformName)
     , elementCount(elementCount)
     , componentCount(componentCount)

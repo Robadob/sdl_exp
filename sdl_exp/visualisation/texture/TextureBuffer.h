@@ -12,7 +12,7 @@ template<class T>
 class TextureBuffer : public Texture
 {
 public:
-    TextureBuffer(char *uniformName, const unsigned int elementCount, const unsigned int componentCount = 1, T *data = 0);
+    TextureBuffer(const char *uniformName, const unsigned int elementCount, const unsigned int componentCount = 1, T *data = 0);
 #ifdef __CUDACC__
     TextureBuffer(char *uniformName, CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation);
 #endif

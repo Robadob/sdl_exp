@@ -95,7 +95,7 @@ public:
 	 * @return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
 	 * @note Texture bindings for each shader are not unique, making them unique would save rebinding every shader call
 	 */
-	int addTextureUniform(GLuint texture, char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
+	int addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 	/**
  	 * Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
      * If a dynamic uniform with the same uniformName is already bound, it will be replaced

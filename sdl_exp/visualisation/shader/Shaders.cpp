@@ -504,7 +504,6 @@ bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 		if (std::string((*a).attributeName) == std::string(attributeName))
 		{
 			a = lostGvads.erase(a);
-			--a;
 			rtn = true;
 		}
 		else
@@ -515,7 +514,6 @@ bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 		if (std::string((*a).attributeName) == std::string(attributeName))
 		{
 			a = gvads.erase(a);
-			--a;
 			rtn = true;
 		}
 		else

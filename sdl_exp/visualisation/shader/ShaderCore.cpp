@@ -552,7 +552,6 @@ bool ShaderCore::removeTextureUniform(const char *uniformName)
 		{
 			textures.erase((*a).data.x);
 			a = staticUniforms.erase(a);
-			--a;
 			rtn = true;
 		}
 		else
@@ -568,7 +567,6 @@ bool ShaderCore::removeBuffer(const char *nameInShader)
 		if (std::string((*a).nameInShader) == std::string(nameInShader))
 		{
 			a = lostBuffers.erase(a);
-			--a;
 			rtn = true;
 		}
 		else
@@ -579,7 +577,6 @@ bool ShaderCore::removeBuffer(const char *nameInShader)
 		if (std::string((*a).second.nameInShader) == std::string(nameInShader))
 		{
 			a = buffers.erase(a);
-			--a;
 			rtn = true;
 		}
 		else

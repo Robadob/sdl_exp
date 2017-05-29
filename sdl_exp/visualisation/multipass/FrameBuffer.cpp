@@ -33,7 +33,7 @@ FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stenci
 	: scale(scale)
     , dimensions(dimensions)
     , samples(samples)
-	, clearColor(clearColor)
+	, clearColor(glm::vec4(clearColor,1.0f))
     , doClear(doClear)
     , depthStencil(depthstencil)
 	, depth(depth)
@@ -209,7 +209,7 @@ void FrameBuffer::setDrawBuffers()
     GLuint prevFBO = getActiveFB();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
     //Allocate array
-    unsigned int itemCt = colors.size()>0 ? colors.size() : 1;
+    unsigned int itemCt = (unsigned int)(colors.size()>0 ? colors.size() : 1);
     GLenum *drawBuffsArr = (GLenum *)malloc(sizeof(GLenum)*itemCt);
     //Fill Array
     if (colors.size()>0)
@@ -303,7 +303,7 @@ bool FrameBuffer::use()
 
 	if (doClear)
 	{
-        GL_CALL(glClearColor(clearColor.x, clearColor.y, clearColor.z, 1));
+        GL_CALL(glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w));
 		GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	}
 	GL_CALL(glViewport(0, 0, dimensions.x, dimensions.y));
@@ -367,4 +367,15 @@ GLuint FrameBuffer::getDepthStencilRenderBufferName() const
     if (depthStencil.conf.Type() == FBA::RenderBuffer)
         return depthStencil.texName;
     return 0;
+}
+void FrameBuffer::disableFiltering(GLuint attachPt)
+{
+	auto && it = colors.find(attachPt);
+	if (it != colors.end() && it->second.conf.Type() == FBA::Texture)
+	{
+		GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), it->second.texName));
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
+	}
 }

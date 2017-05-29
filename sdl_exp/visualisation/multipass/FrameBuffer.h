@@ -121,12 +121,17 @@ public:
     /**
      * Sets the clear color to be used
      */
-    void setClearColor(glm::vec3 doClear){ this->clearColor = clearColor; }
+	void setClearColor(glm::vec3 doClear){ this->clearColor = glm::vec4(doClear, 1.0f); }
+	void setClearColor(glm::vec4 doClear){ this->clearColor = doClear; }
     /**
      * @return The clear color to be used
      */
-    glm::vec3 getClearColor(){ return clearColor; }
-
+    glm::vec4 getClearColor(){ return clearColor; }
+	/**
+	 * Disables filtering for the specified color attachment's texture
+	 * @param attachPt The attachment point to disable filtering for, default 0 (aka single color texture)
+	 */
+	void FrameBuffer::disableFiltering(GLuint attachPt = 0);
 private:
     inline GLenum GL_TEXTURE_TYPE() const { return samples == 0 ? GL_TEXTURE_2D : GL_TEXTURE_2D_MULTISAMPLE; }
 	/**
@@ -161,7 +166,7 @@ private:
 	/**
 	 * The clear colour to clear the frame with prior to rendering
 	 */
-	glm::vec3 clearColor;
+	glm::vec4 clearColor;
 	/**
 	 * Whether to clear the frame prior to rendering
 	 */

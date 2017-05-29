@@ -244,6 +244,7 @@ void Visualisation::render()
 	GL_CALL(glClearColor(0, 0, 0, 1));
 	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     this->scene->_render();
+	GL_CALL(glViewport(0,0,windowWidth, windowHeight));
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	this->hud.render();
 

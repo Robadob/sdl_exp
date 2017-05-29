@@ -109,7 +109,10 @@ public:
     void setViewMatPtr(glm::mat4 const *modelViewMat) override;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
     void flipVertexOrder();
-    void setCullFace(const bool cullFace);
+	void setCullFace(const bool cullFace);
+	glm::vec3 getMin() const { return modelMin; }
+	glm::vec3 getMax() const { return modelMax; }
+	glm::vec3 getDimensions() const { return modelDims; }
 protected:
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<Texture> texture;
@@ -133,6 +136,7 @@ protected:
     void freeMaterial();
     void generateVertexBufferObjects();
 private:
+	glm::vec3 modelMin, modelMax, modelDims;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{
 		std::vector<std::shared_ptr<Shaders>> rtn;

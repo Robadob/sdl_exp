@@ -505,8 +505,8 @@ exit_loop:;
 	char *buffer = new char[bufferLen];
 
 	printf("\rLoading Model: %s [Loading Elements] ", modelPath);
-	glm::vec3 modelMin(FLT_MAX);
-	glm::vec3 modelMax(-FLT_MAX);
+	modelMin = glm::vec3(FLT_MAX);
+	modelMax = glm::vec3(-FLT_MAX);
 	//Read file by line, again.
 	while ((c = fgetc(file)) != EOF) {
 		//If the first char == 'v'
@@ -853,6 +853,7 @@ exit_loop2:;
 	}
 	//Calculate scale factor
 	float scaleFactor = 1.0;
+	modelDims = modelMax - modelMin;
 	if (SCALE>0)
 		scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
 	printf("\rLoading Model: %s [Assigning Elements]", modelPath);
@@ -1349,6 +1350,17 @@ void Entity::importModel(const char *path)
 		for (unsigned int i = 0; i < positions.count*positions.components; i++)
 			((float*)positions.data)[i] *= scaleFactor;
 	}
+	//Calc dims
+	modelMin = glm::vec3(FLT_MAX);
+	modelMax = glm::vec3(-FLT_MAX);
+	glm::vec3 position;
+	for (unsigned int i = 0; i < positions.count*positions.components; i += positions.components)
+	{
+		position = glm::vec3(((float*)positions.data)[i], ((float*)positions.data)[i + 1], ((float*)positions.data)[i + 2]);
+		modelMax = glm::max(modelMax, position);
+		modelMin = glm::min(modelMin, position);
+	}
+	modelDims = modelMax - modelMin;
 	//Allocate VBOs
 	generateVertexBufferObjects();
 	printf("Model import was successful: %s\n", importPath.c_str());

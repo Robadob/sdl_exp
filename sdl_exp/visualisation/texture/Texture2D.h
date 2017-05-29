@@ -10,8 +10,9 @@ public:
     void reload() override;
 	void setTexture(void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type);
 	void setTexture(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type);
-    unsigned int getWidth() { return dimensions.x; }
-    unsigned int getHeight() { return dimensions.y; }
+    unsigned int getWidth() const { return dimensions.x; }
+    unsigned int getHeight() const { return dimensions.y; }
+	glm::uvec2 getDimensions() const { return dimensions; }
 private:
 	static int flipRows(SDL_Surface *img);
     void _reload();//Used so we don't call a virtual fn from the constructor

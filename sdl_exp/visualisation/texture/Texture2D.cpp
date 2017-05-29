@@ -44,7 +44,8 @@ void Texture2D::setTexture(void *image, size_t imageSize, unsigned int width, un
         GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     }
     GL_CALL(glTexImage2D(texType, 0, internalFormat, width, height, 0, format, type, image));
-    GL_CALL(glBindTexture(texType, 0));
+	GL_CALL(glBindTexture(texType, 0));
+	dimensions = glm::uvec2(width, height);
 }
 /**
  * Allocates a texture with specified params

@@ -374,8 +374,8 @@ void FrameBuffer::disableFiltering(GLuint attachPt)
 	if (it != colors.end() && it->second.conf.Type() == FBA::Texture)
 	{
 		GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), it->second.texName));
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_TYPE(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_TYPE(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
 	}
 }

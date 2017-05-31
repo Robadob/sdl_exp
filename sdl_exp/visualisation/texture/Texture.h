@@ -1,7 +1,7 @@
 #ifndef __Texture_h__
 #define __Texture_h__
 
-#include "../GLcheck.h"
+#include "../util/GLcheck.h"
 #include "../shader/Shaders.h"
 
 #include <SDL/SDL_image.h>

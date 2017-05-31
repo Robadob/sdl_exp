@@ -1,7 +1,7 @@
 #ifndef __ShaderCore_h__
 #define __ShaderCore_h__
 
-#include "../GLcheck.h"
+#include "../util/GLcheck.h"
 #include "../interface/Reloadable.h"
 #include <vector>
 #include <map>

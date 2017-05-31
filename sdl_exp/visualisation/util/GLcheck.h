@@ -4,8 +4,8 @@
 #include <GL/glew.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 //Define EXIT_ON_ERROR to cause the program to exit when a GL error occurs
+//Define FORCE_OPTIMUS to force dedicated GPU usage in laptops
 
 #ifdef _DEBUG //VS standard debug flag
 

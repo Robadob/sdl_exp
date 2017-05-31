@@ -42,6 +42,9 @@ The `Shaders` and `Entity` objects attempt to automatically manage uniforms and 
   * `_color` - Vertex Color[Vec3/Vec4]
   * `_texCoords` - Texture Coordinates[Vec2/Vec3]
 
+### Optimus Support
+It's possible to force laptops with Optimus hybrid graphics to handle this application with the dedicated GPU by building with the preprocessor macro `FORCE_OPTIMUS`, this is disabled by default to better facilitate testing on Intel integrated.
+  
 ### CUDA-GL interop
 
 The header `visualisation/util/cuda.cuh` provides functionality for allocating and freeing OpenGL texture buffers that can be accessed by CUDA. 

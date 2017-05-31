@@ -1,4 +1,4 @@
-#include "../GLcheck.h"
+#include "util/GLcheck.h"
 #include <cstring>
 #include <typeinfo>   // operator typeid
 #include <cuda_gl_interop.h>

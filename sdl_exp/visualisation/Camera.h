@@ -1,7 +1,7 @@
 #ifndef __Camera_h__
 #define __Camera_h__
 
-#include "GLcheck.h"
+#include "util/GLcheck.h"
 
 #include <glm/glm.hpp>
 

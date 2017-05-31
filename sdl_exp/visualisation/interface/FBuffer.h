@@ -1,6 +1,6 @@
 #ifndef __FBuffer_h__
 #define __FBuffer_h__
-#include "../GLcheck.h"
+#include "../util/GLcheck.h"
 /**
  * Frame buffer interface shared by FrameBuffer and BackBuffer classes
  * Named FBuffer because Framebuffer is better suited to the actual class than the interface

@@ -1,5 +1,5 @@
 #include "Axis.h"
-#include "GLcheck.h"
+#include "util/GLcheck.h"
 /*
 Constructs a new axis object
 @param length The length of each drawn axis

@@ -1,6 +1,6 @@
 #ifndef __FrameBufferAttachment_h__
 #define __FrameBufferAttachment_h__
-#include "../GLcheck.h"
+#include "../util/GLcheck.h"
 /**
  * Interface to define the shared FBA members
  * These should be constructed via FBAFactory

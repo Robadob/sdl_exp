@@ -4,7 +4,7 @@
 #include <list>
 #include <tuple>
 #include <memory>
-#include "GLcheck.h"
+#include "util/GLcheck.h"
 #include <glm/glm.hpp>
 
 class Overlay;

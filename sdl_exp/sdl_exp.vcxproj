@@ -83,6 +83,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>"$(SolutionDir)include"</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PreprocessorDefinitions>_MBCS;FORCE_OPTIMUS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -184,6 +185,7 @@
     <ClCompile Include="visualisation\texture\Texture2D.cpp" />
     <ClCompile Include="visualisation\texture\TextureBuffer.cu.cpp" />
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp" />
+    <ClCompile Include="visualisation\util\Optimus.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -199,7 +201,6 @@
     <ClInclude Include="visualisation\BasicScene.h" />
     <ClInclude Include="visualisation\Camera.h" />
     <ClInclude Include="visualisation\Entity.h" />
-    <ClInclude Include="visualisation\GLcheck.h" />
     <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\interface\FBuffer.h" />
     <ClInclude Include="visualisation\interface\Reloadable.h" />
@@ -224,6 +225,7 @@
     <ClInclude Include="visualisation\texture\Texture2D.h" />
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
+    <ClInclude Include="visualisation\util\GLcheck.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

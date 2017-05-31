@@ -1,7 +1,7 @@
 #ifndef __Entity_h__
 #define __Entity_h__
 
-#include "GLcheck.h"
+#include "util/GLcheck.h"
 
 #include <memory>
 #include <glm/glm.hpp>

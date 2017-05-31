@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "GLcheck.h"
+#include "util/GLcheck.h"
 
 
 #define DEFAULT_SHININESS 32

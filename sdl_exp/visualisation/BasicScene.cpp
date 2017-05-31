@@ -2,10 +2,16 @@
 
 BasicScene::BasicScene(Visualisation& vis)
 	: Scene(vis)
-	, axis(25)
-	, skybox()
+	, axis(std::make_shared<Axis>(25.0f))
+	, skybox(std::make_unique<Skybox>())
 	, renderAxisState(true)
-{  }
+	, renderSkyboxState(true)
+{
+	registerEntity(axis);
+	this->skybox->setViewMatPtr(this->visualisation.getCamera());
+	this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+	this->skybox->setYOffset(-1.0f);
+}
 void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 {
 	if (ent)
@@ -27,11 +33,10 @@ void BasicScene::_render()
 	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	//Reset viewport
 	GL_CALL(glViewport(0, 0, visualisation.getWindowWidth(), visualisation.getWindowHeight()));
-	if (this->skybox)
+	if (this->renderSkyboxState)
 		this->skybox->render();
-	this->visualisation.defaultProjection();
 	if (this->renderAxisState)
-		this->axis.render();
+		this->axis->render();
 	this->defaultLighting();
 	render();
 }
@@ -42,7 +47,7 @@ bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y)
 		return false;
 	switch (keycode){
 	case SDLK_F9:
-		this->setSkybox(!this->skybox);
+		this->setSkybox(!this->renderSkyboxState);
 		break;
 	default:
 		return true;
@@ -58,17 +63,7 @@ void BasicScene::_reload()
 	reload();
 }
 void BasicScene::setSkybox(bool state){
-    if (state&&!this->skybox)
-    {
-		this->skybox = std::make_unique<Skybox>();
-        this->skybox->setViewMatPtr(this->visualisation.getCamera());
-        this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
-        this->skybox->setYOffset(-1.0f);
-    }
-    else if (!state&&this->skybox)
-    {
-        this->skybox = nullptr;
-    }
+	this->renderSkyboxState = state;
 }
 void BasicScene::setRenderAxis(bool state){
     this->renderAxisState = state;

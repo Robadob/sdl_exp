@@ -183,24 +183,21 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(unsigned int shaderIndex){
-	if (shaderIndex<shaders.size())
-		shaders[shaderIndex]->useProgram();
+    if (shaderIndex<shaders.size())
+        shaders[shaderIndex]->useProgram();
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
-    glPushMatrix();
     if (!cullFace)
-        glDisable(GL_CULL_FACE);
+      GL_CALL(glDisable(GL_CULL_FACE));
     //Translate the model according to it's location
     if (this->material)
         this->material->useMaterial();
-    GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
     GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
     if (!cullFace)
-        glEnable(GL_CULL_FACE);
-    glPopMatrix();
-	if (shaderIndex<shaders.size())
-		shaders[shaderIndex]->clearProgram();
+        GL_CALL(glEnable(GL_CULL_FACE));
+    if (shaderIndex<shaders.size())
+        shaders[shaderIndex]->clearProgram();
 }
 /*
 Calls the necessary code to render count instances of the entity
@@ -215,19 +212,16 @@ void Entity::renderInstances(int count, unsigned int shaderIndex){
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
-    glPushMatrix();
     if (!cullFace)
-        glEnable(GL_CULL_FACE);
+        GL_CALL(glEnable(GL_CULL_FACE));
     //Set the color and material
     if (this->material)
         this->material->useMaterial();
-    GL_CALL(glColor4f(color.x, color.y, color.z, 1.0));
     GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
     if (!cullFace)
-        glDisable(GL_CULL_FACE);
-    glPopMatrix();
-	if (shaderIndex<shaders.size())
-		shaders[shaderIndex]->clearProgram();
+        GL_CALL(glDisable(GL_CULL_FACE));
+    if (shaderIndex<shaders.size())
+        shaders[shaderIndex]->clearProgram();
 }
 /*
 Creates a vertex buffer object of the specified size

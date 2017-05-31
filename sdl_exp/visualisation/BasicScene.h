@@ -57,9 +57,9 @@ protected:
 	 */
 	void setRenderAxis(bool state);
     
-    Axis axis;
+    std::shared_ptr<Axis> axis;
     std::unique_ptr<Skybox> skybox;
-	bool renderAxisState;
+	bool renderAxisState, renderSkyboxState;
 private:
 	/**
 	 * Internal render functionality, calls render()

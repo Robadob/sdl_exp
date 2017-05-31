@@ -637,7 +637,7 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
 		}
 	}
 	GLuint shaderId = createShader(type);
-	GL_CALL(glShaderSource(shaderId, shaderSources.size(), &shaderSources[0], nullptr));
+	GL_CALL(glShaderSource(shaderId,(GLsizei)shaderSources.size(), &shaderSources[0], nullptr));
 	GL_CALL(glCompileShader(shaderId));
 	std::string shaderName = getFilenameFromPath(*(shaderSourceFiles->end() - 1));
 	//Check for compile errors

@@ -16,10 +16,10 @@ uniform vec3 _lightSource;
 
 void main(void)  
 {     
-	eyeLightSource = vec3(_viewMat*vec4(_lightSource,1));  
-	vec4 tVertex = _modelViewMat * vec4(_vertex,1);   
+    eyeLightSource = vec3(_viewMat*vec4(_lightSource,1));  
+    vec4 tVertex = _modelViewMat * vec4(_vertex,1);   
     eyeVertex = vec3(tVertex);	
     eyeNormal = normalize(_normalMat * _normal);
-	
+    
     gl_Position = _projectionMat * tVertex;
 }

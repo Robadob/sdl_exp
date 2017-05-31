@@ -24,7 +24,7 @@ TextureCubeMap::TextureCubeMap(const char *cubemapDirectory, char *uniformName)
     :Texture(GL_TEXTURE_CUBE_MAP, cubemapDirectory, uniformName)
     , texturePath(cubemapDirectory == 0 ? SKYBOX_PATH : cubemapDirectory)
 {
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
     if (cubemapDirectory)
         _reload();
 }

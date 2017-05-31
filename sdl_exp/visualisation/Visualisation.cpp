@@ -64,6 +64,8 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
     this->window = SDL_CreateWindow
         (
@@ -94,15 +96,15 @@ bool Visualisation::init(){
         GLEW_INIT();
         
         // Setup gl stuff
-        glEnable(GL_DEPTH_TEST);
-        glCullFace(GL_BACK);
-        glEnable(GL_CULL_FACE);
-        glShadeModel(GL_SMOOTH);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_COLOR_MATERIAL);
-        glEnable(GL_NORMALIZE);
+        GL_CALL(glEnable(GL_DEPTH_TEST));
+        GL_CALL(glCullFace(GL_BACK));
+        GL_CALL(glEnable(GL_CULL_FACE));
+        GL_CALL(glShadeModel(GL_SMOOTH));
+        GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+        GL_CALL(glEnable(GL_LIGHTING));
+        GL_CALL(glEnable(GL_LIGHT0));
+        GL_CALL(glEnable(GL_COLOR_MATERIAL));
+        GL_CALL(glEnable(GL_NORMALIZE));
         GL_CALL(glBlendEquation(GL_FUNC_ADD));
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         setMSAA(this->msaaState);
@@ -276,14 +278,6 @@ void Visualisation::run(){
 
     this->close();
 }
-void Visualisation::defaultProjection(){
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(this->frustum));
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glLoadMatrixf(glm::value_ptr(this->camera.view()));
-}
 void Visualisation::setMSAA(bool state){
     this->msaaState = state;
     if (this->msaaState)
@@ -334,12 +328,12 @@ void Visualisation::toggleMouseMode(){
 void Visualisation::resizeWindow(){
     // Use the sdl drawable size
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
-	// Get the view frustum using GLM. Alternatively glm::perspective could be used.
-	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), this->windowWidth, this->windowHeight, NEAR_CLIP, FAR_CLIP);
-	// Notify other elements
+    // Get the view frustum using GLM. Alternatively glm::perspective could be used.
+	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
+    // Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
-	if (this->scene)
-		this->scene->_resize(this->windowWidth, this->windowHeight);
+    if (this->scene)
+      this->scene->_resize(this->windowWidth, this->windowHeight);
 }
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.

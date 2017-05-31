@@ -1,12 +1,16 @@
-#version 120
+#version 430
 
-varying vec3 u_normal;
+uniform mat4 _modelViewMat;
+uniform mat4 _projectionMat;
+
+in vec3 _vertex;
+
+out vec3 u_normal;
+
 void main()
 {
-  //pass gl_Vertex to frag shader to calculate face normal
-  u_normal = (gl_ModelViewMatrix * gl_Vertex).rgb;
+  //pass _vertex to frag shader to calculate face normal
+  u_normal = (_modelViewMat * vec4(_vertex,1.0f)).rgb;
   //apply model view proj
-  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-  //Pass gl_Color to frag shader
-  gl_FrontColor = gl_Color;
+  gl_Position = _projectionMat * _modelViewMat * vec4(_vertex,1.0f);
 }

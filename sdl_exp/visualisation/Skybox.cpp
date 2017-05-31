@@ -25,23 +25,10 @@ Renders the skybox
 */
 void Skybox::render(unsigned int shaderIndex)
 {
-    glPushMatrix();
-    ////Setup shaders
-
     // Enable/Disable features
-    glPushAttrib(GL_ENABLE_BIT);
-    glEnable(GL_TEXTURE_CUBE_MAP);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_BLEND);
-
-    glDepthMask(GL_FALSE);
+    GL_CALL(glDisable(GL_DEPTH_TEST));
 	Entity::render(shaderIndex);
-    glDepthMask(GL_TRUE);
-
-    // Restore enable bits and matrix
-    glPopAttrib();
-    glPopMatrix();
+	GL_CALL(glEnable(GL_DEPTH_TEST));
 }
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used

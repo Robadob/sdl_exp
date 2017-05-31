@@ -225,11 +225,6 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
     if (this->viewMat.matrixPtr)
         m = *this->viewMat.matrixPtr * m;
     //Set the model view matrix
-    if (this->vertexShaderVersion <= 120)
-    {//If old shaders where gl_ModelViewMatrix is available
-        GL_CALL(glMatrixMode(GL_MODELVIEW));
-        GL_CALL(glLoadMatrixf(glm::value_ptr(m)));
-    }
     if (this->modelviewMatLoc >= 0)
     {//If modeview matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->modelviewMatLoc, 1, GL_FALSE, glm::value_ptr(m)));
@@ -253,12 +248,6 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
 void Shaders::_useProgram()
 {
     _useProgramModelMatrices();
-    //Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-    if (this->vertexShaderVersion <= 120 && this->projectionMat.matrixPtr > nullptr)
-    {//If old shaders where gl_ModelViewProjectionMatrix is available
-        GL_CALL(glMatrixMode(GL_PROJECTION));
-        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projectionMat.matrixPtr)));
-    }
     if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr > nullptr)
     {//If projection matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->projectionMat.location, 1, GL_FALSE, glm::value_ptr(*this->projectionMat.matrixPtr)));
@@ -271,13 +260,6 @@ void Shaders::_useProgram()
 
     GLuint activeVBO = 0;
     //Set the vertex (location) attribute
-    if (this->vertexShaderVersion <= 120 && this->positions.vbo > 0)
-    {//If old shaders where gl_Vertex is available
-		GL_CALL(glEnableClientState(GL_VERTEX_ARRAY));
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->positions.vbo));
-		GL_CALL(glVertexPointer(this->positions.components, this->positions.componentType, this->positions.stride, static_cast<char *>(nullptr) + this->positions.offset));
-        activeVBO = this->positions.vbo;
-    }
     if (this->positions.location >= 0 && this->positions.vbo > 0)
     {//If vertex attribute location and vbo are known
 		GL_CALL(glEnableVertexAttribArray(this->positions.location));
@@ -298,16 +280,6 @@ void Shaders::_useProgram()
     }
 
     //Set the vertex normal attribute
-    if (this->vertexShaderVersion <= 120 && this->normals.vbo > 0)
-    {//If old shaders where gl_Vertex is available
-		GL_CALL(glEnableClientState(GL_NORMAL_ARRAY));
-        if (activeVBO != this->normals.vbo)
-        {
-            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->normals.vbo));
-            activeVBO = this->normals.vbo;
-        }
-        GL_CALL(glNormalPointer(this->normals.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
-    }
     if (this->normals.location >= 0 && this->normals.vbo > 0)
     {//If vertex attribute location and vbo are known
 		GL_CALL(glEnableVertexAttribArray(this->normals.location));
@@ -330,16 +302,6 @@ void Shaders::_useProgram()
 		}
     }
     //Set the vertex color attributes
-    if (this->vertexShaderVersion <= 120 && this->colors.vbo > 0)
-    {//If old shaders where gl_Color is available
-		GL_CALL(glEnableClientState(GL_COLOR_ARRAY));
-        if (activeVBO != this->colors.vbo)
-        {
-            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->colors.vbo));
-            activeVBO = this->colors.vbo;
-        }
-        GL_CALL(glColorPointer(this->colors.components, this->colors.componentType, this->colors.stride, static_cast<char *>(nullptr) + this->colors.offset));
-    }
     if (this->colors.location >= 0 && this->colors.vbo > 0)
     {//If color attribute location and vbo are known
 		GL_CALL(glEnableVertexAttribArray(this->colors.location));
@@ -363,16 +325,6 @@ void Shaders::_useProgram()
     }
 
     //Set the vertex texture coord attributes
-    if (this->vertexShaderVersion <= 140 && this->texcoords.vbo > 0)
-    {//If old shaders where gl_TexCoord is available
-		GL_CALL(glEnableClientState(GL_TEXTURE_COORD_ARRAY));
-        if (activeVBO != this->texcoords.vbo)
-        {
-            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->texcoords.vbo));
-            activeVBO = this->texcoords.vbo;
-        }
-        GL_CALL(glTexCoordPointer(this->texcoords.components, this->texcoords.componentType, this->texcoords.stride, static_cast<char *>(nullptr) + this->texcoords.offset));
-    }
     if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
     {//If texture attribute location and vbo are known
 		GL_CALL(glEnableVertexAttribArray(this->texcoords.location));
@@ -563,7 +515,7 @@ bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name)
     {
         if (error == GL_INVALID_VALUE)
             printf("%s(%i) GL Error Occurred;\n%s\n", __FILE__, __LINE__, (char*)(gluErrorString(error)));
-#if EXIT_ON_ERROR
+#ifdef EXIT_ON_ERROR
         getchar();
         exit(1);
 #endif

@@ -111,7 +111,11 @@ bool Visualisation::init(){
         setMSAA(this->msaaState);
 
         // Setup the projection matrix
-        this->resizeWindow();
+		this->resizeWindow(); 
+    	
+		GLuint vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
         GL_CHECK();
         return true;
     }
@@ -333,6 +337,7 @@ void Visualisation::_run()
 				// Update the fps in the window title
 				this->updateFPS();
 
+<<<<<<< HEAD
 				this->render();
 			}
 			SDL_StopTextInput();

@@ -33,10 +33,11 @@ void Material::useMaterial(){
     float spec[4] = { this->specular.x, this->specular.y, this->specular.z, this->specular.w };
     
     // Call gl material fns
-    GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb));
-    GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diff));
-    GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec));
-    GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &this->shininess));
+    //GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb));
+    //GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diff));
+    //GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec));
+    //GL_CALL(glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &this->shininess));
+	fprintf(stderr,"materials are disabled\n");
     
 }
 

@@ -25,15 +25,10 @@ Renders the skybox
 */
 void Skybox::render(unsigned int shaderIndex)
 {
-    bool isBlend=false;
-    glGetBooleanv(GL_BLEND, &isBlend);
     // Enable/Disable features
     GL_CALL(glDisable(GL_DEPTH_TEST));
-    if(isBlend)
-      GL_CALL(glDisable(GL_BLEND));
     Entity::render(shaderIndex);
-    if(isBlend)
-      GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glEnable(GL_DEPTH_TEST));
 }
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used

@@ -49,7 +49,9 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
     helpText->setVisible(false);
     hud.add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
 }
-Visualisation::~Visualisation(){}
+Visualisation::~Visualisation()
+{
+}
 bool Visualisation::init(){
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -160,6 +162,7 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
 void Visualisation::close(){
     //Delete objects before we delete the GL context!
     fpsDisplay.reset();
+	helpText.reset();
     this->hud.clear();
     if (this->scene)
     {

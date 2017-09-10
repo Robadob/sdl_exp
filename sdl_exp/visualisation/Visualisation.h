@@ -8,6 +8,8 @@
 #include <memory>
 #include "Camera.h"
 #include "HUD.h"
+#include <thread>
+#include <atomic>
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -46,9 +48,18 @@ public:
 	/**
 	 * Executes the render loop, this is a blocking call
      * @see quit() to externally kill the loop
-     * @todo Make a runAsync() method
 	 */
 	void run();
+	/**
+	 * Executes the redner loop in an asynchronous background thread
+     * @see quit() to externally kill the loop
+	 */
+	void runAsync();
+	/**
+	 * Returns whether the window is currently rendering
+	 * @note This may report false early if the rendering is in the process of exiting
+	 */
+	bool isRunning() const { return continueRender; }
 	/**
 	 * @return The current window title
 	 */
@@ -75,10 +86,6 @@ public:
 	 * Toggles whether the mouse is hidden and returned relative to the window
 	 */
     void toggleMouseMode();
-	/**
-	 * Loads the ModelView and Projection matrices using the old fixed function pipeline methods
-	 */
-	void defaultProjection();
 	/**
 	 * Toggles whether Multi-Sample Anti-Aliasing should be used or not
 	 * @param state The desired MSAA state
@@ -157,7 +164,11 @@ private:
 	 * Provides destruction of the object, deletes child objects, removes the GL context, closes the window and calls SDL_quit()
 	 */
     void close();
-
+	/**
+	 * Internal run method, allows us to avoid starting the render loop if it's already executing when run() or runAsync() are called
+	 */
+	void _run();
+	std::thread *t;
     SDL_Window* window;
     SDL_Rect windowedBounds;
     SDL_GLContext context;
@@ -167,8 +178,8 @@ private:
 	std::shared_ptr<Scene> scene;
     glm::mat4 frustum;
 
-    bool isInitialised;
-    bool continueRender;
+	bool isInitialised;
+	std::atomic<bool> continueRender;
 
     bool msaaState;
 

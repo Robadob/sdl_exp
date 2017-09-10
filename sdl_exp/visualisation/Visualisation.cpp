@@ -163,6 +163,7 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     }
 }
 void Visualisation::close(){
+	killThread();
 	assert(this->window);//There should always be a window, it might just be hidden
 	SDL_GL_MakeCurrent(this->window, this->context);
     //Delete objects before we delete the GL context!

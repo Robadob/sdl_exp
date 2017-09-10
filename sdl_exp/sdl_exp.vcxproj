@@ -174,10 +174,12 @@
     <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
     <ClCompile Include="visualisation\multipass\RenderPass.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
+    <ClCompile Include="visualisation\ParticleFX.cpp" />
     <ClCompile Include="visualisation\shader\ComputeShader.cpp" />
     <ClCompile Include="visualisation\shader\GaussianBlur.cpp" />
     <ClCompile Include="visualisation\shader\ShaderCore.cpp" />
     <ClCompile Include="visualisation\shader\Shaders.cpp" />
+    <ClCompile Include="visualisation\shader\Sort.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
     <ClCompile Include="visualisation\Sprite2D.cpp" />
     <ClCompile Include="visualisation\Text.cpp" />
@@ -214,10 +216,12 @@
     <ClInclude Include="visualisation\multipass\MultiPassScene.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
+    <ClInclude Include="visualisation\ParticleFX.h" />
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
     <ClInclude Include="visualisation\shader\GaussianBlur.h" />
     <ClInclude Include="visualisation\shader\ShaderCore.h" />
     <ClInclude Include="visualisation\shader\Shaders.h" />
+    <ClInclude Include="visualisation\shader\Sort.h" />
     <ClInclude Include="visualisation\Skybox.h" />
     <ClInclude Include="visualisation\Sprite2D.h" />
     <ClInclude Include="visualisation\Text.h" />

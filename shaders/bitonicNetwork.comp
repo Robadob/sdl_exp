@@ -1,0 +1,51 @@
+#version 430
+//https://wiki.rice.edu/confluence/download/attachments/4435861/comp322-s12-lec28-slides-JMC.pdf?version=1&modificationDate=1333163955158
+layout(local_size_x=256) in;
+
+buffer Items
+{
+	vec4 items[];
+};
+//Total items
+uniform int itemCount;
+uniform int threadCount;
+uniform int hop;
+uniform int hop2;
+uniform int periodisation;
+uniform int direction;
+//Camera pos
+uniform vec3 eye;
+//Camera dir
+//uniform vec3 look;
+float distFromEye(vec3 particle)
+{
+	return length(eye-particle);
+}
+//Bitonic sequence generator
+void main () 
+{
+    //Calculate indexes to be Compare&Swap'd
+	uint indexA = (gl_GlobalInvocationID.x%hop)+((gl_GlobalInvocationID.x/hop)*hop2);	
+	uint indexB = indexA+hop;
+	
+	//Check indexes are in range
+	if(indexB>=itemCount||indexA>=itemCount||gl_GlobalInvocationID.x>=threadCount)
+		return;
+	
+	//Read items
+	int mapA = floatBitsToInt(items[indexA].w);
+	int mapB = floatBitsToInt(items[indexB].w);
+	vec3 particleA = items[mapA].xyz;
+	vec3 particleB = items[mapB].xyz;
+	
+	//Every [periodisation] threads we invert direction
+	int flip = int(gl_GlobalInvocationID.x/periodisation)%2;
+	
+	//Compare (Bring furthest to front)
+	if((direction<0)^^(flip!=0)^^(distFromEye(particleB)<distFromEye(particleA)))
+	{//xor chain ensures only true when odd number of conditions == true
+		//and Swap
+		items[indexA].w=intBitsToFloat(mapB);
+		items[indexB].w=intBitsToFloat(mapA);
+	}
+}

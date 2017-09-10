@@ -10,7 +10,8 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
     , tick(0.0f)
     , polarity(-1)
-    , instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
+	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
+	, particles(std::make_shared<ParticleFX>(visualisation.getCamera()))
 #ifdef __CUDACC__
     , cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
     , texBuf("_texBuf", cuTexBuf, true)
@@ -20,7 +21,8 @@ EntityScene::EntityScene(Visualisation &visualisation)
 {
     registerEntity(deerModel);
     registerEntity(colorModel);
-    registerEntity(instancedSphere);
+	registerEntity(instancedSphere);
+	registerEntity(particles);
     this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
@@ -64,7 +66,8 @@ void EntityScene::render()
 {
     colorModel->render();
     deerModel->render();
-    this->instancedSphere->renderInstances(100);
+	this->instancedSphere->renderInstances(100);
+	this->particles->render();
 }
 /*
 Called when the user requests a reload

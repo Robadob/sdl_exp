@@ -108,6 +108,21 @@ glm::vec3 Camera::getPureUp() const{
 glm::vec3 Camera::getRight() const{
     return right;
 }
+const glm::vec3 *Camera::getEyePtr() const{
+	return &eye;
+}
+const glm::vec3 *Camera::getLookPtr() const{
+	return &look;
+}
+const glm::vec3 *Camera::getUpPtr() const{
+	return &up;
+}
+const glm::vec3 *Camera::getPureUpPtr() const{
+	return &pureUp;
+}
+const glm::vec3 *Camera::getRightPtr() const{
+	return &right;
+}
 const glm::mat4 *Camera::getViewMatPtr() const{
     return &viewMat;
 }

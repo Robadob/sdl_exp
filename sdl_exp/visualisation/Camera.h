@@ -113,13 +113,39 @@ public:
 	 */
 	glm::vec3 getRight() const;
 	/**
-	 * Returns a constant pointer to the cameras modelview matrix
+	* Returns a read-only pointer to the cameras location
+	* @return A pointer to the location of the camera in world space
+	*/
+	const glm::vec3 *getEyePtr() const;
+	/**
+	* Returnsa read-only pointer to  the cameras normalized direction vector
+	* @return A pointer to the normalized direction of the camera
+	*/
+	const glm::vec3 *getLookPtr() const;
+	/**
+	* Returns a read-only pointer to the cameras normalized up vector
+	* @return A pointer to the normalized direction the camera treats as upwards
+	*/
+	const glm::vec3 *getUpPtr() const;
+	/**
+	* Returns a read-only pointer to  pureUp
+	* This value is used by the stabilisation to prevent the camera rolling unintentionally
+	* @return A pointer to the normalized direction the camera treats as the true up
+	*/
+	const glm::vec3 *getPureUpPtr() const;
+	/**
+	* Returns a read-only pointer to the cameras normalized right vector
+	* @return A pointer to the normalized direction the camera treats as rightwards
+	*/
+	const glm::vec3 *getRightPtr() const;
+	/**
+	 * Returns a read-only pointer to the cameras modelview matrix
 	 * This pointer can be used to continuously track the modelview matrix
 	 * @return A pointer to the modelview matrix
 	 */
 	const glm::mat4 *Camera::getViewMatPtr() const;
 	/**
-	 * Returns a constant pointer to the cameras skybox modelview matrix
+	 * Returns a read-only pointer to the cameras skybox modelview matrix
 	 * This pointer can be used to continuously track the skybox modelview matrix
 	 * @return A pointer to the modelview matrix
 	 */

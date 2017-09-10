@@ -131,6 +131,12 @@
     <ClCompile Include="visualisation\util\Optimus.cpp">
       <Filter>Source Files\Visualisation\Util</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\shader\Sort.cpp">
+      <Filter>Source Files\Visualisation\Shader\util</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\ParticleFX.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -233,6 +239,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\util\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\Sort.h">
+      <Filter>Header Files\Visualisation\Shader\util</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\ParticleFX.h">
+      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -3,9 +3,10 @@
 
 #include "visualisation/BasicScene.h"
 #include "visualisation/Entity.h"
-#include "visualisation/Text.h"
 
 #include "visualisation/texture/TextureBuffer.h"
+#include "visualisation/ParticleFX.h"
+
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
@@ -27,7 +28,8 @@ private:
     TextureBuffer<float> texBuf;
     std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> deerModel;
-    std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<ParticleFX> particles;
     float tick;
     int polarity;
 };

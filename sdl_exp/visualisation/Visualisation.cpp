@@ -265,12 +265,19 @@ void Visualisation::render()
 }
 void Visualisation::runAsync()
 {
-	if (!t&&!continueRender)
+	if (!continueRender)
 	{
-		//Curiously, if we destroy a host-thread window from a different thread, the glContext breaks
-		//However the inverse is not true
-		SDL_GL_MakeCurrent(this->window, NULL);
-		SDL_DestroyWindow(this->window);
+		if (t)
+		{//Async window was closed via cross, so thread still exists
+			killThread();
+		}
+		else
+		{
+			//Curiously, if we destroy a host-thread window from a different thread, the glContext breaks
+			//However the inverse is not true
+			SDL_GL_MakeCurrent(this->window, NULL);
+			SDL_DestroyWindow(this->window);
+		}
 		this->window = nullptr;
 		this->t = new std::thread(&Visualisation::_run, this);
 	}
@@ -281,8 +288,10 @@ void Visualisation::runAsync()
 }
 void Visualisation::run()
 {
-	if (!t&&!continueRender)
+	if (!continueRender)
 	{
+		//Incase Async window was closed via cross and thread still exists
+		killThread();
 		_run();
 	}
 	else
@@ -355,8 +364,16 @@ void Visualisation::setWindowTitle(const char *windowTitle){
 }
 void Visualisation::quit(){
 	this->continueRender = false;
-	if (this->t)
+	if (this->t && std::this_thread::get_id()!= this->t->get_id())
 	{
+		killThread();
+	}
+}
+void Visualisation::killThread()
+{
+	if (this->t && std::this_thread::get_id() != this->t->get_id())
+	{
+		this->continueRender = false;
 		//Wait for thread to exit
 		this->t->join();
 		delete this->t;

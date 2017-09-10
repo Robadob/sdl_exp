@@ -168,6 +168,10 @@ private:
 	 * Internal run method, allows us to avoid starting the render loop if it's already executing when run() or runAsync() are called
 	 */
 	void _run();
+	/**
+	 * Kills thread t, only to be called from host threead.
+	 */
+	void killThread();
 	std::thread *t;
     SDL_Window* window;
     SDL_Rect windowedBounds;

@@ -28,16 +28,17 @@
 #define DEFAULT_WINDOW_HEIGHT 720
 
 Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
-    : hud(windowWidth, windowHeight)
+    : t(nullptr)
+    , hud(windowWidth, windowHeight)
     , camera(glm::vec3(50,50,50))
     , scene(nullptr)
     , isInitialised(false)
-    , continueRender(true)
-	, msaaState(true)
+	, continueRender(false)
+    , msaaState(true)
     , windowTitle(windowTitle)
     , windowWidth(windowWidth)
     , windowHeight(windowHeight)
-    , fpsDisplay(0)
+	, fpsDisplay(nullptr)
 {
     this->isInitialised = this->init();
 
@@ -51,10 +52,12 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
 }
 Visualisation::~Visualisation()
 {
+	this->close();
 }
 bool Visualisation::init(){
     SDL_Init(SDL_INIT_VIDEO);
 
+	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     // Enable MSAA (Must occur before SDL_CreateWindow)
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
@@ -79,8 +82,8 @@ bool Visualisation::init(){
         SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
         );
 
-    if (this->window == NULL){
-        printf("window failed to init");
+    if (!this->window){
+        printf("Window failed to init.\n");
     }
     else {
         SDL_GetWindowPosition(window, &this->windowedBounds.x, &this->windowedBounds.y);
@@ -160,6 +163,9 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     }
 }
 void Visualisation::close(){
+	killThread();
+	assert(this->window);//There should always be a window, it might just be hidden
+	SDL_GL_MakeCurrent(this->window, this->context);
     //Delete objects before we delete the GL context!
     fpsDisplay.reset();
 	helpText.reset();
@@ -167,10 +173,10 @@ void Visualisation::close(){
     if (this->scene)
     {
         this->scene.reset();
-    }
+	}
+	SDL_DestroyWindow(this->window);
+	this->window = nullptr;
     SDL_GL_DeleteContext(this->context);
-    SDL_DestroyWindow(this->window);
-    this->window = nullptr;
     SDL_Quit();
 }
 void Visualisation::render()
@@ -258,28 +264,90 @@ void Visualisation::render()
     // update the screen
     SDL_GL_SwapWindow(window);
 }
-void Visualisation::run(){
+void Visualisation::runAsync()
+{
+	if (!continueRender)
+	{
+		if (t)
+		{//Async window was closed via cross, so thread still exists
+			killThread();
+		}
+		else
+		{
+			//Curiously, if we destroy a host-thread window from a different thread, the glContext breaks
+			//However the inverse is not true
+			SDL_GL_MakeCurrent(this->window, NULL);
+			SDL_DestroyWindow(this->window);
+		}
+		this->window = nullptr;
+		this->t = new std::thread(&Visualisation::_run, this);
+	}
+	else
+	{
+		printf("Already running! Call quit() to close it first!\n");
+	}
+}
+void Visualisation::run()
+{
+	if (!continueRender)
+	{
+		//Incase Async window was closed via cross and thread still exists
+		killThread();
+		_run();
+	}
+	else
+	{
+		printf("Already running! Call quit() to close it first!\n");
+	}
+}
+void Visualisation::_run()
+{
     if (!this->isInitialised){
-        printf("Visulisation not initialised yet.");
+        printf("Visulisation not initialised yet.\n");
     }
     else if (!this->scene){
-        printf("Scene not yet set.");
+        printf("Scene not yet set.\n");
     }
-    else {
-        SDL_ShowWindow(this->window);
-        SDL_StartTextInput();
-        this->continueRender = true;
-        while (this->continueRender){
-            // Update the fps in the window title
-            this->updateFPS();
+	else {
+		//Recreate window in current thread (else IO fails)
+		if (this->window)
+		{
+			SDL_GL_MakeCurrent(this->window, NULL);
+			SDL_DestroyWindow(this->window);
+		}
+		this->window = SDL_CreateWindow
+		(
+			this->windowTitle,
+			this->windowedBounds.x,
+			this->windowedBounds.y,
+			this->windowedBounds.w,
+			this->windowedBounds.h,
+			SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
+		);
+		if (!this->window){
+			printf("Window failed to init.\n");
+		}
+		else {
+			SDL_GL_MakeCurrent(this->window, this->context);
+			this->resizeWindow();
+			GL_CHECK();
+			SDL_StartTextInput();
+			this->continueRender = true;
+			while (this->continueRender){
+				// Update the fps in the window title
+				this->updateFPS();
 
-            this->render();
-        }
-        SDL_StopTextInput();
-
+				this->render();
+			}
+			SDL_StopTextInput();
+			//Release mouse lock
+			if (SDL_GetRelativeMouseMode()){
+				SDL_SetRelativeMouseMode(SDL_FALSE);
+			}
+			//Hide window
+			SDL_HideWindow(window);
+		}
     }
-
-    this->close();
 }
 void Visualisation::setMSAA(bool state){
     this->msaaState = state;
@@ -296,7 +364,35 @@ void Visualisation::setWindowTitle(const char *windowTitle){
     SDL_SetWindowTitle(this->window, this->windowTitle);
 }
 void Visualisation::quit(){
-    this->continueRender = false;
+	this->continueRender = false;
+	if (this->t && std::this_thread::get_id()!= this->t->get_id())
+	{
+		killThread();
+	}
+}
+void Visualisation::killThread()
+{
+	if (this->t && std::this_thread::get_id() != this->t->get_id())
+	{
+		this->continueRender = false;
+		//Wait for thread to exit
+		this->t->join();
+		delete this->t;
+		this->t = nullptr;
+		//Recreate hidden window in current thread, so context is stable
+		SDL_GL_MakeCurrent(this->window, NULL);
+		SDL_DestroyWindow(this->window);
+		this->window = SDL_CreateWindow
+			(
+			this->windowTitle,
+			this->windowedBounds.x,
+			this->windowedBounds.y,
+			this->windowedBounds.w,
+			this->windowedBounds.h,
+			SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
+			);
+		SDL_GL_MakeCurrent(this->window, this->context);
+	}
 }
 void Visualisation::toggleFullScreen(){
     if (this->isFullscreen()){

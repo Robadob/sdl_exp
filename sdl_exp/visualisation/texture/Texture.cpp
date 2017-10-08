@@ -175,6 +175,16 @@ Binds the texture to the passed shader so it will be used at render
 @param shaders The shader to bind to
 @param uniformName The uniform name within the shader to bind to (defaults to the value of TEXTURE_UNIFORM_NAME)
 */
+bool Texture::bindToShader(std::shared_ptr<Shaders> shaders, const char *uniformName)
+{
+    if (!this->texName)
+        return false;
+    if (uniformName)
+        shaders->addTextureUniform(this->texName, uniformName, texType);
+    else
+        shaders->addTextureUniform(this->texName, this->uniformName, texType);
+    return true;
+}
 bool Texture::bindToShader(Shaders *shaders, const char *uniformName)
 {
     if (!this->texName)

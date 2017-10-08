@@ -44,7 +44,7 @@ public:
 	 * Also handle user inputs
 	 * @note This only need be called if manually triggering frame updates, run() should otherwise be used
 	 */
-    void Visualisation::render();
+    void render();
 	/**
 	 * Executes the render loop, this is a blocking call
      * @see quit() to externally kill the loop

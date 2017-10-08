@@ -41,6 +41,7 @@ inline static void InitGlew() {
         getchar();
         exit(1);
     }
+    glGetError(); //Purge init error?
 }
 #define GLEW_INIT() (InitGlew())
 

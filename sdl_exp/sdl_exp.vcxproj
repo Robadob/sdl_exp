@@ -88,7 +88,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;openvr_api.lib;freetype263d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -106,7 +106,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;openvr_api.lib;freetype263d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
@@ -130,7 +130,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;openvr_api.lib;freetype263.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -152,7 +152,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;openvr_api.lib;freetype263.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -167,6 +167,7 @@
     <ClCompile Include="visualisation\BasicScene.cpp" />
     <ClCompile Include="visualisation\Camera.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
+    <ClCompile Include="visualisation\Entity2.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
     <ClCompile Include="visualisation\multipass\BackBuffer.cpp" />
@@ -187,6 +188,10 @@
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp" />
     <ClCompile Include="visualisation\util\Optimus.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
+    <ClCompile Include="visualisation\VisualisationVR.cpp" />
+    <ClCompile Include="visualisation\vr\CameraVR.cpp" />
+    <ClCompile Include="visualisation\vr\CompanionVR.cpp" />
+    <ClCompile Include="visualisation\vr\RenderModelsVR.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">
@@ -201,6 +206,7 @@
     <ClInclude Include="visualisation\BasicScene.h" />
     <ClInclude Include="visualisation\Camera.h" />
     <ClInclude Include="visualisation\Entity.h" />
+    <ClInclude Include="visualisation\Entity2.h" />
     <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\interface\FBuffer.h" />
     <ClInclude Include="visualisation\interface\Reloadable.h" />
@@ -216,6 +222,8 @@
     <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
     <ClInclude Include="visualisation\shader\GaussianBlur.h" />
+    <ClInclude Include="visualisation\shader\Light.h" />
+    <ClInclude Include="visualisation\shader\Material.h" />
     <ClInclude Include="visualisation\shader\ShaderCore.h" />
     <ClInclude Include="visualisation\shader\Shaders.h" />
     <ClInclude Include="visualisation\Skybox.h" />
@@ -227,6 +235,11 @@
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
     <ClInclude Include="visualisation\util\GLcheck.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
+    <ClInclude Include="visualisation\VisualisationVR.h" />
+    <ClInclude Include="visualisation\vr\CameraVR.h" />
+    <ClInclude Include="visualisation\vr\CompanionVR.h" />
+    <ClInclude Include="visualisation\vr\RenderModelsVR.h" />
+    <ClInclude Include="visualisation\vr\utilVR.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

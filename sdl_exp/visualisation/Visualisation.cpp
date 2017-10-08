@@ -54,8 +54,14 @@ Visualisation::~Visualisation()
 {
 	this->close();
 }
-bool Visualisation::init(){
-    SDL_Init(SDL_INIT_VIDEO);
+bool Visualisation::init()
+{
+    //Create SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+        printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+        return false;
+    }
 
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     // Enable MSAA (Must occur before SDL_CreateWindow)
@@ -71,6 +77,9 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+#ifdef _DEBUG //Puts GL in debug mode (may harm performance or do nothing, depending on implementation)
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
 
     this->window = SDL_CreateWindow
         (
@@ -83,43 +92,57 @@ bool Visualisation::init(){
         );
 
     if (!this->window){
-        printf("Window failed to init.\n");
+        printf("Window failed to init: %s\n", SDL_GetError());
+        return false;
     }
-    else {
-        SDL_GetWindowPosition(window, &this->windowedBounds.x, &this->windowedBounds.y);
-        SDL_GetWindowSize(window, &this->windowedBounds.w, &this->windowedBounds.h);
+    SDL_GetWindowPosition(window, &this->windowedBounds.x, &this->windowedBounds.y);
+    SDL_GetWindowSize(window, &this->windowedBounds.w, &this->windowedBounds.h);
 
-        // Get context
-        this->context = SDL_GL_CreateContext(window);
-
-        //Enable VSync
-        int swapIntervalResult = SDL_GL_SetSwapInterval(VSYNC);
-        if (swapIntervalResult == -1){
-            printf("Swap Interval Failed: %s\n", SDL_GetError());
-        }
-        
-        GLEW_INIT();
-        
-        // Setup gl stuff
-        GL_CALL(glEnable(GL_DEPTH_TEST));
-        GL_CALL(glCullFace(GL_BACK));
-        GL_CALL(glEnable(GL_CULL_FACE));
-        GL_CALL(glShadeModel(GL_SMOOTH));
-        GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-        GL_CALL(glEnable(GL_LIGHTING));
-        GL_CALL(glEnable(GL_LIGHT0));
-        GL_CALL(glEnable(GL_COLOR_MATERIAL));
-        GL_CALL(glEnable(GL_NORMALIZE));
-        GL_CALL(glBlendEquation(GL_FUNC_ADD));
-        GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-        setMSAA(this->msaaState);
-
-        // Setup the projection matrix
-        this->resizeWindow();
-        GL_CHECK();
-        return true;
+    // Get context
+    this->context = SDL_GL_CreateContext(window);
+    if (!this->context)
+    {
+        printf("OpenGL context could not be created: %s\n", SDL_GetError());
+        return false;
     }
-    return false;
+
+    //Enable VSync
+    int swapIntervalResult = SDL_GL_SetSwapInterval(VSYNC);
+    if (swapIntervalResult == -1){
+        printf("Swap Interval Failed: %s\n", SDL_GetError());
+    }
+        
+    GLEW_INIT();
+
+#ifdef _DEBUG
+    //Callback format
+    //void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const char* message, const void* userParam)
+    //{
+    //    printf("GL Error: %s\n", message);
+    //}
+    //glDebugMessageCallback((GLDEBUGPROC)DebugCallback, nullptr);
+    //glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
+
+    // Setup gl stuff
+    GL_CALL(glEnable(GL_DEPTH_TEST));
+    GL_CALL(glCullFace(GL_BACK));
+    GL_CALL(glEnable(GL_CULL_FACE));
+    GL_CALL(glShadeModel(GL_SMOOTH));
+    GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+    GL_CALL(glEnable(GL_LIGHTING));
+    GL_CALL(glEnable(GL_LIGHT0));
+    GL_CALL(glEnable(GL_COLOR_MATERIAL));
+    GL_CALL(glEnable(GL_NORMALIZE));
+    GL_CALL(glBlendEquation(GL_FUNC_ADD));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    setMSAA(this->msaaState);
+
+    // Setup the projection matrix
+    this->resizeWindow();
+    GL_CHECK();
+    return true;
 }
 std::shared_ptr<Scene> Visualisation::setScene(std::unique_ptr<Scene> scene)
 {

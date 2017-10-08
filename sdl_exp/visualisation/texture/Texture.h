@@ -5,6 +5,8 @@
 #include "../shader/Shaders.h"
 
 #include <SDL/SDL_image.h>
+#include <memory>
+
 /*
 Shell texture class providing various utility methods for subclasses
 @note This class cannot be directly instantiated
@@ -17,7 +19,7 @@ public:
     virtual void reload() = 0;
     //void createTextureBufferObject(GLuint *tbo, GLuint *texture, GLuint size);
     //void deleteTextureBufferObject(GLuint *tbo); 
-    
+    bool bindToShader(std::shared_ptr<Shaders> shaders, const char *uniformName = 0);
 	bool bindToShader(Shaders *s, const char *uniformName = 0);
 	GLuint getName() const { return texName; }
 protected:

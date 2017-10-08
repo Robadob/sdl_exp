@@ -20,7 +20,7 @@ This paramters of this function wrap setTexture()
 */
 Texture2D::Texture2D(const char *uniformName, void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
     : Texture(GL_TEXTURE_2D, "", uniformName)
-    , texturePath(0)
+    , texturePath(nullptr)
 {
     setTexture(image, imageSize, width, height, internalFormat, format, type);
 }
@@ -44,6 +44,14 @@ void Texture2D::setTexture(void *image, size_t imageSize, unsigned int width, un
         GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     }
     GL_CALL(glTexImage2D(texType, 0, internalFormat, width, height, 0, format, type, image));
+    //Setup MipMap & Sampling
+    GL_CALL(glGenerateMipmap(texType));
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));//Tri linear filtering
+    GLfloat fLargest;
+    GL_CALL(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest));
+    GL_CALL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest));//Anistropic filtering (improves texture sampling at steep angle, especially visible with tiling patterns)
+
 	GL_CALL(glBindTexture(texType, 0));
 	dimensions = glm::uvec2(width, height);
 }

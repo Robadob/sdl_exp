@@ -48,6 +48,12 @@
     <Filter Include="Source Files\Visualisation\Util">
       <UniqueIdentifier>{561a15bc-295a-46ca-a632-3ba1da2d012d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\vr">
+      <UniqueIdentifier>{19a31deb-e72d-457e-a2d4-fa26eefb5ffc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\vr">
+      <UniqueIdentifier>{dd486ea9-5215-4510-bce0-2fee0e0872a1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -130,6 +136,21 @@
     </ClCompile>
     <ClCompile Include="visualisation\util\Optimus.cpp">
       <Filter>Source Files\Visualisation\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\VisualisationVR.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\CameraVR.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\CompanionVR.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\RenderModelsVR.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Entity2.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,6 +254,30 @@
     </ClInclude>
     <ClInclude Include="visualisation\util\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\VisualisationVR.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\CameraVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\CompanionVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\RenderModelsVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\utilVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Entity2.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\Light.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\Material.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

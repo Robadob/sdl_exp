@@ -18,7 +18,8 @@ Entity2::Entity2(const char *modelPath)
     , location(0)
 {
     shaders->setColor(glm::vec3(1));
-    loadModel();
+	loadModel();
+	shaders->setModelMatPtr(&modelMat);
 }
 
 Entity2::Entity2(
@@ -28,13 +29,13 @@ Entity2::Entity2(
     const float *tCoords, unsigned int tcComponents,
     unsigned int count,
     const void *faces, size_t fSize, unsigned int fComponents, unsigned int fCount,
-    std::shared_ptr<Texture2D> texture = nullptr)
+    std::shared_ptr<Texture2D> texture)
     : modelPath()
     , vertices(GL_FLOAT, vComponents, sizeof(float))//Components may be increased at runtime
     , normals(GL_FLOAT, nComponents, sizeof(float))
     , colors(GL_FLOAT, cComponents, sizeof(float))
     , texcoords(GL_FLOAT, tcComponents, sizeof(float))//Components may be increased at runtime
-    , faces(GL_UNSIGNED_INT, fComponents, fSize)//Components may be increased at runtime
+    , faces(GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
 {
     assert(vertices);
     assert(faces);
@@ -87,7 +88,8 @@ Entity2::Entity2(
         shaders->setTexCoordsAttributeDetail(this->texcoords);
         shaders->setRotationPtr(&this->rotation);
         shaders->setTranslationPtr(&this->location);
-    }
+	}
+	shaders->setModelMatPtr(&modelMat);
 }
 Entity2::~Entity2()
 {
@@ -419,7 +421,7 @@ void Entity2::addFace(const unsigned int(&faceData)[3][4], const unsigned int(&f
     {
         for (unsigned int i = 0; i < faceDataCount[0]; ++i)
             for (unsigned int j = 0; j < vertices.components; ++j)
-                ((float*)vertices.data)[((faces.count + i)*vertices.components) + j] = t_verts[((faceData[0][i]-1) * vertices.components) + j]*0.01;
+                ((float*)vertices.data)[((faces.count + i)*vertices.components) + j] = t_verts[((faceData[0][i]-1) * vertices.components) + j];
     }
     //Copy colors if present
     if (renderGroup.hasColors)
@@ -1017,22 +1019,6 @@ void Entity2::loadModel()
         shaders->setTranslationPtr(&this->location);
     }
     printf("Model : %s was loaded.\n%dv, %dvn, %dvc, %dvt, %df, %d/%dmat, %drg\n", modelPath.c_str(), vertices.count, normals.count, colors.count, texcoords.count, faces.count/faces.components, materials.size() - missingMats, materials.size(), renderGroup.size());
-    //for (int i = 15; i < 17;++i)
-    //{
-    //    auto &rg2 = renderGroup[i];
-    //    printf("[%d]+%d, %dcomps, %dvc/%dvn/%dvt\n", rg2.faceIndexStart, rg2.faceIndexCount, rg2.faceComponentCount, rg2.hasColors, rg2.hasNormals, rg2.hasTexCoords);
-    //    for (unsigned int j = rg2.faceIndexStart; j < rg2.faceIndexStart + rg2.faceIndexCount;++j)
-    //    {
-    //        unsigned int v = ((unsigned int*)faces.data)[j] * vertices.components;
-    //        unsigned int vn = ((unsigned int*)faces.data)[j] * normals.components;
-    //        unsigned int vt = ((unsigned int*)faces.data)[j] * texcoords.components;
-    //        printf("v(%.2f, %.2f, %.2f), n(%.2f, %.2f, %.2f), t(%.2f, %.2f, %.2f)\n",
-    //            ((float*)vertices.data)[v + 0], ((float*)vertices.data)[v + 1], ((float*)vertices.data)[v + 2],
-    //            ((float*)normals.data)[vn + 0], ((float*)normals.data)[vn + 1], ((float*)normals.data)[vn + 2],
-    //            ((float*)texcoords.data)[vt + 0], ((float*)texcoords.data)[vt + 1], ((float*)texcoords.data)[vt + 2]
-    //        );
-    //    }
-    //}
 }
 void Entity2::reload()
 {
@@ -1121,7 +1107,7 @@ void Entity2::render()
     //printf("%d\n", renderGroup[renderGroup.size() - 1].faceIndexStart+renderGroup[renderGroup.size() - 1].faceIndexCount);
     //GL_CALL(glDrawElements(GL_TRIANGLES, renderGroup[renderGroup.size() - 1].faceIndexStart + renderGroup[renderGroup.size() - 1].faceIndexCount, GL_UNSIGNED_INT, 0));
     //for (const auto &rg:renderGroup)
-    for (unsigned int i = 0; i < groups && i < renderGroup.size(); ++i)
+    for (unsigned int i = 0; i < renderGroup.size(); ++i)
     {
         const auto &rg = renderGroup[i];
         if (rg.materialId!=-1)

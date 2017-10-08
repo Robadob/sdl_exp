@@ -1,57 +1,59 @@
 #include "CameraVR.h"
 
 CameraVR::CameraVR(vr::IVRSystem *vr_HMD, float nearClip, float farClip)
-    : vr_HMD(vr_HMD)
+    : activeEye(Right)
+    , vr_HMD(vr_HMD)
     , nearClip(nearClip)
     , farClip(farClip)
     , projectionLeft(getProjectionEye(vr::Eye_Left))
     , projectionRight(getProjectionEye(vr::Eye_Right))
     , eyePosLeft(getPoseEye(vr::Eye_Left))
-    , eyePosRight(getPoseEye(vr::Eye_Right))
+	, eyePosRight(getPoseEye(vr::Eye_Right))
 {
     assert(vr_HMD);
+	useLeft();
 }
 void CameraVR::useLeft()
 {
-    //matMVP = m_mat4ProjectionLeft * m_mat4eyePosLeft * m_mat4HMDPose;
+	if (activeEye == Left)
+		return;
+	vpMat = projectionLeft * eyePosLeft * HMDPose;
+	activeEye = Left;
 }
 void CameraVR::useRight()
 {
-    //matMVP = m_mat4ProjectionRight * m_mat4eyePosRight *  m_mat4HMDPose;
+	if (activeEye == Right)
+		return;
+	vpMat = projectionRight * eyePosRight *  HMDPose;
+	activeEye = Right;
 }
-void CameraVR::update()
+void CameraVR::use(Eye eye)
 {
-    vr::VRCompositor()->WaitGetPoses(m_rTrackedDevicePose, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-
-    m_iValidPoseCount = 0;
-    m_strPoseClasses = "";
-    for (int nDevice = 0; nDevice < vr::k_unMaxTrackedDeviceCount; ++nDevice)
-    {
-        if (m_rTrackedDevicePose[nDevice].bPoseIsValid)
-        {
-            m_iValidPoseCount++;
-            m_rmat4DevicePose[nDevice] = ConvertSteamVRMatrixToMatrix4(m_rTrackedDevicePose[nDevice].mDeviceToAbsoluteTracking);
-            if (m_rDevClassChar[nDevice] == 0)
-            {
-                switch (m_pHMD->GetTrackedDeviceClass(nDevice))
-                {
-                case vr::TrackedDeviceClass_Controller:        m_rDevClassChar[nDevice] = 'C'; break;
-                case vr::TrackedDeviceClass_HMD:               m_rDevClassChar[nDevice] = 'H'; break;
-                case vr::TrackedDeviceClass_Invalid:           m_rDevClassChar[nDevice] = 'I'; break;
-                case vr::TrackedDeviceClass_GenericTracker:    m_rDevClassChar[nDevice] = 'G'; break;
-                case vr::TrackedDeviceClass_TrackingReference: m_rDevClassChar[nDevice] = 'T'; break;
-                default:                                       m_rDevClassChar[nDevice] = '?'; break;
-                }
-            }
-            m_strPoseClasses += m_rDevClassChar[nDevice];
-        }
-    }
-
-    if (m_rTrackedDevicePose[vr::k_unTrackedDeviceIndex_Hmd].bPoseIsValid)
-    {
-        HMDPose = glm::inverse(m_rmat4DevicePose[vr::k_unTrackedDeviceIndex_Hmd]);
-    }
+	if (activeEye == eye)
+		return;
+	if (eye == Left)
+		useLeft();
+	else
+		useRight();
 }
+
+const glm::mat4* CameraVR::getVPMatPtr() const
+{
+	return &vpMat;
+}
+
+const glm::mat4* CameraVR::getSkyboxVPMatPtr() const
+{
+	return &vpMat;//Purge translation from this
+}
+
+void CameraVR::setHMDPose(const glm::mat4& modelMat)
+{
+	HMDPose = modelMat;
+	eye = HMDPose*glm::vec4(0, 0, 0, 1);
+	use(activeEye);
+}
+
 glm::mat4 CameraVR::getProjectionEye(vr::Hmd_Eye nEye)
 {
     if (!vr_HMD)

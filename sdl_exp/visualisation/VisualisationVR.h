@@ -16,7 +16,7 @@
 #include "vr/CameraVR.h"
 #include "multipass/FrameBuffer.h"
 #include "vr/CompanionVR.h"
-#include "vr/RenderModelsVR.h"
+#include "vr/TrackedDevicesVR.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -213,8 +213,7 @@ private:
     std::shared_ptr<FrameBuffer> vr_leftResolveFB, vr_rightResolveFB;
     std::shared_ptr<CompanionVR> vr_companion;
 
-    std::shared_ptr<CameraVR> vr_camera;
-    std::shared_ptr<RenderModelsVR> vr_renderModels;
+    std::shared_ptr<TrackedDevicesVR> vr_renderModels;
     void renderStereoTargets();
 };
 

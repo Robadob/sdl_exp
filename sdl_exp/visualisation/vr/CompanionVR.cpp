@@ -7,3 +7,8 @@ CompanionVR::CompanionVR()
     //See SetupCompanionWindow()
     //See Sprite2D
 }
+
+void CompanionVR::reload()
+{
+	//Do Nothing?
+}

@@ -70,7 +70,9 @@ public:
 	void setViewMatPtr(glm::mat4 const *viewMat) override;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
     void render();
-    void bumpGroup(){ groups+=10; printf("%d\n", groups); }
+	void setLocation(glm::vec3 location){ this->location = location; }
+	void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
+	void setModelMat(glm::mat4 modelMat){ this->modelMat = modelMat;  };
 private:
 	void loadModel();
     void addFace(const unsigned int(&faceData)[3][4], const unsigned int(&faceDataCount)[3], unsigned int &faceCap,
@@ -84,7 +86,7 @@ private:
     std::shared_ptr<Shaders> shaders;
     glm::vec4 rotation;
     glm::vec3 location;
-    int groups = 44055;
+	glm::mat4 modelMat;
 };
 
 #endif __Entity2_h__

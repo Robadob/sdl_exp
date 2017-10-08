@@ -6,9 +6,6 @@
 
 #define VSYNC 0 //Disabled in SteamVR sample
 
-#define NEAR_CLIP 0.005f
-#define FAR_CLIP 500.0f
-
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
 
@@ -109,10 +106,7 @@ bool VisualisationVR::init()
     }
 
     GLEW_INIT();
-
-    //Setup HMD Camera
-    vr_camera = std::make_shared<CameraVR>(vr_HMD, NEAR_CLIP, FAR_CLIP);
-    
+	    
     //Setup HMD FrameBuffers
     vr_HMD->GetRecommendedRenderTargetSize(&vr_renderTargetDimensions.x, &vr_renderTargetDimensions.y);
     //Render in Multisample
@@ -124,7 +118,7 @@ bool VisualisationVR::init()
     //Setup companion
     vr_companion = std::make_shared<CompanionVR>();
     //Load render models
-    vr_renderModels = std::make_shared <RenderModelsVR>(vr_HMD);
+    vr_renderModels = std::make_shared <TrackedDevicesVR>(vr_HMD);
     if (!vr_renderModels->getInitState())
     {
         vr::VR_Shutdown();
@@ -328,39 +322,8 @@ void VisualisationVR::render()
     }
 
     //handle OpenVR events
-    vr::VREvent_t event;
-    while (vr_HMD->PollNextEvent(&event, sizeof(event)))
-    {
-        switch (event.eventType)
-        {
-            case vr::VREvent_TrackedDeviceUpdated:
-            case vr::VREvent_TrackedDeviceActivated:
-            {
-                vr_renderModels->addDevice(event.trackedDeviceIndex);
-                printf("Device %u attached. Setting up render model.\n", event.trackedDeviceIndex);
-            }
-                break;
-            case vr::VREvent_TrackedDeviceDeactivated:
-            {
-                vr_renderModels->removeDevice(event.trackedDeviceIndex);
-                printf("Device %u detatched. Disabling render model.\n", event.trackedDeviceIndex);
-            }
-                break;
-        }
-    }
+	vr_renderModels->update();
 
-    //handle OpenVR controller state
-    for (vr::TrackedDeviceIndex_t unDevice = 0; unDevice < vr::k_unMaxTrackedDeviceCount; unDevice++)
-    {
-        vr::VRControllerState_t state;
-        if (vr_HMD->GetControllerState(unDevice, &state, sizeof(state)))
-        {
-            //do something with controller state (forward to scene if changed?)
-        }
-    }
-
-    // update
-    vr_camera->update();
     unsigned int t_updateTime = SDL_GetTicks();
     //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
     if (t_updateTime < updateTime)
@@ -376,7 +339,7 @@ void VisualisationVR::render()
 
     if (vr_HMD)
     {
-        //RenderControllerAxes();
+		vr_renderModels->render();
         renderStereoTargets();
         //RenderCompanionWindow();
         vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)vr_leftResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
@@ -403,7 +366,7 @@ void VisualisationVR::renderStereoTargets()
     //Render left eye multi-sample
     vr_leftRenderFB->use();
     GL_CALL(glViewport(0, 0, vr_renderTargetDimensions.x, vr_renderTargetDimensions.y));
-    this->vr_camera->useLeft();
+	this->vr_renderModels->getCamera()->useLeft();
     this->scene->_render();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
@@ -423,7 +386,7 @@ void VisualisationVR::renderStereoTargets()
     //Render right eye multi-sample
     vr_rightRenderFB->use();
     GL_CALL(glViewport(0, 0, vr_renderTargetDimensions.x, vr_renderTargetDimensions.y));
-    this->vr_camera->useRight();
+	this->vr_renderModels->getCamera()->useRight();
     this->scene->_render();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 

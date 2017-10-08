@@ -146,11 +146,11 @@
     <ClCompile Include="visualisation\vr\CompanionVR.cpp">
       <Filter>Source Files\Visualisation\vr</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\vr\RenderModelsVR.cpp">
-      <Filter>Source Files\Visualisation\vr</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Entity2.cpp">
       <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -264,9 +264,6 @@
     <ClInclude Include="visualisation\vr\CompanionVR.h">
       <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\vr\RenderModelsVR.h">
-      <Filter>Header Files\Visualisation\vr</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\vr\utilVR.h">
       <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
@@ -278,6 +275,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\shader\Material.h">
       <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\TrackedDevicesVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

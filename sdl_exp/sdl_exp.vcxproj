@@ -191,7 +191,7 @@
     <ClCompile Include="visualisation\VisualisationVR.cpp" />
     <ClCompile Include="visualisation\vr\CameraVR.cpp" />
     <ClCompile Include="visualisation\vr\CompanionVR.cpp" />
-    <ClCompile Include="visualisation\vr\RenderModelsVR.cpp" />
+    <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">
@@ -238,7 +238,7 @@
     <ClInclude Include="visualisation\VisualisationVR.h" />
     <ClInclude Include="visualisation\vr\CameraVR.h" />
     <ClInclude Include="visualisation\vr\CompanionVR.h" />
-    <ClInclude Include="visualisation\vr\RenderModelsVR.h" />
+    <ClInclude Include="visualisation\vr\TrackedDevicesVR.h" />
     <ClInclude Include="visualisation\vr\utilVR.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -10,6 +10,7 @@ class CompanionVR : public Overlay
 {
 public:
     CompanionVR();
+	void reload() override;
 private:
 
 };

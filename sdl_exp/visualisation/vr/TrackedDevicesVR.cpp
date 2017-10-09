@@ -9,7 +9,7 @@
 TrackedDevicesVR::TrackedDevicesVR(vr::IVRSystem *vr_HMD)
     : initState(true)
     , HMD(vr_HMD)
-	, camera(std::make_shared<CameraVR>(vr_HMD, NEAR_CLIP, FAR_CLIP))
+	, camera(std::make_shared<HMDCamera>(vr_HMD, NEAR_CLIP, FAR_CLIP))
 {
     assert(HMD);
     vr::EVRInitError eError = vr::VRInitError_None;

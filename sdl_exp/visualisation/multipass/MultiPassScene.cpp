@@ -1,6 +1,6 @@
 #include "MultiPassScene.h"
 
-MultiPassScene::MultiPassScene(Visualisation &visualisation)
+MultiPassScene::MultiPassScene(ViewportExt &visualisation)
     : Scene(visualisation)
 {
 
@@ -35,7 +35,7 @@ std::shared_ptr<RenderPass> MultiPassScene::addPass(int index, std::shared_ptr<R
         rtn = it->second;
     }
     rpMap[index] = rp;
-	rp->resize(visualisation.getWindowWidth(), visualisation.getWindowHeight());
+	rp->resize(visualisation.getWindowDims());
     return rtn;
 }
 
@@ -44,8 +44,8 @@ void MultiPassScene::_render()
     for (auto&& it : rpMap)//byRef
         it.second->executeRender();
 }
-void MultiPassScene::_resize(const int width, const int height)
+void MultiPassScene::_resize(const glm::uvec2 &dims)
 {
     for (auto&& it : rpMap)//byRef
-        it.second->resize(width, height);
+		it.second->resize(dims);
 }

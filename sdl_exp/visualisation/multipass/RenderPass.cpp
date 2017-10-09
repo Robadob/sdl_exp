@@ -15,8 +15,8 @@ void RenderPass::executeRender()
 		return;
 	render();
 }
-void RenderPass::resize(int width, int height)
+void RenderPass::resize(const glm::uvec2 &dims)
 {
 	if (fb)
-		fb->resize(width, height);
+		fb->resize(dims);
 }

@@ -1,18 +1,19 @@
-#include "Camera.h"
+#include "FlyCamera.h"
 
+#include "util/GLcheck.h"
 #include <glm/gtx/rotate_vector.hpp>
 
-Camera::Camera()
-    : Camera(glm::vec3(1, 1, 1))
+FlyCamera::FlyCamera()
+    : FlyCamera(glm::vec3(1, 1, 1))
 {}
-Camera::Camera(glm::vec3 eye)
-    : Camera(eye, glm::vec3(0, 0, 0))
+FlyCamera::FlyCamera(const glm::vec3 eye)
+    : FlyCamera(eye, glm::vec3(0, 0, 0))
 {}
 //Initialiser list written to remove any references to member variables
 //Because member variables are initialised via initaliser lists in the order they are declared in the class declaration (rather than the order of the initialiser list)
-Camera::Camera(glm::vec3 eye, glm::vec3 target)
-    : pureUp(0.0f, 1.0f, 0.0f)
-    , eye(eye)
+FlyCamera::FlyCamera(const glm::vec3 eye, const glm::vec3 target)
+    : Camera(eye)
+    , pureUp(0.0f, 1.0f, 0.0f)
     , look(normalize(target - eye))
     , right(normalize(cross(target - eye, glm::vec3(0, 1, 0))))
     , up(normalize(cross(cross(target - eye, glm::vec3(0, 1, 0)), target - eye)))
@@ -25,9 +26,9 @@ Camera::Camera(glm::vec3 eye, glm::vec3 target)
 
     this->updateViews();
 }
-Camera::~Camera(){
+FlyCamera::~FlyCamera(){
 }
-void Camera::turn(float yaw, float pitch){
+void FlyCamera::turn(float yaw, float pitch){
     //Rotate everything yaw rads about up vector
     this->look = rotate(this->look, -yaw, this->up);
     this->right = rotate(this->right, -yaw, this->up);
@@ -51,41 +52,35 @@ void Camera::turn(float yaw, float pitch){
     this->up = normalize(up);
     this->updateViews();
 }
-void Camera::move(float distance){
+void FlyCamera::move(float distance){
     eye += look*distance;
     this->updateViews();
 }
-void Camera::strafe(float distance){
+void FlyCamera::strafe(float distance){
     eye += right*distance;
     this->updateViews();
 }
-void Camera::ascend(float distance){
+void FlyCamera::ascend(float distance){
 	eye += pureUp*distance;
     this->updateViews();
 }
-void Camera::roll(float roll){
+void FlyCamera::roll(float roll){
 	pureUp = normalize(rotate(pureUp, roll, look));
 	right = normalize(rotate(right, roll, look));
 	up = normalize(rotate(up, roll, look));
 	this->updateViews();
 }
-void Camera::setStabilise(bool stabilise){
+void FlyCamera::setStabilise(bool stabilise){
 	this->stabilise = stabilise;
 }
-glm::mat4 Camera::view() const{
-    return viewMat;
-}
-void Camera::gluLookAt(){
+void FlyCamera::gluLookAt(){
     GL_CALL(::gluLookAt(
         eye.x, eye.y, eye.z,
         eye.x + look.x, eye.y + look.y, eye.z + look.z,
         up.x, up.y, up.z
         ));
 }
-glm::mat4 Camera::skyboxView() const{
-    return skyboxViewMat;
-}
-void Camera::skyboxGluLookAt() const
+void FlyCamera::skyboxGluLookAt() const
 {
     GL_CALL(::gluLookAt(
         0, 0, 0,
@@ -93,28 +88,19 @@ void Camera::skyboxGluLookAt() const
         up.x, up.y, up.z
         ));
 }
-glm::vec3 Camera::getEye() const{
-    return eye;
-}
-glm::vec3 Camera::getLook() const{
+glm::vec3 FlyCamera::getLook() const{
     return look;
 }
-glm::vec3 Camera::getUp() const{
+glm::vec3 FlyCamera::getUp() const{
     return up;
 }
-glm::vec3 Camera::getPureUp() const{
+glm::vec3 FlyCamera::getPureUp() const{
     return pureUp;
 }
-glm::vec3 Camera::getRight() const{
+glm::vec3 FlyCamera::getRight() const{
     return right;
 }
-const glm::mat4 *Camera::getViewMatPtr() const{
-    return &viewMat;
-}
-const glm::mat4 *Camera::getSkyboxViewMatPtr() const{
-    return &skyboxViewMat;
-}
-void Camera::updateViews(){
+void FlyCamera::updateViews(){
 	viewMat = glm::lookAt(eye, eye + look, up);
 	skyboxViewMat = glm::lookAt(glm::vec3(0), look, up);
 }

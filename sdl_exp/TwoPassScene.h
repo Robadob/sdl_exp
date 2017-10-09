@@ -61,7 +61,7 @@ class TwoPassScene : public MultiPassScene
 		std::shared_ptr<SceneContent> content;
 	};
 public:
-	TwoPassScene(Visualisation &visualisation);
+	TwoPassScene(ViewportExt &visualisation);
 	void reload() override;
 	bool keypress(SDL_Keycode keycode, int x, int y) override;
 	void update(unsigned int frameTime) override;

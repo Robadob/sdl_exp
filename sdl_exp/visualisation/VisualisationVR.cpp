@@ -11,8 +11,7 @@
 
 VisualisationVR::VisualisationVR(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
     : t(nullptr)
-    , hud(windowWidth, windowHeight)
-    //, camera(glm::vec3(0))//To be replaced
+    , hud(std::make_shared<HUD>(windowWidth, windowHeight))
     , scene(nullptr)
     , isInitialised(false)
     , continueRender(false)
@@ -251,7 +250,7 @@ void VisualisationVR::close(){
     SDL_GL_MakeCurrent(this->window, this->context);
     //Delete objects before we delete the GL context!
     fpsDisplay.reset();
-    this->hud.clear();
+    this->hud.reset();
     if (this->scene)
     {
         this->scene.reset();
@@ -354,7 +353,7 @@ void VisualisationVR::render()
     this->scene->_render();
     GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-    this->hud.render();
+    this->hud->render();
 
     GL_CHECK();
 
@@ -402,4 +401,30 @@ void VisualisationVR::renderStereoTargets()
     GL_CALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, 0));
     GL_CALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
     GL_CALL(glEnable(GL_MULTISAMPLE));
+}
+
+std::shared_ptr<const Camera> VisualisationVR::getCamera() const
+{
+	if (this->vr_renderModels)
+		return this->vr_renderModels->getCamera();
+	return nullptr;
+}
+const glm::mat4 *VisualisationVR::getProjMatPtr() const{
+	return this->vr_renderModels->getCamera()->getProjMatPtr();
+}
+const glm::mat4 VisualisationVR::getProjMat() const{
+	return this->vr_renderModels->getCamera()->getProjMat();
+}
+
+std::weak_ptr<HUD> VisualisationVR::getHUD()
+{
+	return this->hud;
+}
+
+const char *VisualisationVR::getWindowTitle() const{
+	return this->windowTitle;
+}
+void VisualisationVR::setWindowTitle(const char *windowTitle){
+	this->windowTitle = windowTitle;
+	SDL_SetWindowTitle(this->window, this->windowTitle);
 }

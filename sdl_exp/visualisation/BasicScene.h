@@ -12,7 +12,7 @@
 class BasicScene : public Scene
 {
 public:
-	BasicScene(Visualisation& vis);
+	BasicScene(ViewportExt& vis);
 protected:
 	/**
 	 * Registers an entity, so the scene can setup it's modelview and projection matrices and trigger reloads
@@ -36,7 +36,7 @@ protected:
 	 * @param width The new window width
 	 * @param height The new window height
 	 */
-	virtual void resize(int width, int height){};
+	virtual void resize(const glm::uvec2 &dims){};
 	/**
 	 * Called when a reload event occurs
      */
@@ -72,7 +72,7 @@ private:
 	/**
 	 * Internal resize functionality, calls resize()
 	 */
-	inline virtual void _resize(int width, int height) override final { resize(width, height); };
+	inline virtual void _resize(const glm::uvec2 &dims) override final { resize(dims); };
 	/**
 	 * Internal reload functionality, calls reload()
 	 */

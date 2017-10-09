@@ -1,8 +1,9 @@
 #ifndef __Scene_h__
 #define __Scene_h__
 #include <SDL/SDL.h>
+#include <glm/glm.hpp>
 
-class Visualisation;
+class ViewportExt;
 
 class Scene
 {
@@ -24,7 +25,7 @@ public:
 	/**
 	 * Called by the viewport when the windows dimensions change
 	 */
-	virtual void _resize(int width, int height) {};
+	virtual void _resize(const glm::uvec2 &dims) {};
 	/**
 	 * Called by the viewport when a reload is requested (F5 on the keyboard)
 	 * @note This method is named _render, such that subclasses can perform internal reload before forwarding the reload call to a user controlled reload method
@@ -38,8 +39,8 @@ public:
 
 	virtual ~Scene(){};
 protected:
-	Scene(Visualisation &vis) :visualisation(vis){};
-	Visualisation &visualisation;
+	Scene(ViewportExt &vis) :visualisation(vis){};
+	ViewportExt &visualisation;
 };
 
 #endif //__Scene_h__

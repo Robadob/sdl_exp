@@ -33,7 +33,7 @@ void Skybox::render(unsigned int shaderIndex)
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used
  */
-void Skybox::setViewMatPtr(const Camera *camera)
+void Skybox::setViewMatPtr(std::shared_ptr<const Camera> camera)
 {
 	for (auto &&it : shaders)
 		if (it)

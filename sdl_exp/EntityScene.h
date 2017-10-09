@@ -12,7 +12,7 @@ Example scene to demonstrate how to use SDL_EXP
 class EntityScene : public BasicScene
 {
 public:
-    EntityScene(Visualisation &visualisation);
+	EntityScene(ViewportExt &visualisation);
 
     void render() override;
     void reload() override;

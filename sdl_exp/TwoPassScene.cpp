@@ -33,7 +33,7 @@ TwoPassScene::SceneContent::SceneContent()
     GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, shadowDims.x, shadowDims.y, 0, GL_RED, GL_FLOAT, nullptr));
 }
-TwoPassScene::TwoPassScene(Visualisation &visualisation)
+TwoPassScene::TwoPassScene(ViewportExt &visualisation)
 	: MultiPassScene(visualisation)
 	, content(std::make_shared<SceneContent>())
     , sPass(std::make_shared<ShadowPass>(content))
@@ -52,7 +52,8 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	addPass(1, cPass);
     //Put a preview of the depth texture on the HUD
     shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 256, 256, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_HEAT));
-    this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
+	if (auto hud = this->visualisation.getHUD().lock())
+		hud->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
     content->lightModel->setColor(glm::vec3(1));

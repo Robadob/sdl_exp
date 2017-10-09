@@ -36,7 +36,7 @@ public:
     /**
      * Triggered when the viewport resizes, such that attatched textures can be auto resized
      */
-	virtual void resize(int width, int height);
+	virtual void resize(const glm::uvec2 &dims);
 private:
 	const std::shared_ptr<FBuffer> fb;
 protected:

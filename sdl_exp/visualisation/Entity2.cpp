@@ -647,7 +647,7 @@ void Entity2::loadModel()
                 else
                 {//New material
                     renderGroup.push_back({ (int)materialIds.size(), faces.count });
-                    materialIds[matName] = materialIds.size();
+                    materialIds[matName] = (unsigned int)materialIds.size();
                 }
             }
             else

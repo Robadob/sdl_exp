@@ -9,7 +9,7 @@
 #include "Material.h"
 #include "shader/Shaders.h"
 #include "texture/Texture2D.h"
-#include "Camera.h"
+#include "interface/Camera.h"
 #include "interface/Viewport.h"
 #include "interface/Renderable.h"
 

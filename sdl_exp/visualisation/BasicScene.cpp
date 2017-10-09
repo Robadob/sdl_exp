@@ -1,6 +1,6 @@
 #include "BasicScene.h"
 
-BasicScene::BasicScene(Visualisation& vis)
+BasicScene::BasicScene(ViewportExt& vis)
 	: Scene(vis)
 	, axis(std::make_shared<Axis>(25.0f))
 	, skybox(std::make_unique<Skybox>())
@@ -9,7 +9,7 @@ BasicScene::BasicScene(Visualisation& vis)
 {
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
-	this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+	this->skybox->setProjectionMatPtr(this->visualisation.getProjMatPtr());
 	this->skybox->setYOffset(-1.0f);
 }
 void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
@@ -32,7 +32,7 @@ void BasicScene::_render()
 	GL_CALL(glClearColor(0, 0, 0, 1));
 	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	//Reset viewport
-	GL_CALL(glViewport(0, 0, visualisation.getWindowWidth(), visualisation.getWindowHeight()));
+	GL_CALL(glViewport(0, 0, visualisation.getWindowDims().x, visualisation.getWindowDims().y));
 	if (this->renderSkyboxState)
 		this->skybox->render();
 	if (this->renderAxisState)

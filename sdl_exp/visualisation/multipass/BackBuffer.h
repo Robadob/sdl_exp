@@ -24,7 +24,7 @@ public:
 	 * @param height The new viewport height
 	 * Resizes the internal images according to the specifed dimensions and the internal scaling factor
 	 */
-	void resize(int width, int height) override final;
+	void resize(const glm::uvec2 &dims) override final;
 	/**
 	 * Binds the framebuffer
 	 * @return True if the framebuffer is 'complete' and was bound

@@ -7,13 +7,13 @@
 
 #include "interface/Viewport.h"
 #include <memory>
-#include "Camera.h"
+#include "FlyCamera.h"
 #include "HUD.h"
 #include <thread>
 #include <atomic>
 #include <vector>
 #include "Entity.h"
-#include "vr/CameraVR.h"
+#include "vr/HMDCamera.h"
 #include "multipass/FrameBuffer.h"
 #include "vr/CompanionVR.h"
 #include "vr/TrackedDevicesVR.h"
@@ -30,7 +30,7 @@ class Text;
 * @todo Add support for generic camera classes
 * @todo Make a runAsync() variation
 */
-class VisualisationVR : public Viewport
+class VisualisationVR : public ViewportExt
 {
 public:
 
@@ -70,12 +70,12 @@ public:
     /**
     * @return The current window title
     */
-    const char *getWindowTitle() const;
+    const char *getWindowTitle() const override;
     /**
     * Sets the window title
     * @param windowTitle Desired title of the window
     */
-    void setWindowTitle(const char *windowTitle);
+    void setWindowTitle(const char *windowTitle) override;
     /**
     * Sets a flag telling the render loop to exit
     * @note run() should be called to start the render loop
@@ -103,7 +103,7 @@ public:
     * Returns a const pointer to the visualisation's Camera
     * @return The camera
     */
-    const Camera *getCamera() const;
+    std::shared_ptr<const Camera>getCamera() const;
     /**
     * Sets the Scene object to be rendered within the viewport
     * @return The previously bound Scene
@@ -121,20 +121,17 @@ public:
     * This pointer can be used to continuously track the visualisations projection matrix
     * @return A pointer to the projection matrix
     */
-    const glm::mat4 *getFrustrumPtr() const override;
+	const glm::mat4 *getProjMatPtr() const override;
+	const glm::mat4 getProjMat() const override;
     /**
     * Returns the visusalisation's HUD, to be used to add overlays
     * @return The visualisation's scene
     */
-    HUD* getHUD();
+    std::weak_ptr<HUD> getHUD() override;
     /**
-    * @return The current window/viewport width
+    * @return The current viewport dimensions
     */
-    const int& getWindowWidth() const { return windowWidth; }
-    /**
-    * @return The current window/viewport height
-    */
-    const int& getWindowHeight() const { return windowHeight; }
+	const glm::uvec2& getWindowDims() const override { return vr_renderTargetDimensions; }
 private:
     /**
     * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
@@ -184,7 +181,7 @@ private:
     SDL_Rect windowedBounds;
     SDL_GLContext context;
 
-    HUD hud;
+    std::shared_ptr<HUD> hud;
     //Camera camera;
     std::shared_ptr<Scene> scene;
     glm::mat4 frustum;

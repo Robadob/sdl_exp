@@ -1,7 +1,8 @@
-#include "CameraVR.h"
+#include "HMDCamera.h"
 
-CameraVR::CameraVR(vr::IVRSystem *vr_HMD, float nearClip, float farClip)
-    : activeEye(Right)
+HMDCamera::HMDCamera(vr::IVRSystem *vr_HMD, float nearClip, float farClip)
+    : Camera(glm::vec3(0))
+	, activeEye(Right)
     , vr_HMD(vr_HMD)
     , nearClip(nearClip)
     , farClip(farClip)
@@ -12,22 +13,27 @@ CameraVR::CameraVR(vr::IVRSystem *vr_HMD, float nearClip, float farClip)
 {
     assert(vr_HMD);
 	useLeft();
+	vr_HMD->GetRecommendedRenderTargetSize(&renderTargetDims.x, &renderTargetDims.y);
 }
-void CameraVR::useLeft()
+void HMDCamera::useLeft()
 {
 	if (activeEye == Left)
 		return;
-	vpMat = projectionLeft * eyePosLeft * HMDPose;
+	viewMat = eyePosLeft * HMDPose;
+	makeSkyboxViewMat();
+	projMat = projectionLeft;
 	activeEye = Left;
 }
-void CameraVR::useRight()
+void HMDCamera::useRight()
 {
 	if (activeEye == Right)
 		return;
-	vpMat = projectionRight * eyePosRight *  HMDPose;
+	viewMat = eyePosRight *  HMDPose;
+	makeSkyboxViewMat();
+	projMat = projectionRight;
 	activeEye = Right;
 }
-void CameraVR::use(Eye eye)
+void HMDCamera::use(Eye eye)
 {
 	if (activeEye == eye)
 		return;
@@ -36,25 +42,30 @@ void CameraVR::use(Eye eye)
 	else
 		useRight();
 }
-
-const glm::mat4* CameraVR::getVPMatPtr() const
-{
-	return &vpMat;
+void HMDCamera::makeSkyboxViewMat()
+{//Strip location from viewMat (Maybe we need to only strip from HMDPose?)
+	memcpy(&skyboxViewMat, &viewMat, sizeof(float) * 12);//Column major, and we only want the first 3
+	//skyboxViewMat = glm::mat4(
+	//	viewMat[0][0], viewMat[1][0], viewMat[2][0], 0,
+	//	viewMat[0][1], viewMat[1][1], viewMat[2][1], 0,
+	//	viewMat[0][2], viewMat[1][2], viewMat[2][2], 0,
+	//	viewMat[0][3], viewMat[1][3], viewMat[2][3], 0
+	//	);
 }
 
-const glm::mat4* CameraVR::getSkyboxVPMatPtr() const
+const glm::uvec2& HMDCamera::getWindowDims() const
 {
-	return &vpMat;//Purge translation from this
+	return renderTargetDims;
 }
 
-void CameraVR::setHMDPose(const glm::mat4& modelMat)
+void HMDCamera::setHMDPose(const glm::mat4& modelMat)
 {
 	HMDPose = modelMat;
 	eye = HMDPose*glm::vec4(0, 0, 0, 1);
 	use(activeEye);
 }
 
-glm::mat4 CameraVR::getProjectionEye(vr::Hmd_Eye nEye)
+glm::mat4 HMDCamera::getProjectionEye(vr::Hmd_Eye nEye)
 {
     if (!vr_HMD)
         return glm::mat4();
@@ -69,7 +80,7 @@ glm::mat4 CameraVR::getProjectionEye(vr::Hmd_Eye nEye)
         );
 }
 
-glm::mat4 CameraVR::getPoseEye(vr::Hmd_Eye nEye)
+glm::mat4 HMDCamera::getPoseEye(vr::Hmd_Eye nEye)
 {
     if (!vr_HMD)
         return glm::mat4();

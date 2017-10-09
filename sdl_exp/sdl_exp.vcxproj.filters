@@ -59,9 +59,6 @@
     <ClCompile Include="visualisation\Axis.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\Camera.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Entity.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -140,9 +137,6 @@
     <ClCompile Include="visualisation\VisualisationVR.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\vr\CameraVR.cpp">
-      <Filter>Source Files\Visualisation\vr</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\vr\CompanionVR.cpp">
       <Filter>Source Files\Visualisation\vr</Filter>
     </ClCompile>
@@ -150,6 +144,12 @@
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\FlyCamera.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\HMDCamera.cpp">
       <Filter>Source Files\Visualisation\vr</Filter>
     </ClCompile>
   </ItemGroup>
@@ -160,9 +160,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="visualisation\Axis.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Camera.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Entity.h">
@@ -258,9 +255,6 @@
     <ClInclude Include="visualisation\VisualisationVR.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\vr\CameraVR.h">
-      <Filter>Header Files\Visualisation\vr</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\vr\CompanionVR.h">
       <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
@@ -277,6 +271,15 @@
       <Filter>Header Files\Visualisation\Shader</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\vr\TrackedDevicesVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\FlyCamera.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Camera.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\HMDCamera.h">
       <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
   </ItemGroup>

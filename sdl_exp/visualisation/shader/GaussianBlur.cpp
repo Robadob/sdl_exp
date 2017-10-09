@@ -50,7 +50,7 @@ void GaussianBlur::generateFilter()
 	int i = filterRadius;
 	for (unsigned int x = 0; x < filterWidth; ++x)
 	{
-		float _j = (x < filterRadius ? i-- : i++);
+		float _j = (float)(x < filterRadius ? i-- : i++);
 		filter[x] = (1.0f / (sqrt(2.0f*glm::pi<float>())*this->sigma))*glm::exp(-(_j*_j) / (2 * this->sigma*this->sigma));
 		c += filter[x];
 	}

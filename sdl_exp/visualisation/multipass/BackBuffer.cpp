@@ -4,10 +4,10 @@ BackBuffer::BackBuffer(bool doClear, glm::vec3 clearColor)
 	, doClear(doClear)
 	, clearColor(clearColor)
 { }
-void BackBuffer::resize(int width, int height)
+void BackBuffer::resize(const glm::uvec2 &dims)
 {
-	if (width>0 && height>0)
-		this->dimensions = glm::uvec2(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
+	if (dims.x>0 && dims.y>0)
+		this->dimensions = dims;
 }
 bool BackBuffer::use()
 {

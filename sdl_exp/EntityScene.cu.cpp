@@ -4,7 +4,7 @@
 /*
 Constructor, modify this to change what happens
 */
-EntityScene::EntityScene(Visualisation &visualisation)
+EntityScene::EntityScene(ViewportExt& visualisation)
     : BasicScene(visualisation)
     , deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
     , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
@@ -22,7 +22,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     registerEntity(colorModel);
     registerEntity(instancedSphere);
     this->setSkybox(true);
-    this->visualisation.setWindowTitle("Entity Render Sample");
+	this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
     srand((unsigned int)time(0));
     this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));

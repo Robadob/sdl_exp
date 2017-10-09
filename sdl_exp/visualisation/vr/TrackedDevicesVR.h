@@ -6,7 +6,7 @@
 #include <memory>
 #include "../Entity2.h"
 #include "glm/gtx/euler_angles.hpp"
-#include "CameraVR.h"
+#include "HMDCamera.h"
 
 /**
  * Holds the models used to render controllers etc
@@ -45,7 +45,7 @@ public:
 	void update();
 	void render();
 	std::shared_ptr<Device> getHMD(){ return trackedDevices[vr::k_unTrackedDeviceIndex_Hmd]; }
-	std::shared_ptr<CameraVR> getCamera() const { return camera; }
+	std::shared_ptr<HMDCamera> getCamera() const { return camera; }
 private:
 	void updatePoses();
 	bool addDevice(unsigned int id);
@@ -57,7 +57,7 @@ private:
     std::map<std::string, std::shared_ptr<Entity2>> renderEntities;
 	std::shared_ptr<Device> trackedDevices[vr::k_unMaxTrackedDeviceCount];
 	vr::TrackedDevicePose_t trackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
-	std::shared_ptr<CameraVR> camera;
+	std::shared_ptr<HMDCamera> camera;
 };
 
 #endif //__TrackedDevicesVR_h__

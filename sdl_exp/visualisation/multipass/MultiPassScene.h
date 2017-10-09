@@ -20,7 +20,7 @@ public:
 	 * Creates a new MultiPassScene
 	 * @param vis The visualisation that is hosting the scene.
 	 */
-	MultiPassScene(Visualisation &vis);
+	MultiPassScene(ViewportExt &vis);
     /**
      * Called once per frame when Scene animation calls should be executed
      * @param frameTime The number of miliseconds since update was last called
@@ -68,7 +68,7 @@ private:
 	/**
 	 * Resizes the textures attatched the Framebuffers within RenderPass's
 	 */
-	virtual void _resize(int width, int height) override final;
+	virtual void _resize(const glm::uvec2 &dims) override final;
 	/**
 	 * Reloads all registered entities, then calls reload on the subclassed scene
 	 */

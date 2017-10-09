@@ -2,10 +2,11 @@
 #define __Renderable_h__
 
 #include "Reloadable.h"
-#include <glm/mat4x4.hpp>
+#include <memory>
+#include <glm/glm.hpp>
 
 #include "Viewport.h"
-#include "../Camera.h"
+#include "Camera.h"
 
 /**
  * Represents things which hold shaders (and can be rendered)
@@ -32,6 +33,10 @@ public:
 	 * @note This is normally found within the Camera object
 	 * @note This method is overriden by Skybox as it required modelview sans translation
 	 */
+	virtual void setViewMatPtr(std::shared_ptr<const Camera> camera)
+	{
+		setViewMatPtr(camera->getViewMatPtr());
+	}
 	virtual void setViewMatPtr(const Camera *camera)
 	{
 		setViewMatPtr(camera->getViewMatPtr());
@@ -41,9 +46,13 @@ public:
 	 * @param visualisation Ptr to model view matrix
 	 * @note Convenience wrapper
 	 */
+	virtual void setProjectionMatPtr(std::shared_ptr<const Viewport> visualisation) final
+	{
+		setProjectionMatPtr(visualisation->getProjMatPtr());
+	}
 	virtual void setProjectionMatPtr(const Viewport *visualisation) final
 	{
-		setProjectionMatPtr(visualisation->getFrustrumPtr());
+		setProjectionMatPtr(visualisation->getProjMatPtr());
 	}
 
 };

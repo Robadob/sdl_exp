@@ -1,7 +1,6 @@
 #ifndef __FrameBuffer_h__
 #define __FrameBuffer_h__
 
-#include "glm/glm.hpp"
 #include "FrameBufferAttachment.h"
 #include <map>
 #include "../interface/FBuffer.h"
@@ -42,7 +41,7 @@ public:
 	 * @param width The new viewport width
 	 * @param height The new viewport height
 	 */
-	void resize(int width, int height) override final;
+	void resize(const glm::uvec2 &dims) override final;
 	/**
 	 * Binds the framebuffer
 	 * @return True if the framebuffer is 'complete' and was bound

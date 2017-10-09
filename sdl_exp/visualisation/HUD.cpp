@@ -13,10 +13,13 @@ Creates a new HUD, specifying the window dimensions
 HUD::HUD(unsigned int width, unsigned int height)
 	: modelViewMat()
 	, projectionMat()
-	, width(width)
-	, height(height)
+	, dims(width, height)
 {
-	resizeWindow(width, height);
+	resizeWindow(dims);
+}
+HUD::~HUD()
+{
+	clear();//Explicitly clear stack (should happen implicitly regardless)
 }
 /*
 Adds an overlay element to the HUD
@@ -42,7 +45,7 @@ void HUD::add(std::shared_ptr<Overlay> overlay, AnchorV anchorV, AnchorH anchorH
 		}
 	}
 	
-	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, this->width, this->height, anchorV, anchorH, zIndex));
+	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, this->dims.x, this->dims.y, anchorV, anchorH, zIndex));
 	overlay->setHUDItem(*item);
 }
 /*
@@ -111,10 +114,9 @@ Repositions all HUD ovlerays according to the new window dimensions and their re
 @param w New window width
 @param h New window height
 */
-void HUD::resizeWindow(const unsigned int w, const unsigned int h)
+void HUD::resizeWindow(const glm::uvec2 &dims)
 {
-	this->width = w;
-	this->height = h;
+	this->dims = dims;
 	//Camera at origin looking down y axis, with up vector looking up z axis
 	//Top left is origin, bottom right is (width, -height)
 	//Bottom left is origin
@@ -122,12 +124,12 @@ void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 	//Rendering the z plane 0 to -1
 	projectionMat =
 		glm::ortho<float>(
-			0.0f, (float)this->width,
-			0.0f, (float)this->height,
+			0.0f, (float)this->dims.x,
+			0.0f, (float)this->dims.y,
 			0.0f, 1.0f
 			);
 	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
-		(*it)->resizeWindow(this->width, this->height);
+		(*it)->resizeWindow(this->dims.x, this->dims.y);
 }
 /*
 Initialises the HUDItem, by calculating the elements position

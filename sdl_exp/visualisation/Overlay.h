@@ -24,11 +24,13 @@ public:
 	{ return shaders; }
     void setVisible(bool isVisible);
     bool getVisible() const
-    { return visible; }
-protected:
+	{
+		return visible;
+	}
 	void setWidth(unsigned int w);
 	void setHeight(unsigned int h);
 	void setDimensions(unsigned int w, unsigned int h);
+protected:
 	std::weak_ptr<HUD::Item> hudItem;
 private:
     bool visible;

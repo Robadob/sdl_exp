@@ -3,11 +3,14 @@
 #include "util/GLcheck.h"
 #include "Visualisation.h"
 #include "interface/Scene.h"
+#include "Text.h"
 
 #define VSYNC 0 //Disabled in SteamVR sample
 
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
+
+#define ONE_SECOND_MS 1000
 
 VisualisationVR::VisualisationVR(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
     : t(nullptr)
@@ -15,22 +18,20 @@ VisualisationVR::VisualisationVR(char *windowTitle, int windowWidth = DEFAULT_WI
     , scene(nullptr)
     , isInitialised(false)
     , continueRender(false)
-    , msaaState(true)
-    , windowTitle(windowTitle)
-    , windowWidth(windowWidth)
-    , windowHeight(windowHeight)
     , fpsDisplay(nullptr)
-    , vr_HMD(nullptr)
+	, vr_HMD(nullptr)
     , vr_renderModels(nullptr)
-    , vr_driverString("No Driver")
-    , vr_displayString("No Display")
+    , companionWindowTitle(windowTitle)
+    , companionWindowDims(windowWidth, windowHeight)
+	, companionBackBuffer(std::make_shared<BackBuffer>())
 {
+	companionBackBuffer->resize(companionWindowDims);
     this->isInitialised = this->init();
 
     //Can we do vr text?
-    //fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
-    //fpsDisplay->setUseAA(false);
-    //hud.add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);    
+    fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
+    fpsDisplay->setUseAA(false);
+    hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);    
 }
 VisualisationVR::~VisualisationVR()
 {
@@ -77,11 +78,11 @@ bool VisualisationVR::init()
     //Create companion window
     this->window = SDL_CreateWindow
         (
-        this->windowTitle,
+		this->companionWindowTitle,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        this->windowWidth,
-        this->windowHeight,
+		this->companionWindowDims.x,
+		this->companionWindowDims.y,
         SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
         );
 
@@ -115,7 +116,10 @@ bool VisualisationVR::init()
     vr_leftResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     vr_rightResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     //Setup companion
-    vr_companion = std::make_shared<CompanionVR>();
+	companionLeft = std::make_shared<Sprite2D>(vr_leftResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
+	companionRight = std::make_shared<Sprite2D>(vr_rightResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
+	hud->add(companionLeft, HUD::AnchorV::Center, HUD::AnchorH::West, 0, 0, -1024);
+	hud->add(companionLeft, HUD::AnchorV::Center, HUD::AnchorH::East, 0, 0, -1024);
     //Load render models
     vr_renderModels = std::make_shared <TrackedDevicesVR>(vr_HMD);
     if (!vr_renderModels->getInitState())
@@ -149,7 +153,6 @@ bool VisualisationVR::init()
     GL_CALL(glEnable(GL_NORMALIZE));
     GL_CALL(glBlendEquation(GL_FUNC_ADD));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    setMSAA(this->msaaState);
 
     // Setup the projection matrix
     this->resizeWindow();
@@ -170,7 +173,195 @@ std::shared_ptr<Scene> VisualisationVR::setScene(std::unique_ptr<Scene> scene)
     this->scene = std::shared_ptr<Scene>(scene.release());
     return oldScene;
 }
+void VisualisationVR::handleMouseMove(int x, int y){
+	//Do Nothing
+}
+void VisualisationVR::handleKeypress(SDL_Keycode keycode, int x, int y){
+	//Pass key events to the scene and skip handling if false is returned 
+	if (scene&&!scene->_keypress(keycode, x, y))
+		return;
+	switch (keycode){
+	case SDLK_ESCAPE:
+		this->quit();
+		break;
+	//case SDLK_F1:
+	//	this->helpText->setVisible(!this->helpText->getVisible());
+	//	break;
+	case SDLK_F11:
+		this->toggleFullScreen();
+		break;
+	case SDLK_F8:
+		this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+		break;
+	case SDLK_F5:
+		if (this->scene)
+			this->scene->_reload();
+		this->hud->reload();
+		break;
+	default:
+		// Do nothing?
+		break;
+	}
+}
+void VisualisationVR::close(){
+	killThread();
 
+	//Shutdown HMD
+	if (this->vr_HMD)
+	{
+		vr::VR_Shutdown();
+		this->vr_HMD = nullptr;
+	}
+	//Purge Render Models
+	this->vr_renderModels.reset();
+
+	assert(this->window);//There should always be a window, it might just be hidden
+	SDL_GL_MakeCurrent(this->window, this->context);
+	//Delete objects before we delete the GL context!
+	this->fpsDisplay.reset();
+	this->hud.reset();
+	if (this->scene)
+	{
+		this->scene.reset();
+	}
+	SDL_DestroyWindow(this->window);
+	this->window = nullptr;
+	SDL_GL_DeleteContext(this->context);
+	SDL_Quit();
+}
+void VisualisationVR::render()
+{
+	//Static fn var for tracking the time to send to scene->update()
+	static unsigned int updateTime = 0;
+	SDL_Event e;
+	// Handle continuous key presses (movement)
+	//const Uint8 *state = SDL_GetKeyboardState(NULL);
+	//float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
+	//if (state[SDL_SCANCODE_W]) {
+	//    this->camera.move(DELTA_MOVE*turboMultiplier);
+	//}
+	//if (state[SDL_SCANCODE_A]) {
+	//    this->camera.strafe(-DELTA_STRAFE*turboMultiplier);
+	//}
+	//if (state[SDL_SCANCODE_S]) {
+	//    this->camera.move(-DELTA_MOVE*turboMultiplier);
+	//}
+	//if (state[SDL_SCANCODE_D]) {
+	//    this->camera.strafe(DELTA_STRAFE*turboMultiplier);
+	//}
+	//if (state[SDL_SCANCODE_Q]) {
+	//    this->camera.roll(-DELTA_ROLL);
+	//}
+	//if (state[SDL_SCANCODE_E]) {
+	//    this->camera.roll(DELTA_ROLL);
+	//}
+	//if (state[SDL_SCANCODE_SPACE]) {
+	//    this->camera.ascend(DELTA_ASCEND*turboMultiplier);
+	//}
+	//if (state[SDL_SCANCODE_LCTRL]) {
+	//    this->camera.ascend(-DELTA_ASCEND*turboMultiplier);
+	//}
+
+	// handle each event on the SDL queue
+	while (SDL_PollEvent(&e) != 0){
+		switch (e.type){
+		case SDL_QUIT:
+			this->quit();
+			break;
+		case SDL_WINDOWEVENT:
+			if (e.window.event == SDL_WINDOWEVENT_RESIZED || e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+				resizeWindow();
+			break;
+			//case SDL_KEYDOWN:
+			//{
+			//    int x = 0;
+			//    int y = 0;
+			//    SDL_GetMouseState(&x, &y);
+			//    this->handleKeypress(e.key.keysym.sym, x, y);
+			//}
+			//    break;
+			//    //case SDL_MOUSEWHEEL:
+			//    //break;
+			//case SDL_MOUSEMOTION:
+			//    this->handleMouseMove(e.motion.xrel, e.motion.yrel);
+			//    break;
+			//case SDL_MOUSEBUTTONDOWN:
+			//    this->toggleMouseMode();
+			//    break;
+
+		}
+	}
+
+	//handle OpenVR events
+	vr_renderModels->update();
+
+	unsigned int t_updateTime = SDL_GetTicks();
+	//If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
+	if (t_updateTime < updateTime)
+	{
+		this->scene->_update(t_updateTime + (UINT_MAX - updateTime));
+	}
+	else
+	{
+		this->scene->_update(t_updateTime - updateTime);
+	}
+	updateTime = t_updateTime;
+	// render
+
+	if (vr_HMD)
+	{
+		vr_renderModels->render();
+		renderStereoTargets();
+		{//Render companion window
+			//Render textures plane in either half of the screen
+			this->companionBackBuffer->use();
+			this->hud->render();
+		}
+		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)vr_leftResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
+		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)vr_rightResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
+		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+	}
+
+	//GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
+	//GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	//this->hud->render();
+
+	GL_CHECK();
+
+	// update the screen
+	SDL_GL_SwapWindow(window);
+
+	// We want to make sure the glFinish waits for the entire present to complete, not just the submission
+	// of the command. So, we do a clear here right here so the glFinish will wait fully for the swap.
+	GL_CALL(glClearColor(0, 0, 0, 1));
+	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+	GL_CALL(glFlush());
+	GL_CALL(glFinish());
+}
+void VisualisationVR::runAsync()
+{
+	if (!continueRender)
+	{
+		if (t)
+		{//Async window was closed via cross, so thread still exists
+			killThread();
+		}
+		else
+		{
+			//Curiously, if we destroy a host-thread window from a different thread, the glContext breaks
+			//However the inverse is not true
+			SDL_GL_MakeCurrent(this->window, NULL);
+			SDL_DestroyWindow(this->window);
+		}
+		this->window = nullptr;
+		this->t = new std::thread(&VisualisationVR::_run, this);
+	}
+	else
+	{
+		printf("Already running! Call quit() to close it first!\n");
+	}
+}
 void VisualisationVR::run()
 {
     if (!continueRender)
@@ -201,7 +392,7 @@ void VisualisationVR::_run()
         }
         this->window = SDL_CreateWindow
             (
-            this->windowTitle,
+            this->companionWindowTitle,
             this->windowedBounds.x,
             this->windowedBounds.y,
             this->windowedBounds.w,
@@ -232,133 +423,6 @@ void VisualisationVR::_run()
             SDL_HideWindow(window);
         }
     }
-}
-
-void VisualisationVR::close(){
-    killThread();
-
-    //Shutdown HMD
-    if (vr_HMD)
-    {
-        vr::VR_Shutdown();
-        vr_HMD = nullptr;
-    }
-    //Purge Render Models
-    vr_renderModels.reset();
-
-    assert(this->window);//There should always be a window, it might just be hidden
-    SDL_GL_MakeCurrent(this->window, this->context);
-    //Delete objects before we delete the GL context!
-    fpsDisplay.reset();
-    this->hud.reset();
-    if (this->scene)
-    {
-        this->scene.reset();
-    }
-    SDL_DestroyWindow(this->window);
-    this->window = nullptr;
-    SDL_GL_DeleteContext(this->context);
-    SDL_Quit();
-}
-
-void VisualisationVR::render()
-{
-    //Static fn var for tracking the time to send to scene->update()
-    static unsigned int updateTime = 0;
-    SDL_Event e;
-    // Handle continuous key presses (movement)
-    //const Uint8 *state = SDL_GetKeyboardState(NULL);
-    //float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
-    //if (state[SDL_SCANCODE_W]) {
-    //    this->camera.move(DELTA_MOVE*turboMultiplier);
-    //}
-    //if (state[SDL_SCANCODE_A]) {
-    //    this->camera.strafe(-DELTA_STRAFE*turboMultiplier);
-    //}
-    //if (state[SDL_SCANCODE_S]) {
-    //    this->camera.move(-DELTA_MOVE*turboMultiplier);
-    //}
-    //if (state[SDL_SCANCODE_D]) {
-    //    this->camera.strafe(DELTA_STRAFE*turboMultiplier);
-    //}
-    //if (state[SDL_SCANCODE_Q]) {
-    //    this->camera.roll(-DELTA_ROLL);
-    //}
-    //if (state[SDL_SCANCODE_E]) {
-    //    this->camera.roll(DELTA_ROLL);
-    //}
-    //if (state[SDL_SCANCODE_SPACE]) {
-    //    this->camera.ascend(DELTA_ASCEND*turboMultiplier);
-    //}
-    //if (state[SDL_SCANCODE_LCTRL]) {
-    //    this->camera.ascend(-DELTA_ASCEND*turboMultiplier);
-    //}
-
-    // handle each event on the SDL queue
-    while (SDL_PollEvent(&e) != 0){
-        switch (e.type){
-        case SDL_QUIT:
-            this->quit();
-            break;
-        //case SDL_KEYDOWN:
-        //{
-        //    int x = 0;
-        //    int y = 0;
-        //    SDL_GetMouseState(&x, &y);
-        //    this->handleKeypress(e.key.keysym.sym, x, y);
-        //}
-        //    break;
-        //    //case SDL_MOUSEWHEEL:
-        //    //break;
-        //case SDL_MOUSEMOTION:
-        //    this->handleMouseMove(e.motion.xrel, e.motion.yrel);
-        //    break;
-        //case SDL_MOUSEBUTTONDOWN:
-        //    this->toggleMouseMode();
-        //    break;
-
-        }
-    }
-
-    //handle OpenVR events
-	vr_renderModels->update();
-
-    unsigned int t_updateTime = SDL_GetTicks();
-    //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
-    if (t_updateTime < updateTime)
-    {
-        this->scene->_update(t_updateTime + (UINT_MAX - updateTime));
-    }
-    else
-    {
-        this->scene->_update(t_updateTime - updateTime);
-    }
-    updateTime = t_updateTime;
-    // render
-
-    if (vr_HMD)
-    {
-		vr_renderModels->render();
-        renderStereoTargets();
-        //RenderCompanionWindow();
-        vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)vr_leftResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-        vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
-        vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)vr_rightResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-        vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
-    }
-
-    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-    GL_CALL(glClearColor(0, 0, 0, 1));
-    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    this->scene->_render();
-    GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
-    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-    this->hud->render();
-
-    GL_CHECK();
-
-    // update the screen
-    SDL_GL_SwapWindow(window);
 }
 void VisualisationVR::renderStereoTargets()
 {
@@ -403,6 +467,102 @@ void VisualisationVR::renderStereoTargets()
     GL_CALL(glEnable(GL_MULTISAMPLE));
 }
 
+void VisualisationVR::quit(){
+	this->continueRender = false;
+	if (this->t && std::this_thread::get_id() != this->t->get_id())
+	{
+		killThread();
+	}
+}
+void VisualisationVR::killThread()
+{
+	if (this->t && std::this_thread::get_id() != this->t->get_id())
+	{
+		this->continueRender = false;
+		//Wait for thread to exit
+		this->t->join();
+		delete this->t;
+		this->t = nullptr;
+		//Recreate hidden window in current thread, so context is stable
+		SDL_GL_MakeCurrent(this->window, NULL);
+		SDL_DestroyWindow(this->window);
+		this->window = SDL_CreateWindow
+			(
+			this->companionWindowTitle,
+			this->windowedBounds.x,
+			this->windowedBounds.y,
+			this->windowedBounds.w,
+			this->windowedBounds.h,
+			SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
+			);
+		SDL_GL_MakeCurrent(this->window, this->context);
+	}
+}
+void VisualisationVR::toggleFullScreen(){
+	if (this->isFullscreen()){
+		// Update the window using the stored windowBounds
+		SDL_SetWindowBordered(this->window, SDL_TRUE);
+		SDL_SetWindowSize(this->window, this->windowedBounds.w, this->windowedBounds.h);
+		SDL_SetWindowPosition(this->window, this->windowedBounds.x, this->windowedBounds.y);
+	}
+	else {
+		// Store the windowedBounds for later
+		SDL_GetWindowPosition(window, &this->windowedBounds.x, &this->windowedBounds.y);
+		SDL_GetWindowSize(window, &this->windowedBounds.w, &this->windowedBounds.h);
+		// Get the window bounds for the current screen
+		int displayIndex = SDL_GetWindowDisplayIndex(this->window);
+		SDL_Rect displayBounds;
+		SDL_GetDisplayBounds(displayIndex, &displayBounds);
+		// Update the window
+		SDL_SetWindowBordered(this->window, SDL_FALSE);
+		SDL_SetWindowPosition(this->window, displayBounds.x, displayBounds.y);
+		SDL_SetWindowSize(this->window, displayBounds.w, displayBounds.h);
+	}
+	this->resizeWindow();
+}
+void VisualisationVR::resizeWindow()
+{
+	// Use the sdl drawable size
+	glm::ivec2 tDims;
+	SDL_GL_GetDrawableSize(this->window, &tDims.x, &tDims.y);
+	this->companionWindowDims = tDims;
+	//Notify HUD only
+	this->hud->resizeWindow(this->companionWindowDims);
+	companionBackBuffer->resize(companionWindowDims);
+	if (companionLeft)
+		companionLeft->setDimensions(this->companionWindowDims.x / 2, this->companionWindowDims.y);
+	if (companionRight)
+		companionRight->setDimensions(this->companionWindowDims.x / 2, this->companionWindowDims.y);
+}
+bool VisualisationVR::isFullscreen() const{
+	// Use window borders as a toggle to detect fullscreen.
+	return (SDL_GetWindowFlags(this->window) & SDL_WINDOW_BORDERLESS) == SDL_WINDOW_BORDERLESS;
+}
+void VisualisationVR::updateFPS(){
+	// Update the current time
+	this->currentTime = SDL_GetTicks();
+	// Update frame counter
+	this->frameCount += 1;
+	// If it's been more than a second, do something.
+	if (this->currentTime > this->previousTime + ONE_SECOND_MS){
+		// Calculate average fps.
+		double fps = this->frameCount / double(this->currentTime - this->previousTime) * ONE_SECOND_MS;
+		//// Update the title to include FPS at the end.
+		//std::ostringstream newTitle;
+		//newTitle << this->windowTitle << " (" << std::to_string(static_cast<int>(std::ceil(fps))) << " fps)";
+		//SDL_SetWindowTitle(this->window, newTitle.str().c_str());
+		//Update the FPS string
+		this->fpsDisplay->setString("%.3f fps", fps);
+
+		// reset values;
+		this->previousTime = this->currentTime;
+		this->frameCount = 0;
+	}
+}
+std::weak_ptr<Scene> VisualisationVR::getScene() const{
+	return this->scene;
+}
+//Overloads
 std::shared_ptr<const Camera> VisualisationVR::getCamera() const
 {
 	if (this->vr_renderModels)
@@ -410,21 +570,23 @@ std::shared_ptr<const Camera> VisualisationVR::getCamera() const
 	return nullptr;
 }
 const glm::mat4 *VisualisationVR::getProjMatPtr() const{
-	return this->vr_renderModels->getCamera()->getProjMatPtr();
+	if (this->vr_renderModels)
+		return this->vr_renderModels->getCamera()->getProjMatPtr();
+	return nullptr;
 }
 const glm::mat4 VisualisationVR::getProjMat() const{
-	return this->vr_renderModels->getCamera()->getProjMat();
+	if (this->vr_renderModels)
+		return this->vr_renderModels->getCamera()->getProjMat();
+	return glm::mat4();
 }
-
 std::weak_ptr<HUD> VisualisationVR::getHUD()
 {
 	return this->hud;
 }
-
 const char *VisualisationVR::getWindowTitle() const{
-	return this->windowTitle;
+	return this->companionWindowTitle;
 }
 void VisualisationVR::setWindowTitle(const char *windowTitle){
-	this->windowTitle = windowTitle;
-	SDL_SetWindowTitle(this->window, this->windowTitle);
+	this->companionWindowTitle = windowTitle;
+	SDL_SetWindowTitle(this->window, this->companionWindowTitle);
 }

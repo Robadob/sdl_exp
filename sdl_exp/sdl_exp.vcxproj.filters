@@ -137,9 +137,6 @@
     <ClCompile Include="visualisation\VisualisationVR.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\vr\CompanionVR.cpp">
-      <Filter>Source Files\Visualisation\vr</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Entity2.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -254,9 +251,6 @@
     </ClInclude>
     <ClInclude Include="visualisation\VisualisationVR.h">
       <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\vr\CompanionVR.h">
-      <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\vr\utilVR.h">
       <Filter>Header Files\Visualisation\vr</Filter>

@@ -190,7 +190,6 @@
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\VisualisationVR.cpp" />
     <ClCompile Include="visualisation\vr\HMDCamera.cpp" />
-    <ClCompile Include="visualisation\vr\CompanionVR.cpp" />
     <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -238,7 +237,6 @@
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\VisualisationVR.h" />
     <ClInclude Include="visualisation\vr\HMDCamera.h" />
-    <ClInclude Include="visualisation\vr\CompanionVR.h" />
     <ClInclude Include="visualisation\vr\TrackedDevicesVR.h" />
     <ClInclude Include="visualisation\vr\utilVR.h" />
   </ItemGroup>

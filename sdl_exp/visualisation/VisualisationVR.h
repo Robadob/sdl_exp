@@ -15,8 +15,9 @@
 #include "Entity.h"
 #include "vr/HMDCamera.h"
 #include "multipass/FrameBuffer.h"
-#include "vr/CompanionVR.h"
 #include "vr/TrackedDevicesVR.h"
+#include "multipass/BackBuffer.h"
+#include "Sprite2D.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -90,20 +91,10 @@ public:
     */
     bool isFullscreen() const;
     /**
-    * Toggles whether the mouse is hidden and returned relative to the window
-    */
-    void toggleMouseMode();
-    /**
-    * Toggles whether Multi-Sample Anti-Aliasing should be used or not
-    * @param state The desired MSAA state
-    * @note Unless blocked by the active Scene the F10 key toggles MSAA at runtime
-    */
-    void setMSAA(bool state);
-    /**
     * Returns a const pointer to the visualisation's Camera
     * @return The camera
     */
-    std::shared_ptr<const Camera>getCamera() const;
+    std::shared_ptr<const Camera> getCamera() const override;
     /**
     * Sets the Scene object to be rendered within the viewport
     * @return The previously bound Scene
@@ -131,7 +122,7 @@ public:
     /**
     * @return The current viewport dimensions
     */
-	const glm::uvec2& getWindowDims() const override { return vr_renderTargetDimensions; }
+	const glm::uvec2& getWindowDims() const override { return companionWindowDims; }
 private:
     /**
     * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
@@ -182,18 +173,10 @@ private:
     SDL_GLContext context;
 
     std::shared_ptr<HUD> hud;
-    //Camera camera;
     std::shared_ptr<Scene> scene;
-    glm::mat4 frustum;
 
     bool isInitialised;
     std::atomic<bool> continueRender;
-
-    bool msaaState;
-
-    const char* windowTitle;
-    int windowWidth;
-    int windowHeight;
 
     //FPS tracking stuff
     unsigned int previousTime = 0;
@@ -203,14 +186,17 @@ private:
 
     //OpenVR items
     vr::IVRSystem *vr_HMD;                  //HMD configuration access
-    std::string vr_driverString;
-    std::string vr_displayString;
     glm::uvec2 vr_renderTargetDimensions;
     std::shared_ptr<FrameBuffer> vr_leftRenderFB, vr_rightRenderFB;
     std::shared_ptr<FrameBuffer> vr_leftResolveFB, vr_rightResolveFB;
-    std::shared_ptr<CompanionVR> vr_companion;
 
-    std::shared_ptr<TrackedDevicesVR> vr_renderModels;
+	std::shared_ptr<TrackedDevicesVR> vr_renderModels;
+
+	const char* companionWindowTitle;
+	glm::uvec2 companionWindowDims;
+	std::shared_ptr<BackBuffer> companionBackBuffer;
+	std::shared_ptr<Sprite2D> companionLeft;
+	std::shared_ptr<Sprite2D> companionRight;
     void renderStereoTargets();
 };
 

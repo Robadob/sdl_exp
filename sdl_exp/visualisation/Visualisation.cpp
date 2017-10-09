@@ -239,7 +239,11 @@ void Visualisation::render()
         switch (e.type){
         case SDL_QUIT:
             this->quit();
-            break;
+			break;
+		case SDL_WINDOWEVENT:
+			if (e.window.event == SDL_WINDOWEVENT_RESIZED || e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+				resizeWindow();
+			break;
         case SDL_KEYDOWN:
         {
             int x = 0;

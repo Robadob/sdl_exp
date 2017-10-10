@@ -336,8 +336,6 @@ void Visualisation::_run()
 			while (this->continueRender){
 				// Update the fps in the window title
 				this->updateFPS();
-
-<<<<<<< HEAD
 				this->render();
 			}
 			SDL_StopTextInput();

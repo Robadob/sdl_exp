@@ -25,14 +25,21 @@ namespace vr
         float *newData = (float *)malloc(sizeof(vr::RenderModel_Vertex_t) * vrModel.unVertexCount);
         //Copy vertices
         glm::vec3 *vData = (glm::vec3*)newData;
+        glm::vec3 _min = glm::vec3(FLT_MAX);
+        glm::vec3 _max = glm::vec3(-FLT_MAX);
         for (unsigned int i = 0; i < vrModel.unVertexCount; ++i)
+        {
             memcpy(vData + i, &vrModel.rVertexData[i].vPosition.v, sizeof(glm::vec3));
+            _min = glm::min(_min, vData[i]);
+            _max = glm::max(_max, vData[i]);
+        }
+        printf("Model Dims: (%.3f, %.3f, %.3f)\n", _max.x - _min.x, _max.y - _min.y, _max.z - _min.z);
         //Copy normals
-        glm::vec3 *nData = (glm::vec3*)vData + vrModel.unVertexCount;
+        glm::vec3 *nData = (glm::vec3*)(vData + vrModel.unVertexCount);
         for (unsigned int i = 0; i < vrModel.unVertexCount; ++i)
             memcpy(nData + i, &vrModel.rVertexData[i].vNormal.v, sizeof(glm::vec3));
         //Copy tex coords
-        glm::vec2 *tcData = (glm::vec2*)nData + vrModel.unVertexCount;
+        glm::vec2 *tcData = (glm::vec2*)(nData + vrModel.unVertexCount);
         for (unsigned int i = 0; i < vrModel.unVertexCount; ++i)
             memcpy(tcData + i, &vrModel.rVertexData[i].rfTextureCoord, sizeof(glm::vec2));
 

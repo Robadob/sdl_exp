@@ -117,10 +117,10 @@ bool VisualisationVR::init()
     vr_leftResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     vr_rightResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     //Setup companion
-	companionLeft = std::make_shared<Sprite2D>(vr_leftResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
-	companionRight = std::make_shared<Sprite2D>(vr_rightResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
-	hud->add(companionLeft, HUD::AnchorV::Center, HUD::AnchorH::West, 0, 0, -1024);
-	hud->add(companionLeft, HUD::AnchorV::Center, HUD::AnchorH::East, 0, 0, -1024);
+    companionLeft = std::make_shared<Sprite2D>(vr_leftResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
+    companionRight = std::make_shared<Sprite2D>(vr_rightResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
+    hud->add(companionLeft, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, -1024);
+    hud->add(companionRight, HUD::AnchorV::South, HUD::AnchorH::East, 0, 0, -1024);
     //Load render models
     vr_renderModels = std::make_shared <TrackedDevicesVR>(vr_HMD);
     if (!vr_renderModels->getInitState())

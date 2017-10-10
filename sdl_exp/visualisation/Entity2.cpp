@@ -35,35 +35,35 @@ Entity2::Entity2(
     , normals(GL_FLOAT, nComponents, sizeof(float))
     , colors(GL_FLOAT, cComponents, sizeof(float))
     , texcoords(GL_FLOAT, tcComponents, sizeof(float))//Components may be increased at runtime
-    , faces(fSize==16?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
+    , faces(fSize==sizeof(unsigned short)?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
 {
     assert(vertices);
     assert(faces);
     //Copy vertex attribute data
-    this->vertices.data = malloc(sizeof(float)*vComponents*count);
-    memcpy(this->vertices.data, vertices, sizeof(float)*vComponents*count);
+    this->vertices.data = malloc(this->vertices.componentSize*this->vertices.components*count);
+    memcpy(this->vertices.data, vertices, this->vertices.componentSize*this->vertices.components*count);
     this->vertices.count = count;
     if (normals)
     {
-        this->normals.data = malloc(sizeof(float)*nComponents*count);
-        memcpy(this->normals.data, normals, sizeof(float)*nComponents*count);
+        this->normals.data = malloc(this->normals.componentSize*this->normals.components*count);
+        memcpy(this->normals.data, normals, this->normals.componentSize*this->normals.components*count);
         this->normals.count = count;
     }
     if (colors)
     {
-        this->colors.data = malloc(sizeof(float)*cComponents*count);
-        memcpy(this->colors.data, colors, sizeof(float)*cComponents*count);
+        this->colors.data = malloc(this->colors.componentSize*this->colors.components*count);
+        memcpy(this->colors.data, colors, this->colors.componentSize*this->colors.components*count);
         this->colors.count = count;
     }
     if (tCoords)
     {
-        this->texcoords.data = malloc(sizeof(float)*tcComponents*count);
-        memcpy(this->texcoords.data, tCoords, sizeof(float)*tcComponents*count);
+        this->texcoords.data = malloc(this->texcoords.componentSize*this->texcoords.components*count);
+        memcpy(this->texcoords.data, tCoords, this->texcoords.componentSize*this->texcoords.components*count);
         this->texcoords.count = count;
     }
-    this->faces.data = malloc(fSize*fCount*fComponents);
-    memcpy(this->faces.data, faces, fSize*fCount*fComponents);
     this->faces.count = fCount;
+    this->faces.data = malloc(this->faces.componentSize*this->faces.components*this->faces.count);
+    memcpy(this->faces.data, faces, this->faces.componentSize*this->faces.components*this->faces.count);
     //Copy data to VBOs
     generateVertexBufferObjects();
     //Configure rendergroups
@@ -1054,7 +1054,7 @@ void Entity2::generateVertexBufferObjects()
     if (faces.vbo)
         GL_CALL(glDeleteBuffers(1, &faces.vbo));
     unsigned int bufferSize = 0;
-    bufferSize += vertices.count * vertices.components * vertices.componentSize;
+    bufferSize += vertices.count *  vertices.components * vertices.componentSize;
     bufferSize += normals.count *   normals.components *   normals.componentSize;
     bufferSize += colors.count *    colors.components *    colors.componentSize;
     bufferSize += texcoords.count * texcoords.components * texcoords.componentSize;

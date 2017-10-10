@@ -183,6 +183,8 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(unsigned int shaderIndex){
+    if (!faces.vbo)
+        return;
     if (shaderIndex<shaders.size())
         shaders[shaderIndex]->useProgram();
     //Bind the faces to be rendered

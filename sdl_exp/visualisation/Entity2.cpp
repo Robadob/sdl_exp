@@ -35,7 +35,7 @@ Entity2::Entity2(
     , normals(GL_FLOAT, nComponents, sizeof(float))
     , colors(GL_FLOAT, cComponents, sizeof(float))
     , texcoords(GL_FLOAT, tcComponents, sizeof(float))//Components may be increased at runtime
-    , faces(GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
+    , faces(fSize==16?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
 {
     assert(vertices);
     assert(faces);
@@ -1006,6 +1006,8 @@ void Entity2::loadModel()
             i++;
         }
 	}
+    //Correct face count (rather than it being index count)
+    faces.count /= faces.components;
     //Copy data to VBOs
     generateVertexBufferObjects();
     //bind attribs
@@ -1089,7 +1091,7 @@ void Entity2::generateVertexBufferObjects()
     //Faces
     GL_CALL(glGenBuffers(1, &faces.vbo));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
-    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.componentSize, faces.data, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 void Entity2::render()
@@ -1115,18 +1117,18 @@ void Entity2::render()
             glm::vec4 color = glm::vec4(materials[rg.materialId].diffuse, materials[rg.materialId].opacity);
             GL_CALL(glUniform4fv(colorUniformLoc, 1, glm::value_ptr(color)));
         }
-        else
+        else if (colorUniformLoc!=-1)
         {
             glm::vec4 color = glm::vec4(1);
             GL_CALL(glUniform4fv(colorUniformLoc, 1, glm::value_ptr(color)));
         }
         if (rg.faceComponentCount==3)
         {
-            GL_CALL(glDrawElements(GL_TRIANGLES, rg.faceIndexCount, GL_UNSIGNED_INT, (void*)(rg.faceIndexStart*sizeof(unsigned int))));
+            GL_CALL(glDrawElements(GL_TRIANGLES, rg.faceIndexCount, faces.componentType, (void*)(rg.faceIndexStart*faces.componentSize)));
         }
         else if (rg.faceComponentCount == 4)
         {
-            GL_CALL(glDrawElements(GL_QUADS, rg.faceIndexCount, GL_UNSIGNED_INT, (void*)(rg.faceIndexStart*sizeof(unsigned int))));
+            GL_CALL(glDrawElements(GL_QUADS, rg.faceIndexCount, faces.componentType, (void*)(rg.faceIndexStart*faces.componentSize)));
         }
         else
             assert(false);

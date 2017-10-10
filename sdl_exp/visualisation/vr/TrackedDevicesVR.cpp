@@ -160,7 +160,6 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
                 break;
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-
         if (error != vr::VRRenderModelError_None)
         {
             printf("Unable to load render model %s - %s\n", modelName.c_str(), vr::VRRenderModels()->GetRenderModelErrorNameFromEnum(error));
@@ -184,6 +183,8 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
         }
         //Transfer render model from OpenVR format to our internal Entity forma
         renderEntities[modelName] = vr::createEntity(*pModel, *pTexture);
+        renderEntities[modelName]->setProjectionMatPtr(camera->getProjMatPtr());
+        renderEntities[modelName]->setViewMatPtr(camera->getViewMatPtr());
         vr::VRRenderModels()->FreeRenderModel(pModel);
         vr::VRRenderModels()->FreeTexture(pTexture);
     }
@@ -250,8 +251,8 @@ void TrackedDevicesVR::Device::render()
 	if (!vr_HMD->IsTrackedDeviceConnected(id))
 		return;
 
-	if (type != vr::TrackedDeviceClass_Controller)
-		return;
+	//if (type != vr::TrackedDeviceClass_Controller)
+	//	return;
 
 	model->setModelMat(poseMat);//Set ptr instead?
 	model->render();

@@ -11,6 +11,12 @@ void BackBuffer::resize(const glm::uvec2 &dims)
 }
 bool BackBuffer::use()
 {
+	if (auto o = overrideBuffer.lock())
+	{
+		if (o->use())
+			return true;
+		fprintf(stderr, "BackBuffer override failed, reverting to FrameBuffer 0.\n");
+	}
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
 	if (doClear)
 	{

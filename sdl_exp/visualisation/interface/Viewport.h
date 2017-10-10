@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "../HUD.h"
+#include "../multipass/BackBuffer.h"
 
 class Viewport
 {
@@ -39,5 +40,8 @@ public:
 	 * @param windowTitle Desired title of the window
 	 */
 	virtual void setWindowTitle(const char *windowTitle) = 0;
+protected:
+	void overrideBackBuffer(std::weak_ptr<FBuffer> f){ BackBuffer::setOverride(f); };
+	void resetBackBuffer() {BackBuffer::clearOverride();};
 };
 #endif

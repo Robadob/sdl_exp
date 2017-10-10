@@ -2,6 +2,8 @@
 #define __BackBuffer_h__
 #include "../interface/FBuffer.h"
 #include "glm/glm.hpp"
+#include <memory>
+
 /**
  * Represents the default FrameBuffer, often called the BackBuffer in double-buffered rendering
  * FrontBuffer refers to the one currently shown, which is swapped with the BackBuffer after rendering has completed
@@ -9,6 +11,7 @@
  */
 class BackBuffer : public FBuffer
 {
+	friend class ViewportExt;
 public:
 	/**
 	 * @note Call resize() as soon after construction as you know the viewport dimensions
@@ -31,9 +34,14 @@ public:
 	 */
 	bool use() override final;
 	const GLuint name = 0;
+protected:
+	static void setOverride(std::weak_ptr<FBuffer> overrideBuffer) { BackBuffer::overrideBuffer = overrideBuffer; }
+	static void clearOverride() { BackBuffer::overrideBuffer.reset(); }
+private:
 	glm::uvec2 dimensions;
 	bool doClear;
 	glm::vec3 clearColor;
+	static std::weak_ptr<FBuffer> overrideBuffer;
 };
 
 #endif //__BackBuffer_h__

@@ -427,7 +427,9 @@ void VisualisationVR::renderStereoTargets()
     vr_leftRenderFB->use();
     GL_CALL(glViewport(0, 0, vr_renderTargetDimensions.x, vr_renderTargetDimensions.y));
 	this->vr_renderModels->getCamera()->useLeft();
-    this->scene->_render();
+	overrideBackBuffer(vr_leftRenderFB);
+	this->scene->_render();
+	resetBackBuffer();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     //Blit left eye
@@ -447,7 +449,9 @@ void VisualisationVR::renderStereoTargets()
     vr_rightRenderFB->use();
     GL_CALL(glViewport(0, 0, vr_renderTargetDimensions.x, vr_renderTargetDimensions.y));
 	this->vr_renderModels->getCamera()->useRight();
-    this->scene->_render();
+	overrideBackBuffer(vr_rightRenderFB);
+	this->scene->_render();
+	resetBackBuffer();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     //Blit left eye

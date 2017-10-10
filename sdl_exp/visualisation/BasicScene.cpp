@@ -28,12 +28,7 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 void BasicScene::_render()
 {
     //return;
-	//Bind back buffer
-	//GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-	//GL_CALL(glClearColor(0, 0, 0, 1));
-	//GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-	//Reset viewport
-	//GL_CALL(glViewport(0, 0, visualisation.getWindowDims().x, visualisation.getWindowDims().y));
+	//backBuffer->use()
 	if (this->renderSkyboxState)
 		this->skybox->render();
 	if (this->renderAxisState)

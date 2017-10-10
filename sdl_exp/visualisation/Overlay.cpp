@@ -44,7 +44,14 @@ Sets the HUD::item attatched to the overlay, so that resize events can be trigge
 */
 void Overlay::setHUDItem(std::shared_ptr<HUD::Item> ptr)
 {
-	hudItem = std::weak_ptr<HUD::Item>(ptr);
+    hudItem = std::weak_ptr<HUD::Item>(ptr);
+    if (auto t = hudItem.lock())
+    {//Process any stored flips
+        if (flippedV)
+            t->flipVertical();
+        if (flippedH)
+            t->flipHorizontal();
+    }
 }
 /*
 Creates a new overlay, this is an abstract class and should not be directly instantiated
@@ -54,12 +61,13 @@ Creates a new overlay, this is an abstract class and should not be directly inst
 @note If the dimensions of the overlay are not known at initialisation, call setDimensions() as soon as they are known.
 */
 Overlay::Overlay(std::shared_ptr<Shaders> shaders, unsigned int width, unsigned int height)
-	:
-hudItem(), 
-shaders(shaders), 
-width(width), 
-height(height),
-visible(true)
+	: hudItem()
+    , visible(true)
+    , shaders(shaders)
+    , width(width)
+    , height(height)
+    , flippedV(false)
+    , flippedH(false)
 {
 }
 /*
@@ -104,4 +112,16 @@ Sets whether the overlay should be rendered or not
 void Overlay::setVisible(bool isVisible)
 {
     this->visible = isVisible;
+}
+void Overlay::flipVertical()
+{
+    flippedV = !flippedV;
+    if (auto t = hudItem.lock())
+        t->flipVertical();
+}
+void Overlay::flipHorizontal()
+{
+    flippedH = !flippedH;
+    if (auto t = hudItem.lock())
+        t->flipHorizontal();
 }

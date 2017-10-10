@@ -29,7 +29,9 @@ public:
 	}
 	void setWidth(unsigned int w);
 	void setHeight(unsigned int h);
-	void setDimensions(unsigned int w, unsigned int h);
+    void setDimensions(unsigned int w, unsigned int h);
+    void flipVertical();
+    void flipHorizontal();
 protected:
 	std::weak_ptr<HUD::Item> hudItem;
 private:
@@ -38,6 +40,7 @@ private:
 	std::shared_ptr<Shaders> shaders;
 	unsigned int width;
 	unsigned int height;
+    bool flippedV, flippedH;
 };
 
 #endif //ifndef __Overlay_h__

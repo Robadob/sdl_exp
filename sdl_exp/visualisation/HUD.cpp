@@ -192,6 +192,28 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+void HUD::Item::flipVertical()
+{
+    glm::vec2 *texCoords = static_cast<glm::vec2*>(static_cast<void*>(static_cast<glm::vec3*>(data)+4));
+    texCoords[0].y = 1 - texCoords[0].y;//TopLeft
+    texCoords[1].y = 1 - texCoords[0].y; //BottomLeft
+    texCoords[2].y = 1 - texCoords[0].y; //TopRight
+    texCoords[3].y = 1 - texCoords[0].y; //BottomRight
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 4, sizeof(glm::vec2) * 4, texCoords));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+void HUD::Item::flipHorizontal()
+{
+    glm::vec2 *texCoords = static_cast<glm::vec2*>(static_cast<void*>(static_cast<glm::vec3*>(data)+4));
+    texCoords[0].x = 1 - texCoords[0].x;//TopLeft
+    texCoords[1].x = 1 - texCoords[0].x; //BottomLeft
+    texCoords[2].x = 1 - texCoords[0].x; //TopRight
+    texCoords[3].x = 1 - texCoords[0].x; //BottomRight
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 4, sizeof(glm::vec2) * 4, texCoords));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
 /*
 Update the overlays quad location, based on new window size, anchors, offsets and overlay dimensions
 @param w The new window width

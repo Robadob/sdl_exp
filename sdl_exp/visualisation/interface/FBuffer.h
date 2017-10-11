@@ -21,8 +21,7 @@ public:
 	 */
 	virtual GLuint getFrameBufferName() = 0;
 	/**
-	 * @param width The new viewport width
-	 * @param height The new viewport height
+	 * @param dims The new viewport dimensions
 	 * Resizes the internal images according to the specifed dimensions and the internal scaling factor
 	 */
 	virtual void resize(const glm::uvec2 &dims) = 0;

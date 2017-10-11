@@ -110,6 +110,7 @@ bool VisualisationVR::init()
 	    
     //Setup HMD FrameBuffers
     vr_HMD->GetRecommendedRenderTargetSize(&vr_renderTargetDimensions.x, &vr_renderTargetDimensions.y);
+    resizeBackBuffer(this->vr_renderTargetDimensions);
     //Render in Multisample
     vr_leftRenderFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::ManagedDepthRenderBuffer(),FBAFactory::Disabled(), 4);
     vr_rightRenderFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 4);

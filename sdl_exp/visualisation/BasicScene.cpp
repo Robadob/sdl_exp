@@ -27,8 +27,7 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 }
 void BasicScene::_render()
 {
-    //return;
-	//backBuffer->use()
+    BackBuffer::useStatic();
 	if (this->renderSkyboxState)
 		this->skybox->render();
 	if (this->renderAxisState)

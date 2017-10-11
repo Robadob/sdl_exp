@@ -125,7 +125,7 @@ void TwoPassScene::reload()
 }
 
 TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
-    : RenderPass(std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 0, true, glm::vec3(1.0f)))
+    : RenderPass((std::shared_ptr<FBuffer>)std::make_shared<FrameBuffer>(content->shadowDims, FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 0, true, glm::vec3(1.0f)))
 	, content(content)
 {
     //Pass the shadow texture to the second shader of each model
@@ -140,7 +140,7 @@ TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
     content->planeModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
 }
 TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
-	: RenderPass(std::make_shared<BackBuffer>())
+    : RenderPass((std::shared_ptr<FBuffer>)std::make_shared<BackBuffer>())
 	, content(content)
 	
 {

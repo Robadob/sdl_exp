@@ -43,5 +43,6 @@ public:
 protected:
 	void overrideBackBuffer(std::weak_ptr<FBuffer> f){ BackBuffer::setOverride(f); };
 	void resetBackBuffer() {BackBuffer::clearOverride();};
+    void resizeBackBuffer(const glm::uvec2 &dims){ BackBuffer::resizeViewport(dims); };
 };
 #endif

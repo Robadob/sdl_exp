@@ -1,9 +1,15 @@
 #include "RenderPass.h"
 #include "BackBuffer.h"
 
-RenderPass::RenderPass(glm::vec3 clearColor, bool doClear)
-	: fb(std::make_shared<BackBuffer>(doClear, clearColor))
-{ }
+RenderPass::RenderPass(const bool &doClear)
+    : fb(std::make_shared<BackBuffer>(doClear, glm::vec3(-1)))
+{
+    
+}
+RenderPass::RenderPass(const glm::vec3 &clearColor)
+    : fb(std::make_shared<BackBuffer>(true, clearColor))
+{
+}
 
 RenderPass::RenderPass(std::shared_ptr<FBuffer> fb)
 	: fb(fb)

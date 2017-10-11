@@ -136,6 +136,7 @@ bool Visualisation::init()
     GL_CALL(glEnable(GL_NORMALIZE));
     GL_CALL(glBlendEquation(GL_FUNC_ADD));
     GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    BackBuffer::setClear(true, glm::vec3(1));//Clear to black
     setMSAA(this->msaaState);
 
     // Setup the projection matrix
@@ -277,9 +278,7 @@ void Visualisation::render()
     }
     updateTime = t_updateTime;
     // render
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-	GL_CALL(glClearColor(0, 0, 0, 1));
-	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    BackBuffer::useStatic();
     this->scene->_render();
 	GL_CALL(glViewport(0, 0, windowDims.x, windowDims.y));
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
@@ -461,6 +460,7 @@ void Visualisation::resizeWindow(){
 	this->hud->resizeWindow(this->windowDims);
     if (this->scene)
 		this->scene->_resize(this->windowDims);
+    resizeBackBuffer(this->windowDims);
 }
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.

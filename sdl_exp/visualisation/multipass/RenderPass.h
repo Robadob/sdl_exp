@@ -6,17 +6,27 @@
 
 /**
  * Base class that binds the named FrameBuffer before calling the subclasses render() to trigger rendering.
+ * @note 'RenderPass::RenderPass' : ambiguous call to overloaded function while 
+ * trying to match the argument list '(std::shared_ptr<BackBuffer>)
+ * I'm hoping this will be fixed with VS2015, until then cast to std::shared_ptr<FBuffer>
+ * Merging the constructors so they take the form vec3, bool seems to also work
  */
 class RenderPass
 {
 public:
     /**
-     * Creates a RenderPass which renders to the default FrameBuffer (aka back buffer)
+     * Creates a RenderPass which renders to the default FrameBuffer (aka BackBuffer)
+     * The resolution of the backbuffer is controlled by the viewport
+     * @param doClear Whether to clear prior to render
+     * @note The static backbuffer color will be used
+     */
+    explicit RenderPass(const bool &doClear = true);
+    /**
+     * Creates a RenderPass which renders to the default FrameBuffer (aka BackBuffer)
      * The resolution of the backbuffer is controlled by the viewport
      * @param clearColor The colour to clear the backBuffer with prior to render, each component is in the range 0-1
-     * @param doClear Whether to clear prior to render
      */
-	RenderPass(glm::vec3 clearColor = glm::vec3(0), bool doClear = true);
+    RenderPass(const glm::vec3 &clearColor);
     /**
      * Creates a Renderpass which renders to a custom FrameBuffer
      */

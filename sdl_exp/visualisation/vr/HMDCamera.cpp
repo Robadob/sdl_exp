@@ -1,4 +1,5 @@
 #include "HMDCamera.h"
+#include "utilVR.h"
 
 HMDCamera::HMDCamera(vr::IVRSystem *vr_HMD, float nearClip, float farClip)
     : Camera(glm::vec3(0))
@@ -72,12 +73,7 @@ glm::mat4 HMDCamera::getProjectionEye(vr::Hmd_Eye nEye)
 
     vr::HmdMatrix44_t mat = vr_HMD->GetProjectionMatrix(nEye, nearClip, farClip);
 
-    return glm::mat4(
-        mat.m[0][0], mat.m[1][0], mat.m[2][0], mat.m[3][0],
-        mat.m[0][1], mat.m[1][1], mat.m[2][1], mat.m[3][1],
-        mat.m[0][2], mat.m[1][2], mat.m[2][2], mat.m[3][2],
-        mat.m[0][3], mat.m[1][3], mat.m[2][3], mat.m[3][3]
-        );
+    return toMat4(mat);
 }
 
 glm::mat4 HMDCamera::getPoseEye(vr::Hmd_Eye nEye)
@@ -85,13 +81,7 @@ glm::mat4 HMDCamera::getPoseEye(vr::Hmd_Eye nEye)
     if (!vr_HMD)
         return glm::mat4();
 
-    vr::HmdMatrix34_t matEyeRight = vr_HMD->GetEyeToHeadTransform(nEye);
-    glm::mat4 matrixObj(
-        matEyeRight.m[0][0], matEyeRight.m[1][0], matEyeRight.m[2][0], 0.0,
-        matEyeRight.m[0][1], matEyeRight.m[1][1], matEyeRight.m[2][1], 0.0,
-        matEyeRight.m[0][2], matEyeRight.m[1][2], matEyeRight.m[2][2], 0.0,
-        matEyeRight.m[0][3], matEyeRight.m[1][3], matEyeRight.m[2][3], 1.0f
-        );
-
-    return inverse(matrixObj);
+    vr::HmdMatrix34_t mat34 = vr_HMD->GetEyeToHeadTransform(nEye);
+    glm::mat4 mat44 = toMat4(mat34);
+    return inverse(mat44);
 }

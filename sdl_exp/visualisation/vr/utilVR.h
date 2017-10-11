@@ -51,22 +51,32 @@ namespace vr
             vrModel.unVertexCount,
             (void*)vrModel.rIndexData, sizeof(uint16_t), 3, vrModel.unTriangleCount,
             std::make_shared<Texture2D>(
-                    (const char *)nullptr, 
-                    (void*)vrDiffuseTexture.rubTextureMapData,
-                    vrDiffuseTexture.unWidth * vrDiffuseTexture.unHeight * 4 * sizeof(unsigned char),
-                    vrDiffuseTexture.unWidth, vrDiffuseTexture.unHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
-                );
+            (const char *)nullptr,
+            (void*)vrDiffuseTexture.rubTextureMapData,
+            vrDiffuseTexture.unWidth * vrDiffuseTexture.unHeight * 4 * sizeof(unsigned char),
+            vrDiffuseTexture.unWidth, vrDiffuseTexture.unHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
+            );
         free(newData);
         return rtn;
-	}
-	inline glm::mat4 toMat4(const vr::HmdMatrix34_t &matPose)
+    }
+    inline glm::mat4 toMat4(const vr::HmdMatrix34_t &mat)
     {
-		return glm::mat4(
-			matPose.m[0][0], matPose.m[1][0], matPose.m[2][0], 0.0,
-			matPose.m[0][1], matPose.m[1][1], matPose.m[2][1], 0.0,
-			matPose.m[0][2], matPose.m[1][2], matPose.m[2][2], 0.0,
-			matPose.m[0][3], matPose.m[1][3], matPose.m[2][3], 1.0f
-			);
+        return glm::mat4(
+            mat.m[0][0], mat.m[1][0], mat.m[2][0], 0.0f,
+            mat.m[0][1], mat.m[1][1], mat.m[2][1], 0.0f,
+            mat.m[0][2], mat.m[1][2], mat.m[2][2], 0.0f,
+            mat.m[0][3], mat.m[1][3], mat.m[2][3], 1.0f
+            );
+    }
+
+    inline glm::mat4 toMat4(const vr::HmdMatrix44_t &mat)
+    {
+        return glm::mat4(
+            mat.m[0][0], mat.m[1][0], mat.m[2][0], mat.m[3][0],
+            mat.m[0][1], mat.m[1][1], mat.m[2][1], mat.m[3][1],
+            mat.m[0][2], mat.m[1][2], mat.m[2][2], mat.m[3][2],
+            mat.m[0][3], mat.m[1][3], mat.m[2][3], mat.m[3][3]
+            );
     }
 }
 

@@ -6,6 +6,7 @@
 #include "visualisation/Text.h"
 
 #include "visualisation/texture/TextureBuffer.h"
+
 /*
 Example scene to demonstrate how to use SDL_EXP
 */

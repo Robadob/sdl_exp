@@ -485,7 +485,7 @@ Creates a new TextureString which represents the texture holding the glyphs of t
 @param height The height of the texture to be created
 */
 Text::TextureString::TextureString()
-    : Texture(GL_TEXTURE_2D, "")//_texture as default
+    : Texture(GL_TEXTURE_2D, "[TextureString]")//_texture as default
     , texture(0)
     , width(0)
     , height(0)

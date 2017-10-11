@@ -36,6 +36,7 @@ Entity2::Entity2(
     , colors(GL_FLOAT, cComponents, sizeof(float))
     , texcoords(GL_FLOAT, tcComponents, sizeof(float))//Components may be increased at runtime
     , faces(fSize==sizeof(unsigned short)?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
+    , texture(texture)
 {
     assert(vertices);
     assert(faces);

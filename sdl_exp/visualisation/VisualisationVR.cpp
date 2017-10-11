@@ -307,7 +307,6 @@ void VisualisationVR::render()
 
 	if (vr_HMD)
 	{
-		vr_renderModels->render();
 		renderStereoTargets();
 		{//Render companion window
 			//Render textures plane in either half of the screen
@@ -429,6 +428,7 @@ void VisualisationVR::renderStereoTargets()
 	this->vr_renderModels->getCamera()->useLeft();
 	overrideBackBuffer(vr_leftRenderFB);
 	this->scene->_render();
+    this->vr_renderModels->render();
 	resetBackBuffer();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
@@ -448,9 +448,10 @@ void VisualisationVR::renderStereoTargets()
     //Render right eye multi-sample
     vr_rightRenderFB->use();
     GL_CALL(glViewport(0, 0, vr_renderTargetDimensions.x, vr_renderTargetDimensions.y));
-	this->vr_renderModels->getCamera()->useRight();
+    this->vr_renderModels->getCamera()->useRight();
 	overrideBackBuffer(vr_rightRenderFB);
-	this->scene->_render();
+    this->scene->_render();
+    this->vr_renderModels->render();
 	resetBackBuffer();
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 

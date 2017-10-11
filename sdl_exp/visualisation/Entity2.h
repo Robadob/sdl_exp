@@ -87,6 +87,7 @@ private:
     glm::vec4 rotation;
     glm::vec3 location;
 	glm::mat4 modelMat;
+    std::shared_ptr<Texture> texture;
 };
 
 #endif __Entity2_h__

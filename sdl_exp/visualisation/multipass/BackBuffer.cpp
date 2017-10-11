@@ -1,4 +1,7 @@
 #include "BackBuffer.h"
+
+
+std::weak_ptr<FBuffer> BackBuffer::overrideBuffer;
 BackBuffer::BackBuffer(bool doClear, glm::vec3 clearColor)
 	: dimensions(800, 600)//Something simple and valid, resize() should really be called directly after construction
 	, doClear(doClear)

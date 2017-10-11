@@ -19,7 +19,7 @@ This paramters of this function wrap setTexture()
 @see setTexture(...)
 */
 Texture2D::Texture2D(const char *uniformName, void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
-    : Texture(GL_TEXTURE_2D, "", uniformName)
+    : Texture(GL_TEXTURE_2D, "[preloaded]", uniformName)
     , texturePath(nullptr)
 {
     setTexture(image, imageSize, width, height, internalFormat, format, type);

@@ -7,8 +7,15 @@
 #define FAR_CLIP 500.0f
 
 TrackedDevicesVR::TrackedDevicesVR(vr::IVRSystem *vr_HMD)
-    : initState(true)
-    , HMD(vr_HMD)
+    : renderLighthouses(true)
+    , renderRightController(true)
+	, renderLeftController(true)
+	, renderInvalidController(true)
+	, renderTracker(true)
+	, renderHeadset(false)
+	, renderUnknown(true)
+	, initState(true)
+	, HMD(vr_HMD)
 	, camera(std::make_shared<HMDCamera>(vr_HMD, NEAR_CLIP, FAR_CLIP))
 {
     assert(HMD);
@@ -135,7 +142,19 @@ bool TrackedDevicesVR::addDevice(unsigned int deviceIndex)
 		trackedDevices[deviceIndex].reset();
 		return false;
     }
-	trackedDevices[deviceIndex] = std::make_shared<Device>(HMD, deviceIndex, renderModel);
+	switch (HMD->GetTrackedDeviceClass(deviceIndex))
+	{
+	case vr::TrackedDeviceClass_Controller:
+		trackedDevices[deviceIndex] = std::make_shared<Controller>(HMD, deviceIndex, renderModel);
+		break;
+	case vr::TrackedDeviceClass_GenericTracker:
+	case vr::TrackedDeviceClass_HMD:
+	case vr::TrackedDeviceClass_TrackingReference:
+	default:
+		trackedDevices[deviceIndex] = std::make_shared<Device>(HMD, deviceIndex, renderModel);
+		break;
+
+	}
 	return true;
 }
 bool TrackedDevicesVR::removeDevice(unsigned int deviceIndex)
@@ -193,10 +212,54 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
 void TrackedDevicesVR::render()
 {
 	updatePoses();
+	if (HMD->IsInputFocusCapturedByAnotherProcess())
+		return;
+
 	for (vr::TrackedDeviceIndex_t unDevice = 0; unDevice < vr::k_unMaxTrackedDeviceCount; unDevice++)
 	{
 		if (trackedDevices[unDevice])
-			trackedDevices[unDevice]->render();
+		{
+			if (HMD->IsTrackedDeviceConnected(unDevice))
+			{
+				if (trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_Controller)
+				{
+					if (auto t = std::dynamic_pointer_cast<Controller>(trackedDevices[unDevice]))
+					{
+						if (Controller::Hand::Left == t->getHand())
+						{
+							if (renderLeftController)
+								trackedDevices[unDevice]->render();
+						}
+						else if (Controller::Hand::Left == t->getHand())
+						{
+							if (renderRightController)
+								trackedDevices[unDevice]->render();
+						}
+						else if (Controller::Hand::Invalid == t->getHand())
+						{
+							if (renderInvalidController)
+								trackedDevices[unDevice]->render();
+						}
+					}
+				}
+				else if (renderTracker && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_GenericTracker)
+				{
+					trackedDevices[unDevice]->render();
+				}
+				else if (renderHeadset && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_HMD)
+				{
+					trackedDevices[unDevice]->render();
+				}
+				else if (renderLighthouses && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_TrackingReference)
+				{
+					trackedDevices[unDevice]->render();
+				}
+				else if (renderUnknown)
+				{
+					trackedDevices[unDevice]->render();
+				}
+			}
+		}
 	}
 }
 TrackedDevicesVR::Device::Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
@@ -205,7 +268,6 @@ TrackedDevicesVR::Device::Device(vr::IVRSystem *vr_HMD, unsigned int id, std::sh
 	, id(id)
 	, model(model)
 	, type(vr_HMD->GetTrackedDeviceClass(id))//Presume id 0 == HMD
-	, visible(id != 0)
 {
 }
 
@@ -223,7 +285,7 @@ void TrackedDevicesVR::Device::update()
 }
 void TrackedDevicesVR::updatePoses()
 {//This method should be left as late as possible before rendering rendermodel
-	vr::VRCompositor()->WaitGetPoses(trackedDevicePoses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+	vr::VRCompositor()->WaitGetPoses(trackedDevicePoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 	for (unsigned int i = 0; i < vr::k_unMaxTrackedDeviceCount;++i)
 	{
 		if (trackedDevicePoses[i].bPoseIsValid)
@@ -244,16 +306,6 @@ void TrackedDevicesVR::updatePoses()
 }
 void TrackedDevicesVR::Device::render()
 {
-	// don't draw controllers if somebody else has input focus
-	if (!visible || vr_HMD->IsInputFocusCapturedByAnotherProcess())
-		return;
-		
-	if (!vr_HMD->IsTrackedDeviceConnected(id))
-		return;
-
-	//if (type != vr::TrackedDeviceClass_Controller)
-	//	return;
-
-	model->setModelMat(poseMat);//Set ptr instead?
+	model->setModelMat(poseMat);//Model is shared, so can't dynamic track ptr (unless we use unique shaders)
 	model->render();
 }

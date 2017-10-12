@@ -196,9 +196,9 @@ void HUD::Item::flipVertical()
 {
     glm::vec2 *texCoords = static_cast<glm::vec2*>(static_cast<void*>(static_cast<glm::vec3*>(data)+4));
     texCoords[0].y = 1 - texCoords[0].y;//TopLeft
-    texCoords[1].y = 1 - texCoords[0].y; //BottomLeft
-    texCoords[2].y = 1 - texCoords[0].y; //TopRight
-    texCoords[3].y = 1 - texCoords[0].y; //BottomRight
+    texCoords[1].y = 1 - texCoords[1].y; //BottomLeft
+    texCoords[2].y = 1 - texCoords[2].y; //TopRight
+    texCoords[3].y = 1 - texCoords[3].y; //BottomRight
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
     GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 4, sizeof(glm::vec2) * 4, texCoords));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -207,9 +207,9 @@ void HUD::Item::flipHorizontal()
 {
     glm::vec2 *texCoords = static_cast<glm::vec2*>(static_cast<void*>(static_cast<glm::vec3*>(data)+4));
     texCoords[0].x = 1 - texCoords[0].x;//TopLeft
-    texCoords[1].x = 1 - texCoords[0].x; //BottomLeft
-    texCoords[2].x = 1 - texCoords[0].x; //TopRight
-    texCoords[3].x = 1 - texCoords[0].x; //BottomRight
+    texCoords[1].x = 1 - texCoords[1].x; //BottomLeft
+    texCoords[2].x = 1 - texCoords[2].x; //TopRight
+    texCoords[3].x = 1 - texCoords[3].x; //BottomRight
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
     GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * 4, sizeof(glm::vec2) * 4, texCoords));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));

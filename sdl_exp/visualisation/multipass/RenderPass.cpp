@@ -23,6 +23,6 @@ void RenderPass::executeRender()
 }
 void RenderPass::resize(const glm::uvec2 &dims)
 {
-	if (fb)
+	if (!std::dynamic_pointer_cast<BackBuffer>(fb))
 		fb->resize(dims);
 }

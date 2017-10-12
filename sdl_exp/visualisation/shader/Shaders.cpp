@@ -169,7 +169,7 @@ void Shaders::_setupBindings(){
         }
     }
 }
-void Shaders::overrideModelMat(const glm::mat4 *force)
+glm::mat4 Shaders::overrideModelMat(const glm::mat4 *force)
 {
 #ifdef _DEBUG
     int currProgram = 0;
@@ -177,12 +177,12 @@ void Shaders::overrideModelMat(const glm::mat4 *force)
     if (currProgram != getProgram())
     {
         fprintf(stderr, "Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
-        return;
+        return *force;
     }
 #endif
-    _useProgramModelMatrices(force);
+    return _useProgramModelMatrices(force);
 }
-void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
+glm::mat4 Shaders::_useProgramModelMatrices(const glm::mat4 *force)
 {
     ////Set the previous modelview matrix (e.g. glFrustum, normally provided by the Visualisation)
     //if (prevModelviewUniformLocation >= 0)
@@ -213,7 +213,8 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
             m = glm::translate(m, *this->translationPtr);
         }
     }
-
+	//Store return val
+	const glm::mat4 _m = m;
     //Set Model matrix
     if (this->modelMat.location >= 0)
     {//If model matrix location is known
@@ -242,6 +243,7 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
         m = *this->projectionMat.matrixPtr * m;
         GL_CALL(glUniformMatrix4fv(this->modelviewprojectionMatLoc, 1, GL_FALSE, glm::value_ptr(m)));
     }
+	return _m;
 }
 void Shaders::_useProgram()
 {

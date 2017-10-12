@@ -1095,7 +1095,7 @@ void Entity2::generateVertexBufferObjects()
     GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
-void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
+glm::mat4 Entity2::render(const unsigned int &shaderIndex, glm::mat4 transform)
 {
 	if (shaderIndex != 0)
 		fprintf(stderr, "Entity2 does not currently support multi shader.\n");
@@ -1108,7 +1108,7 @@ void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform
     if (shaders)
 	{
 		shaders->useProgram();
-		shaders->overrideModelMat(&transform);
+		transform = shaders->overrideModelMat(&transform);
 	}
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
@@ -1143,5 +1143,6 @@ void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform
     //Fixed fn
     GL_CALL(glEnable(GL_CULL_FACE));
     if (shaders)
-        shaders->clearProgram();    
+        shaders->clearProgram();
+	return transform;
 }

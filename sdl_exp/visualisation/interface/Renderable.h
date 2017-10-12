@@ -56,18 +56,18 @@ public:
 		setProjectionMatPtr(visualisation->getProjMatPtr());
 	}
     //Render
-    virtual void render(const unsigned int &shaderIndex=0, const glm::mat4 &transform = glm::mat4()) = 0;
-    void renderSceneGraph(const unsigned int &shaderIndex = 0, const glm::mat4 &transform = glm::mat4())
+    virtual glm::mat4 render(const unsigned int &shaderIndex=0, glm::mat4 transform = glm::mat4()) = 0;
+    void renderSceneGraph(const unsigned int &shaderIndex = 0, glm::mat4 transform = glm::mat4())
     {
         //Render me with transform
-        render(shaderIndex, transform);
+        transform = render(shaderIndex, transform);
         //Render children with transform
         for (const auto &pair : children)
         {
             if (auto child = std::get<0>(pair).lock())
             {
 				const glm::mat4 *ptr = std::get<1>(pair);
-				child->renderSceneGraph(std::get<2>(pair), ptr==nullptr?transform:((*ptr)*transform));
+				child->renderSceneGraph(std::get<2>(pair), ptr == nullptr ? transform : (transform*(*ptr)));
             }
         }
     }

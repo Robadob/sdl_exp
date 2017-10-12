@@ -201,7 +201,7 @@ public:
      * Overrides the model matrix (and all dependent matrices) until useProgram() is next called
      * @param modelMat Pointer to the overriding modelMat
      */
-    void overrideModelMat(const glm::mat4 *modelMat);
+	glm::mat4 overrideModelMat(const glm::mat4 *modelMat);
     /**
      * Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
      * @param rotationPtr A pointer to the rotation will be tracked
@@ -353,7 +353,7 @@ private:
      * @param force If passed this value overrides the stored modelMat.matrixPtr and translation/rotations
      * @note Called by ShaderCore::_prepare()
      */
-    void _useProgramModelMatrices(const glm::mat4 *force = nullptr);
+	glm::mat4 _useProgramModelMatrices(const glm::mat4 *force = nullptr);
 	/**
 	 * Compiles the shader sources specified at the objects creation
 	 * @param t_shaderProgram The shader program the shader should be attached to.

@@ -23,12 +23,13 @@ Skybox::Skybox(const char *texturePath, float yOffset)
 /*
 Renders the skybox
 */
-void Skybox::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
+glm::mat4 Skybox::render(const unsigned int &shaderIndex, glm::mat4 transform)
 {
     // Enable/Disable features
     GL_CALL(glDisable(GL_DEPTH_TEST));
-	Entity::render(shaderIndex, transform);
+	transform = Entity::render(shaderIndex, transform);
 	GL_CALL(glEnable(GL_DEPTH_TEST));
+	return transform;
 }
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used

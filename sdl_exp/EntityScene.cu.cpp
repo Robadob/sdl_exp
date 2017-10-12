@@ -1,16 +1,18 @@
 #include "EntityScene.h"
 #include <ctime>
+#include <glm/gtx/transform.hpp>
 
 /*
 Constructor, modify this to change what happens
 */
 EntityScene::EntityScene(ViewportExt& visualisation)
     : BasicScene(visualisation)
-    , deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
-    , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
+	, deerModel(std::make_shared<Entity>(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
+	, colorModel(std::make_shared<Entity>(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
     , tick(0.0f)
     , polarity(-1)
-    , instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
+	, instancedSphere(new Entity(Stock::Models::SPHERE, 1.0f, { Stock::Shaders::INSTANCED}))
+	, sphere(new Entity(Stock::Models::ICOSPHERE_COLOR, 1.0f, { Stock::Shaders::COLOR }))
 #ifdef __CUDACC__
     , cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
     , texBuf("_texBuf", cuTexBuf, true)
@@ -20,7 +22,9 @@ EntityScene::EntityScene(ViewportExt& visualisation)
 {
     registerEntity(deerModel);
     registerEntity(colorModel);
-    registerEntity(instancedSphere);
+	registerEntity(instancedSphere);
+	registerEntity(sphere);
+	deerModel->addChild(sphere, new glm::mat4(glm::translate(glm::vec3(0, -4.5, 0))*glm::scale(glm::vec3(10.0f, 10.0f, 10.0f))));
     this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
@@ -51,7 +55,8 @@ void EntityScene::update(unsigned int frameTime)
 {
     this->tick += this->polarity*((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);
-    this->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
+	this->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
+	sphere->setRotation(glm::vec4(1.0, 0.0, 0.0, this->tick*100));
     this->deerModel->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
 #ifdef __CUDACC__
     cuUpdate();
@@ -63,8 +68,8 @@ Called once per frame when Scene render calls should be executed
 void EntityScene::render()
 {
     colorModel->render();
-    deerModel->render();
-    this->instancedSphere->renderInstances(100);
+    deerModel->renderSceneGraph();
+	this->instancedSphere->renderInstances(100);
 }
 /*
 Called when the user requests a reload

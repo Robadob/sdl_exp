@@ -182,13 +182,13 @@ Calls the necessary code to render a single instance of the entity
 @param shaderIndex The indexed shader to use
 @param transform Additional transform to apply to the model matrix
 */
-void Entity::render(const unsigned int &shaderIndex, const glm::mat4 &transform){
+glm::mat4 Entity::render(const unsigned int &shaderIndex, glm::mat4 transform){
     if (!faces.vbo)
-        return;
+		return transform;
     if (shaderIndex<shaders.size())
 	{
 		shaders[shaderIndex]->useProgram();
-		shaders[shaderIndex]->overrideModelMat(&transform);
+		transform = shaders[shaderIndex]->overrideModelMat(&transform);
     }
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
@@ -203,6 +203,7 @@ void Entity::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
         GL_CALL(glEnable(GL_CULL_FACE));
     if (shaderIndex<shaders.size())
         shaders[shaderIndex]->clearProgram();
+	return transform;
 }
 /*
 Calls the necessary code to render count instances of the entity

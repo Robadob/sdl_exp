@@ -263,11 +263,12 @@ void TrackedDevicesVR::render()
 	}
 }
 TrackedDevicesVR::Device::Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
-	: unPacketNum(0)
+	: renderSceneGraph(true)
+	, unPacketNum(0)
 	, vr_HMD(vr_HMD)
 	, id(id)
-	, model(model)
-	, type(vr_HMD->GetTrackedDeviceClass(id))//Presume id 0 == HMD
+	, model(model)//Presume id 0 == HMD
+	, type(vr_HMD->GetTrackedDeviceClass(id))
 {
 }
 
@@ -306,6 +307,8 @@ void TrackedDevicesVR::updatePoses()
 }
 void TrackedDevicesVR::Device::render()
 {
-	model->setModelMat(poseMat);//Model is shared, so can't dynamic track ptr (unless we use unique shaders)
-	model->render();
+	if (renderSceneGraph)
+		model->renderSceneGraph(0, poseMat);
+	else
+		model->render(0, poseMat);
 }

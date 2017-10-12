@@ -264,17 +264,6 @@ public:
 		 */
 		const char* attributeName;
 	};
-	/**
-	 * Holds additional information necessary for tracking generic vertex attributes
-	 * Key: Assigned generic buffer ID 
-	 * Value: Other details necessary for binding
-	 */
-	std::list<GenericVAD> gvads;
-	/**
-	 * Holds generic vertex attributes that were not found within the shader
-	 * or went missing after a shader reload
-	 */
-	std::list<GenericVAD> lostGvads;
 	bool addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad);
 
     inline void clearModelMatPtr(){ this->modelMat.matrixPtr = nullptr; }
@@ -316,6 +305,17 @@ public:
 	 */
     void setColor(glm::vec4 color);
 private:
+	/**
+	* Holds additional information necessary for tracking generic vertex attributes
+	* Key: Assigned generic buffer ID
+	* Value: Other details necessary for binding
+	*/
+	std::list<GenericVAD> gvads;
+	/**
+	 * Holds generic vertex attributes that were not found within the shader
+	 * or went missing after a shader reload
+	 */
+	std::list<GenericVAD> lostGvads;
     /**
      * Utility method for binding uniforms
      * @param rtn Pointer to store the uniform location in
@@ -330,7 +330,7 @@ private:
      * @param attributeName The name of the attribute to locate
      * @param attributeType1 The type of attribute to check for
      * @param attributeType2 The type of attribute to check for
-     * @note On failure rtn is set to -1
+	 * @note On failure rtn is set to -1
      */
     inline void bindAttribute(int *rtn, const char *attributeName, GLenum attributeType1, GLenum attributeType2) const;
 	/**
@@ -339,15 +339,19 @@ private:
 	 */
 	void _clearProgram() override;
 	/**
-	 * Enables the necessary vertex attribute arrays when the shader is required
-	 * @note Called by ShaderCore::useProgram()	 
-	 * @note In future this could be improved with vertex array object's to store attribute configs at shader setup
+	 * Updates shader dynamics
+	 * @note Called by ShaderCore::useProgram()
+	 */
+    void _prepare() override;
+	/**
+	 * Runs any shader config that MUST be called before shader use
+	 * @note Called by ShaderCore::useProgram()
 	 */
 	void _useProgram() override;
     /**
      * Updates all matrix uniforms that contain the modelMat
      * @param force If passed this value overrides the stored modelMat.matrixPtr and translation/rotations
-     * @note Called by ShaderCore::_useProgram()
+     * @note Called by ShaderCore::_prepare()
      */
     void _useProgramModelMatrices(const glm::mat4 *force = nullptr);
 	/**

@@ -23,11 +23,11 @@ Skybox::Skybox(const char *texturePath, float yOffset)
 /*
 Renders the skybox
 */
-void Skybox::render(unsigned int shaderIndex)
+void Skybox::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
     // Enable/Disable features
     GL_CALL(glDisable(GL_DEPTH_TEST));
-	Entity::render(shaderIndex);
+	Entity::render(shaderIndex, transform);
 	GL_CALL(glEnable(GL_DEPTH_TEST));
 }
 /**

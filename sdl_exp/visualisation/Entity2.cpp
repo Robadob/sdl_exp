@@ -1095,8 +1095,10 @@ void Entity2::generateVertexBufferObjects()
     GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.count*faces.components*faces.componentSize, faces.data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
-void Entity2::render()
+void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
+	if (shaderIndex != 0)
+		fprintf(stderr, "Entity2 does not currently support multi shader.\n");
     static int colorUniformLoc = -1;
     if (colorUniformLoc == -1)
         colorUniformLoc=ShaderCore::findUniform("_color", shaders->getProgram()).first;
@@ -1104,7 +1106,10 @@ void Entity2::render()
     //if (shaderIndex<shaders.size())
     //    shaders[shaderIndex]->useProgram();
     if (shaders)
-        shaders->useProgram();
+	{
+		shaders->useProgram();
+		shaders->overrideModelMat(&transform);
+	}
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
     //printf("%d\n", renderGroup[renderGroup.size() - 1].faceIndexStart+renderGroup[renderGroup.size() - 1].faceIndexCount);

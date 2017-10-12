@@ -69,7 +69,7 @@ public:
 	void reload() override;
 	void setViewMatPtr(glm::mat4 const *viewMat) override;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
-    void render();
+	void render(const unsigned int &shaderIndex=0, const glm::mat4 &transform=glm::mat4());
 	void setLocation(glm::vec3 location){ this->location = location; }
 	void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
 	void setModelMat(glm::mat4 modelMat){ this->modelMat = modelMat;  };

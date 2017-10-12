@@ -170,22 +170,14 @@ void ShaderCore::setupBindings()
 	this->_setupBindings();
     GL_CALL(glUseProgram(0));
 }
-void ShaderCore::useProgram()
+void ShaderCore::prepare(bool autoClear)
 {
 	//Kill if shader isn't built
 	if (this->programId <= 0)
 	{
-			return;
+		return;
 	}
-
 	GL_CALL(glUseProgram(this->programId));
-
-	//Set any Texture buffers
-	for (auto utd: textures)
-	{
-        GL_CALL(glActiveTexture(GL_TEXTURE0 + utd.first));
-        GL_CALL(glBindTexture(utd.second.type, utd.second.name));
-	}
 
 	//Set any dynamic uniforms
 	for (std::map<GLint, DynamicUniformDetail>::iterator i = dynamicUniforms.begin(); i != dynamicUniforms.end(); ++i)
@@ -240,15 +232,39 @@ void ShaderCore::useProgram()
         {
             GL_CALL(glUniformMatrix4fv(i->first, 1, false, reinterpret_cast<const GLfloat *>(i->second.data)));
         }
+    }	
+    //Set any subclass specific stuff
+    this->_prepare();
+	
+	if (autoClear)
+		GL_CALL(glUseProgram(0));
+}
+void ShaderCore::useProgram(bool autoPrepare)
+{
+	//Kill if shader isn't built
+	if (this->programId <= 0)
+	{
+			return;
+	}
+
+    if (autoPrepare)
+        this->prepare(false);
+	else
+		GL_CALL(glUseProgram(this->programId));
+
+	//Set any Texture buffers
+	for (auto utd : textures)
+	{//Texture buffers may overlap, so we reset texture buffers, away from prepare
+		glActiveTexture(GL_TEXTURE0 + utd.first);
+		glBindTexture(utd.second.type, utd.second.name);
 	}
 	//Set any buffers
 	for (std::map<GLuint, BufferDetail>::iterator i = buffers.begin(); i != buffers.end(); ++i)
-	{//Should we really hardcode GL_SHADER_STORAGE_BUFFER here?
-		//Don't think buffer bases are specific to shaders, so we treat them as dynamic
-        //We are passing the 2nd parameter incorrectly, should be what we pass to glUniformBlockBinding()
+	{//Don't think buffer bases are specific to shaders, so we treat them as dynamic
+		//We are passing the 2nd parameter incorrectly, should be what we pass to glUniformBlockBinding()
 		GL_CALL(glBindBufferBase(i->second.type, i->first, i->second.name));
 	}
-	//Set any subclass specific stuff
+
 	this->_useProgram();
 }
 void ShaderCore::clearProgram()

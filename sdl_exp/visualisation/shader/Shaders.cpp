@@ -124,13 +124,13 @@ void Shaders::bindAttribute(int *rtn, const char *attributeName, GLenum attribut
 }
 void Shaders::_setupBindings(){
     //MVP
-    bindUniform(&this->modelMat.location, MODEL_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
-    bindUniform(&this->viewMat.location, VIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
-    bindUniform(&this->projectionMat.location, PROJECTION_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
+    bindUniform(&this->modelMat.location,         MODEL_MATRIX_UNIFORM_NAME,               GL_FLOAT_MAT4);
+    bindUniform(&this->viewMat.location,          VIEW_MATRIX_UNIFORM_NAME,                GL_FLOAT_MAT4);
+    bindUniform(&this->projectionMat.location,    PROJECTION_MATRIX_UNIFORM_NAME,          GL_FLOAT_MAT4);
     //MVP - Convenience
     bindUniform(&this->modelviewprojectionMatLoc, MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
-    bindUniform(&this->modelviewMatLoc, MODELVIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
-    bindUniform(&this->normalMatLoc, NORMAL_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT3);
+    bindUniform(&this->modelviewMatLoc,           MODELVIEW_MATRIX_UNIFORM_NAME,           GL_FLOAT_MAT4);
+    bindUniform(&this->normalMatLoc,              NORMAL_MATRIX_UNIFORM_NAME,              GL_FLOAT_MAT3);
     //bindUniform(&this->prevModelviewUniformLocation, PREV_MODELVIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
     //Vertex attribs
     bindAttribute(&this->positions.location, VERTEX_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
@@ -244,8 +244,12 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
         GL_CALL(glUniformMatrix4fv(this->modelviewprojectionMatLoc, 1, GL_FALSE, glm::value_ptr(m)));
     }
 }
-//Overrides
 void Shaders::_useProgram()
+{
+	//Set VaO here
+}
+//Overrides
+void Shaders::_prepare()
 {
     _useProgramModelMatrices();
     if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr > nullptr)
@@ -415,6 +419,7 @@ void Shaders::_clearProgram(){
 	{
         GL_CALL(glDisableVertexAttribArray(gvad.location));
 	}
+	//Disable VaO here
 }
 //Bindings
 void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad)
@@ -426,6 +431,16 @@ void Shaders::setNormalsAttributeDetail(VertexAttributeDetail vad)
 {
     vad.location = this->normals.location;
     this->normals = vad;
+}
+void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad)
+{
+    vad.location = this->colors.location;
+    this->colors = vad;
+}
+void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
+{
+    vad.location = this->texcoords.location;
+    this->texcoords = vad;
 }
 bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad)
 {
@@ -472,16 +487,6 @@ bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 			++a;
 	}
 	return rtn;
-}
-void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad)
-{
-    vad.location = this->colors.location;
-    this->colors = vad;
-}
-void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
-{
-    vad.location = this->texcoords.location;
-    this->texcoords = vad;
 }
 void Shaders::setColor(glm::vec3 color)
 {

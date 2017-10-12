@@ -179,14 +179,17 @@ Entity::~Entity(){
 }
 /*
 Calls the necessary code to render a single instance of the entity
-@param vertLocation The shader attribute location to pass vertices
-@param normalLocation The shader attribute location to pass normals
+@param shaderIndex The indexed shader to use
+@param transform Additional transform to apply to the model matrix
 */
-void Entity::render(unsigned int shaderIndex){
+void Entity::render(const unsigned int &shaderIndex, const glm::mat4 &transform){
     if (!faces.vbo)
         return;
     if (shaderIndex<shaders.size())
-        shaders[shaderIndex]->useProgram();
+	{
+		shaders[shaderIndex]->useProgram();
+		shaders[shaderIndex]->overrideModelMat(&transform);
+    }
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
@@ -208,9 +211,14 @@ The index of the instance being rendered can be identified within the vertex sha
 @param vertLocation The shader attribute location to pass vertices
 @param normalLocation The shader attribute location to pass normals
 */
-void Entity::renderInstances(int count, unsigned int shaderIndex){
+void Entity::renderInstances(const int &count, const unsigned int &shaderIndex, const glm::mat4 &transform){
+	if (!faces.vbo)
+		return;
 	if (shaderIndex<shaders.size())
+	{
 		shaders[shaderIndex]->useProgram();
+		shaders[shaderIndex]->overrideModelMat(&transform);
+	}
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 

@@ -95,8 +95,8 @@ public:
 		std::shared_ptr<Texture> texture
 		);
     virtual ~Entity();
-	virtual void render(unsigned int shaderIndex = 0);
-	void renderInstances(int count, unsigned int shaderIndex=0);
+	void render(const unsigned int &shaderIndex = 0, const glm::mat4 &transform = glm::mat4()) override;
+	void renderInstances(const int &count, const unsigned int &shaderIndex = 0, const glm::mat4 &transform = glm::mat4());
     void setColor(glm::vec3 color);
     void setLocation(glm::vec3 location);
     void setRotation(glm::vec4 rotation);

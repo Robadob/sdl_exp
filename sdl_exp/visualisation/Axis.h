@@ -19,7 +19,7 @@ public:
 	/**
 	 * Renders a simple axis marker. Red displays the positive x, Green the positive y and Blue the positive z.
 	 */
-    void render();
+	void render(const unsigned int &shaderIndex = 0, const glm::mat4 &transform = glm::mat4()) override;
 	/**
 	 * Reloads the shader
 	 */

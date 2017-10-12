@@ -15,12 +15,12 @@ class TrackedDevicesVR
 {
 	class Device
 	{
+		friend class TrackedDevicesVR;
 	public:
 		Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model);
 		virtual ~Device(){};
 		void update();
 		void render();
-		void setPose(const glm::mat4 &poseMat){ this->poseMat = id == vr::k_unTrackedDeviceIndex_Hmd ? inverse(poseMat) : poseMat; };
 		glm::mat4 getModelMat() const { return poseMat; };
 		glm::vec4 getLocation() const { return poseMat * glm::vec4(0, 0, 0, 1); }
 		glm::vec3 getEulerAngles() const
@@ -29,7 +29,40 @@ class TrackedDevicesVR
 			return rtn;
 		}
 		vr::ETrackedDeviceClass getType() const { return type; }
+		//Scene Graph FNs
+		void setSceneGraphVisible(bool t){ renderSceneGraph = t; }
+		void addChild(std::weak_ptr<Renderable> a, const glm::mat4 *b = nullptr, unsigned int shaderIndex = 0)
+		{
+			model->addChild(a,b,shaderIndex);
+		}
+		void clearChildren()
+		{
+			model->clearChildren();
+		}
+		unsigned int removeChildren(const std::shared_ptr<Renderable> &a)
+		{
+			return model->removeChildren(a);
+		}
+
+		unsigned int removeChildren(const glm::mat4 * &b)
+		{
+			return model->removeChildren(b);
+		}
+		unsigned int removeChildren(const std::shared_ptr<Renderable> &a, const glm::mat4 * &b, const unsigned int shaderIndex = 0)
+		{
+			return model->removeChildren(a, b, shaderIndex);
+		}
+		void copySceneGraph(std::shared_ptr<Renderable> r)
+		{
+			model->copySceneGraph(r);
+		}
+		void copySceneGraph(std::shared_ptr<Device> r)
+		{
+			model->copySceneGraph(r->model);
+		}
 	private:
+		bool renderSceneGraph;
+		void setPose(const glm::mat4 &poseMat){ this->poseMat = id == vr::k_unTrackedDeviceIndex_Hmd ? inverse(poseMat) : poseMat; };
 		uint32_t unPacketNum;
 		vr::IVRSystem *vr_HMD;
 		const unsigned int id;
@@ -59,7 +92,7 @@ class TrackedDevicesVR
 			}
 		}
 		enum Hand { Left, Right, Invalid };
-		Hand getHand();
+		Hand getHand() { return hand; };
 	private:
 		Hand hand;
 	};

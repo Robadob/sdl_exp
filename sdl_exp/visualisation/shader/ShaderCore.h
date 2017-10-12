@@ -14,7 +14,7 @@
  * Uniforms, textures and buffers can be automatically bound using the addXXX() methods, so they are provided to the shader
  * Subclasses may implement additional bindings
  * Bound items will then be automatically rebound when the shader is reloaded
- * Bound dynamic uniforms will automatically refresh the value everytime useProgram() is called
+ * Bound dynamic uniforms will automatically refresh the value everytime useProgram(true) or prepare() are called
  *
  * This class is great for quickly using shaders, if you start double binding/unbinding stuff you might find bugs though
  *
@@ -67,15 +67,22 @@ public:
 	 */
 	int getProgram() const { return programId; }
 	/**
-	* Disables the currently active shader program and asks subclasses to clear any enabled client states or attribute arrays
-	* @see _clearProgram()
-	*/
+     * Disables the currently active shader program and asks subclasses to clear any enabled client states or attribute arrays
+	 * @see _clearProgram()
+	 */
 	void clearProgram();
+    /**
+     * Binds all dynamic uniforms/textures and subclass stuff such as vertex attribs
+     * @param autoclear If true, the program will not remain bound after calling
+     * @see _prepare()
+     * @note This is only really of use if you are sharing shaders between multiple Renderable's
+     */
+    void prepare(bool autoclear = true);
 	/**
-	* Calls glUseProgram(GLuint) and binds all dynamic uniforms/textures
-	* @see _useProgram()
-	*/
-	void useProgram();
+	 * Calls glUseProgram(GLuint)
+	 * @param autoPrepare Automatically calls prepare() if true is passed
+	 */
+	void useProgram(bool autoPrepare=true);
 	/**
 	 * Returns whether the shader is compiled and ready
 	 * @return True if the shader is ready to be used, else false
@@ -91,7 +98,7 @@ public:
 	 * If a texture with the same uniformName is already bound, it will be replaced
 	 * @param texture The name of the texture (as returned by glGenTexture())
 	 * @param uniformName The name of the uniform within the shader this texture should be bound to
-	 * @param type The type of texture being bound (e.g. GL_TEXTURE_2D)
+	 * @param type The type of texture being bound (e.g. GL_TEXTURE2D)
 	 * @return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
 	 * @note Texture bindings for each shader are not unique, making them unique would save rebinding every shader call
 	 */
@@ -380,32 +387,37 @@ private:
 	/**
 	* Subclasses should use this to clear any enabled client states or attribute arrays
 	* If not overriden, does nothing
-	* Called by clearProgram()
+	* @note Called by clearProgram()
 	*/
 	virtual void _clearProgram() {}
 	/**
-	* Subclasses should use this to apply any subclass specific shader bindings
+	* Subclasses should use this to update ant subclass specific dynamics
 	* If not overriden, does nothing
-	* Called by useProgram()
+	* @note Called by prepare()
+	*/
+	virtual void _prepare() {}
+	/**
+	*Subclasses should use this to config shader specifics that MUST be executed before shader use
+	* @note Called by useProgram()
 	*/
 	virtual void _useProgram() {}
 	/**
 	* Subclasses should use this to call compileShader() with each shader src
 	* @param t_shaderProgram Temporary shader program ID which succesfully compiled shaders should be attatched to
-	* Called by reload()
+	* @note Called by reload()
 	*/
 	virtual bool _compileShaders(const GLuint t_shaderProgram) = 0;
-	/**
-	* Locates all subclass specific bound uniforms, attributes, textures and storage within the shader
-	* Called by setupBindings()
-	*/
-	virtual void _setupBindings() {}
 protected:
 	/**
 	 * Locates all bound uniforms, attributes, textures and storage within the shader
-	 * Calls _setupBindings()
+	 * @note Calls _setupBindings()
 	 */
 	void setupBindings();
+	/**
+	* Locates all subclass specific bound uniforms, attributes, textures and storage within the shader
+	* @note Called by setupBindings()
+	*/
+	virtual void _setupBindings() {}
 	/**
 	 * Compiles the specified shader source and attatches it to the provided program
 	 * @param t_shaderProgram The shader program to attach the compiled shader to
@@ -421,15 +433,15 @@ protected:
 	 */
 	static char *loadShaderSource(const char *file);
 	/**
-	* Looks for the '#version xx' tag in the provided shader source and returns the numeric value
-	* @param shaderSources The shader code to detect the version from
-	* @return The detected shader version, 0 if one was not found
-	*/
+	 * Looks for the '#version xx' tag in the provided shader source and returns the numeric value
+	 * @param shaderSources The shader code to detect the version from
+	 * @return The detected shader version, 0 if one was not found
+	 */
 	static unsigned int findShaderVersion(std::vector<const char*> shaderSources);
 	/**
-	* Copies the init list to a std::vector of std:strings on the heap
-	* @note You should delete the ptr returned by this yourself
-	*/
+	 * Copies the init list to a std::vector of std:strings on the heap
+	 * @note You should delete the ptr returned by this yourself
+	 */
 	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
 	/**
 	* Checks whether the specified shader program linked succesfully.
@@ -441,12 +453,12 @@ protected:
 	bool checkProgramLinkError(const GLuint programId) const;
 private:
 	/**
-	* Checks whether the specified shader compiled succesfully.
-	* Compilation errors are printed to stderr and compileSuccessflag is set to false on failure.
-	* @param shaderId Location of the shader to check
-	* @param shaderPath Path to the shader being checked (so that it can be easily identified in the error log)
-	* @return True if no errors were detected
-	*/
+	 * Checks whether the specified shader compiled succesfully.
+	 * Compilation errors are printed to stderr and compileSuccessflag is set to false on failure.
+	 * @param shaderId Location of the shader to check
+	 * @param shaderPath Path to the shader being checked (so that it can be easily identified in the error log)
+	 * @return True if no errors were detected
+	 */
 	static bool checkShaderCompileError(const GLuint shaderId, const char *shaderPath);
 	/**
 	 * Returns the filename from the provided file path
@@ -460,7 +472,7 @@ private:
 	 * @param filename A null terminated string holding a file name
 	 * @return The filename sans extension
 	 */
-	static std::string ShaderCore::removeFileExt(const std::string &filename);
+	static std::string removeFileExt(const std::string &filename);
 };
 
 #endif //ifndef __ShaderCore_h__

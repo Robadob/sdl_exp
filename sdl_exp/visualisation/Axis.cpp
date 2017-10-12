@@ -66,8 +66,13 @@ Axis::~Axis()
 	GL_CALL(glDeleteBuffers(1, &vbo));
 	GL_CALL(glDeleteBuffers(1, &fvbo));
 }
-void Axis::render(){
+void Axis::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
+{
+#ifdef _DEBUG
+	assert(shaderIndex == 0);
+#endif
 	shaders->useProgram();
+	shaders->overrideModelMat(&transform);
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 	GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 	GL_CALL(glDrawElements(GL_LINES, faces.count * faces.components, faces.componentType, 0));

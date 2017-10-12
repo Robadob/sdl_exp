@@ -195,14 +195,13 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
     if (force)
     {
         m = *force;
-    }
-    //Else calculate the required modelMat
-    else
-    {
-        if (this->modelMat.matrixPtr)
-        {
-            m = *this->modelMat.matrixPtr;
-        }
+	}
+	else if (this->modelMat.matrixPtr)
+	{
+		m = *this->modelMat.matrixPtr;
+	}
+    //Add adjustments to modelMat
+    {        
         if (this->rotationPtr)
         {
             //Check we actually have a rotation (providing no axis == error)

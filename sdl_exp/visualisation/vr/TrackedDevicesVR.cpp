@@ -254,7 +254,7 @@ void TrackedDevicesVR::render()
 				{
 					trackedDevices[unDevice]->render();
 				}
-				else if (renderUnknown)
+                else if (renderUnknown && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_Invalid)
 				{
 					trackedDevices[unDevice]->render();
 				}
@@ -293,14 +293,18 @@ void TrackedDevicesVR::updatePoses()
 		{
 			if (trackedDevices[i])
 			{
-				glm::mat4 poseMat = vr::toMat4(trackedDevicePoses[i].mDeviceToAbsoluteTracking);
-				trackedDevices[i]->setPose(poseMat);
+				glm::mat4 poseMat = vr::toMat4(trackedDevicePoses[i].mDeviceToAbsoluteTracking);                
 				//setVelocity
 				//setAngularVelocity
 				if (i == vr::k_unTrackedDeviceIndex_Hmd)
-				{
-					camera->setHMDPose(inverse(poseMat));
+				{//Hmd is inverse for unknown reason
+                    camera->setHMDPose(inverse(poseMat)); 
+				    trackedDevices[i]->setPose(inverse(poseMat));
 				}
+                else
+                {
+                    trackedDevices[i]->setPose(poseMat);
+                }
 			}
 		}
 	}

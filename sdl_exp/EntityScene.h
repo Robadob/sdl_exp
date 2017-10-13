@@ -6,6 +6,7 @@
 #include "visualisation/Text.h"
 
 #include "visualisation/texture/TextureBuffer.h"
+#include "visualisation/primitives/Lines.h"
 
 /*
 Example scene to demonstrate how to use SDL_EXP
@@ -30,6 +31,7 @@ private:
 	std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> deerModel;
     std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Lines> lines;
     float tick;
     int polarity;
 };

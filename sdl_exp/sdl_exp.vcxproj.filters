@@ -54,6 +54,12 @@
     <Filter Include="Header Files\Visualisation\vr">
       <UniqueIdentifier>{dd486ea9-5215-4510-bce0-2fee0e0872a1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Primitives">
+      <UniqueIdentifier>{75eb2fd8-f36f-4720-9b3c-9748e4398393}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Primitives">
+      <UniqueIdentifier>{baeafb1a-da39-4bfd-860a-4496b7b0be18}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -157,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="visualisation\vr\VRExampleScene.cpp">
       <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\primitives\Lines.cpp">
+      <Filter>Source Files\Visualisation\Primitives</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -293,6 +302,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\vr\VRExampleScene.h">
       <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\primitives\Lines.h">
+      <Filter>Header Files\Visualisation\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\primitives\Primitives.h">
+      <Filter>Header Files\Visualisation\Primitives</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

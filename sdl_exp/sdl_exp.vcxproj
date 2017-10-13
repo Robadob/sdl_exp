@@ -175,6 +175,7 @@
     <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
     <ClCompile Include="visualisation\multipass\RenderPass.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
+    <ClCompile Include="visualisation\primitives\Lines.cpp" />
     <ClCompile Include="visualisation\shader\ComputeShader.cpp" />
     <ClCompile Include="visualisation\shader\GaussianBlur.cpp" />
     <ClCompile Include="visualisation\shader\ShaderCore.cpp" />
@@ -223,6 +224,8 @@
     <ClInclude Include="visualisation\multipass\MultiPassScene.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
+    <ClInclude Include="visualisation\primitives\Lines.h" />
+    <ClInclude Include="visualisation\primitives\Primitives.h" />
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
     <ClInclude Include="visualisation\shader\GaussianBlur.h" />
     <ClInclude Include="visualisation\shader\Light.h" />

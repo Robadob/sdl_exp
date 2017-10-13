@@ -295,15 +295,15 @@ void Shaders::_prepare()
 		}
 		if (this->normals.componentType == GL_FLOAT || this->normals.componentType == GL_HALF_FLOAT)
 		{
-			GL_CALL(glVertexAttribPointer(this->normals.location, this->normals.components, this->positions.componentType, GL_FALSE, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+			GL_CALL(glVertexAttribPointer(this->normals.location, this->normals.components, this->normals.componentType, GL_FALSE, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
 		}
 		else if (this->normals.componentType == GL_DOUBLE)
 		{
-			GL_CALL(glVertexAttribLPointer(this->normals.location, this->normals.components, this->positions.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+			GL_CALL(glVertexAttribLPointer(this->normals.location, this->normals.components, this->normals.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
 		}
 		else
 		{
-			GL_CALL(glVertexAttribIPointer(this->normals.location, this->normals.components, this->positions.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
+			GL_CALL(glVertexAttribIPointer(this->normals.location, this->normals.components, this->normals.componentType, this->normals.stride, static_cast<char *>(nullptr) + this->normals.offset));
 		}
     }
     //Set the vertex color attributes

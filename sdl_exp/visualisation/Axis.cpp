@@ -9,7 +9,7 @@ Axis::Axis(float length)
     , fvbo(0)
     , vertices(GL_FLOAT, 3, sizeof(float))
 	, colors(GL_FLOAT, 3, sizeof(float))
-	, faces(GL_UNSIGNED_INT, 2, sizeof(unsigned int))
+	, faces(GL_UNSIGNED_SHORT, 2, sizeof(unsigned short))
 	, shaders(std::make_shared<Shaders>(Stock::Shaders::COLOR))
 {
 	const float VERTICES_COLORS[36] = {
@@ -26,13 +26,13 @@ Axis::Axis(float length)
 		0.0, 0.0, 1.0,
 		0.0, 0.0, 1.0
 	};
-	const unsigned int FACE_INDICES[6] = {
+	const unsigned short FACE_INDICES[6] = {
 		0, 1,
 		2, 3,
 		4, 5
 	};
 	unsigned int vboSize = 36*sizeof(float);
-	unsigned int fvboSize = 6 * sizeof(unsigned int);
+	unsigned int fvboSize = 6 * sizeof(unsigned short);
 	GL_CALL(glGenBuffers(1, &vbo));
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
 	GL_CALL(glBufferData(GL_ARRAY_BUFFER, vboSize, &VERTICES_COLORS[0], GL_STATIC_DRAW));
@@ -46,7 +46,7 @@ Axis::Axis(float length)
 	vertices.data = (void*)&VERTICES_COLORS[0];
 	vertices.vbo = vbo;
 
-	colors.count = 8;
+	colors.count = 6;
 	colors.data = (void*)&VERTICES_COLORS[0];
 	colors.offset = 18 * sizeof(float);
 	colors.vbo = vbo;
@@ -75,7 +75,7 @@ glm::mat4 Axis::render(const unsigned int &shaderIndex, glm::mat4 transform)
 	transform = shaders->overrideModelMat(&transform);
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 	GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
-	GL_CALL(glDrawElements(GL_LINES, faces.count * faces.components, faces.componentType, 0));
+	GL_CALL(glDrawElements(GL_LINES, faces.count * faces.components, faces.componentType, nullptr));
 	GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 	shaders->clearProgram();
 	return transform;

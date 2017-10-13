@@ -24,6 +24,18 @@ EntityScene::EntityScene(ViewportExt& visualisation)
     registerEntity(colorModel);
 	registerEntity(instancedSphere);
 	registerEntity(sphere);
+	//lines = std::shared_ptr<Lines>(new Lines({ 
+	//		glm::vec3(0), glm::vec3(1), 
+	//		glm::vec3(1), glm::vec3(0, 1, 0), 
+	//		glm::vec3(0, 1, 0), glm::vec3(0, 0, 1), 
+	//		glm::vec3(0, 0, 1), glm::vec3(1, 0, 0)
+	//}, glm::vec4(0, 0, 1, 0.5f)));
+	lines = std::shared_ptr<Lines>(new Lines({
+		glm::vec3(25,0,0), glm::vec3(0,25,0),
+		glm::vec3(0, 25, 0), glm::vec3(0, 0, 25),
+		glm::vec3(25, 0, 0), glm::vec3(0, 0, 25)
+	}, glm::vec4(1, 1, 1, 1)));
+	registerEntity(lines);
 	deerModel->addChild(sphere, new glm::mat4(glm::translate(glm::vec3(0, -4.5, 0))*glm::scale(glm::vec3(10.0f, 10.0f, 10.0f))));
     this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
@@ -70,6 +82,7 @@ void EntityScene::render()
     colorModel->render();
     deerModel->renderSceneGraph();
 	this->instancedSphere->renderInstances(100);
+	lines->render();
 }
 /*
 Called when the user requests a reload

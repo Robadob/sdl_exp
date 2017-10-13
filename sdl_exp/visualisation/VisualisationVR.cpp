@@ -23,9 +23,8 @@ VisualisationVR::VisualisationVR(char *windowTitle, int windowWidth = DEFAULT_WI
     , vr_renderModels(nullptr)
     , companionWindowTitle(windowTitle)
     , companionWindowDims(windowWidth, windowHeight)
-	, companionBackBuffer(std::make_shared<BackBuffer>())
 {
-	companionBackBuffer->resize(companionWindowDims);
+    resizeBackBuffer(this->companionWindowDims);
     this->isInitialised = this->init();
 
     //Can we do vr text?
@@ -110,7 +109,6 @@ bool VisualisationVR::init()
 	    
     //Setup HMD FrameBuffers
     vr_HMD->GetRecommendedRenderTargetSize(&vr_renderTargetDimensions.x, &vr_renderTargetDimensions.y);
-    resizeBackBuffer(this->vr_renderTargetDimensions);
     //Render in Multisample
     vr_leftRenderFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::ManagedDepthRenderBuffer(),FBAFactory::Disabled(), 4);
     vr_rightRenderFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 4);
@@ -118,6 +116,7 @@ bool VisualisationVR::init()
     vr_leftResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     vr_rightResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     //Setup companion
+    resizeBackBuffer(this->companionWindowDims);
     companionLeft = std::make_shared<Sprite2D>(vr_leftResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
     companionRight = std::make_shared<Sprite2D>(vr_rightResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
     hud->add(companionLeft, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, -1024);
@@ -311,7 +310,7 @@ void VisualisationVR::render()
 		renderStereoTargets();
 		{//Render companion window
 			//Render textures plane in either half of the screen
-			this->companionBackBuffer->use();
+			BackBuffer::useStatic();
 			this->hud->render();
 		}
 		vr::Texture_t leftEyeTexture = { (void*)(uintptr_t)vr_leftResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
@@ -531,7 +530,7 @@ void VisualisationVR::resizeWindow()
 	this->companionWindowDims = tDims;
 	//Notify HUD only
 	this->hud->resizeWindow(this->companionWindowDims);
-	companionBackBuffer->resize(companionWindowDims);
+	resizeBackBuffer(companionWindowDims);
 	if (companionLeft)
 		companionLeft->setDimensions(this->companionWindowDims.x / 2, this->companionWindowDims.y);
 	if (companionRight)

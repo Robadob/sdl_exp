@@ -16,7 +16,6 @@
 #include "vr/HMDCamera.h"
 #include "multipass/FrameBuffer.h"
 #include "vr/TrackedDevicesVR.h"
-#include "multipass/BackBuffer.h"
 #include "Sprite2D.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
@@ -194,7 +193,6 @@ private:
 
 	const char* companionWindowTitle;
 	glm::uvec2 companionWindowDims;
-	std::shared_ptr<BackBuffer> companionBackBuffer;
 	std::shared_ptr<Sprite2D> companionLeft;
 	std::shared_ptr<Sprite2D> companionRight;
     void renderStereoTargets();

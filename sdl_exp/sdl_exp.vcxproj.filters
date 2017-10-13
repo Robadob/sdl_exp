@@ -149,6 +149,15 @@
     <ClCompile Include="visualisation\vr\HMDCamera.cpp">
       <Filter>Source Files\Visualisation\vr</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\vr\Device.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\SceneVR.cpp">
+      <Filter>Source Files\Visualisation\vr</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\VRExampleScene.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -274,6 +283,15 @@
       <Filter>Header Files\Visualisation\Interface</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\vr\HMDCamera.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\SceneVR.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\Device.h">
+      <Filter>Header Files\Visualisation\vr</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\VRExampleScene.h">
       <Filter>Header Files\Visualisation\vr</Filter>
     </ClInclude>
   </ItemGroup>

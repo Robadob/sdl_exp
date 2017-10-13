@@ -17,6 +17,7 @@
 #include "multipass/FrameBuffer.h"
 #include "vr/TrackedDevicesVR.h"
 #include "Sprite2D.h"
+#include "vr/SceneVR.h"
 
 #undef main //SDL breaks the regular main entry point, this fixes
 
@@ -95,10 +96,10 @@ public:
     */
     std::shared_ptr<const Camera> getCamera() const override;
     /**
-    * Sets the Scene object to be rendered within the viewport
-    * @return The previously bound Scene
-    * @note Calling getScene() will return a weak_ptr<Scene> to the object you provide
-    */
+     * Sets the Scene object to be rendered within the viewport
+     * @return The previously bound Scene (or SceneVR)
+     * @note Calling getScene() will return a weak_ptr<Scene> to the object you provide
+     */
     std::shared_ptr<Scene> setScene(std::unique_ptr<Scene> scene);
     /**
     * Returns a pointer to the visualisation's Scene
@@ -122,7 +123,11 @@ public:
     * @return The current viewport dimensions
     */
 	const glm::uvec2& getWindowDims() const override { return companionWindowDims; }
+    
+    ViewportExt &toViewportExt() { return reinterpret_cast<ViewportExt &>(*this); }
 private:
+    friend class SceneVR;
+    void setVR(SceneVR *scene);
     /**
     * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
     * @param keycode The keypress detected
@@ -173,6 +178,7 @@ private:
 
     std::shared_ptr<HUD> hud;
     std::shared_ptr<Scene> scene;
+    SceneVR *sceneVR;
 
     bool isInitialised;
     std::atomic<bool> continueRender;

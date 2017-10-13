@@ -1,11 +1,11 @@
 #include "EntityScene.h"
 #include "TwoPassScene.h"
-#include "visualisation/VisualisationVR.h"
+#include "visualisation/vr/VRExampleScene.h"
 
 int main(int count, char **args)
 {
 	VisualisationVR v = VisualisationVR("Visulisation Example", 1280, 720);
-	v.setScene(std::make_unique<EntityScene>(v));
+    v.setScene(std::make_unique<VRExampleScene>(v));
     //int sceneId = 0;
     //if (count > 1)
     //    sceneId = atoi(args[1]);

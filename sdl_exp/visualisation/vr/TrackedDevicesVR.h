@@ -7,103 +7,26 @@
 #include "../Entity2.h"
 #include "glm/gtx/euler_angles.hpp"
 #include "HMDCamera.h"
+#include "Device.h"
+#include "SceneVR.h"
 
 /**
  * Holds the models used to render controllers etc
  */
 class TrackedDevicesVR
 {
-	class Device
-	{
-		friend class TrackedDevicesVR;
-	public:
-		Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model);
-		virtual ~Device(){};
-		void update();
-		void render();
-		glm::mat4 getModelMat() const { return poseMat; };
-		glm::vec4 getLocation() const { return poseMat * glm::vec4(0, 0, 0, 1); }
-		glm::vec3 getEulerAngles() const
-		{
-			glm::vec3 rtn; glm::extractEulerAngleXYZ(poseMat, rtn.x, rtn.y, rtn.z);
-			return rtn;
-		}
-		vr::ETrackedDeviceClass getType() const { return type; }
-		//Scene Graph FNs
-		void setSceneGraphVisible(bool t){ renderSceneGraph = t; }
-		void addChild(std::weak_ptr<Renderable> a, const glm::mat4 *b = nullptr, unsigned int shaderIndex = 0)
-		{
-			model->addChild(a,b,shaderIndex);
-		}
-		void clearChildren()
-		{
-			model->clearChildren();
-		}
-		unsigned int removeChildren(const std::shared_ptr<Renderable> &a)
-		{
-			return model->removeChildren(a);
-		}
-
-		unsigned int removeChildren(const glm::mat4 * &b)
-		{
-			return model->removeChildren(b);
-		}
-		unsigned int removeChildren(const std::shared_ptr<Renderable> &a, const glm::mat4 * &b, const unsigned int shaderIndex = 0)
-		{
-			return model->removeChildren(a, b, shaderIndex);
-		}
-		void copySceneGraph(std::shared_ptr<Renderable> r)
-		{
-			model->copySceneGraph(r);
-		}
-		void copySceneGraph(std::shared_ptr<Device> r)
-		{
-			model->copySceneGraph(r->model);
-		}
-	private:
-		bool renderSceneGraph;
-		void setPose(const glm::mat4 &poseMat){ this->poseMat = id == vr::k_unTrackedDeviceIndex_Hmd ? inverse(poseMat) : poseMat; };
-		uint32_t unPacketNum;
-		vr::IVRSystem *vr_HMD;
-		const unsigned int id;
-		std::shared_ptr<Entity2> model;
-		vr::ETrackedDeviceClass type;
-		glm::mat4 poseMat;
-	};
-	class Controller : public Device
-	{
-	public:
-		//Hand defaults to right if undetermined
-		Controller(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
-			: Device(vr_HMD, id, model)
-		{
-			switch (vr_HMD->GetControllerRoleForTrackedDeviceIndex(id))
-			{
-			case vr::ETrackedControllerRole::TrackedControllerRole_LeftHand:
-				hand = Left;
-				break;
-			case vr::ETrackedControllerRole::TrackedControllerRole_RightHand:
-				hand = Right;
-				break;
-			case vr::ETrackedControllerRole::TrackedControllerRole_Invalid:
-			default:
-				hand = Invalid;
-				break;
-			}
-		}
-		enum Hand { Left, Right, Invalid };
-		Hand getHand() { return hand; };
-	private:
-		Hand hand;
-	};
+	
 public:
     TrackedDevicesVR(vr::IVRSystem *vr_HMD);
     ~TrackedDevicesVR();
     bool getInitState(){ return initState; }
-	void update();
-	void render();
-	std::shared_ptr<Device> getHMD(){ return trackedDevices[vr::k_unTrackedDeviceIndex_Hmd]; }
-	std::shared_ptr<HMDCamera> getCamera() const { return camera; }
+    void update(SceneVR *scene);
+    void render();
+    std::shared_ptr<HMDCamera> getCamera() const { return camera; }
+    std::shared_ptr<Headset> getHMD(){ return std::dynamic_pointer_cast<Headset>(trackedDevices[vr::k_unTrackedDeviceIndex_Hmd]); }
+    std::shared_ptr<Controller> getController(const unsigned int &no);
+    std::shared_ptr<Controller> getLeftController();
+    std::shared_ptr<Controller> getRightController();
 	void setLighthouseVisible(bool t){ renderLighthouses = t; };
 	void setControllersVisible(bool t){ renderLeftController = t; renderRightController = t; renderInvalidController = t; };
 	void setLeftControllerVisible(bool t){ renderLeftController = t; };

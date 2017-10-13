@@ -23,6 +23,7 @@ VisualisationVR::VisualisationVR(char *windowTitle, int windowWidth = DEFAULT_WI
     , vr_renderModels(nullptr)
     , companionWindowTitle(windowTitle)
     , companionWindowDims(windowWidth, windowHeight)
+    , sceneVR(nullptr)
 {
     resizeBackBuffer(this->companionWindowDims);
     this->isInitialised = this->init();
@@ -170,6 +171,10 @@ std::shared_ptr<Scene> VisualisationVR::setScene(std::unique_ptr<Scene> scene)
     this->scene = std::shared_ptr<Scene>(scene.release());
     return oldScene;
 }
+void VisualisationVR::setVR(SceneVR *scene)
+{
+    this->sceneVR = scene;
+}
 void VisualisationVR::handleMouseMove(int x, int y){
 	//Do Nothing
 }
@@ -290,7 +295,10 @@ void VisualisationVR::render()
 	}
 
 	//handle OpenVR events
-	vr_renderModels->update();
+    if (sceneVR)
+        vr_renderModels->update(sceneVR);
+
+   // handleControllerEvents();
 
 	unsigned int t_updateTime = SDL_GetTicks();
 	//If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap

@@ -189,8 +189,11 @@
     <ClCompile Include="visualisation\util\Optimus.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
     <ClCompile Include="visualisation\VisualisationVR.cpp" />
+    <ClCompile Include="visualisation\vr\Device.cpp" />
     <ClCompile Include="visualisation\vr\HMDCamera.cpp" />
+    <ClCompile Include="visualisation\vr\SceneVR.cpp" />
     <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp" />
+    <ClCompile Include="visualisation\vr\VRExampleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">
@@ -236,9 +239,12 @@
     <ClInclude Include="visualisation\util\GLcheck.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
     <ClInclude Include="visualisation\VisualisationVR.h" />
+    <ClInclude Include="visualisation\vr\Device.h" />
     <ClInclude Include="visualisation\vr\HMDCamera.h" />
+    <ClInclude Include="visualisation\vr\SceneVR.h" />
     <ClInclude Include="visualisation\vr\TrackedDevicesVR.h" />
     <ClInclude Include="visualisation\vr\utilVR.h" />
+    <ClInclude Include="visualisation\vr\VRExampleScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

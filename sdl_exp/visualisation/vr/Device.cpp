@@ -1,9 +1,9 @@
 #include "Device.h"
 
 Device::Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
-    : renderSceneGraph(true)
-    , vr_HMD(vr_HMD)
+    : vr_HMD(vr_HMD)
     , id(id)
+    , renderSceneGraph(true)
     , model(model)//Presume id 0 == HMD
     , type(vr_HMD->GetTrackedDeviceClass(id))
 {
@@ -50,6 +50,11 @@ void Device::copySceneGraph(std::shared_ptr<Device> r)
     model->copySceneGraph(r->model);
 }
 
+void Device::setPose(const glm::mat4 &poseMat)
+{
+    this->poseMat = poseMat; 
+    location = glm::vec3(poseMat * glm::vec4(0, 0, 0, 1));
+};
 
 Controller::Controller(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
     : Device(vr_HMD, id, model)
@@ -108,4 +113,9 @@ Headset::Headset(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2
     : Device(vr_HMD, id, model)
 {
 
+}
+void Controller::vibrate(unsigned short duration)
+{
+    assert(duration < 4000);
+    vr_HMD->TriggerHapticPulse(id, 0, duration);
 }

@@ -326,11 +326,6 @@ void VisualisationVR::render()
 		vr::Texture_t rightEyeTexture = { (void*)(uintptr_t)vr_rightResolveFB->getColorTextureName(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
 		vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
 	}
-
-	//GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
-	//GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-	//this->hud->render();
-
 	GL_CHECK();
 
 	// update the screen

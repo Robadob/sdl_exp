@@ -15,6 +15,7 @@ public:
     VRExampleScene::VRExampleScene(VisualisationVR &vis);
 
     void render() override;
+    void update(unsigned int frameTime) override;
     bool controllerEventVR(std::shared_ptr<Controller> controller, vr::EVRButtonId buttonId, vr::EVREventType buttonEvent) override;
 private:
     std::shared_ptr<Entity> sphere[MAX_SPHERES]; 

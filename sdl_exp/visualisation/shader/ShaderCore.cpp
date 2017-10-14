@@ -255,9 +255,9 @@ void ShaderCore::useProgram(bool autoPrepare)
 	//Set any Texture buffers
 	for (auto utd : textures)
 	{//Texture buffers may overlap, so we reset texture buffers, away from prepare
-		glActiveTexture(GL_TEXTURE0 + utd.first);
-		glBindTexture(utd.second.type, utd.second.name);
-	}
+        GL_CALL(glActiveTexture(GL_TEXTURE0 + utd.first));
+        GL_CALL(glBindTexture(utd.second.type, utd.second.name));
+    }
 	//Set any buffers
 	for (std::map<GLuint, BufferDetail>::iterator i = buffers.begin(); i != buffers.end(); ++i)
 	{//Don't think buffer bases are specific to shaders, so we treat them as dynamic
@@ -265,7 +265,7 @@ void ShaderCore::useProgram(bool autoPrepare)
 		GL_CALL(glBindBufferBase(i->second.type, i->first, i->second.name));
 	}
 
-	this->_useProgram();
+    this->_useProgram();
 }
 void ShaderCore::clearProgram()
 {

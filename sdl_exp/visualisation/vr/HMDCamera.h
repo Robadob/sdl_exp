@@ -20,7 +20,11 @@ public:
     void useRight();
 	void use(Eye eye);
 	const glm::mat4 *getProjMatPtr()const override { return &projMat; };
-	const glm::mat4 getProjMat()const override { return projMat; };
+    const glm::mat4 getProjMat()const override { return projMat; };
+    glm::mat4 getWorldMat(){ return worldMat; }
+    void setWorldMat(glm::mat4 a){ worldMat=a; }//Temp
+    const glm::mat4 *getWorldMatPtr() { return &worldMat; }
+    inline glm::mat4 applyWorldMat(const glm::mat4 &a) const { return worldMat * a; }
 	/**
 	* @return The current viewport dimensions
 	*/
@@ -42,7 +46,8 @@ private:
     glm::mat4 eyePosLeft, eyePosRight;
 	glm::mat4 HMDPose;
 
-	glm::mat4 projMat;
+    glm::mat4 projMat;
+    glm::mat4 worldMat;
 };
 
 #endif //__CameraVR_h__

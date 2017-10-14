@@ -270,7 +270,8 @@ void TrackedDevicesVR::updatePoses()
 				{//Invert HMD for camera (not sure why, but this is how it's done)
                     camera->setHMDPose(inverse(poseMat)); 
 				}
-                trackedDevices[i]->setPose(poseMat);
+                
+                trackedDevices[i]->setPose(camera->applyWorldMat(poseMat));
 			}
 		}
 	}
@@ -294,28 +295,24 @@ std::shared_ptr<Controller> TrackedDevicesVR::getController(const unsigned int &
 }
 std::shared_ptr<Controller> TrackedDevicesVR::getLeftController()
 {
-    for (unsigned int i = 0; i < vr::k_unMaxTrackedDeviceCount; ++i)
+    unsigned int i = HMD->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
+    if (i < vr::k_unMaxTrackedDeviceCount&&i != vr::k_unTrackedDeviceIndex_Hmd)
     {
         if (auto s = std::dynamic_pointer_cast<Controller>(trackedDevices[i]))
         {
-            if (s->getHand() == Controller::Hand::Left)
-            {
-                return s;
-            }
+            return s;
         }
     }
     return std::shared_ptr<Controller>();
 }
 std::shared_ptr<Controller> TrackedDevicesVR::getRightController()
 {
-    for (unsigned int i = 0; i < vr::k_unMaxTrackedDeviceCount; ++i)
+    unsigned int i = HMD->GetTrackedDeviceIndexForControllerRole(vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
+    if (i < vr::k_unMaxTrackedDeviceCount&&i != vr::k_unTrackedDeviceIndex_Hmd)
     {
         if (auto s = std::dynamic_pointer_cast<Controller>(trackedDevices[i]))
         {
-            if (s->getHand() == Controller::Hand::Right)
-            {
-                return s;
-            }
+            return s;
         }
     }
     return std::shared_ptr<Controller>();

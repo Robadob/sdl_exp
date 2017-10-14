@@ -37,7 +37,7 @@ protected:
     const unsigned int id;
 private:
     bool renderSceneGraph;
-    void setPose(const glm::mat4 &poseMat){ this->poseMat = poseMat; location = glm::vec3(poseMat * glm::vec4(0, 0, 0, 1)); };
+    void setPose(const glm::mat4 &poseMat);
 
     std::shared_ptr<Entity2> model;
     const vr::ETrackedDeviceClass type;
@@ -68,6 +68,12 @@ public:
     glm::vec2 getAxisState(unsigned int id);
     vr::EVRControllerAxisType getAxisMode(unsigned int id);
     void update() override;
+    /**
+     * 1 second is 1000 milliseconds
+     * Defaults to 0.5 seconds
+     * @note 3999 is the upper limit for duration, its not very strong regardless
+     */
+    void vibrate(unsigned short durationMicroSeconds = 3999);
 private:
     ButtonState buttons[vr::k_EButton_Max];
     glm::vec2 axis[vr::k_unControllerStateAxisCount];

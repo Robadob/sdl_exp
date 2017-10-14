@@ -2,6 +2,7 @@
 #include "../VisualisationVR.h"
 #include <glm/gtx/transform.hpp>
 #define lanceLength 0.25
+std::shared_ptr<Controller> leftCtrller, rightCtrller;
 VRExampleScene::VRExampleScene(VisualisationVR &vis)
     : BasicScene(vis.toViewportExt())
     , SceneVR(vis)
@@ -31,6 +32,8 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
     this->setRenderAxis(true);
     getTrackedDevices()->getRightController()->addChild(lines);
     lines->addChild(this->points);
+    leftCtrller = getTrackedDevices()->getLeftController();
+    rightCtrller = getTrackedDevices()->getRightController();
 }
 
 void VRExampleScene::render()
@@ -40,7 +43,68 @@ void VRExampleScene::render()
         if (i != heldSphere)
             this->sphere[i]->render();
     }
-    this->points->render();
+}
+void VRExampleScene::update(unsigned int frameTime)
+{
+    //getTrackedDevices()->getCamera()->setWorldMat(glm::translate(wMat, glm::vec3(0.001, 0, 0)));
+    //getTrackedDevices()->getCamera()->setWorldMat();
+    //if (!leftCtrller)
+    //    leftCtrller = getTrackedDevices()->getLeftController();
+    //if (!rightCtrller)
+    //    rightCtrller = getTrackedDevices()->getRightController();
+    //if (leftCtrller&&rightCtrller)
+    //{
+    //    //If both grip buttons are pressed, we want to transform the world (scale/translate)
+    //    static bool prevGripLeftDown = false;
+    //    static bool prevGripRightDown = false;
+    //    static glm::vec2 prevControllerLeftPos;
+    //    static glm::vec2 prevControllerRightPos;
+    //    bool gripLeftDown = leftCtrller->getButtonState(vr::k_EButton_Grip) == Controller::ButtonState::Pressed;
+    //    bool gripRightDown = rightCtrller->getButtonState(vr::k_EButton_Grip) == Controller::ButtonState::Pressed;
+    //    glm::vec2 controllerLeftPos = glm::vec2(leftCtrller->getLocation().x, leftCtrller->getLocation().z);
+    //    glm::vec2 controllerRightPos = glm::vec2(rightCtrller->getLocation().x, rightCtrller->getLocation().z);
+    //    if (prevGripLeftDown&&prevGripRightDown&&gripLeftDown&&gripRightDown)
+    //    {//2 frames with both down
+    //        const glm::mat4 _wMat = getTrackedDevices()->getCamera()->getWorldMat();
+    //        glm::mat4 wMat = _wMat;
+    //        //{//SCALE
+    //        //    float prevDistance = glm::distance(prevControllerLeftPos, prevControllerRightPos);
+    //        //    float currentDistance = glm::distance(controllerLeftPos, controllerRightPos);
+    //        //    float invScaleFactor = prevDistance / currentDistance;
+    //        //    wMat = glm::scale(wMat, glm::vec3(invScaleFactor));
+    //        //}
+    //        {//UN-TRANSLATE
+    //            wMat = glm::translate(wMat, glm::vec3(controllerLeftPos.x, 0, controllerLeftPos.y));
+    //        }
+    //        {//ROTATE
+    //            glm::vec2 prevAngle = glm::normalize(prevControllerLeftPos - prevControllerRightPos);
+    //            glm::vec2 currentAngle = glm::normalize(controllerLeftPos - controllerRightPos);
+    //            float invAngle = atan2(currentAngle.y, currentAngle.x) - atan2(prevAngle.y, prevAngle.x);
+    //            wMat = glm::rotate(wMat, invAngle, glm::vec3(0, 1, 0));
+    //        }
+    //        {//TRANSLATE
+    //            wMat = glm::translate(wMat, -glm::vec3(prevControllerLeftPos.x, 0, prevControllerLeftPos.y));
+    //            //glm::vec3 newLeftControllerLoc = inverse(_wMat)*wMat*glm::vec4(controllerLeftPos.x, 0, controllerLeftPos.y, 1.0f);
+    //            //glm::vec2 newLeftControllerLoc2 = glm::vec2(newLeftControllerLoc.x, newLeftControllerLoc.z);
+    //            //glm::vec2 invOffset = prevControllerLeftPos - newLeftControllerLoc2;
+    //            //wMat = glm::translate(wMat, glm::vec3(invOffset.x, 0, invOffset.y));
+    //        }
+    //        //Stabilise y==0
+    //        ///At current unnecessary
+    //        //Scale near/far planes?
+    //        ///CBA right now
+
+    //        getTrackedDevices()->getCamera()->setWorldMat(wMat);
+    //    }
+    //    //Update previous values
+    //    {
+    //        prevGripLeftDown = gripLeftDown;
+    //        prevGripRightDown = gripRightDown;
+    //        prevControllerLeftPos = controllerLeftPos;
+    //        prevControllerRightPos = controllerRightPos;
+    //    }
+
+    }
 }
 bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, vr::EVRButtonId buttonId, vr::EVREventType buttonEvent)
 {
@@ -85,6 +149,14 @@ bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, v
             }
             this->points->setPointColor(0, glm::vec4(1, 0, 0, 0.3));
         }
+    }
+    else if (vr::k_EButton_Grip == buttonId&&vr::VREvent_ButtonTouch == buttonEvent)
+    {
+        controller->vibrate();
+    }
+    else if (vr::k_EButton_SteamVR_Touchpad == buttonId&&vr::VREvent_ButtonTouch == buttonEvent)
+    {
+        controller->vibrate();
     }
     return false;
 };

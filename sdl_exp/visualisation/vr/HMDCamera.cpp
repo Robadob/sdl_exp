@@ -61,8 +61,8 @@ const glm::uvec2& HMDCamera::getWindowDims() const
 
 void HMDCamera::setHMDPose(const glm::mat4& modelMat)
 {
-	HMDPose = modelMat;
-	eye = HMDPose*glm::vec4(0, 0, 0, 1);
+    HMDPose = modelMat * inverse(worldMat);
+	eye = HMDPose * glm::vec4(0, 0, 0, 1);
 	use(activeEye);
 }
 

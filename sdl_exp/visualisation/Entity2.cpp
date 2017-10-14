@@ -19,7 +19,6 @@ Entity2::Entity2(const char *modelPath)
 {
     shaders->setColor(glm::vec3(1));
 	loadModel();
-	shaders->setModelMatPtr(&modelMat);
 }
 
 Entity2::Entity2(
@@ -89,8 +88,8 @@ Entity2::Entity2(
         shaders->setTexCoordsAttributeDetail(this->texcoords);
         shaders->setRotationPtr(&this->rotation);
         shaders->setTranslationPtr(&this->location);
+        shaders->setModelMatPtr(&this->modelMat);
 	}
-	shaders->setModelMatPtr(&modelMat);
 }
 Entity2::~Entity2()
 {
@@ -1020,6 +1019,7 @@ void Entity2::loadModel()
         shaders->setTexCoordsAttributeDetail(texcoords);
         shaders->setRotationPtr(&this->rotation);
         shaders->setTranslationPtr(&this->location);
+        shaders->setModelMatPtr(&this->modelMat);
     }
     printf("Model : %s was loaded.\n%dv, %dvn, %dvc, %dvt, %df, %d/%dmat, %drg\n", modelPath.c_str(), vertices.count, normals.count, colors.count, texcoords.count, faces.count/faces.components, materials.size() - missingMats, materials.size(), renderGroup.size());
 }
@@ -1145,4 +1145,12 @@ glm::mat4 Entity2::render(const unsigned int &shaderIndex, glm::mat4 transform)
     if (shaders)
         shaders->clearProgram();
 	return transform;
+}
+void Entity2::setModelMat(glm::mat4 const modelMat)
+{
+    this->modelMat = modelMat;
+}
+glm::mat4 Entity2::getModelMat()
+{
+    return modelMat;
 }

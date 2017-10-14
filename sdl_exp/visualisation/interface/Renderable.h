@@ -54,7 +54,14 @@ public:
 	virtual void setProjectionMatPtr(const Viewport *visualisation) final
 	{
 		setProjectionMatPtr(visualisation->getProjMatPtr());
-	}
+    }
+    /**
+    * Binds the provided projection matrix to the internal shader
+    * @param visualisation Ptr to model view matrix
+    * @note Convenience wrapper
+    */
+    virtual void setModelMat(glm::mat4 const modelMat) = 0;
+    virtual glm::mat4 getModelMat() = 0;
     //Render
     virtual glm::mat4 render(const unsigned int &shaderIndex=0, glm::mat4 transform = glm::mat4()) = 0;
     void renderSceneGraph(const unsigned int &shaderIndex = 0, glm::mat4 transform = glm::mat4())
@@ -85,7 +92,7 @@ public:
         unsigned int rtn = 0;
         for (auto &&it = children.begin(); it != children.end();)
         {
-            if (std::get<0>(*it).lock())
+            if (std::get<0>(*it).lock()==a)
             {
                 it = children.erase(it);
                 rtn++;

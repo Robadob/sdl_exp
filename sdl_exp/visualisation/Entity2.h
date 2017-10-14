@@ -71,8 +71,9 @@ public:
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
 	glm::mat4 render(const unsigned int &shaderIndex=0, glm::mat4 transform=glm::mat4()) override;
 	void setLocation(glm::vec3 location){ this->location = location; }
-	void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
-	void setModelMat(glm::mat4 modelMat){ this->modelMat = modelMat;  };
+    void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
+    void setModelMat(glm::mat4 const modelMat) override;
+    glm::mat4 getModelMat() override;
 private:
 	void loadModel();
     void addFace(const unsigned int(&faceData)[3][4], const unsigned int(&faceDataCount)[3], unsigned int &faceCap,

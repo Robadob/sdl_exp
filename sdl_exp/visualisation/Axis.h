@@ -31,11 +31,14 @@ public:
 	/**
 	* Provides projection matrix to the shader
 	*/
-	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setModelMat(glm::mat4 const modelMat) override;
+    glm::mat4 getModelMat() override;
 private:
 	GLuint vbo, fvbo;
 	Shaders::VertexAttributeDetail vertices, colors, faces;
 	std::shared_ptr<Shaders> shaders;
+    glm::mat4 modelMat;
 };
 
 #endif //ifndef __Axis_h__

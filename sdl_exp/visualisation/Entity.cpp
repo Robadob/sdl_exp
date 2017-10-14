@@ -156,6 +156,7 @@ Entity::Entity(
 			it->setTexCoordsAttributeDetail(texcoords);
 			it->setRotationPtr(&this->rotation);
 			it->setTranslationPtr(&this->location);
+            it->setModelMatPtr(&this->modelMat);
 		}
 	}
     if (needsExport)
@@ -1493,4 +1494,12 @@ Disables or enables face culling
 void Entity::setCullFace(const bool cullFace)
 {
 	this->cullFace = cullFace;
+}
+void Entity::setModelMat(glm::mat4 const modelMat)
+{
+    this->modelMat = modelMat;
+}
+glm::mat4 Entity::getModelMat()
+{
+    return modelMat;
 }

@@ -108,6 +108,8 @@ public:
 	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex=0) const;
     void setViewMatPtr(glm::mat4 const *modelViewMat) override;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setModelMat(glm::mat4 const modelMat) override;
+    glm::mat4 getModelMat() override;
     void flipVertexOrder();
 	void setCullFace(const bool cullFace);
 	glm::vec3 getMin() const { return modelMin; }
@@ -128,6 +130,7 @@ protected:
     glm::vec4 color;
     glm::vec3 location;
     glm::vec4 rotation;
+    glm::mat4 modelMat;
 
     static void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size, void *data);
     static void deleteVertexBufferObject(GLuint *vbo);

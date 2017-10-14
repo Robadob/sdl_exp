@@ -1,6 +1,7 @@
 #include "EntityScene.h"
 #include "TwoPassScene.h"
 #include "visualisation/vr/VRExampleScene.h"
+#include "visualisation/primitives/Points.h"
 
 int main(int count, char **args)
 {

@@ -194,11 +194,11 @@ glm::mat4 Shaders::_useProgramModelMatrices(const glm::mat4 *force)
     //If this has been triggered as an override, ignore this->modelMat.matrixPtr
     if (force)
     {
-        m = *force;
+        m *= *force;
 	}
-	else if (this->modelMat.matrixPtr)
+	if (this->modelMat.matrixPtr)
 	{
-		m = *this->modelMat.matrixPtr;
+		m *= *this->modelMat.matrixPtr;
 	}
     //Add adjustments to modelMat
     {        

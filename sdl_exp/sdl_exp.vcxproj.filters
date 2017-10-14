@@ -167,6 +167,9 @@
     <ClCompile Include="visualisation\primitives\Lines.cpp">
       <Filter>Source Files\Visualisation\Primitives</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\primitives\Points.cpp">
+      <Filter>Source Files\Visualisation\Primitives</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -307,6 +310,9 @@
       <Filter>Header Files\Visualisation\Primitives</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\primitives\Primitives.h">
+      <Filter>Header Files\Visualisation\Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\primitives\Points.h">
       <Filter>Header Files\Visualisation\Primitives</Filter>
     </ClInclude>
   </ItemGroup>

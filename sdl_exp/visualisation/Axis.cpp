@@ -56,7 +56,8 @@ Axis::Axis(float length)
 	faces.vbo = fvbo;
 
 	shaders->setPositionsAttributeDetail(vertices);
-	shaders->setColorsAttributeDetail(colors);
+    shaders->setColorsAttributeDetail(colors);
+    shaders->setModelMatPtr(&this->modelMat);
 }
 /*
 Default destructor
@@ -91,4 +92,12 @@ void Axis::setViewMatPtr(glm::mat4 const *viewMat)
 void Axis::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	shaders->setProjectionMatPtr(projectionMat);
+}
+void Axis::setModelMat(glm::mat4 const modelMat)
+{
+    this->modelMat = modelMat;
+}
+glm::mat4 Axis::getModelMat()
+{
+    return modelMat;
 }

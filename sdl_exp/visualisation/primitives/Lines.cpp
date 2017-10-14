@@ -6,6 +6,7 @@
 const unsigned int Lines::LINE_SIZE = sizeof(float) * 7 * 2;
 const unsigned int Lines::LINE_INDICES_SIZE = sizeof(unsigned short) * 2;
 const unsigned int Lines::VERTEX_STRIDE = 7;
+const unsigned int Lines::LINE_STRIDE = VERTEX_STRIDE * 2;
 const unsigned int Lines::VERTEX_A_OFFSET = 0;
 const unsigned int Lines::VERTEX_B_OFFSET = 7;
 const unsigned int Lines::COLOR_A_OFFSET = 3;
@@ -21,6 +22,7 @@ Lines::Lines(const std::vector<Line> &lines)
 	, colors(GL_FLOAT, 4, sizeof(float))
 	, faces(GL_UNSIGNED_SHORT, 2, sizeof(unsigned short))
 	, shaders(std::make_shared<Shaders>(Stock::Shaders::COLOR))
+    , lineWidth(DEFAULT_LINE_WIDTH)
 {
 	//Create buffers
 	GL_CALL(glGenBuffers(1, &vbo));
@@ -40,7 +42,7 @@ Lines::Lines(const std::vector<Line> &lines)
 		memcpy(&vertColor[offset + VERTEX_B_OFFSET], &it->vertices[1], sizeof(glm::vec3));
 		memcpy(&vertColor[offset + COLOR_A_OFFSET], &it->colors[0], sizeof(glm::vec4));
 		memcpy(&vertColor[offset + COLOR_B_OFFSET], &it->colors[1], sizeof(glm::vec4));
-		offset += 2*VERTEX_STRIDE;
+        offset += LINE_STRIDE;
 	}
 	for (unsigned short i = 0; i < maxCount * 2; ++i)
 		indices[i]=i;
@@ -49,7 +51,7 @@ Lines::Lines(const std::vector<Line> &lines)
 	GL_CALL(glBufferData(GL_ARRAY_BUFFER, maxCount * LINE_SIZE, vertColor, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
-	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * LINE_INDICES_SIZE, indices, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, maxCount * LINE_INDICES_SIZE, indices, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 	//Configure shaders
 	vertices.count = count*2;
@@ -69,6 +71,7 @@ Lines::Lines(const std::vector<Line> &lines)
 
 	shaders->setPositionsAttributeDetail(vertices);
 	shaders->setColorsAttributeDetail(colors);
+    shaders->setModelMatPtr(&this->modelMat);
 }
 Lines::Lines(const Line &line)
 	: Lines(std::vector<Line>({ line }))
@@ -133,19 +136,27 @@ Lines::~Lines()
 
 unsigned int Lines::addLine(const Line &line)
 {
-	if (count==maxCount)
-	{
-		//Resize host memory
-		maxCount *= RESIZE_FACTOR;
-		float *t = (float*)malloc(maxCount*LINE_SIZE);
-		memcpy(t, vertColor, sizeof(count*LINE_SIZE));
-		free(vertColor);
-		vertColor = t;
+    if (count == maxCount)
+    {
+        //Resize host memory
+        maxCount *= RESIZE_FACTOR;
+        {//VertColor
+            float *t = static_cast<float*>(malloc(maxCount * LINE_SIZE));
+            memcpy(t, vertColor, sizeof(count*LINE_SIZE));
+            free(vertColor);
+            vertColor = t;
+        }        
+        {//Faces
+            unsigned short *t = static_cast<unsigned short*>(malloc(maxCount * LINE_INDICES_SIZE));
+            memcpy(t, indices, sizeof(count*LINE_INDICES_SIZE));
+            free(indices);
+            indices = t;
+		}
 		//Extend face vbo
 		for (unsigned short i = count * 2; i < maxCount * 2; ++i)
 			indices[i]=i;
 		//Add Line
-		auto offset = count++*VERTEX_STRIDE*2;
+        auto offset = count++*LINE_STRIDE;
 		memcpy(&vertColor[offset + VERTEX_A_OFFSET], &line.vertices[0], sizeof(glm::vec3));
 		memcpy(&vertColor[offset + VERTEX_B_OFFSET], &line.vertices[1], sizeof(glm::vec3));
 		memcpy(&vertColor[offset + COLOR_A_OFFSET], &line.colors[0], sizeof(glm::vec4));
@@ -184,12 +195,15 @@ bool Lines::setLine(const unsigned int &index, const Line &line)
 {
 	if (index >= this->count)
 		return false;
-	auto offset = index*VERTEX_STRIDE*2;
+    auto offset = index*LINE_STRIDE;
 	memcpy(&vertColor[offset + VERTEX_A_OFFSET], &line.vertices[0], sizeof(glm::vec3));
 	memcpy(&vertColor[offset + VERTEX_B_OFFSET], &line.vertices[1], sizeof(glm::vec3));
 	memcpy(&vertColor[offset + COLOR_A_OFFSET],  &line.colors[0],   sizeof(glm::vec4));
 	memcpy(&vertColor[offset + COLOR_B_OFFSET],  &line.colors[1],   sizeof(glm::vec4));
 	//Add to device buffer
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+    GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, index*LINE_SIZE, LINE_SIZE, &vertColor[offset]));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	return true;
 }
 bool Lines::setLine(const unsigned int &index, const Point &pointA, Point &pointB)
@@ -205,20 +219,32 @@ bool Lines::setLine(const unsigned int &index, const glm::vec3 &vertexA, const g
 	return setLine(index, { { vertexA, glm::vec4(color, 1.0f) }, { vertexB, glm::vec4(color, 1.0f) } });
 }
 
+void Lines::setLineWidth(float lineWidth)
+{
+    this->lineWidth = lineWidth > 0 ? lineWidth : lineWidth;
+    assert(lineWidth > 0);
+}
+
 glm::mat4 Lines::render(const unsigned int &shaderIndex, glm::mat4 transform)
 {
+    //Grab current line width size
+    float _lineWidth = lineWidth;
+    GL_CALL(glGetFloatv(GL_LINE_WIDTH, &_lineWidth));
 #ifdef _DEBUG
 	assert(shaderIndex == 0);
 #endif
 	shaders->useProgram();
-	transform = shaders->overrideModelMat(&transform);
+    transform = shaders->overrideModelMat(&transform);
+    GL_CALL(glLineWidth(lineWidth));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 	GL_CALL(glEnable(GL_BLEND));
 	GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 	GL_CALL(glDrawElements(GL_LINES, faces.count * faces.components, faces.componentType, nullptr));
 	GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 	GL_CALL(glDisable(GL_BLEND));
-	shaders->clearProgram();
+    shaders->clearProgram();
+    //Reset line width
+    GL_CALL(glLineWidth(_lineWidth));
 	return transform;
 }
 void Lines::reload()
@@ -232,4 +258,12 @@ void Lines::setViewMatPtr(glm::mat4 const *viewMat)
 void Lines::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	shaders->setProjectionMatPtr(projectionMat);
+}
+void Lines::setModelMat(glm::mat4 const modelMat)
+{
+    this->modelMat = modelMat;
+}
+glm::mat4 Lines::getModelMat()
+{
+    return modelMat;
 }

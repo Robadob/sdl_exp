@@ -4,6 +4,7 @@
 #include "../interface/Renderable.h"
 #include "../shader/Shaders.h"
 #include <vector>
+#define DEFAULT_LINE_WIDTH 2.0f
 class Lines : public Renderable
 {
 public:
@@ -27,6 +28,8 @@ public:
 	bool setLine(const unsigned int &index, const glm::vec3 &vertexA, const glm::vec3 &vertexB, glm::vec4 color);
 	bool setLine(const unsigned int &index, const glm::vec3 &vertexA, const glm::vec3 &vertexB, glm::vec3 color);
 
+    void setLineWidth(float lineWidth);
+
 	glm::mat4 render(const unsigned int &shaderIndex = 0, glm::mat4 transform = glm::mat4()) override;
 	void reload() override;
 	/**
@@ -40,10 +43,13 @@ public:
 	 * @param projectionMat Ptr to model view matrix
 	 * @note This is normally found within the Viewport object
 	 */
-	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setModelMat(glm::mat4 const modelMat) override;
+    glm::mat4 getModelMat() override;
 	static const unsigned int LINE_SIZE;
 	static const unsigned int LINE_INDICES_SIZE;
-	static const unsigned int VERTEX_STRIDE;
+    static const unsigned int VERTEX_STRIDE;
+    static const unsigned int LINE_STRIDE;
 	static const unsigned int VERTEX_A_OFFSET;
 	static const unsigned int VERTEX_B_OFFSET;
 	static const unsigned int COLOR_A_OFFSET;
@@ -61,7 +67,10 @@ private:
 	static std::vector<Line> makeInitList(const std::initializer_list<glm::vec3> vertices, const glm::vec3 &color);
 
 	Shaders::VertexAttributeDetail vertices, colors, faces;
-	std::shared_ptr<Shaders> shaders;
+    std::shared_ptr<Shaders> shaders;
+    glm::mat4 modelMat;
+
+    float lineWidth;
 };
 
 #endif //__Lines_h__

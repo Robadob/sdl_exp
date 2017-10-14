@@ -2,7 +2,7 @@
 
 uniform mat4 _modelViewProjectionMat;
 in vec3 _vertex;
-in vec3 _color;
+in vec4 _color;
 in vec3 _normal;
 
 out vec4 o_color;
@@ -13,6 +13,6 @@ void main()
 {
     o_normal = _normal;
     o_vertex = _vertex;
-    o_color = vec4(_color,1.0f);
+    o_color = _color;//if GL_BLEND disabled, will act as RGB anyway
     gl_Position = _modelViewProjectionMat * vec4(_vertex, 1.0f);
 }

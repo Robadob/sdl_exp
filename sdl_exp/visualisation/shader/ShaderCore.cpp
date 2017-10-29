@@ -154,11 +154,12 @@ void ShaderCore::setupBindings()
         GLenum blockType = getResourceBlock(d.type);
         if (blockType == GL_INVALID_ENUM)
             continue;
-        GLuint location = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, d.nameInShader));
-		if (location != GL_INVALID_INDEX)
+		GLuint uniformBlockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, d.nameInShader));
+		if (uniformBlockIndex != GL_INVALID_INDEX)
 		{			
-			auto rtn = buffers.emplace(location, d);
-			if (!rtn.second)fprintf(stderr,"Somehow a buffer was bound twice.");
+			auto rtn = buffers.emplace(uniformBlockIndex, d);
+			if (!rtn.second)fprintf(stderr, "Somehow a buffer was bound twice.");
+			GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, d.bindingPoint));
 		}
 		else//If the buffer isn't found, remind the user
 		{
@@ -240,13 +241,6 @@ void ShaderCore::useProgram()
         {
             GL_CALL(glUniformMatrix4fv(i->first, 1, false, reinterpret_cast<const GLfloat *>(i->second.data)));
         }
-	}
-	//Set any buffers
-	for (std::map<GLuint, BufferDetail>::iterator i = buffers.begin(); i != buffers.end(); ++i)
-	{//Should we really hardcode GL_SHADER_STORAGE_BUFFER here?
-		//Don't think buffer bases are specific to shaders, so we treat them as dynamic
-        //We are passing the 2nd parameter incorrectly, should be what we pass to glUniformBlockBinding()
-		GL_CALL(glBindBufferBase(i->second.type, i->first, i->second.name));
 	}
 	//Set any subclass specific stuff
 	this->_useProgram();
@@ -473,9 +467,8 @@ GLenum ShaderCore::getResourceBlock(GLenum bufferType)
         return GL_INVALID_ENUM;
     }
 }
-bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName)
-{//Really need to track and call glUniformBlockBinding() here rather than using blockIndex, https://www.opengl.org/wiki/GLAPI/glUniformBlockBinding
- //Treat it similar to texture binding points
+bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferBindingPoint)
+{//Each buffer must have a unique binding point
 	//Purge any existing buffer which matches
 	removeBuffer(bufferNameInShader);
 	if (this->programId > 0)
@@ -484,15 +477,16 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
         GLenum blockType = getResourceBlock(bufferType);
 		if (blockType == GL_INVALID_ENUM)
             return false;
-		GLuint blockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, bufferNameInShader));
-		if (blockIndex != GL_INVALID_INDEX)
+		GLuint uniformBlockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, bufferNameInShader));
+		if (uniformBlockIndex != GL_INVALID_INDEX)
 		{
 			//Replace with new one
 			//Can't use[] assignment constructor due to const elements
-			BufferDetail bd = { bufferNameInShader, bufferType, bufferName };
+			BufferDetail bd = { bufferNameInShader, bufferType, bufferBindingPoint };
 			//dynamicUniforms.erase(blockIndex);//Why?
-			auto rtn = buffers.emplace(blockIndex, bd);
+			auto rtn = buffers.emplace(uniformBlockIndex, bd);
 			if (!rtn.second)fprintf(stderr, "%s: Buffer named: %s is already bound.\n", shaderTag, bufferNameInShader);
+			GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, bufferBindingPoint));
 			return true;
 		}
 		else
@@ -500,7 +494,7 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 			fprintf(stderr, "%s: Buffer named: %s was not found.\n", shaderTag, bufferNameInShader);
 		}
 	}
-	lostBuffers.push_back({ bufferNameInShader, bufferType, bufferName });
+	lostBuffers.push_back({ bufferNameInShader, bufferType, bufferBindingPoint });
 	return false;
 }
 bool ShaderCore::removeDynamicUniform(const char *uniformName)

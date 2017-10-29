@@ -373,13 +373,13 @@ private:
 		*/
 		const char* nameInShader;
 		/**
-		* The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER)
+		* The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER, GL_UNIFORM_BUFFER)
 		*/
 		const GLenum type;
 		/**
-		* The name of the buffer (as returned by glGenBuffers())
+		* The binding point of the buffer (as set with glBindBufferBase())
 		*/
-		const GLuint name;
+		const GLuint bindingPoint;
 	};
 	/**
 	* Holds additional information necessary for tracking buffers

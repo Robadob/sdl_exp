@@ -48,6 +48,12 @@
     <Filter Include="Source Files\Visualisation\Util">
       <UniqueIdentifier>{561a15bc-295a-46ca-a632-3ba1da2d012d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\Shader\Buffer">
+      <UniqueIdentifier>{6bff0996-7c58-483b-8f91-c771ccf1b11e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Shader\Buffer">
+      <UniqueIdentifier>{fa904b7b-5604-4ee4-9ca2-2aefd0495c65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -130,6 +136,15 @@
     </ClCompile>
     <ClCompile Include="visualisation\util\Optimus.cpp">
       <Filter>Source Files\Visualisation\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\buffer\BufferCore.cpp">
+      <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\buffer\ShaderStorageBuffer.cpp">
+      <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp">
+      <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,6 +248,15 @@
     </ClInclude>
     <ClInclude Include="visualisation\util\GLcheck.h">
       <Filter>Header Files\Visualisation\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\buffer\ShaderStorageBuffer.h">
+      <Filter>Header Files\Visualisation\Shader\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\buffer\UniformBuffer.h">
+      <Filter>Header Files\Visualisation\Shader\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\buffer\BufferCore.h">
+      <Filter>Header Files\Visualisation\Shader\Buffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

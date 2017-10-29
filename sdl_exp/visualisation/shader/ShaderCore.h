@@ -8,6 +8,9 @@
 #include <list>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
+#include <memory>
+
+class BufferCore;//Implementation of addBuffer(const char *, std::shared_ptr<BufferCore>) found in BufferCore.cpp
 
 /**
  * This class is is a wrapper for the core OpenGL shader operations
@@ -184,10 +187,20 @@ public:
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
 	 * This is for 'program resources', NOT texture buffers
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
-	 * @param bufferType The type of buffer (probably GL_SHADER_STORAGE_BUFFER)
+	 * @param bufferType The type of buffer (probably GL_SHADER_STORAGE_BUFFER or GL_UNIFORM_BUFFER)
 	 * @param bufferName The buffer name as set by glGenBuffers(GLsizei, GLuint)
 	 */
 	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName);
+	/**
+	* Attatches the specified buffer to the shader if bufferNameInShader can be found
+	* If a buffer with the same bufferNameInShader is already bound, it will be replaced
+	* This is for 'program resources', NOT texture buffers
+	* This will not retain the shared_ptr, it's upto you to keep it alive
+	* @param bufferNameInShader The indentifier of the buffer within the shader source
+	* @param buffer The buffer to be used
+	* @note Convenience method, implemented in BufferCore.cpp
+	*/
+	bool addBuffer(const char *bufferNameInShader, std::shared_ptr<BufferCore> buffer);
 	/**
 	* Unbinds the named dynamic uniform
 	* @note This will not replace the value cached in the shader, reload() is necessary to achieve that
@@ -360,13 +373,13 @@ private:
 		*/
 		const char* nameInShader;
 		/**
-		* The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER)
+		* The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER, GL_UNIFORM_BUFFER)
 		*/
 		const GLenum type;
 		/**
-		* The name of the buffer (as returned by glGenBuffers())
+		* The binding point of the buffer (as set with glBindBufferBase())
 		*/
-		const GLuint name;
+		const GLuint bindingPoint;
 	};
 	/**
 	* Holds additional information necessary for tracking buffers

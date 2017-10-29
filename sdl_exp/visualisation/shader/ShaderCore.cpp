@@ -482,9 +482,9 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 	{
         //Get the uniform buffers index within the shader program
         GLenum blockType = getResourceBlock(bufferType);
-        if (blockType == GL_INVALID_ENUM)
+		if (blockType == GL_INVALID_ENUM)
             return false;
-        GLuint blockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, bufferNameInShader));
+		GLuint blockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, bufferNameInShader));
 		if (blockIndex != GL_INVALID_INDEX)
 		{
 			//Replace with new one

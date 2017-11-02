@@ -92,6 +92,7 @@ private:
     CUDATextureBuffer<T> *cuTexBuf;
     const bool handleDeallocation;
 #endif
+	static const char *RAW_TEXTURE_FLAG;
 };
 
 #endif //ifndef __TexturBuffer_h__

@@ -1,12 +1,15 @@
 #include "TextureBuffer.h"
 #include <cassert>
 
+template<class T>
+const char *TextureBuffer<T>::RAW_TEXTURE_FLAG = "TextureBuffer";
+
 /**
  * Constructors
  */
 template<class T>
 TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned int componentCount, T *data)
-	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), componentCount*sizeof(T), _getType()), "TextureBuffer", 0)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), componentCount*sizeof(T), _getType()), RAW_TEXTURE_FLAG, 0)
     , elementCount(elementCount)
     , componentCount(componentCount)
 #ifdef __CUDACC__
@@ -26,7 +29,7 @@ TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned 
 }
 template<class T>
 TextureBuffer<T>::TextureBuffer(const TextureBuffer<T>& b)
-	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), b.format, "TextureBuffer", 0)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), b.format, b.reference, 0)
 	, elementCount(b.elementCount)
 	, componentCount(b.componentCount)
 #ifdef __CUDACC__
@@ -53,7 +56,7 @@ TextureBuffer<T>::TextureBuffer(const TextureBuffer<T>& b)
 #ifdef __CUDACC__
 template<class T>
 TextureBuffer<T>::TextureBuffer(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation)
-	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(cuTexBuf->componentCount), _getInternalFormat(cuTexBuf->componentCount)), "TextureBuffer", 0, cuTexBuf->glTexName)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(cuTexBuf->componentCount), _getInternalFormat(cuTexBuf->componentCount)), RAW_TEXTURE_FLAG, 0, cuTexBuf->glTexName)
     , cuTexBuf(cuTexBuf)
     , handleDeallocation(handleDeallocation)
     , elementCount(cuTexBuf->elementCount)

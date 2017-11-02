@@ -2,6 +2,8 @@
 #include <cassert>
 #include <glm/gtx/component_wise.hpp>
 
+const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
+
 /**
 * Constructors
 */
@@ -14,7 +16,7 @@ Texture2D::Texture2D(std::shared_ptr<SDL_Surface> image, const std::string refer
 	applyOptions();
 }
 Texture2D::Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const unsigned long long &options)
-	: Texture(GL_TEXTURE_2D, genTextureUnit(), format, "Texture2D", options)
+	: Texture(GL_TEXTURE_2D, genTextureUnit(), format, RAW_TEXTURE_FLAG, options)
 	, dimensions(dimensions)
 {
 	allocateTexture(data, dimensions);
@@ -125,12 +127,22 @@ void Texture2D::purgeCache(const std::string &filePath)
 }
 void Texture2D::setTexture(void *data, size_t size)
 {
+	if (reference.compare(RAW_TEXTURE_FLAG))
+	{
+		fprintf(stderr, "Error: Texture2D setTexture() is disabled for textures loaded from disk.\n");
+		return;
+	}
 	if (size)
 		assert(size == format.pixelSize*compMul(this->dimensions));
 	Texture::setTexture(data, this->dimensions);
 }
 void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offset, size_t size)
 {
+	if (reference.compare(RAW_TEXTURE_FLAG))
+	{
+		fprintf(stderr, "Error: Texture2D setTexture() is disabled for textures loaded from disk.\n");
+		return;
+	}
 	if (size)
 		assert(size == format.pixelSize*compMul(dimensions));
 	Texture::setTexture(data, dimensions, offset);

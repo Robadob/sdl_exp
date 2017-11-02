@@ -46,6 +46,7 @@ private:
 	static std::shared_ptr<Texture2D> loadFromCache(const std::string &filePath);
 	static std::unordered_map<std::string, std::weak_ptr<Texture2D>> cache;
 	const glm::uvec2 dimensions;
+	static const char *RAW_TEXTURE_FLAG;
 };
 
 #endif //ifndef __Texture2D_h__

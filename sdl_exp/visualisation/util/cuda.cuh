@@ -52,7 +52,7 @@ namespace
     @return the internal format
     @see https://www.opengl.org/sdk/docs/man/html/glTexBuffer.xhtml
     */
-    GLuint _getInternalFormat(const unsigned int componentCount, float a=0)
+	GLenum _getInternalFormat(const unsigned int componentCount, float a = 0)
     {
 
         if (componentCount == 1) return GL_R32F;
@@ -60,14 +60,14 @@ namespace
         if (componentCount == 3 || componentCount == 4) return GL_RGBA32F;
         return 0;
     }
-    GLuint _getInternalFormat(const unsigned int componentCount, unsigned int a = 0)
+	GLenum _getInternalFormat(const unsigned int componentCount, unsigned int a = 0)
     {
         if (componentCount == 1) return GL_R32UI;
         if (componentCount == 2) return GL_RG32UI;
         if (componentCount == 3 || componentCount == 4) return GL_RGBA32UI;
         return 0;
     }
-    GLuint _getInternalFormat(const unsigned int componentCount, int a = 0)
+    GLenum _getInternalFormat(const unsigned int componentCount, int a = 0)
     {
         if (componentCount == 1) return GL_R32I;
         if (componentCount == 2) return GL_RG32I;

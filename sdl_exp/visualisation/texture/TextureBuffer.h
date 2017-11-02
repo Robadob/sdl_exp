@@ -12,17 +12,20 @@ template<class T>
 class TextureBuffer : public Texture
 {
 public:
-    TextureBuffer(const char *uniformName, const unsigned int elementCount, const unsigned int componentCount = 1, T *data = 0);
+    TextureBuffer(const unsigned int elementCount, const unsigned int componentCount = 1, T *data = 0);
 #ifdef __CUDACC__
-    TextureBuffer(char *uniformName, CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation);
+    TextureBuffer(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation);
 #endif
     ~TextureBuffer();
 
-    void setData(T *data, unsigned int size=0, unsigned int offset=0); 
-    void getData(T *dataReturn, unsigned int size=0, unsigned int offset=0);
-    void reload() override { };
+	void setData(const T *data, size_t size = 0, size_t offset = 0);
+	void getData(T *dataReturn, size_t size = 0, size_t offset = 0);
+	bool isBound() const override;
 private:
-    GLuint _getInternalFormat() const;
+	GLuint genTextureUnit();
+	static GLenum _getInternalFormat(unsigned int componentCount);
+	static GLenum _getFormat(unsigned int componentCount);
+	static GLenum _getType();
     //GL TexBuf
     const unsigned int elementCount;
     const unsigned int componentCount;

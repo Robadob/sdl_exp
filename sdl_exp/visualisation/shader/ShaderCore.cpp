@@ -176,25 +176,53 @@ void ShaderCore::useProgram()
 	//Kill if shader isn't built
 	if (this->programId <= 0)
 	{
-			return;
+		return;
 	}
 
 	GL_CALL(glUseProgram(this->programId));
 
-	//Set any Texture buffers
-	for (auto utd: textures)
-	{
-        GL_CALL(glActiveTexture(GL_TEXTURE0 + utd.first));
-        GL_CALL(glBindTexture(utd.second.type, utd.second.name));
+#ifdef _DEBUG
+	{//Debug verification that textures are bound as expected
+		GLint whichID=0;
+		for (auto utd: textures)
+		{
+		    GL_CALL(glActiveTexture(GL_TEXTURE0 + utd.first));
+			if (utd.second.type==GL_TEXTURE_2D)
+			{
+				GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID));
+			}
+			else if (utd.second.type == GL_TEXTURE_CUBE_MAP)
+			{
+				GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &whichID));
+			}
+			else if (utd.second.type == GL_TEXTURE_BUFFER)
+			{
+				GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_BUFFER, &whichID));
+			}
+			else if (utd.second.type == GL_TEXTURE_2D_MULTISAMPLE)
+			{
+				GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D_MULTISAMPLE, &whichID));
+			}
+			else
+			{
+				fprintf(stderr,"Unexpected texture type when verifying texture unit bindings, please add to ShaderCore::useProgram()\n");
+				continue;
+			}
+			//Updated textures use unique buffers, if for some reason this fails we have exceeded GL_MAX_COMBINED_TEXTURE_UNITS
+			//and must start reusing texture units (for the given texture type) based on a static flag/counter
+			assert(whichID == utd.second.name);
+		}
+		//Reset to texture unit 0 for doing work
+		GL_CALL(glActiveTexture(GL_TEXTURE0));
 	}
+#endif 
 
 	//Set any dynamic uniforms
 	for (std::map<GLint, DynamicUniformDetail>::iterator i = dynamicUniforms.begin(); i != dynamicUniforms.end(); ++i)
 	{
 		if (i->second.type == GL_FLOAT)
 		{
-            if (i->second.count == 1)
-            {
+            if (i->second.count == 1){
                 GL_CALL(glUniform1fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
             }
             else if (i->second.count == 2){
@@ -260,38 +288,6 @@ void ShaderCore::destroyProgram()
 	}
 }
 //Bindings
-int ShaderCore::addTextureUniform(GLuint texture, const char *uniformName, GLenum type)
-{
-	//Purge any existing buffer which matches
-	for (auto a = textures.begin(); a != textures.end();)
-	{
-		if ((*a).second.name == texture)
-		{
-			a = textures.erase(a);
-		}
-		else
-			++a;
-	}
-	//Find the first free key	
-	GLint bufferId = 0;
-	for (bufferId; bufferId <= (GLint)textures.size();++bufferId)
-	{
-		//If bufferId doesn't exist, break
-		if (textures.count(bufferId) == 0)
-			break;
-	}
-	GLint maxTex;
-    GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTex));
-	if (bufferId>=maxTex)
-	{
-		printf("Max texture buffers (%d) exceeded for shader %s.\n", maxTex, shaderTag);
-		return -1;
-	}
-	UniformTextureDetail utd = { texture, type };
-	textures.emplace(bufferId, utd);
-	addStaticUniform(uniformName, &bufferId);
-	return bufferId;
-}
 bool ShaderCore::addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count)
 {
 	return addDynamicUniform({ GL_INT, reinterpret_cast<const void*>(arry), count, uniformName });
@@ -496,6 +492,26 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 	}
 	lostBuffers.push_back({ bufferNameInShader, bufferType, bufferBindingPoint });
 	return false;
+}
+bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint textureName, GLuint textureUnit)
+{
+	//Purge any existing buffer which matches
+	for (auto a = textures.begin(); a != textures.end();)
+	{
+		if (a->second.name == textureName)
+		{
+			a = textures.erase(a);
+		}
+		else
+		{
+			//Check for collision of texture unit
+			assert(a->first!=textureUnit);
+			++a;
+		}
+	}
+	UniformTextureDetail utd = { textureName, type };
+	textures.emplace(textureUnit, utd);
+	return addStaticUniform(textureNameInShader, &textureUnit);
 }
 bool ShaderCore::removeDynamicUniform(const char *uniformName)
 {

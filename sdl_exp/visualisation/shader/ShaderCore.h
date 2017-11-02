@@ -11,7 +11,7 @@
 #include <memory>
 
 class BufferCore;//Implementation of addBuffer(const char *, std::shared_ptr<BufferCore>) found in BufferCore.cpp
-
+class Texture;//Impementation of addTexture(const char *textureNameInShader, std::shared_ptr<Texture> texture) found in Texture.cpp
 /**
  * This class is is a wrapper for the core OpenGL shader operations
  * Uniforms, textures and buffers can be automatically bound using the addXXX() methods, so they are provided to the shader
@@ -89,16 +89,6 @@ public:
 	 * @see glDeleteProgram(GLuint)
 	 */
 	void destroyProgram();
-	/**
-	 * Binds a texture to be loaded when useProgram() is called
-	 * If a texture with the same uniformName is already bound, it will be replaced
-	 * @param texture The name of the texture (as returned by glGenTexture())
-	 * @param uniformName The name of the uniform within the shader this texture should be bound to
-	 * @param type The type of texture being bound (e.g. GL_TEXTURE_2D)
-	 * @return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
-	 * @note Texture bindings for each shader are not unique, making them unique would save rebinding every shader call
-	 */
-	int addTextureUniform(GLuint texture, const char *uniformName, GLenum type = GL_TEXTURE_BUFFER);
 	/**
  	 * Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
      * If a dynamic uniform with the same uniformName is already bound, it will be replaced
@@ -181,9 +171,30 @@ public:
     * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
     * @see addDynamicUniform(const char *,const GLfloat *, unsigned int)
     */
-    bool addStaticUniform(const char *uniformName, const glm::mat4 *mat);
+	bool addStaticUniform(const char *uniformName, const glm::mat4 *mat);
 	/**
-	 * Attatches the specified buffer to the shader if bufferNameInShader can be found
+	 * Binds a texture to be loaded when useProgram() is called
+	 * If a uniform with the same uniformName as textureNameInShader is already bound, it will be replaced
+	 * @param textureNameInShader The name of the uniform within the shader this texture should be bound to
+	 * @param type The type of texture being bound (e.g. GL_TEXTURE_2D)
+	 * @param textureName The name of the texture (as returned by glGenTexture())
+	 * @param textureUnit The texture unit assigned to the texture (as set via glActiveTexture() glBindTexture())
+	 * @return The texture unit the texture has been bound to, on failure (due to no texture units remaining) -1
+	 * @note Texture unit bindings are not shader specific, they persist between shader calls
+	 * @note Different texture type can be bound to the same unit, the sampler type used in shader selects the correct texture
+	 */
+	bool addTexture(const char *textureNameInShader, GLenum type, GLint textureName, GLuint textureUnit);
+	/**
+	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
+	 * If a uniform with the same uniformName as textureNameInShader is already bound, it will be replaced
+	 *This will not retain the shared_ptr, it's upto you to keep it alive
+	 * @param textureNameInShader The indentifier of the buffer within the shader source
+	 * @param texture The texture to be used
+	 * @note Convenience method, implemented in Texture.cpp
+	 */
+	bool addTexture(const char *textureNameInShader, std::shared_ptr<Texture> texture);
+	/**
+	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
 	 * This is for 'program resources', NOT texture buffers
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
@@ -192,7 +203,7 @@ public:
 	 */
 	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName);
 	/**
-	* Attatches the specified buffer to the shader if bufferNameInShader can be found
+	* Attaches the specified buffer to the shader if bufferNameInShader can be found
 	* If a buffer with the same bufferNameInShader is already bound, it will be replaced
 	* This is for 'program resources', NOT texture buffers
 	* This will not retain the shared_ptr, it's upto you to keep it alive

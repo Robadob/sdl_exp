@@ -321,41 +321,41 @@ Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image)
 	switch (image->format->format)
 	{
 	case SDL_PIXELFORMAT_RGB332:
-		return Format(GL_RGB, GL_R3_G3_B2, GL_UNSIGNED_BYTE_3_3_2);
+		return Format(GL_RGB, GL_R3_G3_B2, 1, GL_UNSIGNED_BYTE_3_3_2);
 	case SDL_PIXELFORMAT_RGB444:
-		return Format(GL_RGB, GL_RGB4, GL_UNSIGNED_SHORT_4_4_4_4);
+		return Format(GL_RGB, GL_RGB4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
 	case SDL_PIXELFORMAT_BGR555:
-		return Format(GL_BGR, GL_RGB5, GL_UNSIGNED_SHORT_5_5_5_1);
+		return Format(GL_BGR, GL_RGB5, 2, GL_UNSIGNED_SHORT_5_5_5_1);
 	case SDL_PIXELFORMAT_RGB555:
-		return Format(GL_RGB, GL_RGB5, GL_UNSIGNED_SHORT_5_5_5_1);
+		return Format(GL_RGB, GL_RGB5, 2, GL_UNSIGNED_SHORT_5_5_5_1);
 	case SDL_PIXELFORMAT_ABGR4444:
-		return Format(GL_ABGR_EXT, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4);
+		return Format(GL_ABGR_EXT, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
 	case SDL_PIXELFORMAT_RGBA4444:
-		return Format(GL_RGBA, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4);
+		return Format(GL_RGBA, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
 	case SDL_PIXELFORMAT_BGRA4444:
-		return Format(GL_BGRA, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4);
+		return Format(GL_BGRA, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
 	case SDL_PIXELFORMAT_BGRA5551:
-		return Format(GL_BGRA, GL_RGB5_A1, GL_UNSIGNED_SHORT_5_5_5_1);
+		return Format(GL_BGRA, GL_RGB5_A1, 2, GL_UNSIGNED_SHORT_5_5_5_1);
 	case SDL_PIXELFORMAT_RGBA5551:
-		return Format(GL_RGBA, GL_RGB5_A1, GL_UNSIGNED_SHORT_5_5_5_1);
+		return Format(GL_RGBA, GL_RGB5_A1, 2, GL_UNSIGNED_SHORT_5_5_5_1);
 	case SDL_PIXELFORMAT_RGB565:
-		return Format(GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);//None specific
+		return Format(GL_RGB, GL_RGB, 2, GL_UNSIGNED_SHORT_5_6_5);
 	case SDL_PIXELFORMAT_BGR565:
-		return Format(GL_BGR, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);//None specific
+		return Format(GL_BGR, GL_RGB, 2, GL_UNSIGNED_SHORT_5_6_5);
 	case SDL_PIXELFORMAT_RGB24:
-		return Format(GL_RGB, GL_RGB8, GL_UNSIGNED_BYTE);//Is this correct?
+		return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);//Is this correct?
 	case SDL_PIXELFORMAT_BGR24:
-		return Format(GL_BGR, GL_RGB8, GL_UNSIGNED_BYTE);//Is this correct?
+		return Format(GL_BGR, GL_RGB8, 3, GL_UNSIGNED_BYTE);//Is this correct?
 	case SDL_PIXELFORMAT_RGB888:
-		return Format(GL_RGB, GL_RGB8, GL_UNSIGNED_BYTE);//Is this correct?
+		return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);//Is this correct?
 	case SDL_PIXELFORMAT_BGR888:
-		return Format(GL_BGR, GL_RGB8, GL_UNSIGNED_BYTE);//Is this correct?
+		return Format(GL_BGR, GL_RGB8, 3, GL_UNSIGNED_BYTE);//Is this correct?
 	case SDL_PIXELFORMAT_RGBA8888:
-		return Format(GL_RGBA, GL_RGBA8, GL_UNSIGNED_INT_8_8_8_8);
+		return Format(GL_RGBA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
 	case SDL_PIXELFORMAT_ABGR8888:
-		return Format(GL_ABGR_EXT, GL_RGBA8, GL_UNSIGNED_INT_8_8_8_8);
+		return Format(GL_ABGR_EXT, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
 	case SDL_PIXELFORMAT_BGRA8888:
-		return Format(GL_BGRA, GL_RGBA8, GL_UNSIGNED_INT_8_8_8_8);
+		return Format(GL_BGRA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
 	//Possible if we bother to write reorder to RGBA functions
 	case SDL_PIXELFORMAT_ARGB4444:
 		//return Format(GL_RGBA, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4);
@@ -386,7 +386,7 @@ Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image)
 		fprintf(stderr, "Unable to handle SDL_PIXELFORMAT: %d\n", image->format->format);
 		assert(false);
 	}
-	return Format(0, 0, 0);
+	return Format(0, 0, 0, 0);
 }
 //Comment out this include if not making use of Shaders/ShaderCore
 #include "../shader/ShaderCore.h"

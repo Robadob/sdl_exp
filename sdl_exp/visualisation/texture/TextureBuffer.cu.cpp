@@ -9,7 +9,7 @@ Creates the texture buffer
 */
 template<class T>
 TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned int componentCount, T *data)
-	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), _getType()), "-", 0)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), componentCount*sizeof(T), _getType()), "-", 0)
     , elementCount(elementCount)
     , componentCount(componentCount)
 #ifdef __CUDACC__
@@ -21,7 +21,7 @@ TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned 
     GL_CALL(glGenBuffers(1, &TBO));
     //Size buffer and tie to tex
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
-    GL_CALL(glBufferData(GL_TEXTURE_BUFFER, sizeof(T)*elementCount * componentCount, (void*)data, GL_STATIC_DRAW));
+    GL_CALL(glBufferData(GL_TEXTURE_BUFFER, format.pixelSize*elementCount, (void*)data, GL_STATIC_DRAW));
     GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, glName));
 	GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, _getInternalFormat(componentCount), TBO));
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));

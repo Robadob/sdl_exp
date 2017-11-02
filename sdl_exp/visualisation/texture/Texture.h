@@ -15,8 +15,8 @@ class Texture
 public:
 	struct Format
 	{
-		Format(GLenum format, GLenum internalFormat, GLenum type = GL_UNSIGNED_BYTE)
-			: format(format), internalFormat(internalFormat), type(type)
+		Format(GLenum format, GLenum internalFormat, size_t pixelSize, GLenum type)
+			: format(format), internalFormat(internalFormat), type(type), pixelSize(pixelSize)
 		{ }
 		bool operator==(const Format& other) const
 		{
@@ -28,6 +28,7 @@ public:
 		const GLenum format;
 		const GLenum internalFormat;
 		const GLenum type;
+		const size_t pixelSize;//inBytes
 	};
 	static const unsigned long long DISABLE_ANISTROPIC_FILTERING;
 

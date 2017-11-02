@@ -20,14 +20,22 @@ Texture2D::Texture2D(const Texture2D& b)
 	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
 	, dimensions(b.dimensions)
 {
-	//Copy the actual texture data (THIS IS UNTESTED, WHAT HAPPENS IF WE HAVE A GL_RGB texture?)
-	unsigned char *tex = (unsigned char *)malloc(4*sizeof(unsigned char)*compMul(dimensions));
+	//Negate the need for padding
+	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+	//Copy the actual texture data
+	const size_t dataSize = format.pixelSize*compMul(dimensions);
+	unsigned char *tex = (unsigned char *)malloc(dataSize);
 	GL_CALL(glBindTexture(b.type, b.glName));
-	GL_CALL(glGetTexImage(b.type, 0, format.format, format.type, tex));
+	GL_CALL(glGetTextureImage(b.type, 0, format.format, format.type, dataSize, tex));
 	GL_CALL(glBindTexture(type, glName));
 	GL_CALL(glTexStorage2D(type, enableMipMapOption() ? 4 : 1, format.internalFormat, dimensions.x, dimensions.y));//Must not be called twice on the same gl tex
 	GL_CALL(glTexSubImage2D(type, 0, 0, 0, dimensions.x, dimensions.y, format.format, format.type, tex));
 	free(tex);
+	//Reset the need for padding
+	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
+	applyOptions();
 }
 /**
  * Cache handling

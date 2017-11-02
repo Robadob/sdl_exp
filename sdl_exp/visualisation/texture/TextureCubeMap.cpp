@@ -40,17 +40,25 @@ TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE
 TextureCubeMap::TextureCubeMap(const TextureCubeMap& b)
 	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
 {
-	//Copy the actual texture data (THIS IS UNTESTED, WHAT HAPPENS IF WE HAVE A GL_RGB texture?)
-	unsigned char *tex = (unsigned char *)malloc(4 * sizeof(unsigned char)*compMul(faceDimensions));
+	//Negate the need for padding
+	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+	//Copy the actual texture data
+	const size_t dataSize = format.pixelSize*compMul(faceDimensions);
+	unsigned char *tex = (unsigned char *)malloc(dataSize);
 	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
 	{
 		GL_CALL(glBindTexture(b.type, b.glName));
-		GL_CALL(glGetTexImage(FACES[i].target, 0, format.format, format.type, tex));
+		GL_CALL(glGetTextureImage(FACES[i].target, 0, format.format, format.type, dataSize, tex));
 		GL_CALL(glBindTexture(type, glName));
 		GL_CALL(glTexStorage2D(FACES[i].target, enableMipMapOption() ? 4 : 1, format.internalFormat, faceDimensions.x, faceDimensions.y));//Must not be called twice on the same gl tex
 		GL_CALL(glTexSubImage2D(FACES[i].target, 0, 0, 0, faceDimensions.x, faceDimensions.y, format.format, format.type, tex));
 	}
 	free(tex);
+	//Reset the need for padding
+	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
+	applyOptions();
 }
 /**
 * Cache handling

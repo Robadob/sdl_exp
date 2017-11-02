@@ -27,7 +27,7 @@ Texture2D::Texture2D(const Texture2D& b)
 	const size_t dataSize = format.pixelSize*compMul(dimensions);
 	unsigned char *tex = (unsigned char *)malloc(dataSize);
 	GL_CALL(glBindTexture(b.type, b.glName));
-	GL_CALL(glGetTextureImage(b.type, 0, format.format, format.type, dataSize, tex));
+	GL_CALL(glGetTextureImage(b.type, 0, format.format, format.type, (GLsizei)dataSize, tex));
 	GL_CALL(glBindTexture(type, glName));
 	GL_CALL(glTexStorage2D(type, enableMipMapOption() ? 4 : 1, format.internalFormat, dimensions.x, dimensions.y));//Must not be called twice on the same gl tex
 	GL_CALL(glTexSubImage2D(type, 0, 0, 0, dimensions.x, dimensions.y, format.format, format.type, tex));

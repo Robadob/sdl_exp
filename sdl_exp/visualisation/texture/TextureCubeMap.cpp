@@ -49,7 +49,7 @@ TextureCubeMap::TextureCubeMap(const TextureCubeMap& b)
 	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
 	{
 		GL_CALL(glBindTexture(b.type, b.glName));
-		GL_CALL(glGetTextureImage(FACES[i].target, 0, format.format, format.type, dataSize, tex));
+		GL_CALL(glGetTextureImage(FACES[i].target, 0, format.format, format.type, (GLsizei)dataSize, tex));
 		GL_CALL(glBindTexture(type, glName));
 		GL_CALL(glTexStorage2D(FACES[i].target, enableMipMapOption() ? 4 : 1, format.internalFormat, faceDimensions.x, faceDimensions.y));//Must not be called twice on the same gl tex
 		GL_CALL(glTexSubImage2D(FACES[i].target, 0, 0, 0, faceDimensions.x, faceDimensions.y, format.format, format.type, tex));

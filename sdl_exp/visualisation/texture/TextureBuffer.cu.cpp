@@ -39,7 +39,7 @@ TextureBuffer<T>::TextureBuffer(const TextureBuffer<T>& b)
 	//Get buffer data
 	size_t bufSize = format.pixelSize*elementCount;
 	void * bufData = malloc(bufSize);
-	b.getData(bufData, bufSize);
+	b.getData((T*)bufData, bufSize);
 	//Bind new buffer to new texture
 	GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
 	GL_CALL(glBufferData(GL_TEXTURE_BUFFER, bufSize, bufData, GL_STATIC_DRAW));
@@ -89,14 +89,14 @@ TextureBuffer<T>::~TextureBuffer(){
 template<class T>
 std::shared_ptr<TextureBuffer<T>> TextureBuffer<T>::make(const unsigned int elementCount, const unsigned int componentCount, T *data)
 {
-	return std::make_shared<TextureBuffer<T>>(elementCount, componentCount, data);
+	return std::shared_ptr<TextureBuffer<T>>(new TextureBuffer<T>(elementCount, componentCount, data));
 }
 
 #ifdef __CUDACC__
 template<class T>
 std::shared_ptr<TextureBuffer<T>> TextureBuffer<T>::make(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation)
 {
-	return std::make_shared<TextureBuffer<T>>(cuTexBuf, handleDeallocation);
+	return std::shared_ptr<TextureBuffer<T>>(new TextureBuffer<T>(cuTexBuf, handleDeallocation));
 }
 #endif
 /**
@@ -112,7 +112,7 @@ void TextureBuffer<T>::setData(const T *data, size_t size, size_t offset){
     //GL_CALL(glNamedBufferSubData(TBO, offset, size, (void*)data));//GL4.5+
 }
 template<class T>
-void TextureBuffer<T>::getData(T *dataReturn, size_t size, size_t offset){
+void TextureBuffer<T>::getData(T *dataReturn, size_t size, size_t offset) const{
     if (size == 0)
 		size = format.pixelSize*elementCount;
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
@@ -169,23 +169,29 @@ GLenum TextureBuffer<T>::_getFormat(unsigned int componentCount) {
 /**
  * Util
  */
+namespace
+{
+	//We use an anonymous namespace static here
+	//Use of templates causes method level static to be unique to each template instance
+	//We need them to share texture units, as they are all GL_TEXTURE_BUFFER
+	GLuint TextureBuffer_T_texUnit = 1;
+}
 template<class T>
 GLuint TextureBuffer<T>::genTextureUnit()
 {
-	static GLuint texUnit = 1;
 	GLint maxUnits;
 	GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));//192 on Modern GPUs, spec minimum 80
 #ifdef _DEBUG
-	assert(texUnit < (GLuint)maxUnits);
+	assert(TextureBuffer_T_texUnit < (GLuint)maxUnits);
 #endif
-	if (texUnit < (GLuint)maxUnits)
+	if (TextureBuffer_T_texUnit < (GLuint)maxUnits)
 	{
-		texUnit = 1;
+		TextureBuffer_T_texUnit = 1;
 		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D, enable texture switching");
 		//If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
 		//Possibly even notifying it of duplicate units
 	}
-	return texUnit++;
+	return TextureBuffer_T_texUnit++;
 }
 template<class T>
 bool TextureBuffer<T>::isBound() const

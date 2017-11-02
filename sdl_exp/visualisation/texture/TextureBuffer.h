@@ -45,7 +45,7 @@ public:
 	 * @param size The number of bytes to be copied. If 0 this defaults to the size of the buffer
 	 * @param offset The byte offset into the buffer. Defaults to 0
 	 */
-	void getData(T *dataReturn, size_t size = 0, size_t offset = 0);
+	void getData(T *dataReturn, size_t size = 0, size_t offset = 0) const;
 	/**
 	 * Returns whether this is the currently bound texture
 	 * @note This does not check whether it is the currently bound buffer!

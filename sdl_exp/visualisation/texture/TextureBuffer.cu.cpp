@@ -1,12 +1,9 @@
 #include "TextureBuffer.h"
 #include <cassert>
 
-/*
-Creates the texture buffer
-@param uniformName Name of the uniform to be used
-@param elementCount The number of elements to be stored in the buffer
-@param componentCount The number of components per element (1-4)
-*/
+/**
+ * Constructors
+ */
 template<class T>
 TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned int componentCount, T *data)
 	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), componentCount*sizeof(T), _getType()), "TextureBuffer", 0)
@@ -54,12 +51,6 @@ TextureBuffer<T>::TextureBuffer(const TextureBuffer<T>& b)
 	free(bufData);	
 }
 #ifdef __CUDACC__
-/*
-Creates the texture buffer from a preallocated CUDATextureBuffer
-@param uniformName Name of the uniform to be used
-@param cuTexBuf The pointer to the CUDATextureBuffer
-@param handleDeallocation If true, at destruction of this object the CUDATextureBuffer will be deallocated
-*/
 template<class T>
 TextureBuffer<T>::TextureBuffer(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation)
 	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(cuTexBuf->componentCount), _getInternalFormat(cuTexBuf->componentCount)), "TextureBuffer", 0, cuTexBuf->glTexName)
@@ -92,12 +83,25 @@ TextureBuffer<T>::~TextureBuffer(){
         TBO = 0;
     }
 }
-/*
-Copies data into the texture buffer
-@param data Pointer to the source data to be copied
-@param size The number of bytes to be copied. If 0 this defaults to the size of the buffer
-@param offset The byte offset into the buffer. Defaults to 0
-*/
+/**
+ * Factories
+ */
+template<class T>
+std::shared_ptr<TextureBuffer<T>> TextureBuffer<T>::make(const unsigned int elementCount, const unsigned int componentCount, T *data)
+{
+	return std::make_shared<TextureBuffer<T>>(elementCount, componentCount, data);
+}
+
+#ifdef __CUDACC__
+template<class T>
+std::shared_ptr<TextureBuffer<T>> TextureBuffer<T>::make(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation)
+{
+	return std::make_shared<TextureBuffer<T>>(cuTexBuf, handleDeallocation);
+}
+#endif
+/**
+ * Buffer accessors
+ */
 template<class T>
 void TextureBuffer<T>::setData(const T *data, size_t size, size_t offset){
     if (size == 0)
@@ -107,12 +111,6 @@ void TextureBuffer<T>::setData(const T *data, size_t size, size_t offset){
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
     //GL_CALL(glNamedBufferSubData(TBO, offset, size, (void*)data));//GL4.5+
 }
-/*
-Copies data out of the texture buffer
-@param dataReturn Pointer to the destination that data will be copied
-@param size The number of bytes to be copied. If 0 this defaults to the size of the buffer
-@param offset The byte offset into the buffer. Defaults to 0
-*/
 template<class T>
 void TextureBuffer<T>::getData(T *dataReturn, size_t size, size_t offset){
     if (size == 0)
@@ -121,10 +119,9 @@ void TextureBuffer<T>::getData(T *dataReturn, size_t size, size_t offset){
     GL_CALL(glGetBufferSubData(GL_TEXTURE_BUFFER, offset, size, (void*)dataReturn));
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
 }
-/*
-Returns the internal format of a float buffer based on the componentCount
-@return The internal format of the element
-*/
+/**
+ * Static enum calculators
+ */
 template<>
 GLenum TextureBuffer<float>::_getInternalFormat(unsigned int componentCount) {
     if (componentCount == 1) return GL_R32F;
@@ -133,10 +130,6 @@ GLenum TextureBuffer<float>::_getInternalFormat(unsigned int componentCount) {
     if (componentCount == 4) return GL_RGBA32F;
     return 0;
 }
-/*
-Returns the internal format of an int buffer based on the componentCount
-@return The internal format of the element
-*/
 template<>
 GLenum TextureBuffer<unsigned int>::_getInternalFormat(unsigned int componentCount) {
     if (componentCount == 1) return GL_R32UI;
@@ -145,10 +138,6 @@ GLenum TextureBuffer<unsigned int>::_getInternalFormat(unsigned int componentCou
     if (componentCount == 4) return GL_RGBA32UI;
     return 0;
 }
-/*
-Returns the internal format of an unsigned int buffer based on the componentCount
-@return The internal format of the element
-*/
 template<>
 GLenum TextureBuffer<int>::_getInternalFormat(unsigned int componentCount) {
     if (componentCount == 1) return GL_R32I;
@@ -178,8 +167,8 @@ GLenum TextureBuffer<T>::_getFormat(unsigned int componentCount) {
 	return 0;
 }
 /**
-* Required methods for handling texture units
-*/
+ * Util
+ */
 template<class T>
 GLuint TextureBuffer<T>::genTextureUnit()
 {

@@ -24,17 +24,23 @@ public:
 	 * @param skipCache If false the returned Texture2D will be added to or loaded from the cache
 	 */
 	static std::shared_ptr<Texture2D> load(const std::string &filepath, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
+	static std::shared_ptr<Texture2D> make(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data = nullptr, const unsigned long long &options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
+	static std::shared_ptr<Texture2D> make(const glm::uvec2 &dimensions, const Texture::Format &format, const unsigned long long &options);
+
 	static bool isCached(const std::string &filePath);
 	Texture2D(const Texture2D& b);
 	Texture2D(const Texture2D&& b) = delete;
 	Texture2D& operator= (const Texture2D& b) = delete;
 	Texture2D& operator= (const Texture2D&& b) = delete;
+	void setTexture(void *data, size_t size = 0);
+	void setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offset, size_t size = 0);
 	glm::uvec2 getDimensions() const { return dimensions; }
 	unsigned int getWidth() const { return dimensions.x; }
 	unsigned int getHeight() const { return dimensions.y; }
 	bool isBound() const override;
 private:
 	Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
+	Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data = nullptr, const unsigned long long &options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
 	static GLuint genTextureUnit();
 	static void purgeCache(const std::string &filePath);
 	static std::shared_ptr<Texture2D> loadFromCache(const std::string &filePath);

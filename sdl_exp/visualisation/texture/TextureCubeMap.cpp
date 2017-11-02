@@ -30,7 +30,7 @@ TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE
 		assert(images[i]->w == faceDimensions.x);//All must share dimensions and pixel format
 		assert(images[i]->h == faceDimensions.y);
 		assert(getFormat(images[i]) == format);
-		fillTexture(images[i], FACES[i].target);
+		allocateTexture(images[i], FACES[i].target);
 	}
 	applyOptions();
 }

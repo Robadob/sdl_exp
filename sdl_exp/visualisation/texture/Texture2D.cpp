@@ -10,7 +10,14 @@ Texture2D::Texture2D(std::shared_ptr<SDL_Surface> image, const std::string refer
 	, dimensions(image->w, image->h)
 {
 	assert(image);
-	fillTexture(image);
+	allocateTexture(image);
+	applyOptions();
+}
+Texture2D::Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const unsigned long long &options)
+	: Texture(GL_TEXTURE_2D, genTextureUnit(), format, "Texture2D", options)
+	, dimensions(dimensions)
+{
+	allocateTexture(data, dimensions);
 	applyOptions();
 }
 /**
@@ -36,6 +43,17 @@ Texture2D::Texture2D(const Texture2D& b)
 	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
 	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
 	applyOptions();
+}
+/**
+ * Factory
+ */
+std::shared_ptr<Texture2D> Texture2D::make(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const unsigned long long &options)
+{
+	return std::shared_ptr<Texture2D>(new Texture2D(dimensions, format, data, options));
+}
+std::shared_ptr<Texture2D> Texture2D::make(const glm::uvec2 &dimensions, const Texture::Format &format, const unsigned long long &options)
+{
+	return make(dimensions, format, nullptr, options);
 }
 /**
  * Cache handling
@@ -104,6 +122,18 @@ void Texture2D::purgeCache(const std::string &filePath)
 		//Erase record
 		cache.erase(a);
 	}
+}
+void Texture2D::setTexture(void *data, size_t size)
+{
+	if (size)
+		assert(size == format.pixelSize*compMul(this->dimensions));
+	Texture::setTexture(data, this->dimensions);
+}
+void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offset, size_t size)
+{
+	if (size)
+		assert(size == format.pixelSize*compMul(dimensions));
+	Texture::setTexture(data, dimensions, offset);
 }
 /**
  * Required methods for handling texture units

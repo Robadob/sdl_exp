@@ -5,6 +5,7 @@
 #include <SDL/SDL_image.h>
 #include <string>
 #include <memory>
+#include <glm/vec2.hpp>
 
 /**
  * Shell texture class providing various utility methods for subclasses
@@ -80,7 +81,9 @@ protected:
 	 * @param target The texture target, if left as default 'type' will be used, only fancy textures like cube map require this parameter
 	 * @note This function uses glTexStorage2D so cannot be called multiple times with the same target
 	 */
-	void fillTexture(std::shared_ptr<SDL_Surface> image, GLenum target=0);
+	void allocateTexture(std::shared_ptr<SDL_Surface> image, GLenum target = 0);
+	void allocateTexture(const void *data, const glm::uvec2 &dimensions, GLenum target = 0);
+	void setTexture(const void *data, const glm::uvec2 &dimensions, glm::ivec2 offset = glm::ivec2(0), GLenum target = 0);
 	const GLenum type;
 	const GLuint glName;	
 	const GLuint textureUnit;

@@ -268,24 +268,51 @@ bool Texture::flipRows(std::shared_ptr<SDL_Surface> img)
 	free(temp_row);
 	return true;
 }
-void Texture::fillTexture(std::shared_ptr<SDL_Surface> image, GLenum target)
+void Texture::allocateTexture(std::shared_ptr<SDL_Surface> image, GLenum target)
 {
-	GLint internalFormat = image->format->BytesPerPixel == 3 ? GL_RGB : GL_RGBA;
-
+	target = target == 0 ? type : target;
 	GL_CALL(glBindTexture(type, glName));
 	//If the image is stored with a pitch different to width*bytes per pixel, temp change setting
 	if (image->pitch / image->format->BytesPerPixel != image->w)
 	{
 		GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel));
 	}
-	GLint sizedIF = image->format->BytesPerPixel == 3 ? GL_RGB8 : GL_RGBA8;
-	GL_CALL(glTexStorage2D(type, enableMipMapOption() ? 4 : 1, sizedIF, image->w, image->h));//Must not be called twice on the same gl tex
-	GL_CALL(glTexSubImage2D(type, 0, 0, 0, image->w, image->h, internalFormat, GL_UNSIGNED_BYTE, image->pixels));
+	GL_CALL(glTexStorage2D(target, enableMipMapOption() ? 4 : 1, format.internalFormat, image->w, image->h));//Must not be called twice on the same gl tex
+	GL_CALL(glTexSubImage2D(target, 0, 0, 0, image->w, image->h, format.format, format.type, image->pixels));
 	//Disable custom pitch
 	if (image->pitch / image->format->BytesPerPixel != image->w)
 	{
 		GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
 	}
+	GL_CALL(glBindTexture(type, 0));
+}
+void Texture::allocateTexture(const void *data, const glm::uvec2 &dimensions, GLenum target)
+{
+	target = target == 0 ? type : target;
+	GL_CALL(glBindTexture(type, glName));
+	//Set custom algin, for safety
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+	GL_CALL(glTexStorage2D(target, enableMipMapOption() ? 4 : 1, format.internalFormat, dimensions.x, dimensions.y));//Must not be called twice on the same gl tex
+	if (data)
+	{
+		GL_CALL(glTexSubImage2D(target, 0, 0, 0, dimensions.x, dimensions.y, format.format, format.type, data));
+	}
+	//Disable custom align
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
+	GL_CALL(glBindTexture(type, 0));
+}
+void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::ivec2 offset, GLenum target)
+{
+	target = target == 0 ? type : target;
+	GL_CALL(glBindTexture(type, glName));
+	//Set custom algin, for safety
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+	if (data)
+	{
+		GL_CALL(glTexSubImage2D(target, 0, offset.x, offset.y, dimensions.x, dimensions.y, format.format, format.type, data));
+	}
+	//Disable custom align
+	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
 	GL_CALL(glBindTexture(type, 0));
 }
 

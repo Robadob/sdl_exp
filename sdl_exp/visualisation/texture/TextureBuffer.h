@@ -16,6 +16,10 @@ public:
 #ifdef __CUDACC__
     TextureBuffer(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation);
 #endif
+	TextureBuffer(const TextureBuffer<T>& b);
+	TextureBuffer(const TextureBuffer<T>&& b) = delete;
+	TextureBuffer<T>& operator= (const TextureBuffer<T>& b) = delete;
+	TextureBuffer<T>& operator= (const TextureBuffer<T>&& b) = delete;
     ~TextureBuffer();
 
 	void setData(const T *data, size_t size = 0, size_t offset = 0);

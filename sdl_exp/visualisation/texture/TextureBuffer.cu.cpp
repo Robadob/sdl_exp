@@ -9,7 +9,7 @@ Creates the texture buffer
 */
 template<class T>
 TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned int componentCount, T *data)
-	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), componentCount*sizeof(T), _getType()), "-", 0)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(componentCount), _getInternalFormat(componentCount), componentCount*sizeof(T), _getType()), "TextureBuffer", 0)
     , elementCount(elementCount)
     , componentCount(componentCount)
 #ifdef __CUDACC__
@@ -27,7 +27,32 @@ TextureBuffer<T>::TextureBuffer(const unsigned int elementCount, const unsigned 
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
     GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, 0));
 }
-
+template<class T>
+TextureBuffer<T>::TextureBuffer(const TextureBuffer<T>& b)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), b.format, "TextureBuffer", 0)
+	, elementCount(b.elementCount)
+	, componentCount(b.componentCount)
+#ifdef __CUDACC__
+	, cuTexBuf(0)
+	, handleDeallocation(true)
+#endif
+{
+	//Gen buffer
+	GL_CALL(glGenBuffers(1, &TBO));
+	//Get buffer data
+	size_t bufSize = format.pixelSize*elementCount;
+	void * bufData = malloc(bufSize);
+	b.getData(bufData, bufSize);
+	//Bind new buffer to new texture
+	GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
+	GL_CALL(glBufferData(GL_TEXTURE_BUFFER, bufSize, bufData, GL_STATIC_DRAW));
+	GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, glName));
+	GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, _getInternalFormat(componentCount), TBO));
+	GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
+	GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, 0));
+	//Free buffer data
+	free(bufData);	
+}
 #ifdef __CUDACC__
 /*
 Creates the texture buffer from a preallocated CUDATextureBuffer
@@ -37,7 +62,7 @@ Creates the texture buffer from a preallocated CUDATextureBuffer
 */
 template<class T>
 TextureBuffer<T>::TextureBuffer(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation)
-	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(cuTexBuf->componentCount), _getInternalFormat(cuTexBuf->componentCount)), "-", 0, cuTexBuf->glTexName)
+	: Texture(GL_TEXTURE_BUFFER, genTextureUnit(), Format(_getFormat(cuTexBuf->componentCount), _getInternalFormat(cuTexBuf->componentCount)), "TextureBuffer", 0, cuTexBuf->glTexName)
     , cuTexBuf(cuTexBuf)
     , handleDeallocation(handleDeallocation)
     , elementCount(cuTexBuf->elementCount)
@@ -76,7 +101,7 @@ Copies data into the texture buffer
 template<class T>
 void TextureBuffer<T>::setData(const T *data, size_t size, size_t offset){
     if (size == 0)
-        size = sizeof(T)*elementCount*componentCount;
+		size = format.pixelSize*elementCount;
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
     GL_CALL(glBufferSubData(GL_TEXTURE_BUFFER, offset, size, (void*)data));
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));
@@ -91,7 +116,7 @@ Copies data out of the texture buffer
 template<class T>
 void TextureBuffer<T>::getData(T *dataReturn, size_t size, size_t offset){
     if (size == 0)
-        size = sizeof(T)*elementCount*componentCount;
+		size = format.pixelSize*elementCount;
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, TBO));
     GL_CALL(glGetBufferSubData(GL_TEXTURE_BUFFER, offset, size, (void*)dataReturn));
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, 0));

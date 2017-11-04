@@ -16,12 +16,14 @@ const TextureCubeMap::CubeMapParts TextureCubeMap::FACES[] = {
     CubeMapParts(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, "front"),
     CubeMapParts(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, "back")
 };
+std::unordered_map<std::string, std::weak_ptr<const TextureCubeMap>> TextureCubeMap::cache;
 /**
  * Constructors
  */
 TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE_COUNT], const std::string reference, const unsigned long long options)
 	:Texture(GL_TEXTURE_CUBE_MAP, genTextureUnit(), getFormat(images[0]), reference, options)
 	, faceDimensions(images[0]->w, images[0]->h)
+    , immutable(true)
 {
 	GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
 	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
@@ -30,7 +32,7 @@ TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE
 		assert(images[i]->w == faceDimensions.x);//All must share dimensions and pixel format
 		assert(images[i]->h == faceDimensions.y);
 		assert(getFormat(images[i]) == format);
-		allocateTexture(images[i], FACES[i].target);
+		allocateTextureImmutable(images[i], FACES[i].target);
 	}
 	applyOptions();
 }
@@ -39,31 +41,24 @@ TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE
  */
 TextureCubeMap::TextureCubeMap(const TextureCubeMap& b)
 	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
+    , immutable(false)
 {
-	//Negate the need for padding
-	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 1));
-	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-	//Copy the actual texture data
-	const size_t dataSize = format.pixelSize*compMul(faceDimensions);
-	unsigned char *tex = (unsigned char *)malloc(dataSize);
-	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
-	{
-		GL_CALL(glBindTexture(b.type, b.glName));
-		GL_CALL(glGetTextureImage(FACES[i].target, 0, format.format, format.type, (GLsizei)dataSize, tex));
-		GL_CALL(glBindTexture(type, glName));
-		GL_CALL(glTexStorage2D(FACES[i].target, enableMipMapOption() ? 4 : 1, format.internalFormat, faceDimensions.x, faceDimensions.y));//Must not be called twice on the same gl tex
-		GL_CALL(glTexSubImage2D(FACES[i].target, 0, 0, 0, faceDimensions.x, faceDimensions.y, format.format, format.type, tex));
-	}
-	free(tex);
-	//Reset the need for padding
-	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
-	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
-	applyOptions();
+    //Allocate each face
+    for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
+    {
+        allocateTextureMutable(faceDimensions, nullptr, FACES[i].target);
+    }
+    //Copy all faces simultaneously
+    GL_CALL(glCopyImageSubData(
+        b.glName, b.type, 0, 0, 0, 0,
+        glName, type, 0, 0, 0, 0,
+        b.faceDimensions.x, b.faceDimensions.y, 6));
+    applyOptions();
 }
 /**
 * Cache handling
 */
-std::shared_ptr<TextureCubeMap> TextureCubeMap::loadFromCache(const std::string &filePath)
+std::shared_ptr<const TextureCubeMap> TextureCubeMap::loadFromCache(const std::string &filePath)
 {
 	auto a = cache.find(filePath);
 	if (a != cache.end())
@@ -78,10 +73,10 @@ std::shared_ptr<TextureCubeMap> TextureCubeMap::loadFromCache(const std::string 
 	}
 	return nullptr;
 }
-std::shared_ptr<TextureCubeMap> TextureCubeMap::load(const std::string &filePath, const unsigned long long options, bool skipCache)
+std::shared_ptr<const TextureCubeMap> TextureCubeMap::load(const std::string &filePath, const unsigned long long options, bool skipCache)
 {
 	//Attempt from cache
-	std::shared_ptr<TextureCubeMap> rtn;
+    std::shared_ptr<const TextureCubeMap> rtn;
 	if (!skipCache)
 	{
 		rtn = loadFromCache(filePath);
@@ -100,7 +95,7 @@ std::shared_ptr<TextureCubeMap> TextureCubeMap::load(const std::string &filePath
 				return rtn;
 		}
 		//Pass to constructor
-		rtn = std::shared_ptr<TextureCubeMap>(new TextureCubeMap(images, filePath, options),
+        rtn = std::shared_ptr<const TextureCubeMap>(new TextureCubeMap(images, filePath, options),
 			[&](TextureCubeMap *ptr){//Custom deleter, which purges cache of item
 			TextureCubeMap::purgeCache(ptr->getReference());
 			delete ptr;

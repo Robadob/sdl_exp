@@ -121,6 +121,8 @@ GLenum Texture::wrapOption() const
 const unsigned long long Texture::DISABLE_MIPMAP = 1ull << 14;
 bool Texture::enableMipMapOption() const
 {
+    if (type == GL_TEXTURE_BUFFER || type == GL_TEXTURE_2D_MULTISAMPLE || type == GL_TEXTURE_RECTANGLE || type == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
+        return false;//These formats don't support mimap
 	return  !((options & DISABLE_MIPMAP) == DISABLE_MIPMAP);
 }
 
@@ -268,7 +270,7 @@ bool Texture::flipRows(std::shared_ptr<SDL_Surface> img)
 	free(temp_row);
 	return true;
 }
-void Texture::allocateTexture(std::shared_ptr<SDL_Surface> image, GLenum target)
+void Texture::allocateTextureImmutable(std::shared_ptr<SDL_Surface> image, GLenum target)
 {
 	target = target == 0 ? type : target;
 	GL_CALL(glBindTexture(type, glName));
@@ -286,7 +288,7 @@ void Texture::allocateTexture(std::shared_ptr<SDL_Surface> image, GLenum target)
 	}
 	GL_CALL(glBindTexture(type, 0));
 }
-void Texture::allocateTexture(const void *data, const glm::uvec2 &dimensions, GLenum target)
+void Texture::allocateTextureImmutable(const glm::uvec2 &dimensions, const void *data, GLenum target)
 {
 	target = target == 0 ? type : target;
 	GL_CALL(glBindTexture(type, glName));
@@ -300,6 +302,17 @@ void Texture::allocateTexture(const void *data, const glm::uvec2 &dimensions, GL
 	//Disable custom align
 	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
 	GL_CALL(glBindTexture(type, 0));
+}
+void Texture::allocateTextureMutable(const glm::uvec2 &dimensions, const void *data, GLenum target)
+{
+    target = target == 0 ? type : target;
+    GL_CALL(glBindTexture(type, glName));
+    //Set custom algin, for safety
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    GL_CALL(glTexImage2D(target, 0, format.internalFormat, dimensions.x, dimensions.y, 0, format.format, format.type, data));
+    //Disable custom align
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
+    GL_CALL(glBindTexture(type, 0));
 }
 void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::ivec2 offset, GLenum target)
 {

@@ -3,6 +3,7 @@
 #include <glm/gtx/component_wise.hpp>
 
 const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
+std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache;
 
 /**
 * Constructors
@@ -10,16 +11,18 @@ const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
 Texture2D::Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const unsigned long long options)
 	: Texture(GL_TEXTURE_2D, genTextureUnit(), getFormat(image), reference, options)
 	, dimensions(image->w, image->h)
+    , immutable(true)
 {
 	assert(image);
-	allocateTexture(image);
+	allocateTextureImmutable(image);
 	applyOptions();
 }
 Texture2D::Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const unsigned long long &options)
 	: Texture(GL_TEXTURE_2D, genTextureUnit(), format, RAW_TEXTURE_FLAG, options)
 	, dimensions(dimensions)
+    , immutable(false)
 {
-	allocateTexture(data, dimensions);
+    allocateTextureMutable(dimensions, data);
 	applyOptions();
 }
 /**
@@ -28,22 +31,13 @@ Texture2D::Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format
 Texture2D::Texture2D(const Texture2D& b)
 	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
 	, dimensions(b.dimensions)
+    , immutable(false)
 {
-	//Negate the need for padding
-	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 1));
-	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-	//Copy the actual texture data
-	const size_t dataSize = format.pixelSize*compMul(dimensions);
-	unsigned char *tex = (unsigned char *)malloc(dataSize);
-	GL_CALL(glBindTexture(b.type, b.glName));
-	GL_CALL(glGetTextureImage(b.type, 0, format.format, format.type, (GLsizei)dataSize, tex));
-	GL_CALL(glBindTexture(type, glName));
-	GL_CALL(glTexStorage2D(type, enableMipMapOption() ? 4 : 1, format.internalFormat, dimensions.x, dimensions.y));//Must not be called twice on the same gl tex
-	GL_CALL(glTexSubImage2D(type, 0, 0, 0, dimensions.x, dimensions.y, format.format, format.type, tex));
-	free(tex);
-	//Reset the need for padding
-	GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 4));
-	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
+    allocateTextureMutable(dimensions, nullptr);
+    GL_CALL(glCopyImageSubData(
+        b.glName, b.type, 0, 0, 0, 0,
+        glName, type, 0, 0, 0, 0, 
+        b.dimensions.x, b.dimensions.y, 0));
 	applyOptions();
 }
 /**
@@ -60,12 +54,12 @@ std::shared_ptr<Texture2D> Texture2D::make(const glm::uvec2 &dimensions, const T
 /**
  * Cache handling
  */
-std::shared_ptr<Texture2D> Texture2D::loadFromCache(const std::string &filePath)
+std::shared_ptr<const Texture2D> Texture2D::loadFromCache(const std::string &filePath)
 {
 	auto a = cache.find(filePath);
 	if (a != cache.end())
 	{
-		if (auto b = a->second.lock())
+        if (auto b = a->second.lock())
 		{
 			return b;
 		}
@@ -75,10 +69,10 @@ std::shared_ptr<Texture2D> Texture2D::loadFromCache(const std::string &filePath)
 	}
 	return nullptr;
 }
-std::shared_ptr<Texture2D> Texture2D::load(const std::string &filePath, const unsigned long long options, bool skipCache)
+std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, const unsigned long long options, bool skipCache)
 {
 	//Attempt from cache
-	std::shared_ptr<Texture2D> rtn;
+	std::shared_ptr<const Texture2D> rtn;
 	if (!skipCache)
 	{
 		rtn = loadFromCache(filePath);
@@ -89,7 +83,7 @@ std::shared_ptr<Texture2D> Texture2D::load(const std::string &filePath, const un
 		auto image = loadImage(filePath);
 		if (image)
 		{
-			rtn = std::shared_ptr<Texture2D>(new Texture2D(image, filePath, options),
+			rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
 				[&](Texture2D *ptr){//Custom deleter, which purges cache of item
 					Texture2D::purgeCache(ptr->getReference());
 					delete ptr;
@@ -125,12 +119,24 @@ void Texture2D::purgeCache(const std::string &filePath)
 		cache.erase(a);
 	}
 }
+void Texture2D::resize(const glm::uvec2 &dimensions, void *data, size_t size)
+{
+    if (immutable)
+    {
+        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        return;
+    }
+    if (data&&size)
+        assert(size == format.pixelSize*compMul(dimensions));
+    allocateTextureMutable(dimensions, data);
+    this->dimensions = dimensions;
+}
 void Texture2D::setTexture(void *data, size_t size)
 {
-	if (reference.compare(RAW_TEXTURE_FLAG))
-	{
-		fprintf(stderr, "Error: Texture2D setTexture() is disabled for textures loaded from disk.\n");
-		return;
+	if (immutable)
+    {
+        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        return;
 	}
 	if (size)
 		assert(size == format.pixelSize*compMul(this->dimensions));
@@ -138,9 +144,9 @@ void Texture2D::setTexture(void *data, size_t size)
 }
 void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offset, size_t size)
 {
-	if (reference.compare(RAW_TEXTURE_FLAG))
+	if (immutable)
 	{
-		fprintf(stderr, "Error: Texture2D setTexture() is disabled for textures loaded from disk.\n");
+        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
 		return;
 	}
 	if (size)

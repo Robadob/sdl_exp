@@ -146,6 +146,9 @@
     <ClCompile Include="visualisation\texture\Texture2D.cpp">
       <Filter>Source Files\Visualisation\Texture</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\texture\Texture2D_Multisample.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -256,6 +259,9 @@
       <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\texture\Texture2D.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\Texture2D_Multisample.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
   </ItemGroup>

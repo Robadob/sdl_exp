@@ -431,7 +431,7 @@ Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image)
 //Comment out this include if not making use of Shaders/ShaderCore
 #include "../shader/ShaderCore.h"
 #ifdef __ShaderCore_h__
-bool ShaderCore::addTexture(const char *textureNameInShader, std::shared_ptr<Texture> texture)
+bool ShaderCore::addTexture(const char *textureNameInShader, std::shared_ptr<const Texture> texture)
 {//Treat it similar to texture binding points
 	return addTexture(textureNameInShader, texture->getType(), texture->getName(), texture->getTextureUnit());
 }

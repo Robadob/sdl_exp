@@ -137,9 +137,6 @@
     <ClCompile Include="visualisation\shader\buffer\ShaderStorageBuffer.cpp">
       <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp">
-      <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\texture\Texture.cpp">
       <Filter>Source Files\Visualisation\Texture</Filter>
     </ClCompile>
@@ -148,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="visualisation\texture\Texture2D_Multisample.cpp">
       <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp">
+      <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

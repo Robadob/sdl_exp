@@ -192,7 +192,7 @@ public:
 	 * @param texture The texture to be used
 	 * @note Convenience method, implemented in Texture.cpp
 	 */
-	bool addTexture(const char *textureNameInShader, std::shared_ptr<Texture> texture);
+	bool addTexture(const char *textureNameInShader, std::shared_ptr<const Texture> texture);
 	/**
 	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced

@@ -13,9 +13,9 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
 #ifdef __CUDACC__
     , cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
-    , texBuf("_texBuf", cuTexBuf, true)
+    , texBuf(TextureBuffer<float>::make(cuTexBuf, true))
 #else
-    , texBuf("_texBuf", 100, 3)
+    , texBuf(TextureBuffer<float>::make(100, 3))
 #endif
 {
     registerEntity(deerModel);
@@ -37,10 +37,10 @@ EntityScene::EntityScene(Visualisation &visualisation)
         tempData[(i * 3) + 1] = -50.0f;
         tempData[(i * 3) + 2] = 100 * (float)cos(i*3.6);
     }
-    texBuf.setData(tempData);
+    texBuf->setData(tempData);
     free(tempData);
 #endif
-    texBuf.bindToShader(this->instancedSphere->getShaders().get());
+    this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
     this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
 }
 /*

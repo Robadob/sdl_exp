@@ -2,7 +2,7 @@
 #define __Sprite2D_h__
 #include "Texture/Texture2D.h"
 #include "Overlay.h"
-
+class Shaders;
 /*
 Class for rendering 2D graphics to the screen via an orthographic projection
 */
@@ -28,6 +28,6 @@ public:
     virtual ~Sprite2D(){};
     void reload() override{};
 private:
-    std::shared_ptr<Texture2D> tex;
+    std::shared_ptr<const Texture2D> tex;
 };
 #endif //__Sprite2D_h__

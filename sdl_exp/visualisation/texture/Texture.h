@@ -9,6 +9,8 @@
 
 /**
  * Shell texture class providing various utility methods for subclasses
+ * SDL_EXP intends for each texture type to assign each instance a unique texture unit
+ * At this time it's not expected that any use cases will require greater than GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
  * @note This class cannot be directly instantiated
  */
 class Texture
@@ -141,25 +143,76 @@ protected:
 	 * Copies a texture from an SDL_Surface into the host object's GL texture
 	 * @param image The SDL_Surface to upload to the GL texture
 	 * @param target The texture target, if left as default 'type' will be used, only fancy textures like cube map require this parameter
-	 * @note This function uses glTexStorage2D so cannot be called multiple times with the same target
+	 * @note The allocated texture is immutable, so cannot be resized
 	 */
     void allocateTextureImmutable(std::shared_ptr<SDL_Surface> image, GLenum target = 0);
+    /**
+     * Allocates an immutable texture, this cannot be later resized. Optionally fills with provided data
+     * @param dimensions The dimensions of the image to be allocated
+     * @param data The (optional) data to fill the allocated image with
+     * @param target The texture target, if left as default 'type' will be used, only fancy textures like cube map require this parameter
+     * @note The allocated texture is immutable, so cannot be resized
+     */
     void allocateTextureImmutable(const glm::uvec2 &dimensions, const void *data = nullptr, GLenum target = 0);
+    /**
+     * Allocates a mutable texture, this can be later resized by calling the function again. Optionally fills with provided data
+     * @param dimensions The dimensions of the image to be allocated
+     * @param data The (optional) data to fill the allocated image with
+     * @param target The texture target, if left as default 'type' will be used, only fancy textures like cube map require this parameter
+     */
     void allocateTextureMutable(const glm::uvec2 &dimensions, const void *data = nullptr, GLenum target = 0);
+    /**
+     * Copies the specified data into the texture
+     * @param data Pointer to the texture data on host
+     * @param dimensions The dimensions of the image to be copied
+     * @param offset The optional offset into the texture where to write the image (used if copying a sub image)
+     * @param target The texture target, if left as default 'type' will be used, only fancy textures like cube map require this parameter
+     */
 	void setTexture(const void *data, const glm::uvec2 &dimensions, glm::ivec2 offset = glm::ivec2(0), GLenum target = 0);
+    /**
+     * The GLenum representation of the texture type. e.g. GL_TEXTURE_2D, GL_TEXTURE_BUFFER etc
+     */
 	const GLenum type;
-	const GLuint glName;	
+    /**
+     * The OpenGL name of the texture as allocated by glGenTextures()
+     */
+	const GLuint glName;
+    /**
+     * The (currently) unique texture unit allocated to this texture instance
+     * Total number of texture units available per type is found via GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
+     * Each type of texture has it's own set of texture units, so they may share units
+     * Possible in future to allow duplicated units by setting a flag within ShaderCore that identifies duplicated units
+     */
 	const GLuint textureUnit;
-	const std::string reference;
+    /**
+     * String representation of the texture, only currently used by textures loaded from disk
+     */
+    const std::string reference;
+    /**
+     * This structure holds the necessary Enums for calling various OpenGL texture funtions
+     * format, internal format and type, see docs of glTexImage2D() or similar for explanation
+     * pixelSize is the size of a single pixel in bytes, this is included for convenience (and accuracy)
+     */
 	const Format format;
+    /**
+     * Bitmask of options to be applied to the texture
+     * Primarily filtering, magnifying and wrapping settings
+     * See the various constants in the rest of this class definition
+     */
 	const unsigned long long options;
 	/**
 	 * Returns the first image found at the provided path
 	 * This method attempts all the suffices stored in Texture::IMAGE_EXTS
-	 * @imagePath Path to search for images
+	 * @param imagePath Path to search for images
 	 */
-	static std::shared_ptr<SDL_Surface> findLoadImage(const std::string &imagePath);
-	static std::shared_ptr<SDL_Surface> loadImage(const std::string &imagePath, bool flipVertical=true, bool silenceErrors = false);
+    static std::shared_ptr<SDL_Surface> findLoadImage(const std::string &imagePath);
+    /**
+     * Returns the specified image
+     * @param imagePath Path to search for images
+     * @param flipVertical Vertically flips the image. This is useful because most images are indexed from the top, whereas GL indexes from the bottom
+     * @param silenceErrors If true, will not print errors to console (used by findLoadImage() to reduce error spam)
+     */
+	static std::shared_ptr<SDL_Surface> loadImage(const std::string &imagePath, bool flipVertical = true, bool silenceErrors = false);
 	/**
 	 * We use this when loading an image with SDL_Image to invert the image rows.
 	 * This is because most image formats label images with the origin in the top left corner
@@ -170,10 +223,24 @@ protected:
 	 * @note original source: http://www.gribblegames.com/articles/game_programming/sdlgl/invert_sdl_surfaces.html
 	 */
 	static bool flipRows(std::shared_ptr<SDL_Surface> img);
+    /**
+     * Attempts to identify the format of the provided SDL_Surface
+     * @param image SDL_Surface to identify format
+     * @return A Format struct containing image format data
+     */
 	static Format getFormat(std::shared_ptr<SDL_Surface> image);
+    /**
+     * Array of image extensions supported by SDL_SURFACE
+     */
 	static const char *IMAGE_EXTS[5];
 private:
+    /**
+     * Calls glGenTextures() returning the generated texture name
+     */
 	static GLuint genTexName();
+    /**
+     * If true this value tells the destructor not to delete the texture at object destruction
+     */
 	const bool externalTex;
 };
 

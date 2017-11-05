@@ -190,7 +190,7 @@ GLuint TextureBuffer<T>::genTextureUnit()
 	if (TextureBuffer_T_texUnit < (GLuint)maxUnits)
 	{
 		TextureBuffer_T_texUnit = 1;
-		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D, enable texture switching");
+		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_BUFFER, enable texture switching");
 		//If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
 		//Possibly even notifying it of duplicate units
 	}
@@ -201,7 +201,7 @@ bool TextureBuffer<T>::isBound() const
 {
 	GL_CALL(glActiveTexture(GL_TEXTURE0 + textureUnit));
 	GLint whichID;
-	GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID));
+	GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_BUFFER, &whichID));
 	return whichID == glName;
 }
 

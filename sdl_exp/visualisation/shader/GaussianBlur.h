@@ -4,6 +4,8 @@
 #include "buffer/UniformBuffer.h"
 #include <memory>
 
+class Texture2D;
+
 /**
  * Provides convenient compute shader Gaussian blur functionality
  * Currently only supports 2D textures of format R32F (single channel textures)
@@ -20,7 +22,25 @@ public:
 	 */
 	GaussianBlur(unsigned int filterRadius, float sigma = 1.0f);
 	~GaussianBlur();
+	/**
+	 * Blurs a GL_R32F format texture from inTex to outTex according to the constructed args
+	 * @param inTex Source texture to be blurred
+	 * @param outTex Destination texture to store result
+	 * @param texDims Dimensions of the texture to be blurred
+	 */
 	void blurR32F(GLuint inTex, GLuint outTex, glm::uvec2 texDims);
+	/**
+	 * Blurs a GL_R32F format texture from inTex to outTex according to the constructed args
+	 * @param inTex Source texture to be blurred
+	 * @param outTex Destination texture to store result
+	 * @note This is a convenience function, implemented in Texture2D.cpp
+	 * @note Textures must have equal dimensions
+	 */
+	void blurR32F(std::shared_ptr<Texture2D> inTex, std::shared_ptr<Texture2D> outTex);
+	/**
+	 * Slightly redundant reload
+	 * Reloads the internal shader
+	 */
 	virtual void reload() override;
 private:
 	void generateFilter();

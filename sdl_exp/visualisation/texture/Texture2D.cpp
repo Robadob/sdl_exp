@@ -180,3 +180,14 @@ bool Texture2D::isBound() const
 	GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID));
 	return whichID == glName;
 }
+//Comment out this include if not making use of GaussianBlur
+#include "../shader/GaussianBlur.h"
+#ifdef __GaussianBlur_h__
+void GaussianBlur::blurR32F(std::shared_ptr<Texture2D> inTex, std::shared_ptr<Texture2D> outTex)
+{
+#ifdef _DEBUG
+	assert(inTex->getDimensions() == outTex->getDimensions());
+#endif
+	blurR32F(inTex->getName(), outTex->getName(), inTex->getDimensions());
+}
+#endif

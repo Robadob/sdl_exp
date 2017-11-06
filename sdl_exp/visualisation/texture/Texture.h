@@ -109,6 +109,9 @@ public:
 	 * Returns whether mipmapping is enabled according to the selected options
 	 */
 	bool enableMipMapOption() const;
+	void setOptions(unsigned long long addOptions);
+	void unsetOptions(unsigned long long removeOptions);
+	void updateMipMap();
 	/**
 	 * @param fileExtension A given string of a file extension
 	 * @return Wether the image loader is capable of handling the given extension
@@ -199,7 +202,7 @@ protected:
      * Primarily filtering, magnifying and wrapping settings
      * See the various constants in the rest of this class definition
      */
-	const unsigned long long options;
+	unsigned long long options;
 	/**
 	 * Returns the first image found at the provided path
 	 * This method attempts all the suffices stored in Texture::IMAGE_EXTS

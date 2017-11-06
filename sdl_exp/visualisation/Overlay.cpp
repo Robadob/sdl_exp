@@ -4,26 +4,21 @@
 
 void Overlay::setWidth(unsigned int w)
 {
-	if (w == width)
-		return;
-	width = w;
-	if (auto t = hudItem.lock())
-		t->resizeWindow();
+	setDimensions({ w, dimensions.y });
 }
 void Overlay::setHeight(unsigned int h)
 {
-	if (h == height)
-		return;
-	height = h;
-	if (auto t = hudItem.lock())
-		t->resizeWindow();
+	setDimensions({ dimensions.x, h });
 }
 void Overlay::setDimensions(unsigned int w, unsigned int h)
 {
-	if (w == width&&h == height)
+	setDimensions({ w, h });
+}
+void Overlay::setDimensions(glm::uvec2 dims)
+{
+	if (dimensions == dims)
 		return;
-	width = w;
-	height = h;
+	dimensions = dims;
 	if (auto t = hudItem.lock())
 		t->resizeWindow();
 }
@@ -32,12 +27,14 @@ void Overlay::setHUDItem(std::shared_ptr<HUD::Item> ptr)
 	hudItem = std::weak_ptr<HUD::Item>(ptr);
 }
 Overlay::Overlay(std::shared_ptr<Shaders> shaders, unsigned int width, unsigned int height)
-	:
-hudItem(), 
-shaders(shaders), 
-width(width), 
-height(height),
-visible(true)
+	:Overlay(shaders, {width, height})
+{
+}
+Overlay::Overlay(std::shared_ptr<Shaders> shaders, glm::uvec2 dimensions)
+	: hudItem()
+	, shaders(shaders)
+	, dimensions(dimensions)
+	, visible(true)
 {
 }
 void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)

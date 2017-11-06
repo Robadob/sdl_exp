@@ -172,6 +172,7 @@
     <ClCompile Include="visualisation\multipass\BackBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\FrameBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
+    <ClCompile Include="visualisation\multipass\RenderBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\RenderPass.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
     <ClCompile Include="visualisation\shader\buffer\BufferCore.cpp" />
@@ -209,6 +210,7 @@
     <ClInclude Include="visualisation\interface\FBuffer.h" />
     <ClInclude Include="visualisation\interface\Reloadable.h" />
     <ClInclude Include="visualisation\interface\Renderable.h" />
+    <ClInclude Include="visualisation\interface\RenderTarget.h" />
     <ClInclude Include="visualisation\interface\Scene.h" />
     <ClInclude Include="visualisation\interface\Viewport.h" />
     <ClInclude Include="visualisation\Material.h" />
@@ -216,6 +218,7 @@
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h" />
     <ClInclude Include="visualisation\multipass\MultiPassScene.h" />
+    <ClInclude Include="visualisation\multipass\RenderBuffer.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
     <ClInclude Include="visualisation\shader\buffer\BufferCore.h" />

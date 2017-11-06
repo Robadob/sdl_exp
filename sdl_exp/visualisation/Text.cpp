@@ -1,5 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS //vsnprintf()
 #include "Text.h"
+
+#include "shader/Shaders.h"
+
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 #include <stdarg.h>
@@ -20,25 +23,9 @@ namespace Stock
         const char* VIVALDI = "C:/Windows/Fonts/VIVALDII.TTF";
     };
 };
-/*
-Creates a text overlay with the provided string
-@param string The text to be included in the overlay
-@param fontHeight The pixel height of the text
-@param color The rgb(0-1) color of the font
-@param fontFile The path to the desired font
-@param faceIndex The face within the font file to be used (most likely 0)
-*/
 Text::Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile,unsigned int faceIndex)
     :Text(string, fontHeight, glm::vec4(color,1.0f),fontFile, faceIndex)
 {}
-/*
-Creates a text overlay with the provided string
-@param _string The text to be included in the overlay
-@param fontHeight The pixel height of the text
-@param color The rgba(0-1) color of the font
-@param fontFile The path to the desired font
-@param faceIndex The face within the font file to be used (most likely 0)
-*/
 Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile, unsigned int faceIndex)
 	: Overlay(std::make_shared<Shaders>(Stock::Shaders::TEXT))
 	, printMono(false)
@@ -97,9 +84,6 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     printf("Font %s was loaded successfully.\n", fontFile);
     setString(_string);
 }
-/*
-Deallocates the loaded font and other allocated elements
-*/
 Text::~Text() {
     if (this->font)
         FT_Done_Face(this->font);
@@ -108,15 +92,12 @@ Text::~Text() {
     if (this->string)
         free(this->string);
 }
-/*
-Repaints the text to a texture, according to the provided parameters
-*/
 void Text::reload() {
 	recomputeTex();
 }
-/*
-Structure used within Text::recomputeTex() to keep info about each glyph in a single structure
-*/
+/**
+ * Structure used within Text::recomputeTex() to keep info about each glyph in a single structure
+ */
 struct  TGlyph
 {
     FT_UInt    index;  /* glyph index                  */
@@ -125,10 +106,6 @@ struct  TGlyph
     char       c;      /* char                         */
     int        line;   /* Line number                  */
 };
-/*
-Repaints the text to a texture, according to the provided parameters
-@note Based on http://www.freetype.org/freetype2/docs/tutorial/step2.html
-*/
 void Text::recomputeTex() {
 	setStringLen();
     if (stringLen <= 0) return;
@@ -260,7 +237,7 @@ void Text::recomputeTex() {
         fprintf(stderr,"unknown err, bounding box incorrect");
     }
     //And thus the texture size
-    glm::ivec2 texDim(
+    glm::uvec2 texDim(
         (2 * padding) + bbox.xMax - bbox.xMin,
         (2 * padding) + bbox.yMax - bbox.yMin - lineHeight*(lineSpacing)
         );
@@ -281,7 +258,7 @@ void Text::recomputeTex() {
                 penX = (int)padding + bit->left - bbox.xMin;
                 penY = (int)padding - bit->top + ascender + (int)(lineHeight*glyphs[i].line*(lineSpacing + 1.0f));
                 //Only paint is the glyph is within bounds of the texture (report err if our maths is bad)
-                if (penX >= 0 && penX + bit->bitmap.pitch <= texDim.x && penY >= 0 && penY + (int)bit->bitmap.rows <= texDim.y)
+				if (penX >= 0 && penX + bit->bitmap.pitch <= (int)texDim.x && penY >= 0 && penY + (int)bit->bitmap.rows <= (int)texDim.y)
                     if (printMono)
                         tex->paintGlyphMono(bit->bitmap, penX, penY);
                     else
@@ -295,23 +272,15 @@ void Text::recomputeTex() {
 	//link tex to shader
 	tex->updateTex(getShaders());
 	//Set width
-    setDimensions(texDim.x, texDim.y);
+    setDimensions(texDim);
     free(glyphs);
 }
-/*
-Internal method used to update the variable stringLen according to the length of string
-*/
 void Text::setStringLen() {
     stringLen = 0;
     // ReSharper disable once CppPossiblyErroneousEmptyStatements
     while (string[stringLen++] != '\0');
     stringLen--;
 }
-/*
-Sets the height of the font
-@param pixels The height of the font in pixels
-@param refreshTex Whether to automatically refresh the texture
-*/
 void Text::setFontHeight(unsigned int pixels, bool refreshTex) {
     if (!font)
     {
@@ -331,29 +300,14 @@ void Text::setFontHeight(unsigned int pixels, bool refreshTex) {
     if (refreshTex)
         recomputeTex();
 }
-/*
-Returns the currently stored font height (measured in pixels)
-@return The stored font height
-@note If refreshTex was set to false when the height was updated, this may not reflect the rendered text
-*/
 unsigned int Text::getFontHeight() {
     return this->fontHeight;
 }
-/*
-Sets the padding (distance between text bounding box and teture bounding box) of the overlay
-@param pixels The padding of overlay in pixels
-@param refreshTex Whether to automatically refresh the texture
-*/
 void Text::setPadding(unsigned int padding, bool refreshTex) {
     this->padding = padding;
     if (refreshTex)
         recomputeTex();
 }
-/*
-Returns the currently stored padding (measured in pixels)
-@return The stored padding
-@note If refreshTex was set to false when the padding was updated, this may not reflect the rendered text
-*/
 unsigned int Text::getPadding() {
     return this->padding;
 }
@@ -368,97 +322,43 @@ void Text::setUseAA(bool aa, bool refreshTex) {
     if (refreshTex)
         recomputeTex();
 }
-/*
-Returns whether the font is being rendered with anti-aliasing
-@return The stored aliasing state
-@note If refreshTex was set to false when the padding was updated, this may not reflect the rendered text
-*/
 bool Text::getUseAA() {
     return !this->printMono;
 }
-/*
-Sets the maximum width of the texture, if text extends past this it will be wrapped
-@param pixels The max width of the texture in pixels
-@param refreshTex Whether to automatically refresh the texture
-*/
 void Text::setMaxWidth(unsigned int maxWidth, bool refreshTex) {
     this->wrapDistance = wrapDistance;
     if (refreshTex)
         recomputeTex();
 }
-/*
-Returns the maximum width of the texture, if text extends past this it will be wrapped
-@return The maximum width of the texture
-@note If refreshTex was set to false when the max width was updated, this may not reflect the rendered text
-*/
 unsigned int Text::getMaxWidth() {
     return this->wrapDistance;
 }
-/*
-Sets the line spacing, this is measured as a proporition of the line height (which may include space or not, dependent on font)
-@param lineSpacing The line spacing, recommended values are -0.2-0.0
-@param refreshTex Whether to automatically refresh the texture
-*/
 void Text::setLineSpacing(float lineSpacing, bool refreshTex) {
     this->lineSpacing = lineSpacing;
     if (refreshTex)
         recomputeTex();
 }
-/*
-Returns the line spacing of the text
-@return The line spacing of the text
-@note If refreshTex was set to false when the line spacing was updated, this may not reflect the rendered text
-*/
 float Text::getLineSpacing() {
     return this->lineSpacing;
 }
-/*
-Sets the color of the font
-@param color The RGB(0-1) font color to be used when rendering the text
-*/
 void Text::setColor(glm::vec3 color) {
     this->color = glm::vec4(color, 1.0f);
 }
-/*
-Sets the color of the font
-@param color The RGBA(0-1) font color to be used when rendering the text
-@note If an alpha value of -1 is used, you can achieve transparent text on a background
-*/
 void Text::setColor(glm::vec4 color) {
     this->color = color;
 }
-/*
-Sets the color of the texture
-@param color The RGB(0-1) background color to be used when rendering the text
-*/
 void Text::setBackgroundColor(glm::vec3 color) {
     this->backgroundColor = glm::vec4(color, 1.0f);
 }
-/*
-Sets the color of the texture
-@param color The RGBA(0-1) background color to be used when rendering the text
-*/
 void Text::setBackgroundColor(glm::vec4 color) {
     this->backgroundColor = color;
 }
-/*
-Returns the font color used to render the text
-*/
 glm::vec4 Text::getColor() {
     return color;
 }
-/*
-Returns the background color of the texture
-*/
 glm::vec4 Text::getBackgroundColor() {
     return backgroundColor;
 }
-/*
-Updates the string using a string format
-@param fmt Matches those used by functions such as printf(), sprintf() etc
-@note This function simply wraps snprintf() for convenience
-@note This function will always refresh the texture
-*/
 void Text::setString(const char*fmt, ...) {
     if (this->string)
         delete this->string;
@@ -479,27 +379,15 @@ void Text::setString(const char*fmt, ...) {
     this->string = buffer;
     recomputeTex();
 }
-/*
-Creates a new TextureString which represents the texture holding the glyphs of the string
-@param width The width of the texture to be created
-@param height The height of the texture to be created
-*/
 Text::TextureString::TextureString()
-    : Texture(GL_TEXTURE_2D, "")//_texture as default
-    , texture(0)
-    , width(0)
-    , height(0)
+	: Texture2D(glm::uvec2( 1, 1 ), { GL_RED, GL_RED, sizeof(unsigned char), GL_UNSIGNED_BYTE }, nullptr, Texture::DISABLE_MIPMAP | Texture::WRAP_CLAMP_TO_EDGE)
+    , texture(nullptr)
+	, dimensions(1,1)
 {
 }
-/*
-Resizes the texture
-@param width The width of the texture to be created
-@param height The height of the texture to be created
-*/
 void Text::TextureString::resize(unsigned int width, unsigned int height)
 {
-    this->width = width;
-    this->height = height;
+	this->dimensions = { width, height };
     if (texture)
         free(texture);
     texture = (unsigned char**)malloc(sizeof(char*)*height);
@@ -510,37 +398,18 @@ void Text::TextureString::resize(unsigned int width, unsigned int height)
         texture[i] = texture[i - 1] + width;
     }
 }
-/*
-Updates the GL texture to match the painted texture
-@param shaders The shader object to bind the texture to
-*/
 void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders) {
     if (!texture)
         return;
-    GL_CALL(glBindTexture(texType, texName));
-    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    //GL_CALL(glTexStorage2D(texType, 1, GL_R8, width, height));//No mipmaps
-    //GL_CALL(glTexSubImage2D(texType, 0, 0, 0, width, height, GL_RED, GL_UNSIGNED_BYTE, texture[0]));//Don't want immutable storage, otherwise we need to regen text to resize
-    GL_CALL(glTexParameteri(texType, GL_TEXTURE_MAX_LEVEL, 0));//Disable mipmaps
-    GL_CALL(glTexImage2D(texType, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, texture[0]));
-    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 4));
-    GL_CALL(glBindTexture(texType, 0));
-    bindToShader(shaders.get(), 0);
+	Texture2D::resize(dimensions, texture[0]);
+	shaders->addTexture("_texture", this->getType(), this->getName(), this->getTextureUnit());
 }
-/*
-Frees the texture's data
-*/
 Text::TextureString::~TextureString() {
 	if (texture){
 		free(texture[0]);
 		free(texture);
 	}
 }
-/*
-Paints a single character glyph to the texture at the specified location from a 1-byte texture
-@param penX The x coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
-@param penY The y coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
-*/
 void Text::TextureString::paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigned int penY) {
     for (unsigned int y = 0; y<glyph.rows; y++)
     {
@@ -557,11 +426,6 @@ void Text::TextureString::paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigne
         //memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph.pitch);
     }
 }
-/*
-Paints a single character glyph to the texture at the specified location from a 1-bit mono texture
-@param penX The x coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
-@param penY The y coordinate that the top-left corner of the glyphs bounding-box maps to within the texture
-*/
 void Text::TextureString::paintGlyphMono(FT_Bitmap glyph, unsigned int penX, unsigned int penY) {
     for (unsigned int y = 0; y<glyph.rows; y++)
     {
@@ -579,10 +443,4 @@ void Text::TextureString::paintGlyphMono(FT_Bitmap glyph, unsigned int penX, uns
         }
         //memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph.pitch);
     }
-}
-/*
-Not used
-*/
-void Text::TextureString::reload() {
-    //Nothing
 }

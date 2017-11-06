@@ -126,6 +126,24 @@ bool Texture::enableMipMapOption() const
 	return  !((options & DISABLE_MIPMAP) == DISABLE_MIPMAP);
 }
 
+void Texture::updateMipMap()
+{
+	if (type == GL_TEXTURE_BUFFER || type == GL_TEXTURE_2D_MULTISAMPLE || type == GL_TEXTURE_RECTANGLE || type == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
+	{
+		fprintf(stderr, "MipMap generation failed. Buffer, MultiSample and Array textures do not support mipmap!\n");
+		return;
+	}
+#ifdef _DEBUG
+	if (!enableMipMapOption())
+	{
+		fprintf(stderr, "MipMap generation failed. MipMap option not enabled.\n");
+		return;
+	}
+#endif
+	GL_CALL(glBindTexture(type, glName));
+	GL_CALL(glGenerateMipmap(type));
+	GL_CALL(glBindTexture(type, 0));
+}
 //Constructors
 Texture::Texture(GLenum type, GLuint textureUnit, const Format &format, const std::string &reference, unsigned long long options, GLuint glName)
 	: type(type)
@@ -153,6 +171,43 @@ GLuint Texture::genTexName()
 	GLuint texName = 0;
 	GL_CALL(glGenTextures(1, &texName));
 	return texName;
+}
+
+void Texture::setOptions(unsigned long long addOptions)
+{
+	if ((addOptions&WRAP_REPEAT)||
+		(addOptions&WRAP_CLAMP_TO_EDGE) ||
+		(addOptions&WRAP_CLAMP_TO_BORDER) ||
+		(addOptions&WRAP_MIRRORED_REPEAT) ||
+		(addOptions&WRAP_MIRROR_CLAMP_TO_EDGE))
+	{
+		//Unset current wrap setting
+		options &= !(WRAP_REPEAT | WRAP_CLAMP_TO_EDGE | WRAP_CLAMP_TO_BORDER | WRAP_MIRRORED_REPEAT | WRAP_MIRROR_CLAMP_TO_EDGE);
+	}
+	if ((addOptions&FILTER_MAG_LINEAR) ||
+		(addOptions&FILTER_MAG_NEAREST))
+	{
+		//Unset current filter mag setting
+		options &= !(FILTER_MAG_LINEAR | FILTER_MAG_NEAREST);
+	}
+	if ((addOptions&FILTER_MIN_NEAREST) ||
+		(addOptions&FILTER_MIN_LINEAR) ||
+		(addOptions&FILTER_MIN_NEAREST_MIPMAP_NEAREST) ||
+		(addOptions&FILTER_MIN_LINEAR_MIPMAP_NEAREST) ||
+		(addOptions&FILTER_MIN_NEAREST_MIPMAP_LINEAR) ||
+		(addOptions&FILTER_MIN_LINEAR_MIPMAP_LINEAR))
+	{
+		//Unset current filter min setting
+		options &= !(FILTER_MIN_NEAREST | FILTER_MIN_LINEAR | FILTER_MIN_NEAREST_MIPMAP_NEAREST | FILTER_MIN_LINEAR_MIPMAP_NEAREST | FILTER_MIN_NEAREST_MIPMAP_LINEAR | FILTER_MIN_LINEAR_MIPMAP_LINEAR);
+	}
+	//Apply new settings
+	options |= addOptions;
+	applyOptions();
+}
+void Texture::unsetOptions(unsigned long long removeOptions)
+{
+	options &= !removeOptions;
+	applyOptions();
 }
 void Texture::applyOptions()
 {

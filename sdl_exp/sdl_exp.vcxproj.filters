@@ -149,6 +149,9 @@
     <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp">
       <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -263,6 +266,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\texture\Texture2D_Multisample.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\RenderBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\RenderTarget.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

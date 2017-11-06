@@ -1,4 +1,8 @@
 #include "FrameBuffer.h"
+
+#include "../texture/Texture2D.h"
+#include "../texture/Texture2D_Multisample.h"
+#include "RenderBuffer.h"
 //Constructors
 
 typedef FrameBufferAttachment FBA;
@@ -70,45 +74,11 @@ FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stenci
 FrameBuffer::~FrameBuffer()
 {
 	//Color
-	for (auto &&it = colors.begin(); it != colors.end(); ++it)
-	{
-		//Skip if unmanaged
-		if (it->second.conf.TexName() != 0)
-			continue;
-        if (it->second.conf.Type() == FBA::Texture){
-            GL_CALL(glDeleteTextures(1, &it->second.texName));
-		}
-        else if (it->second.conf.Type() == FBA::RenderBuffer){
-            GL_CALL(glDeleteRenderbuffers(1, &it->second.texName));
-        }
-	}
 	colors.clear();
 	//DepthStencil
-    if (depthStencil.conf.Type() == FBA::Texture&&depthStencil.conf.TexName() == 0)
-	{
-        GL_CALL(glDeleteTextures(1, &depthStencil.texName));
-	}
-    else if (depthStencil.conf.Type() == FBA::RenderBuffer&&depthStencil.conf.TexName() == 0)
-	{
-        GL_CALL(glDeleteRenderbuffers(1, &depthStencil.texName));
-	}
-    else
-    {
-        //Depth
-        if (depth.conf.Type() == FBA::Texture&&depth.conf.TexName() == 0){
-            GL_CALL(glDeleteTextures(1, &depth.texName));
-        }
-        else if (depth.conf.Type() == FBA::RenderBuffer&&depth.conf.TexName() == 0) {
-            GL_CALL(glDeleteRenderbuffers(1, &depth.texName));
-        }
-        //Stencil
-        if (stencil.conf.Type() == FBA::Texture&&stencil.conf.TexName() == 0){
-            GL_CALL(glDeleteTextures(1, &stencil.texName));
-        }
-        else if (stencil.conf.Type() == FBA::RenderBuffer&&stencil.conf.TexName() == 0){
-            GL_CALL(glDeleteRenderbuffers(1, &stencil.texName));
-        }
-	}
+	depthStencil.renderTarget.reset();
+	depth.renderTarget.reset();
+	stencil.renderTarget.reset();
 	//FrameBuffer
     GL_CALL(glDeleteFramebuffers(1, &name));
 }
@@ -118,90 +88,87 @@ void FrameBuffer::makeAttachments()
 	for (auto &&it = colors.begin(); it != colors.end(); ++it)
     {
         assert(it->second.conf.Class() == FBA::Color);
-        makeAttachment(it->second.conf, GL_COLOR_ATTACHMENT0 + it->first, &it->second.texName);
+        makeAttachment(it->second.conf, GL_COLOR_ATTACHMENT0 + it->first, it->second.renderTarget);
     }
     if (depthStencil.conf.Type() != FBA::Disabled)
     {
         assert(depthStencil.conf.Class() == FBA::DepthStencil);
-        makeAttachment(depthStencil.conf, GL_DEPTH_STENCIL_ATTACHMENT, &depthStencil.texName);
+        makeAttachment(depthStencil.conf, GL_DEPTH_STENCIL_ATTACHMENT, depthStencil.renderTarget);
     }
     else
     {
         if (depth.conf.Type() != FBA::Disabled)
         {
             assert(depth.conf.Class() == FBA::Depth);
-            makeAttachment(depth.conf, GL_DEPTH_ATTACHMENT, &depth.texName);
+            makeAttachment(depth.conf, GL_DEPTH_ATTACHMENT, depth.renderTarget);
         }
         if (stencil.conf.Type() != FBA::Disabled)
         {
             assert(stencil.conf.Class() == FBA::Stencil);
-            makeAttachment(stencil.conf, GL_STENCIL_ATTACHMENT, &stencil.texName);
+            makeAttachment(stencil.conf, GL_STENCIL_ATTACHMENT, stencil.renderTarget);
         }
     }
 }
-void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint, GLuint *texNameOut) const
+void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint, std::shared_ptr<RenderTarget> &renderTarget)
 {
     if (attachmentConfig.Type() != FBA::Disabled)
     {
         GLuint prevFBO = getActiveFB();
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
-        if (attachmentConfig.Type() == FBA::Texture)
-        {
-            if (attachmentConfig.TexName() == 0)
-            {
-                if (*texNameOut==0)//Don't generate a new texture if resizing
-                    GL_CALL(glGenTextures(1, texNameOut));
-
-                GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), *texNameOut));
-
-                //Size the texture
-                if (samples)
-                {//Multisampling
-                    GL_CALL(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y, true));
-                }
-                else
-                {//No Multisampling
-                    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y, 0, attachmentConfig.PixelFormat(), attachmentConfig.StorageType(), nullptr));
-                    //Config for mipmap access
-                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-                    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-                    //Disable depth comparison by default
-                    //if (attachPoint == GL_DEPTH_ATTACHMENT || attachPoint == GL_DEPTH_STENCIL_ATTACHMENT)
-                    //    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE));
-                }
-                GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
-            }
-            else
-                *texNameOut = attachmentConfig.TexName();
-            //Bind the tex to our framebuffer
-            GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, attachPoint, GL_TEXTURE_TYPE(), *texNameOut, 0));
+        if (attachmentConfig.Type() == FBA::TextureRT)
+		{
+			if (!renderTarget)
+			{//If this is the first call, set the render target				
+				if (!attachmentConfig.RenderTarget())
+				{//If texture is managed
+						Texture::Format fmt(attachmentConfig.PixelFormat(), attachmentConfig.InternalFormat(), Texture::WRAP_CLAMP_TO_EDGE|Texture::FILTER_MAG_LINEAR|Texture::FILTER_MIN_LINEAR|Texture::DISABLE_MIPMAP, attachmentConfig.StorageType());
+						renderTarget = samples 
+							? std::dynamic_pointer_cast<RenderTarget>(Texture2D_Multisample::make(dimensions, fmt, samples, nullptr, 0)) 
+							: std::dynamic_pointer_cast<RenderTarget>(Texture2D::make(dimensions, fmt, nullptr, 0));
+						//Bind the tex to our framebuffer
+						GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, renderTarget->getName()));
+						return;//No need to resize if we just created
+				}
+				else
+				{//Texture is unmanaged
+					//Ensure format is correct
+					if (samples)
+					{
+						assert(std::dynamic_pointer_cast<Texture2D_Multisample>(attachmentConfig.RenderTarget()));
+					}
+					else
+					{
+						assert(std::dynamic_pointer_cast<Texture2D>(attachmentConfig.RenderTarget()));
+					}
+					renderTarget = attachmentConfig.RenderTarget();
+					//Bind the tex to our framebuffer
+					GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, renderTarget->getName()));
+				}
+			}
+			//Resize
+			renderTarget->resize(dimensions);
         }
-        else if (attachmentConfig.Type() == FBA::RenderBuffer)
-        {
-            if (attachmentConfig.TexName() == 0)
-            {
-                if (*texNameOut == 0)//Don't generate a new renderbuffer if resizing
-                    GL_CALL(glGenRenderbuffers(1, texNameOut));
-                //Set storage
-                GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, *texNameOut));
-                if (samples)
-                {
-                    GL_CALL(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y));
-                }
-                else
-                {
-                    GL_CALL(glRenderbufferStorage(GL_RENDERBUFFER, attachmentConfig.InternalFormat(), dimensions.x, dimensions.y));
-                }
-                GL_CALL(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-            }
-            else
-                *texNameOut = attachmentConfig.TexName();
-            //Bind to our framebuffer
-            GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, *texNameOut));
-        }
-        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
+        else if (attachmentConfig.Type() == FBA::RenderBufferRT)
+		{
+			if(!renderTarget)
+			{//If this is the first call, set the render target	 
+				if (!attachmentConfig.RenderTarget())
+				{//managed
+					renderTarget = RenderBuffer::make(dimensions, attachmentConfig.InternalFormat(), samples);
+					//Bind the to our framebuffer
+					GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, renderTarget->getName()));
+					return;//No need to resize if we just created
+				}
+				else
+				{//unmanaged
+					renderTarget = attachmentConfig.RenderTarget();
+					//Bind the to our framebuffer
+					GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, renderTarget->getName()));
+				}
+			}
+		}
+		renderTarget->resize(dimensions);
+		GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
     }
 }
 void FrameBuffer::setDrawBuffers()
@@ -313,69 +280,125 @@ bool FrameBuffer::use()
 GLuint FrameBuffer::getColorTextureName(GLuint attachPt) const
 {
 	auto && it = colors.find(attachPt);
-    if (it != colors.end() && it->second.conf.Type() == FBA::Texture)
-			return it->second.texName;
+	if (it != colors.end() && it->second.conf.Type() == FBA::TextureRT)
+		return it->second.renderTarget->getName();
 	return 0;
 }
 GLuint FrameBuffer::getDepthTextureName() const
 {
-    if (depth.conf.Type() == FBA::Texture)
-		return depth.texName;
-    if (depthStencil.conf.Type() == FBA::Texture)
-        return depthStencil.texName;
+    if (depth.conf.Type() == FBA::TextureRT)
+		return depth.renderTarget->getName();
+	if (depthStencil.conf.Type() == FBA::TextureRT)
+		return depthStencil.renderTarget->getName();
 	return 0;
 }
 GLuint FrameBuffer::getStencilTextureName() const
 {
-    if (stencil.conf.Type() == FBA::Texture)
-        return stencil.texName;
-    if (depthStencil.conf.Type() == FBA::Texture)
-        return depthStencil.texName;
+	if (stencil.conf.Type() == FBA::TextureRT)
+		return stencil.renderTarget->getName();
+	if (depthStencil.conf.Type() == FBA::TextureRT)
+		return depthStencil.renderTarget->getName();
 	return 0;
 }
 GLuint FrameBuffer::getDepthStencilTextureName() const
 {
-    if (depthStencil.conf.Type() == FBA::Texture)
-        return depthStencil.texName;
+	if (depthStencil.conf.Type() == FBA::TextureRT)
+		return depthStencil.renderTarget->getName();
 	return 0;
 }
 GLuint FrameBuffer::getColorRenderBufferName(GLuint attachPt) const
 {
     auto && it = colors.find(attachPt);
-    if (it != colors.end() && it->second.conf.Type() == FBA::RenderBuffer)
-        return it->second.texName;
+    if (it != colors.end() && it->second.conf.Type() == FBA::RenderBufferRT)
+		return it->second.renderTarget->getName();
     return 0;
 }
 GLuint FrameBuffer::getDepthRenderBufferName() const
 {
-    if (depth.conf.Type() == FBA::RenderBuffer)
-        return depth.texName;
-    if (depthStencil.conf.Type() == FBA::RenderBuffer)
-        return depthStencil.texName;
+	if (depth.conf.Type() == FBA::RenderBufferRT)
+		return depth.renderTarget->getName();
+	if (depthStencil.conf.Type() == FBA::RenderBufferRT)
+		return depthStencil.renderTarget->getName();
     return 0;
 }
 GLuint FrameBuffer::getStencilRenderBufferName() const
 {
-    if (stencil.conf.Type() == FBA::RenderBuffer)
-        return stencil.texName;
-    if (depthStencil.conf.Type() == FBA::RenderBuffer)
-        return depthStencil.texName;
+	if (stencil.conf.Type() == FBA::RenderBufferRT)
+		return stencil.renderTarget->getName();
+	if (depthStencil.conf.Type() == FBA::RenderBufferRT)
+		return depthStencil.renderTarget->getName();
     return 0;
 }
 GLuint FrameBuffer::getDepthStencilRenderBufferName() const
 {
-    if (depthStencil.conf.Type() == FBA::RenderBuffer)
-        return depthStencil.texName;
+	if (depthStencil.conf.Type() == FBA::RenderBufferRT)
+        return depthStencil.renderTarget->getName();
     return 0;
+}
+//Ptr Getters
+std::shared_ptr<Texture> FrameBuffer::getColorTexture(GLuint attachPt) const
+{
+	auto && it = colors.find(attachPt);
+	if (it != colors.end() && it->second.conf.Type() == FBA::TextureRT)
+		return std::dynamic_pointer_cast<Texture>(it->second.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<Texture> FrameBuffer::getDepthTexture() const
+{
+	if (depth.conf.Type() == FBA::TextureRT)
+		return std::dynamic_pointer_cast<Texture>(depth.renderTarget);
+	if (depthStencil.conf.Type() == FBA::TextureRT)
+		return std::dynamic_pointer_cast<Texture>(depthStencil.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<Texture> FrameBuffer::getStencilTexture() const
+{
+	if (stencil.conf.Type() == FBA::TextureRT)
+		return std::dynamic_pointer_cast<Texture>(stencil.renderTarget);
+	if (depthStencil.conf.Type() == FBA::TextureRT)
+		return std::dynamic_pointer_cast<Texture>(depthStencil.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<Texture> FrameBuffer::getDepthStencilTexture() const
+{
+	if (depthStencil.conf.Type() == FBA::TextureRT)
+		return std::dynamic_pointer_cast<Texture>(depthStencil.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<RenderBuffer> FrameBuffer::getColorRenderBuffer(GLuint attachPt) const
+{
+	auto && it = colors.find(attachPt);
+	if (it != colors.end() && it->second.conf.Type() == FBA::RenderBufferRT)
+		return std::dynamic_pointer_cast<RenderBuffer>(it->second.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<RenderBuffer> FrameBuffer::getDepthRenderBuffer() const
+{
+	if (depth.conf.Type() == FBA::RenderBufferRT)
+		return std::dynamic_pointer_cast<RenderBuffer>(depth.renderTarget);
+	if (depthStencil.conf.Type() == FBA::RenderBufferRT)
+		return std::dynamic_pointer_cast<RenderBuffer>(depthStencil.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<RenderBuffer> FrameBuffer::getStencilRenderBuffer() const
+{
+	if (stencil.conf.Type() == FBA::RenderBufferRT)
+		return std::dynamic_pointer_cast<RenderBuffer>(stencil.renderTarget);
+	if (depthStencil.conf.Type() == FBA::RenderBufferRT)
+		return std::dynamic_pointer_cast<RenderBuffer>(depthStencil.renderTarget);
+	return nullptr;
+}
+std::shared_ptr<RenderBuffer> FrameBuffer::getDepthStencilRenderBuffer() const
+{
+	if (depthStencil.conf.Type() == FBA::RenderBufferRT)
+		return std::dynamic_pointer_cast<RenderBuffer>(depthStencil.renderTarget);
+	return nullptr;
 }
 void FrameBuffer::disableFiltering(GLuint attachPt)
 {
 	auto && it = colors.find(attachPt);
-	if (it != colors.end() && it->second.conf.Type() == FBA::Texture)
+	if (it != colors.end() && it->second.conf.Type() == FBA::TextureRT)
 	{
-		GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), it->second.texName));
-		glTexParameteri(GL_TEXTURE_TYPE(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_TYPE(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		GL_CALL(glBindTexture(GL_TEXTURE_TYPE(), 0));
+		std::dynamic_pointer_cast<Texture>(depth.renderTarget)->setOptions(Texture::FILTER_MIN_NEAREST | Texture::FILTER_MAG_NEAREST);
 	}
 }

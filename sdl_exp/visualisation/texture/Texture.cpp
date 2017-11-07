@@ -240,10 +240,10 @@ void Texture::applyOptions()
 std::shared_ptr<SDL_Surface> Texture::findLoadImage(const std::string &imagePath)
 {
 	//Attempt without appending extension
-	std::shared_ptr<SDL_Surface> image = loadImage(imagePath);
+	std::shared_ptr<SDL_Surface> image = loadImage(imagePath, false, true);
 	for (int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*) && !image; i++)
 	{
-		image = loadImage(std::string(imagePath).append(".").append(IMAGE_EXTS[i]), true, false);
+        image = loadImage(std::string(imagePath).append(".").append(IMAGE_EXTS[i]), false, true);
 	}
 	return image;
 }

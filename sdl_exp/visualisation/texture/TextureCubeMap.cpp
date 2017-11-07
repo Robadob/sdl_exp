@@ -26,13 +26,14 @@ TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE
     , immutable(true)
 {
 	GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
+    allocateTextureImmutable(faceDimensions);
 	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
 	{
 		assert(images[i]);
 		assert(images[i]->w == faceDimensions.x);//All must share dimensions and pixel format
 		assert(images[i]->h == faceDimensions.y);
 		assert(getFormat(images[i]) == format);
-		allocateTextureImmutable(images[i], FACES[i].target);
+        setTexture(images[i]->pixels, faceDimensions,glm::ivec2(0), FACES[i].target);
 	}
 	applyOptions();
 }

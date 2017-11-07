@@ -54,9 +54,8 @@ class Text : public Overlay
 		void paintGlyphMono(FT_Bitmap glyph, unsigned int penX, unsigned int penY);
 		/**
 		 * Updates the GL texture to match the painted texture
-		 * @param shaders The shader object to bind the texture to
 		 */
-		void updateTex(std::shared_ptr<Shaders> shaders);
+		void updateTex();
 	private:
 		unsigned char **texture;
 		glm::uvec2 dimensions;
@@ -200,6 +199,6 @@ private:
     unsigned int stringLen;
     unsigned int fontHeight;
     unsigned int wrapDistance;
-	std::unique_ptr<TextureString> tex;
+	std::shared_ptr<TextureString> tex;
 };
 #endif //__Text_h__

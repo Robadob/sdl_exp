@@ -233,7 +233,12 @@ void Texture::applyOptions()
 
 	if (enableMipMapOption())
 	{
+		GL_CALL(glTexParameteri(type, GL_TEXTURE_MAX_LEVEL, 1000));//Enable mip mapsdefault
 		GL_CALL(glGenerateMipmap(type));
+	}
+	else
+	{
+		GL_CALL(glTexParameteri(type, GL_TEXTURE_MAX_LEVEL, 0));//Disable mipmaps
 	}
 	GL_CALL(glBindTexture(type, 0));
 }

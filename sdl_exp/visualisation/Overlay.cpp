@@ -32,9 +32,9 @@ Overlay::Overlay(std::shared_ptr<Shaders> shaders, unsigned int width, unsigned 
 }
 Overlay::Overlay(std::shared_ptr<Shaders> shaders, glm::uvec2 dimensions)
 	: hudItem()
+	, visible(true)
 	, shaders(shaders)
 	, dimensions(dimensions)
-	, visible(true)
 {
 }
 void Overlay::render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo)

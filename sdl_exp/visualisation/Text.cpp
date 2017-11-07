@@ -38,10 +38,11 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     , string(0)
     , fontHeight(fontHeight)
     , wrapDistance(800)
-    , tex(std::make_unique<TextureString>())
+    , tex(std::make_shared<TextureString>())
 {
-    getShaders()->addDynamicUniform("_col", glm::value_ptr(this->color), 4);
-    getShaders()->addDynamicUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
+    getShaders()->addStaticUniform("_col", glm::value_ptr(this->color), 4);
+	getShaders()->addStaticUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
+	getShaders()->addTexture("_texture", tex);
     if (!fontFile)
         fontFile = Stock::Font::ARIAL;
     FT_Error error = FT_Init_FreeType(&library);
@@ -270,7 +271,7 @@ void Text::recomputeTex() {
         FT_Done_Glyph(glyphs[i].image);
     }
 	//link tex to shader
-	tex->updateTex(getShaders());
+	tex->updateTex();
 	//Set width
     setDimensions(texDim);
     free(glyphs);
@@ -342,16 +343,18 @@ float Text::getLineSpacing() {
     return this->lineSpacing;
 }
 void Text::setColor(glm::vec3 color) {
-    this->color = glm::vec4(color, 1.0f);
+	setColor(glm::vec4(color, 1.0f));
 }
 void Text::setColor(glm::vec4 color) {
-    this->color = color;
+	this->color = color;
+	getShaders()->addStaticUniform("_col", glm::value_ptr(this->color), 4);
 }
 void Text::setBackgroundColor(glm::vec3 color) {
-    this->backgroundColor = glm::vec4(color, 1.0f);
+	setBackgroundColor(glm::vec4(color, 1.0f));
 }
 void Text::setBackgroundColor(glm::vec4 color) {
-    this->backgroundColor = color;
+	this->backgroundColor = color;
+	getShaders()->addStaticUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
 }
 glm::vec4 Text::getColor() {
     return color;
@@ -380,7 +383,7 @@ void Text::setString(const char*fmt, ...) {
     recomputeTex();
 }
 Text::TextureString::TextureString()
-	: Texture2D(glm::uvec2( 1, 1 ), { GL_RED, GL_RED, sizeof(unsigned char), GL_UNSIGNED_BYTE }, nullptr, Texture::DISABLE_MIPMAP | Texture::WRAP_CLAMP_TO_EDGE)
+	: Texture2D(glm::uvec2( 1, 1 ), { GL_RED, GL_RED, sizeof(unsigned char), GL_UNSIGNED_BYTE }, nullptr, Texture::DISABLE_MIPMAP | Texture::WRAP_REPEAT)
     , texture(nullptr)
 	, dimensions(1,1)
 {
@@ -398,11 +401,10 @@ void Text::TextureString::resize(unsigned int width, unsigned int height)
         texture[i] = texture[i - 1] + width;
     }
 }
-void Text::TextureString::updateTex(std::shared_ptr<Shaders> shaders) {
+void Text::TextureString::updateTex() {
     if (!texture)
         return;
 	Texture2D::resize(dimensions, texture[0]);
-	shaders->addTexture("_texture", this->getType(), this->getName(), this->getTextureUnit());
 }
 Text::TextureString::~TextureString() {
 	if (texture){

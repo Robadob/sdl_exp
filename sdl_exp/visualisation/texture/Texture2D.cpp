@@ -133,9 +133,9 @@ void Texture2D::resize(const glm::uvec2 &dimensions, void *data, size_t size)
         return;
     }
     if (data&&size)
-        assert(size == format.pixelSize*compMul(dimensions));
+		assert(size == format.pixelSize*compMul(dimensions));
+	this->dimensions = dimensions;
     allocateTextureMutable(dimensions, data);
-    this->dimensions = dimensions;
 }
 void Texture2D::setTexture(void *data, size_t size)
 {
@@ -157,6 +157,7 @@ void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offs
 	}
 	if (size)
 		assert(size == format.pixelSize*compMul(dimensions));
+	this->dimensions = dimensions;
 	Texture::setTexture(data, dimensions, offset);
 }
 /**

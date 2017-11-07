@@ -135,18 +135,18 @@ void Texture2D::resize(const glm::uvec2 &dimensions, void *data, size_t size)
     if (data&&size)
 		assert(size == format.pixelSize*compMul(dimensions));
 	this->dimensions = dimensions;
-    allocateTextureMutable(dimensions, data);
+	allocateTextureMutable(dimensions, data);
+	//If image data has been updated, regen mipmap
+	if (data)
+	{
+		GL_CALL(glBindTexture(type, glName));
+		GL_CALL(glGenerateMipmap(type));
+		GL_CALL(glBindTexture(type, 0));
+	}
 }
 void Texture2D::setTexture(void *data, size_t size)
 {
-	if (immutable)
-    {
-        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
-        return;
-	}
-	if (size)
-		assert(size == format.pixelSize*compMul(this->dimensions));
-	Texture::setTexture(data, this->dimensions);
+	Texture2D::setSubTexture(data, this->dimensions, glm::ivec2(0), size);
 }
 void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offset, size_t size)
 {
@@ -159,6 +159,13 @@ void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offs
 		assert(size == format.pixelSize*compMul(dimensions));
 	this->dimensions = dimensions;
 	Texture::setTexture(data, dimensions, offset);
+	//If image data has been updated, regen mipmap
+	if (data)
+	{
+		GL_CALL(glBindTexture(type, glName));
+		GL_CALL(glGenerateMipmap(type));
+		GL_CALL(glBindTexture(type, 0));
+	}
 }
 /**
  * Required methods for handling texture units

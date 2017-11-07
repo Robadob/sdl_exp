@@ -13,6 +13,9 @@ RenderBuffer::RenderBuffer(glm::uvec2 dimensions, GLenum internalFormat, unsigne
 {
 	RenderBuffer::resize(dimensions);
 }
+RenderBuffer::RenderBuffer(const RenderBuffer& b)
+	:RenderBuffer(b.dimensions, b.internalFormat, b.samples)
+{ }
 void RenderBuffer::resize(glm::uvec2 dimensions)
 {
 	this->dimensions = dimensions;

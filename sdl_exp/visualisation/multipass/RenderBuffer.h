@@ -30,6 +30,16 @@ public:
 	 * Returns the OpenGL name as allocated by glGenRenderbuffers()
 	 */
 	GLuint getName() const override { return name; }
+	/**
+	 * Copy constructor, creates a mutable copy
+	 */
+	RenderBuffer(const RenderBuffer& b);
+	/**
+	 * Move constructor and assignment operators disabled, contains const elements
+	 */
+	RenderBuffer(const RenderBuffer&& b) = delete;
+	RenderBuffer& operator= (const RenderBuffer& b) = delete;
+	RenderBuffer& operator= (const RenderBuffer&& b) = delete;
 private:
 	/**
 	 * private constructor

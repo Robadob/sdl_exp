@@ -62,7 +62,7 @@ Entity::Entity(
     model.modelPath,
     modelScale,
 	shaders.size() > 0 ? shaders : std::vector<std::shared_ptr<Shaders>>({std::make_shared<Shaders>(model.defaultShaders)}),
-    texture.get() ? texture : Texture2D::load(model.texturePath)
+    texture ? texture : Texture2D::load(model.texturePath)
     ){ }
 /*
 Convenience constructor.

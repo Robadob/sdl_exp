@@ -511,7 +511,8 @@ bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint 
 	}
 	UniformTextureDetail utd = { textureName, type };
 	textures.emplace(textureUnit, utd);
-	return addStaticUniform(textureNameInShader, &textureUnit);
+    GLint textureUnit_int = (GLint)textureUnit;//Samplers are set as int, not uint in shader
+    return addStaticUniform(textureNameInShader, &textureUnit_int);
 }
 bool ShaderCore::removeDynamicUniform(const char *uniformName)
 {

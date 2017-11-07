@@ -155,7 +155,11 @@ Texture::Texture(GLenum type, GLuint textureUnit, const Format &format, const st
 	, externalTex(glName!=0)
 {
 	assert(textureUnit != 0);//We reserve texture unit 0 for texture commands, because if we bind a texture to change settings we would knock the desired one out of the unit
-	bind();
+    //Bind to texture unit (cant use bind() as includes debug call virtual fn)
+    GL_CALL(glActiveTexture(GL_TEXTURE0 + this->textureUnit));
+    GL_CALL(glBindTexture(this->type, this->glName));
+    //Always return to Tex0 for doing normal texture work
+    GL_CALL(glActiveTexture(GL_TEXTURE0));
 }
 Texture::~Texture()
 {

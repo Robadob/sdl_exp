@@ -24,6 +24,7 @@ public:
 	 * @param options A bitmask of options which correspond to various GL texture options
 	 * @param skipCache If false the returned Texture2D will be added to or loaded from the cache
 	 */
+    static std::shared_ptr<const Texture2D> load(const char * filepath, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
 	static std::shared_ptr<const Texture2D> load(const std::string &filepath, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
 	static std::shared_ptr<Texture2D> make(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data = nullptr, const unsigned long long &options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
 	static std::shared_ptr<Texture2D> make(const glm::uvec2 &dimensions, const Texture::Format &format, const unsigned long long &options);

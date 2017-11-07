@@ -69,6 +69,12 @@ std::shared_ptr<const Texture2D> Texture2D::loadFromCache(const std::string &fil
 	}
 	return nullptr;
 }
+std::shared_ptr<const Texture2D> Texture2D::load(const char * filePath, const unsigned long long options, bool skipCache)
+{
+    if (filePath)
+        return load(std::string(filePath), options, skipCache);
+    return std::shared_ptr <const Texture2D>();
+}
 std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, const unsigned long long options, bool skipCache)
 {
 	//Attempt from cache
@@ -164,10 +170,10 @@ GLuint Texture2D::genTextureUnit()
 #ifdef _DEBUG
 	assert(texUnit < (GLuint)maxUnits);
 #endif
-	if (texUnit < (GLuint)maxUnits)
+	if (texUnit >= (GLuint)maxUnits)
 	{
 		texUnit = 1;
-		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D, enable texture switching");
+		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D, enable texture switching.\n");
 		//If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
 		//Possibly even notifying it of duplicate units
 	}

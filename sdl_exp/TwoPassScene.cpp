@@ -14,7 +14,7 @@ TwoPassScene::SceneContent::SceneContent()
     , pointlightTarget(0)
     , shadowDims(2048)
 	, shadowIn()
-	, shadowOut(Texture2D::make(shadowDims, { GL_R32F, GL_RED, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MIN_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
+    , shadowOut(Texture2D::make(shadowDims, { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
     planeModel->setColor(glm::vec3(1));//White
     deerModel->exportModel();

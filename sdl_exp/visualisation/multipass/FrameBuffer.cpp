@@ -121,12 +121,12 @@ void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint
 			{//If this is the first call, set the render target				
 				if (!attachmentConfig.RenderTarget())
 				{//If texture is managed
-						Texture::Format fmt(attachmentConfig.PixelFormat(), attachmentConfig.InternalFormat(), Texture::WRAP_CLAMP_TO_EDGE|Texture::FILTER_MAG_LINEAR|Texture::FILTER_MIN_LINEAR|Texture::DISABLE_MIPMAP, attachmentConfig.StorageType());
+                        Texture::Format fmt(attachmentConfig.PixelFormat(), attachmentConfig.InternalFormat(), 0, attachmentConfig.StorageType());//Size is unused for our requirements, so 0 will suffice
 						renderTarget = samples 
-							? std::dynamic_pointer_cast<RenderTarget>(Texture2D_Multisample::make(dimensions, fmt, samples, nullptr, 0)) 
-							: std::dynamic_pointer_cast<RenderTarget>(Texture2D::make(dimensions, fmt, nullptr, 0));
+                            ? std::dynamic_pointer_cast<RenderTarget>(Texture2D_Multisample::make(dimensions, fmt, samples, nullptr, Texture::WRAP_CLAMP_TO_EDGE | Texture::FILTER_MAG_LINEAR | Texture::FILTER_MIN_LINEAR | Texture::DISABLE_MIPMAP))
+                            : std::dynamic_pointer_cast<RenderTarget>(Texture2D::make(dimensions, fmt, nullptr, Texture::WRAP_CLAMP_TO_EDGE | Texture::FILTER_MAG_LINEAR | Texture::FILTER_MIN_LINEAR | Texture::DISABLE_MIPMAP));
 						//Bind the tex to our framebuffer
-						GL_CALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachPoint, GL_RENDERBUFFER, renderTarget->getName()));
+                        GL_CALL(glFramebufferTexture2D(GL_FRAMEBUFFER, attachPoint, GL_TEXTURE_TYPE(), renderTarget->getName(), 0));
 						return;//No need to resize if we just created
 				}
 				else

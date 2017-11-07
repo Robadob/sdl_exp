@@ -187,10 +187,10 @@ GLuint TextureBuffer<T>::genTextureUnit()
 #ifdef _DEBUG
 	assert(TextureBuffer_T_texUnit < (GLuint)maxUnits);
 #endif
-	if (TextureBuffer_T_texUnit < (GLuint)maxUnits)
+    if (TextureBuffer_T_texUnit >= (GLuint)maxUnits)
 	{
 		TextureBuffer_T_texUnit = 1;
-		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_BUFFER, enable texture switching");
+		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_BUFFER, enable texture switching.\n");
 		//If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
 		//Possibly even notifying it of duplicate units
 	}

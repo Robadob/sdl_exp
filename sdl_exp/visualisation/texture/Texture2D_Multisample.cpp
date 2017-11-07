@@ -42,10 +42,10 @@ GLuint Texture2D_Multisample::genTextureUnit()
 #ifdef _DEBUG
     assert(texUnit < (GLuint)maxUnits);
 #endif
-    if (texUnit < (GLuint)maxUnits)
+    if (texUnit >= (GLuint)maxUnits)
     {
         texUnit = 1;
-        fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D_MULTISAMPLE, enable texture switching");
+        fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D_MULTISAMPLE, enable texture switching.\n");
         //If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
         //Possibly even notifying it of duplicate units
     }

@@ -192,7 +192,7 @@ public:
 	 * @param texture The texture to be used
 	 * @note Convenience method, implemented in Texture.cpp
 	 */
-	bool addTexture(const char *textureNameInShader, std::shared_ptr<const Texture> texture);
+	bool addTexture(const char *textureNameInShader, const std::shared_ptr<const Texture> &texture);
 	/**
 	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
@@ -203,25 +203,25 @@ public:
 	 */
 	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName);
 	/**
-	* Attaches the specified buffer to the shader if bufferNameInShader can be found
-	* If a buffer with the same bufferNameInShader is already bound, it will be replaced
-	* This is for 'program resources', NOT texture buffers
-	* This will not retain the shared_ptr, it's upto you to keep it alive
-	* @param bufferNameInShader The indentifier of the buffer within the shader source
-	* @param buffer The buffer to be used
-	* @note Convenience method, implemented in BufferCore.cpp
-	*/
-	bool addBuffer(const char *bufferNameInShader, std::shared_ptr<BufferCore> buffer);
+	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
+	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
+	 * This is for 'program resources', NOT texture buffers
+	 * This will not retain the shared_ptr, it's upto you to keep it alive
+	 * @param bufferNameInShader The indentifier of the buffer within the shader source
+	 * @param buffer The buffer to be used
+	 * @note Convenience method, implemented in BufferCore.cpp
+	 */
+	bool addBuffer(const char *bufferNameInShader, const std::shared_ptr<BufferCore> &buffer);
 	/**
-	* Unbinds the named dynamic uniform
-	* @note This will not replace the value cached in the shader, reload() is necessary to achieve that
-	*/
+	 * Unbinds the named dynamic uniform
+	 * @note This will not replace the value cached in the shader, reload() is necessary to achieve that
+	 */
 	bool removeDynamicUniform(const char *uniformName);
 	/**
-	* Unbinds the named static uniform
-	* @note This will not replace the value cached in the shader, reload() is necessary to achieve that
-    * @note This will also remove texture uniforms of the same name
-	*/
+	 * Unbinds the named static uniform
+	 * @note This will not replace the value cached in the shader, reload() is necessary to achieve that
+     * @note This will also remove texture uniforms of the same name
+	 */
 	bool removeStaticUniform(const char *uniformName);
 	/**
 	 * Unbinds the named texture uniform
@@ -229,34 +229,34 @@ public:
 	 */
 	bool removeTextureUniform(const char *uniformName);
 	/**
-	* Unbinds the named buffer uniform
-	* @note This will not replace the value cached in the shader, reload() is necessary to achieve that
-	*/
+	 * Unbinds the named buffer uniform
+	 * @note This will not replace the value cached in the shader, reload() is necessary to achieve that
+	 */
 	bool removeBuffer(const char *nameInShader);
 	/**
 	 * Sets the static setting determining whether the program should exit on a shader compilation failure
 	 */
 	static void setExitOnError(const bool exitOnError){ ShaderCore::exitOnError = exitOnError; }
 	/**
-	* Returns the status of the static setting determining whether the program should exit on shader compilation failure
-	* @return True if the program should exit on shader compilation failure
-	*/
+	 * Returns the status of the static setting determining whether the program should exit on shader compilation failure
+	 * @return True if the program should exit on shader compilation failure
+	 */
 	static bool getExitOnError(){ return ShaderCore::exitOnError; }
 	/**
-	* Attempts to locate the specified uniform's location and type within the provided shader
-	* @param uniformName The name of the uniform
-	* @param shaderProgram The programId of the shader
-	* @return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
-	* @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
-	*/
+	 * Attempts to locate the specified uniform's location and type within the provided shader
+	 * @param uniformName The name of the uniform
+	 * @param shaderProgram The programId of the shader
+	 * @return A pair object whereby the first item is the uniform'd location, and the second item is the type. On failure the first item will be -1
+	 * @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
+	 */
 	static std::pair<int, GLenum> findUniform(const char *uniformName, const int shaderProgram);
 	/**
-	* Attempts to locate the specified attribute's location and type
-	* @param attributeName The name of the attribute
-	* @param shaderProgram The programId of the shaderprogram
-	* @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
-	* @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
-	*/
+	 * Attempts to locate the specified attribute's location and type
+	 * @param attributeName The name of the attribute
+	 * @param shaderProgram The programId of the shaderprogram
+	 * @return A pair object whereby the first item is the attribute's location, and the second item is the type. On failure the first item will be -1
+	 * @note Type can be any enum from: GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3, GL_FLOAT_VEC4, GL_INT, GL_INT_VEC2, GL_INT_VEC3, GL_INT_VEC4, GL_BOOL, GL_BOOL_VEC2, GL_BOOL_VEC3, GL_BOOL_VEC4, GL_FLOAT_MAT2, GL_FLOAT_MAT3, GL_FLOAT_MAT4, GL_SAMPLER_2D, or GL_SAMPLER_CUBE
+	 */
 	static std::pair<int, GLenum> findAttribute(const char *attributeName, const int shaderProgram);
 private:
     static GLenum getResourceBlock(GLenum bufferType);
@@ -266,8 +266,8 @@ private:
 	 */
 	std::vector<GLuint> floatingShaders;
 	/**
-	* Simply wraps glCreateShader(GLenum), so that we can track created shaders to clean them after linking
-	*/
+	 * Simply wraps glCreateShader(GLenum), so that we can track created shaders to clean them after linking
+	 */
 	GLuint createShader(GLenum type)
 	{
 		GLuint t = GL_CALL(glCreateShader(type));
@@ -275,9 +275,9 @@ private:
 		return t;
 	}
 	/**
-	* Simply calls glDeleteShader(GLuint) on all values stored in floatingShaders and then clears floatingShaders
-	* Once they have been linked to the program, they are nolonger required
-	*/
+	 * Simply calls glDeleteShader(GLuint) on all values stored in floatingShaders and then clears floatingShaders
+	 * Once they have been linked to the program, they are nolonger required
+	 */
 	void deleteShaders()
 	{
 		for (auto i : floatingShaders)
@@ -321,45 +321,45 @@ private:
 	 */
 	std::map<GLint, DynamicUniformDetail> dynamicUniforms;
 	/**
-	* Holds dynamic uniforms that were not found within the shader
-	*/
+	 * Holds dynamic uniforms that were not found within the shader
+	 */
 	std::list<DynamicUniformDetail> lostDynamicUniforms;
 	/**
-	* Holds all the necessary information for binding static uniform int and float vectors
-	*/
+	 * Holds all the necessary information for binding static uniform int and float vectors
+	 */
 	struct StaticUniformDetail
 	{
 		/**
-		* GL_INT, GL_UNSIGNED_INT or GL_FLOAT
-		*/
+		 * GL_INT, GL_UNSIGNED_INT or GL_FLOAT
+		 */
 		const GLenum type;
 		/**
-		* Data to be stored in the shader uniform
-		* @note components greater than count-1 are likely to contain garbage data
-		* @note this may actually contain a glm::vec4 if type==GL_FLOAT
-		*/
+		 * Data to be stored in the shader uniform
+		 * @note components greater than count-1 are likely to contain garbage data
+		 * @note this may actually contain a glm::vec4 if type==GL_FLOAT
+		 */
 		const glm::ivec4 data;
 		/**
-		* Number of vector components
-		*/
+		 * Number of vector components
+		 */
 		const unsigned int count;
 		/**
-		* Identifier of the uniform within the shader source
-		*/
+		 * Identifier of the uniform within the shader source
+		 */
 		const char *uniformName;
 	};
 	/**
-	* Holds information necessary for setting the static uniforms to be bound to the shader
-	*/
+	 * Holds information necessary for setting the static uniforms to be bound to the shader
+	 */
 	std::list<StaticUniformDetail> staticUniforms;
 	/**
-	* Holds all the additional information for binding texture uniforms
-	*/
+	 * Holds all the additional information for binding texture uniforms
+	 */
 	struct UniformTextureDetail
 	{
 		/**
-		* The name of the texture (as returned by glGenTexture())
-		*/
+		 * The name of the texture (as returned by glGenTexture())
+		 */
 		const GLuint name;
 		/**
 		 * The type of texture (e.g. GL_TEXTURE2D)
@@ -375,54 +375,54 @@ private:
 	 */
 	std::map<GLint,UniformTextureDetail> textures;
 	/**
-	* Holds all the additional information for binding texture uniforms
-	*/
+	 * Holds all the additional information for binding texture uniforms
+	 */
 	struct BufferDetail
 	{
 		/**
-		Name of the buffer within the shader
-		*/
+		 * Name of the buffer within the shader
+		 */
 		const char* nameInShader;
 		/**
-		* The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER, GL_UNIFORM_BUFFER)
-		*/
+		 * The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER, GL_UNIFORM_BUFFER)
+		 */
 		const GLenum type;
 		/**
-		* The binding point of the buffer (as set with glBindBufferBase())
-		*/
+		 * The binding point of the buffer (as set with glBindBufferBase())
+		 */
 		const GLuint bindingPoint;
 	};
 	/**
-	* Holds additional information necessary for tracking buffers
-	*/
+	 * Holds additional information necessary for tracking buffers
+	 */
 	std::map<GLuint, BufferDetail> buffers;
 	/**
-	* Holds buffers that were not found within the shader
-	* or went missing after a shader reload
-	*/
+	 * Holds buffers that were not found within the shader
+	 * or went missing after a shader reload
+	 */
 	std::list<BufferDetail> lostBuffers;
 	/**
-	* Subclasses should use this to clear any enabled client states or attribute arrays
-	* If not overriden, does nothing
-	* Called by clearProgram()
-	*/
+	 * Subclasses should use this to clear any enabled client states or attribute arrays
+	 * If not overriden, does nothing
+	 * Called by clearProgram()
+	 */
 	virtual void _clearProgram() {}
 	/**
-	* Subclasses should use this to apply any subclass specific shader bindings
-	* If not overriden, does nothing
-	* Called by useProgram()
-	*/
+	 * Subclasses should use this to apply any subclass specific shader bindings
+	 * If not overriden, does nothing
+	 * Called by useProgram()
+	 */
 	virtual void _useProgram() {}
 	/**
-	* Subclasses should use this to call compileShader() with each shader src
-	* @param t_shaderProgram Temporary shader program ID which succesfully compiled shaders should be attatched to
-	* Called by reload()
-	*/
+	 * Subclasses should use this to call compileShader() with each shader src
+	 * @param t_shaderProgram Temporary shader program ID which succesfully compiled shaders should be attatched to
+	 * Called by reload()
+	 */
 	virtual bool _compileShaders(const GLuint t_shaderProgram) = 0;
 	/**
-	* Locates all subclass specific bound uniforms, attributes, textures and storage within the shader
-	* Called by setupBindings()
-	*/
+	 * Locates all subclass specific bound uniforms, attributes, textures and storage within the shader
+	 * Called by setupBindings()
+	 */
 	virtual void _setupBindings() {}
 protected:
 	/**
@@ -445,32 +445,32 @@ protected:
 	 */
 	static char *loadShaderSource(const char *file);
 	/**
-	* Looks for the '#version xx' tag in the provided shader source and returns the numeric value
-	* @param shaderSources The shader code to detect the version from
-	* @return The detected shader version, 0 if one was not found
-	*/
+	 * Looks for the '#version xx' tag in the provided shader source and returns the numeric value
+	 * @param shaderSources The shader code to detect the version from
+	 * @return The detected shader version, 0 if one was not found
+	 */
 	static unsigned int findShaderVersion(std::vector<const char*> shaderSources);
 	/**
-	* Copies the init list to a std::vector of std:strings on the heap
-	* @note You should delete the ptr returned by this yourself
-	*/
+	 * Copies the init list to a std::vector of std:strings on the heap
+	 * @note You should delete the ptr returned by this yourself
+	 */
 	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
 	/**
-	* Checks whether the specified shader program linked succesfully.
-	* Linking errors are printed to stderr and compileSuccessflag is set to false on failure.
-	* @param programId Location of the shader program to check
-	* @return True if no errors were detected
-	* @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
-	*/
+	 * Checks whether the specified shader program linked succesfully.
+	 * Linking errors are printed to stderr and compileSuccessflag is set to false on failure.
+	 * @param programId Location of the shader program to check
+	 * @return True if no errors were detected
+	 * @note For some reason program compilation failure logs don't seem to work (the same as shader compilation)
+	 */
 	bool checkProgramLinkError(const GLuint programId) const;
 private:
 	/**
-	* Checks whether the specified shader compiled succesfully.
-	* Compilation errors are printed to stderr and compileSuccessflag is set to false on failure.
-	* @param shaderId Location of the shader to check
-	* @param shaderPath Path to the shader being checked (so that it can be easily identified in the error log)
-	* @return True if no errors were detected
-	*/
+	 * Checks whether the specified shader compiled succesfully.
+	 * Compilation errors are printed to stderr and compileSuccessflag is set to false on failure.
+	 * @param shaderId Location of the shader to check
+	 * @param shaderPath Path to the shader being checked (so that it can be easily identified in the error log)
+	 * @return True if no errors were detected
+	 */
 	static bool checkShaderCompileError(const GLuint shaderId, const char *shaderPath);
 	/**
 	 * Returns the filename from the provided file path

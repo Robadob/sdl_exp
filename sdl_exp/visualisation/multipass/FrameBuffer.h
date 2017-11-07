@@ -12,8 +12,8 @@ class RenderBuffer;
 
 /**
  * This class represents a Framebuffer with custom 2D texture and renderbuffer attachments
- * The class supports multisampling, however that required you to instead use Sampler2DMS to sample any textures inside shaders
- * If a scaling framebuffer is used, it will be resized whenever the viewport dimensions are changed
+ * The class supports multisampling, however that requires you to instead use Sampler2DMS to sample any textures inside shaders
+ * If a scaling framebuffer is used, it will be resized whenever the viewport dimensions are changed (this includes resizing unmanaged textures/renderbuffers)
  * You can use Shaders::setFragOutAttribute() to bind the attachment point to a named output
  * @todo Improve stencilbuffer (control when writing/clearing/using) //https://en.wikipedia.org/wiki/Stencil_buffer
  * @todo Add support for cubemap framebuffers
@@ -155,12 +155,12 @@ public:
      * @return The number of samples
      * @note 0 Means that multisampling for the FrameBuffer is disabled
      */
-    unsigned int getSampleCount(){ return samples; }
+    unsigned int getSampleCount() const { return samples; }
     /**
      * @return The current dimensions of the FrameBuffer
      * @note If this is a scaling FrameBuffer this value may change over time
      */
-    glm::uvec2 getDimensions(){ return dimensions; }
+    glm::uvec2 getDimensions() const { return dimensions; }
     /**
      * Sets whether the Framebuffer is to be automatically cleared before use
      */
@@ -168,7 +168,7 @@ public:
     /**
      * @return Whether the Framebuffer is to be automatically cleared before use
      */
-    bool getDoClear(){ return doClear; }
+    bool getDoClear() const { return doClear; }
     /**
      * Sets the clear color to be used
      */
@@ -177,7 +177,7 @@ public:
     /**
      * @return The clear color to be used
      */
-    glm::vec4 getClearColor(){ return clearColor; }
+    glm::vec4 getClearColor() const { return clearColor; }
 	/**
 	 * Disables filtering for the specified color attachment's texture
 	 * @param attachPt The attachment point to disable filtering for, default 0 (aka single color texture)

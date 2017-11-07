@@ -77,8 +77,11 @@ FrameBuffer::~FrameBuffer()
 	colors.clear();
 	//DepthStencil
 	depthStencil.renderTarget.reset();
+	depthStencil.conf.RenderTarget().reset();
 	depth.renderTarget.reset();
+	depth.conf.RenderTarget().reset();
 	stencil.renderTarget.reset();
+	stencil.conf.RenderTarget().reset();
 	//FrameBuffer
     GL_CALL(glDeleteFramebuffers(1, &name));
 }

@@ -109,8 +109,21 @@ public:
 	 * Returns whether mipmapping is enabled according to the selected options
 	 */
 	bool enableMipMapOption() const;
+	/**
+	 * Enables any passed options
+	 * @param addOptions The options to enable
+	 */
 	void setOptions(unsigned long long addOptions);
+	/**
+	 * Disables any passed options
+	 * @param removeOptions The options to disable
+	 */
 	void unsetOptions(unsigned long long removeOptions);
+	/**
+	 * Regenerate's the texture's mip map
+	 * @note This does nothing for texture's with mipmap disabled
+	 * @note Texture buffer and array texture's do not support mipmapping
+	 */
 	void updateMipMap();
 	/**
 	 * @param fileExtension A given string of a file extension

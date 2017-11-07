@@ -27,7 +27,13 @@ public:
 	 */
 	static std::shared_ptr<TextureBuffer<T>> make(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation);
 #endif
+	/**
+	 * Copy constructor, creates a mutable copy
+	 */
 	TextureBuffer(const TextureBuffer<T>& b);
+	/**
+	 * Move constructor and assignment operators disabled, contains const elements
+	 */
 	TextureBuffer(const TextureBuffer<T>&& b) = delete;
 	TextureBuffer<T>& operator= (const TextureBuffer<T>& b) = delete;
 	TextureBuffer<T>& operator= (const TextureBuffer<T>&& b) = delete;
@@ -47,7 +53,7 @@ public:
 	 */
 	void getData(T *dataReturn, size_t size = 0, size_t offset = 0) const;
 	/**
-	 * Returns whether this is the currently bound texture
+     * @return boolean representing whether the texture is currently correct bound to it's allocated texture unit
 	 * @note This does not check whether it is the currently bound buffer!
 	 */
 	bool isBound() const override;
@@ -65,7 +71,7 @@ private:
 	TextureBuffer(CUDATextureBuffer<T> *cuTexBuf, bool handleDeallocation);
 #endif
 	/**
-	 * Required methods for handling texture units
+	 * Used inside constructor to assign the instance a texture unit
 	 */
 	static GLuint genTextureUnit();
 	/**

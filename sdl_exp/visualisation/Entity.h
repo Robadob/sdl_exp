@@ -44,55 +44,55 @@ public:
 		Stock::Models::Model const model,
 		float scale = 1.0f,
 		std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
-		std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
 	explicit Entity(
 		Stock::Models::Model const model,
 		float scale,
 		Stock::Shaders::ShaderSet const ss,
-		std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
 	explicit Entity(
 		const char *modelPath,
 		float modelScale = 1.0f,
 		Stock::Shaders::ShaderSet const ss = Stock::Shaders::FIXED_FUNCTION,
-		std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
 	explicit Entity(
 		const char *modelPath,
 		float modelScale,
 		std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
-		std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
     explicit Entity(
         Stock::Models::Model const model,
         float scale = 1.0f,
 		std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
-        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
     Entity(
         Stock::Models::Model const model,
         float scale,
 		std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
     explicit Entity(
         const char *modelPath,
         float modelScale = 1.0f,
 		std::initializer_list<const Stock::Shaders::ShaderSet> ss = {},
-        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
         );
     explicit Entity(
         const char *modelPath,
         float modelScale,
 		std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
-        std::shared_ptr<Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
 	explicit Entity(
 		const char *modelPath,
 		float modelScale,
 		std::vector<std::shared_ptr<Shaders>> shaders,
-		std::shared_ptr<Texture> texture
+        std::shared_ptr<const Texture> texture
 		);
     virtual ~Entity();
 	virtual void render(unsigned int shaderIndex = 0);
@@ -115,7 +115,7 @@ public:
 	glm::vec3 getDimensions() const { return modelDims; }
 protected:
     std::vector<std::shared_ptr<Shaders>> shaders;
-    std::shared_ptr<Texture> texture;
+    std::shared_ptr<const Texture> texture;
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
     const char *modelPath;

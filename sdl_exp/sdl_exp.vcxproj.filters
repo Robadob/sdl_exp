@@ -74,12 +74,6 @@
     <ClCompile Include="visualisation\Visualisation.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\texture\Texture.cpp">
-      <Filter>Source Files\Visualisation\Texture</Filter>
-    </ClCompile>
-    <ClCompile Include="visualisation\texture\Texture2D.cpp">
-      <Filter>Source Files\Visualisation\Texture</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp">
       <Filter>Source Files\Visualisation\Texture</Filter>
     </ClCompile>
@@ -143,8 +137,20 @@
     <ClCompile Include="visualisation\shader\buffer\ShaderStorageBuffer.cpp">
       <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\texture\Texture.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\texture\Texture2D.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\texture\Texture2D_Multisample.cpp">
+      <Filter>Source Files\Visualisation\Texture</Filter>
+    </ClCompile>
     <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp">
       <Filter>Source Files\Visualisation\Shader\Buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -171,13 +177,7 @@
     <ClInclude Include="visualisation\Visualisation.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\texture\Texture2D.h">
-      <Filter>Header Files\Visualisation\Texture</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\texture\TextureCubeMap.h">
-      <Filter>Header Files\Visualisation\Texture</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\texture\Texture.h">
       <Filter>Header Files\Visualisation\Texture</Filter>
     </ClInclude>
     <ClInclude Include="EntityScene.h">
@@ -257,6 +257,21 @@
     </ClInclude>
     <ClInclude Include="visualisation\shader\buffer\BufferCore.h">
       <Filter>Header Files\Visualisation\Shader\Buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\Texture.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\Texture2D.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\texture\Texture2D_Multisample.h">
+      <Filter>Header Files\Visualisation\Texture</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\RenderBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\RenderTarget.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

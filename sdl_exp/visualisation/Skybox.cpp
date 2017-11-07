@@ -11,7 +11,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
         Stock::Models::CUBE, 
         50.0f,//Make it adequate distance away
 		{ Stock::Shaders::SKYBOX },
-        std::make_shared<TextureCubeMap>(texturePath)
+        TextureCubeMap::load(texturePath)
     )
 {    
     //Set height

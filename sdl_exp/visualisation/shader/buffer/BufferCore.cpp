@@ -154,8 +154,11 @@ GLint BufferCore::maxBuffers(GLenum bufferType)
 	return 0;
 }
 
+//Comment out this include if not making use of Shaders/ShaderCore
 #include "../ShaderCore.h"
-bool ShaderCore::addBuffer(const char *bufferNameInShader, std::shared_ptr<BufferCore> buffer)
+#ifdef __ShaderCore_h__
+bool ShaderCore::addBuffer(const char *bufferNameInShader, const std::shared_ptr<BufferCore> &buffer)
 {//Treat it similar to texture binding points
 	return addBuffer(bufferNameInShader, buffer->getType(), buffer->getBufferBindPoint());
 }
+#endif

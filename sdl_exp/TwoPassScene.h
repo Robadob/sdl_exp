@@ -35,7 +35,7 @@ class TwoPassScene : public MultiPassScene
 		//Dimensions of the shadow texture
         glm::uvec2 shadowDims;
 		//GL names of the rendered to and blurred to shadow textures
-        GLuint shadowIn, shadowOut;
+		std::shared_ptr<Texture2D> shadowIn, shadowOut;
 	};
 	/**
 	 * This is the first render pass, we use to to generate the shadow map

@@ -13,25 +13,13 @@ TwoPassScene::SceneContent::SceneContent()
     , pointlightPos(75, 100, 0)//100 units up, radius of 75
     , pointlightTarget(0)
     , shadowDims(2048)
-    , shadowIn(0)
-    , shadowOut(0)
+	, shadowIn()
+    , shadowOut(Texture2D::make(shadowDims, { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
     planeModel->setColor(glm::vec3(1));//White
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
-    //Create the gauss tex manually
-    GL_CALL(glGenTextures(1, &shadowOut));
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, shadowOut));
-	GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));//Tri-linear filtering
-	GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-	GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)); 
-	GLfloat fLargest;
-	GL_CALL(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest));
-	GL_CALL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest));//Anistropic filtering (improves texture sampling at steep angle)
-    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, shadowDims.x, shadowDims.y, 0, GL_RED, GL_FLOAT, nullptr));
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
@@ -51,7 +39,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	addPass(0, sPass);
 	addPass(1, cPass);
     //Put a preview of the depth texture on the HUD
-    shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, 256, 256, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_HEAT));
+	shadowMapPreview = std::make_shared<Sprite2D>(content->shadowOut, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_HEAT), glm::uvec2(256, 256));
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
@@ -130,12 +118,12 @@ TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
     std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(getFrameBuffer());
     if (t)
     {
-        content->shadowIn = t->getColorTextureName();
-        //content->shadowOut = content->shadowIn;
+		content->shadowIn = std::dynamic_pointer_cast<Texture2D>(t->getColorTexture());
+        //content->shadowOut = content->shadowIn;//Uses the pre blur shadow map (aka hard shadows)
     }
-    content->deerModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
-    content->sphereModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
-    content->planeModel->getShaders(1)->addTextureUniform(content->shadowOut, "_shadowMap", GL_TEXTURE_2D);
+	content->deerModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	content->sphereModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	content->planeModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 }
 TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
@@ -154,11 +142,9 @@ void TwoPassScene::ShadowPass::render()
 void TwoPassScene::CompositePass::render()
 {
 	//Slightly blur shadow map to reduce harshness of edges
-	content->blur->blurR32F(content->shadowIn, content->shadowOut, content->shadowDims);
+	content->blur->blurR32F(content->shadowIn, content->shadowOut);
 	//Generate mip-map
-	GL_CALL(glBindTexture(GL_TEXTURE_2D, content->shadowOut));
-	GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
-	GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+	content->shadowOut->updateMipMap();
 	//Render models using shadow map
     content->deerModel->render(1);
     content->sphereModel->render(1);

@@ -21,7 +21,7 @@ Entity::Entity(
 	Stock::Models::Model const model,
 	float modelScale,
 	std::shared_ptr<Shaders> shaders,
-	std::shared_ptr<Texture> texture
+	std::shared_ptr<const Texture> texture
 	) : Entity(model, modelScale, { shaders }, texture){ }
 /*
 Convenience constructor.
@@ -30,7 +30,7 @@ Entity::Entity(
 	Stock::Models::Model const model,
 	float modelScale,
 	Stock::Shaders::ShaderSet const ss,
-	std::shared_ptr<Texture> texture
+	std::shared_ptr<const Texture> texture
 	) : Entity(model, modelScale, { ss }, texture){ }
 /*
 Convenience constructor.
@@ -39,7 +39,7 @@ Entity::Entity(
 	const char *modelPath,
 	float modelScale,
 	Stock::Shaders::ShaderSet const ss,
-	std::shared_ptr<Texture> texture
+	std::shared_ptr<const Texture> texture
 	) : Entity(modelPath, modelScale, { ss }, texture){ }
 /*
 Convenience constructor.
@@ -48,7 +48,7 @@ Entity::Entity(
 	const char *modelPath,
 	float modelScale,
 	std::shared_ptr<Shaders> shaders,
-	std::shared_ptr<Texture> texture
+	std::shared_ptr<const Texture> texture
 	) : Entity(modelPath, modelScale, { shaders }, texture){ }
 /*
 Convenience constructor.
@@ -57,12 +57,12 @@ Entity::Entity(
     Stock::Models::Model const model,
     float modelScale,
 	std::initializer_list<std::shared_ptr<Shaders>> shaders,
-    std::shared_ptr<Texture> texture
+    std::shared_ptr<const Texture> texture
     ) : Entity(
     model.modelPath,
     modelScale,
 	shaders.size() > 0 ? shaders : std::vector<std::shared_ptr<Shaders>>({std::make_shared<Shaders>(model.defaultShaders)}),
-    texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
+    texture ? texture : Texture2D::load(model.texturePath)
     ){ }
 /*
 Convenience constructor.
@@ -71,12 +71,12 @@ Entity::Entity(
     Stock::Models::Model const model,
     float modelScale,
 	std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-    std::shared_ptr<Texture> texture
+    std::shared_ptr<const Texture> texture
     ) : Entity(
     model.modelPath,
     modelScale,
 	convertToShader(ss),
-    texture.get() ? texture : std::make_shared<Texture2D>(model.texturePath)
+    texture.get() ? texture : Texture2D::load(model.texturePath)
     ) { }
 /*
 Convenience constructor.
@@ -85,7 +85,7 @@ Entity::Entity(
     const char *modelPath,
     float modelScale,
 	std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-    std::shared_ptr<Texture> texture
+    std::shared_ptr<const Texture> texture
     ): Entity(
     modelPath,
 	modelScale,
@@ -96,7 +96,7 @@ Entity::Entity(
 	const char *modelPath,
 	float modelScale,
 	std::initializer_list<std::shared_ptr<Shaders>> shaders,
-	std::shared_ptr<Texture> texture
+    std::shared_ptr<const Texture> texture
 	) : Entity(
 	modelPath,
 	modelScale,
@@ -114,7 +114,7 @@ Entity::Entity(
     const char *modelPath,
     float modelScale,
 	std::vector<std::shared_ptr<Shaders>> shaders,
-    std::shared_ptr<Texture> texture
+    std::shared_ptr<const Texture> texture
     )
     : positions(GL_FLOAT, 3, sizeof(float))
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
@@ -135,13 +135,14 @@ Entity::Entity(
     GL_CHECK();
     loadModelFromFile();
     //If texture has been provided, set up
-    if (texture.get())
+    if (texture)
     {
 		for (auto &&it : this->shaders)
 		{
 			if (it)
 			{
-				texture->bindToShader(it.get());
+                //Temporary hardcode uniform name with literal
+                it->addTexture("_texture", texture);
 			}
 		}
     }
@@ -1426,8 +1427,6 @@ void Entity::reload()
 	for (auto &&it:shaders)
 		if (it)
 			it->reload();
-    if (texture.get())
-        texture->reload();
 }
 /*
 Sets the pointer to the view matrix used by this entitiy (in the shader)

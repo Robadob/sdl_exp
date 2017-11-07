@@ -3,6 +3,7 @@
 #include "Overlay.h"
 #include <glm/gtc/matrix_transform.inl>
 #include <glm/gtc/type_ptr.hpp>
+#include "shader/Shaders.h"
 
 /*
 Creates a new HUD, specifying the window dimensions

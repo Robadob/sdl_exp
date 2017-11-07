@@ -1,11 +1,13 @@
 #include "TextureCubeMap.h"
-/*
-The stock skybox path (used as the default cube map texture
-*/
+#include <cassert>
+#include <glm/gtx/component_wise.hpp>
+
+/**
+ * Static members
+ */
+//The stock skybox path (used as the default cube map texture
 const char *TextureCubeMap::SKYBOX_PATH = "../textures/skybox/";
-/*
-The file name (without the file type) to face mapping used by cube maps
-*/
+//The file name (without the file type) to face mapping used by cube maps
 const TextureCubeMap::CubeMapParts TextureCubeMap::FACES[] = {
     CubeMapParts(GL_TEXTURE_CUBE_MAP_POSITIVE_X, "left"),
     CubeMapParts(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, "right"),
@@ -14,27 +16,148 @@ const TextureCubeMap::CubeMapParts TextureCubeMap::FACES[] = {
     CubeMapParts(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, "front"),
     CubeMapParts(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, "back")
 };
-/*
-Constructs a new cubemap texture from files in the provided directory
-@param cubeMapDirectory Path to a directory that contains 6 files of the names provided in TextureCubeMap::FACES
-@param uniformName The name of the uniform sampler within the shader (this defaults to the value of Texture::TEXTURE_UNIFORM_NAME)
-@note The directory must end with a slash
-*/
-TextureCubeMap::TextureCubeMap(const char *cubemapDirectory, char *uniformName)
-    :Texture(GL_TEXTURE_CUBE_MAP, cubemapDirectory, uniformName)
-    , texturePath(cubemapDirectory == 0 ? SKYBOX_PATH : cubemapDirectory)
+std::unordered_map<std::string, std::weak_ptr<const TextureCubeMap>> TextureCubeMap::cache;
+/**
+ * Constructors
+ */
+TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE_COUNT], const std::string reference, const unsigned long long options)
+	:Texture(GL_TEXTURE_CUBE_MAP, genTextureUnit(), getFormat(images[0]), reference, options)
+	, faceDimensions(images[0]->w, images[0]->h)
+    , immutable(true)
 {
-    GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
-    if (cubemapDirectory)
-        _reload();
+	GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
+    allocateTextureImmutable(faceDimensions);
+	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
+	{
+		assert(images[i]);
+		assert(images[i]->w == faceDimensions.x);//All must share dimensions and pixel format
+		assert(images[i]->h == faceDimensions.y);
+		assert(getFormat(images[i]) == format);
+        setTexture(images[i]->pixels, faceDimensions,glm::ivec2(0), FACES[i].target);
+	}
+	applyOptions();
 }
-void TextureCubeMap::reload() { _reload(); }
-void TextureCubeMap::_reload()
+/**
+ * Copy/Assignment handling
+ */
+TextureCubeMap::TextureCubeMap(const TextureCubeMap& b)
+	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
+    , immutable(false)
 {
-    SDL_Surface *image;
-    for (int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
+    //Allocate each face
+    for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
     {
-        image = readImage(std::string(texturePath).append(FACES[i].name).c_str());
-        setTexture(image, FACES[i].target);
+        allocateTextureMutable(faceDimensions, nullptr, FACES[i].target);
     }
+    //Copy all faces simultaneously
+    GL_CALL(glCopyImageSubData(
+        b.glName, b.type, 0, 0, 0, 0,
+        glName, type, 0, 0, 0, 0,
+        b.faceDimensions.x, b.faceDimensions.y, 6));
+    applyOptions();
+}
+/**
+* Cache handling
+*/
+std::shared_ptr<const TextureCubeMap> TextureCubeMap::loadFromCache(const std::string &filePath)
+{
+	auto a = cache.find(filePath);
+	if (a != cache.end())
+	{
+		if (auto b = a->second.lock())
+		{
+			return b;
+		}
+		//Weak pointer has expired, erase record 
+		//This should be redundant, if custom deleter has been used
+		cache.erase(a);
+	}
+	return nullptr;
+}
+std::shared_ptr<const TextureCubeMap> TextureCubeMap::load(const std::string &filePath, const unsigned long long options, bool skipCache)
+{
+	//Attempt from cache
+    std::shared_ptr<const TextureCubeMap> rtn;
+	if (!skipCache)
+	{
+		rtn = loadFromCache(filePath);
+	}
+	//Load using loader
+	if (!rtn)
+	{
+		//Ensure file path contains trailing slash
+		std::string _filePath = (filePath.back() == '\\' || filePath.back() == '/') ? filePath : std::string(filePath).append("//");
+		//Build array of images, checking each has loaded correctly
+		std::shared_ptr<SDL_Surface> *images = new std::shared_ptr<SDL_Surface>[CUBE_MAP_FACE_COUNT];
+		for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
+		{
+			images[i] = findLoadImage(std::string(_filePath).append(FACES[i].name));
+			if (!images[i])
+				return rtn;
+		}
+		//Pass to constructor
+        rtn = std::shared_ptr<const TextureCubeMap>(new TextureCubeMap(images, filePath, options),
+			[&](TextureCubeMap *ptr){//Custom deleter, which purges cache of item
+			TextureCubeMap::purgeCache(ptr->getReference());
+			delete ptr;
+		});
+		//Delete images
+		delete[] images;
+		images = nullptr;
+	}
+	//If we've loaded something, store in cache
+	if (rtn&&!skipCache)
+	{
+		cache.emplace(filePath, rtn);
+	}
+	return rtn;
+}
+bool TextureCubeMap::isCached(const std::string &filePath)
+{
+	auto a = cache.find(filePath);
+	if (a != cache.end())
+	{
+		if (a->second.lock())
+			return true;
+		//Weak pointer has expired, erase record 
+		//This should be redundant, if custom deleter has been used
+		cache.erase(a);
+	}
+	return false;
+}
+void TextureCubeMap::purgeCache(const std::string &filePath)
+{
+	auto a = cache.find(filePath);
+	if (a != cache.end())
+	{
+		//Erase record
+		cache.erase(a);
+	}
+}
+/**
+ * Required methods for handling texture units
+ */
+GLuint TextureCubeMap::genTextureUnit()
+{
+	static GLuint texUnit = 1;
+	GLint maxUnits;
+	GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));//192 on Modern GPUs, spec minimum 80
+#ifdef _DEBUG
+	assert(texUnit < (GLuint)maxUnits);
+#endif
+    if (texUnit >= (GLuint)maxUnits)
+	{
+		texUnit = 1;
+		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_CUBE_MAP, enable texture switching.\n");
+		//If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
+		//Possibly even notifying it of duplicate units
+	}
+	return texUnit++;
+}
+bool TextureCubeMap::isBound() const
+{
+	GL_CALL(glActiveTexture(GL_TEXTURE0 + textureUnit));
+	GLint whichID;
+	GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &whichID));
+	return whichID == glName;
 }

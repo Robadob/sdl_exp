@@ -1,6 +1,13 @@
 #ifndef __FrameBufferAttachment_h__
 #define __FrameBufferAttachment_h__
+
 #include "../util/GLcheck.h"
+#include "../interface/RenderTarget.h"
+#include "RenderBuffer.h"
+#include "../texture/Texture.h"
+
+#include <memory>
+
 /**
  * Interface to define the shared FBA members
  * These should be constructed via FBAFactory
@@ -10,13 +17,13 @@ class FrameBufferAttachment
     friend class FBAFactory;
 public:
     enum AttachClass { Null, Color, Depth, Stencil, DepthStencil };
-    enum AttachType { Disabled, Texture, RenderBuffer };
+	enum AttachType { Disabled, TextureRT, RenderBufferRT };
     AttachClass Class() const { return cls; }
     AttachType Type() const { return type; }
     GLint InternalFormat() const { return internalFormat; }
     GLenum PixelFormat() const { return pixelFormat; }
     GLenum StorageType() const { return storageType; }
-    GLuint TexName() const { return texName; }
+	std::shared_ptr<RenderTarget> RenderTarget() const { return rt; }
     virtual ~FrameBufferAttachment(){};
 private:
     FrameBufferAttachment(
@@ -24,15 +31,15 @@ private:
         AttachType type, 
         GLint internalFormat,
         GLenum pixelFormat,
-        GLenum storageType,
-        GLuint texName
+		GLenum storageType,
+		std::shared_ptr<::RenderTarget> tex
             )
         : cls(cls)
         , type(type)
         , internalFormat(internalFormat)
         , pixelFormat(pixelFormat)
-        , storageType(storageType)
-        , texName(texName)
+		, storageType(storageType)
+		, rt(rt)
     { }
     /**
      * Which class of attachment is it: Color, Depth, Stencil or DepthStencil
@@ -61,12 +68,12 @@ private:
      * @see glTexImage2D()
      */
     const GLenum storageType;//GL_UNSIGNED_BYTE
-    /**
-     * The name of the unmanaged texture or renderbuffer to use
-     * @note Only set this value to something other than 0 if you want to use an unmanaged texture
-     * @see This is the value which glGenTextures() creates
-     */
-    const GLuint texName;
+	/**
+	 * The name of the unmanaged texture or renderbuffer to use as a render target
+	 * @note Only set this value to something other than nullptr if you want to use an unmanaged texture
+	 * @see This is the value which glGenTextures() creates
+	 */
+	const std::shared_ptr<::RenderTarget> rt;
 };
 class FBAFactory
 {
@@ -79,7 +86,7 @@ public:
      */
     static FrameBufferAttachment Disabled()
     {
-        return FrameBufferAttachment(FrameBufferAttachment::Null, FrameBufferAttachment::Disabled, 0, 0, 0, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Null, FrameBufferAttachment::Disabled, 0, 0, 0, 0);
     }
     ////////////////////////////
     //      Color FBA's       //
@@ -93,7 +100,7 @@ public:
      */
     static FrameBufferAttachment ManagedColorTexture(GLint internalFormat, GLenum format, GLenum storageType = GL_UNSIGNED_BYTE)
     {
-        return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::Texture, internalFormat, format, storageType, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::TextureRT, internalFormat, format, storageType, nullptr);
     }
     /**
      * Defines a FBA capable of representing a RGB color texture FBA using a default configuration
@@ -116,7 +123,7 @@ public:
      */
     static FrameBufferAttachment ManagedColorRenderBuffer(GLint internalFormat)
     {
-        return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::RenderBuffer, internalFormat, 0, 0, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::RenderBufferRT, internalFormat, 0, 0, nullptr);
     }
     /**
      * Defines a FBA capable of representing a RGB color renderbuffer FBA using a default configuration
@@ -156,7 +163,7 @@ public:
         {
             storageType = GL_FLOAT;
         }
-        return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::Texture, internalFormat, GL_DEPTH_COMPONENT, storageType, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::TextureRT, internalFormat, GL_DEPTH_COMPONENT, storageType, nullptr);
     }
     /**
      * Defines a FBA capable of representing depth renderbuffer FBAs
@@ -165,7 +172,7 @@ public:
      */
     static FrameBufferAttachment ManagedDepthRenderBuffer(GLint internalFormat = GL_DEPTH_COMPONENT32F)
     {
-        return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::RenderBuffer, internalFormat, 0, 0, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::RenderBufferRT, internalFormat, 0, 0, nullptr);
     }
     ////////////////////////////
     //     Stencil FBA's      //
@@ -176,7 +183,7 @@ public:
      */
     static FrameBufferAttachment ManagedStencilTexture()
     {
-        return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::Texture, GL_STENCIL_INDEX8, GL_STENCIL_INDEX8, GL_UNSIGNED_INT_24_8, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::TextureRT, GL_STENCIL_INDEX8, GL_STENCIL_INDEX8, GL_UNSIGNED_INT_24_8, nullptr);
     }
     /**
      * Defines a FBA capable of representing 8 bit stencil renderbuffer FBAs
@@ -184,7 +191,7 @@ public:
      */
     static FrameBufferAttachment ManagedStencilRenderBuffer()
     {
-        return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::RenderBuffer, GL_STENCIL_INDEX8, 0, 0, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::RenderBufferRT, GL_STENCIL_INDEX8, 0, 0, nullptr);
     }
     ////////////////////////////
     //   DepthStencil FBA's   //
@@ -194,95 +201,99 @@ public:
      */
     static FrameBufferAttachment ManagedDepthStencilTexture24()
     {//https://www.khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
-        return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::Texture, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::TextureRT, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr);
     }
     /**
      * Defines a FBA capable of representing combined 32 bit depth, 8 bit stencil texture FBAs
      */
     static FrameBufferAttachment ManagedDepthStencilTexture32()
     {//https://www.khronos.org/opengles/sdk/docs/man3/docbook4/xhtml/glTexImage2D.xml
-        return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::Texture, GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::TextureRT, GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV, nullptr);
     }
     /**
      * Defines a FBA capable of representing combined 24 bit depth, 8 bit stencil renderbuffer FBAs
      */
     static FrameBufferAttachment ManagedDepthStencilRenderBuffer24()
     {
-        return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBuffer, GL_DEPTH24_STENCIL8, 0, 0, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBufferRT, GL_DEPTH24_STENCIL8, 0, 0, nullptr);
     }
     /**
      * Defines a FBA capable of representing combined 32 bit depth, 8 bit stencil renderbuffer FBAs
      */
     static FrameBufferAttachment ManagedDepthStencilRenderBuffer32()
     {
-        return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBuffer, GL_DEPTH32F_STENCIL8, 0, 0, 0);
+		return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBufferRT, GL_DEPTH32F_STENCIL8, 0, 0, nullptr);
     }
     ////////////////////////////
     //    Unmanaged FBA's     //
     ////////////////////////////
-    /**
-     * Defines an unmanaged color texture FBA
-     * The named texture will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedColorTexture(GLuint texName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::Texture, 0, 0, 0, texName);
-    }
-    /**
-     * Defines an unmanaged depth texture FBA
-     * The named texture will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedDepthTexture(GLuint texName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::Texture, 0, 0, 0, texName);
-    }
-    /**
-     * Defines an unmanaged stencil texture FBA
-     * The named texture will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedStencilTexture(GLuint texName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::Texture, 0, 0, 0, texName);
-    }
-    /**
-     * Defines an unmanaged depthstencil texture FBA
-     * The named texture will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedDepthStencilTexture(GLuint texName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::Texture, 0, 0, 0, texName);
-    }
-    /**
-     * Defines an unmanaged color renderbuffer FBA 
-     * The named renderbuffer will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedColorRenderBuffer(GLuint bufferName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::RenderBuffer, 0, 0, 0, bufferName);
-    }
-    /**
-     * Defines an unmanaged depth renderbuffer FBA
-     * The named renderbuffer will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedDepthRenderBuffer(GLuint bufferName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::RenderBuffer, 0, 0, 0, bufferName);
-    }
-    /**
-     * Defines an unmanaged stencil renderbuffer FBA
-     * The named renderbuffer will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedStencilRenderBuffer(GLuint bufferName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::RenderBuffer, 0, 0, 0, bufferName);
-    }
-    /**
-     * Defines an unmanaged depth stencil renderbuffer FBA
-     * The named renderbuffer will not be managed by sdl_exp
-     */
-    static FrameBufferAttachment UnmanagedDepthStencilRenderBuffer(GLuint bufferName)
-    {
-        return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBuffer, 0, 0, 0, bufferName);
-    }
+	/**
+	 * Defines an unmanaged color texture FBA
+	 * The named texture will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedColorTexture(std::shared_ptr<::RenderTarget> tex)
+	{
+		assert(std::dynamic_pointer_cast<Texture>(tex));
+		return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
+	}
+	/**
+	 * Defines an unmanaged depth texture FBA
+	 * The named texture will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedDepthTexture(std::shared_ptr<::RenderTarget> tex)
+	{
+		assert(std::dynamic_pointer_cast<Texture>(tex));
+		return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
+	}
+	/**
+	 * Defines an unmanaged stencil texture FBA
+	 * The named texture will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedStencilTexture(std::shared_ptr<::RenderTarget> tex)
+	{
+		assert(std::dynamic_pointer_cast<Texture>(tex));
+		return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
+	}
+	/**
+	 * Defines an unmanaged depthstencil texture FBA
+	 * The named texture will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedDepthStencilTexture(std::shared_ptr<::RenderTarget> tex)
+	{
+		assert(std::dynamic_pointer_cast<Texture>(tex));
+		return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
+	}
+	/**
+	 * Defines an unmanaged color renderbuffer FBA 
+	 * The named renderbuffer will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedColorRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
+	{
+		return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::RenderBufferRT, 0, 0, 0, renderBuffer);
+	}
+	/**
+	 * Defines an unmanaged depth renderbuffer FBA
+	 * The named renderbuffer will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedDepthRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
+	{
+		return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::RenderBufferRT, 0, 0, 0, renderBuffer);
+	}
+	/**
+	 * Defines an unmanaged stencil renderbuffer FBA
+	 * The named renderbuffer will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedStencilRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
+	{
+		return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::RenderBufferRT, 0, 0, 0, renderBuffer);
+	}
+	/**
+	 * Defines an unmanaged depth stencil renderbuffer FBA
+	 * The named renderbuffer will not be managed by sdl_exp
+	 */
+	static FrameBufferAttachment UnmanagedDepthStencilRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
+	{
+		return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBufferRT, 0, 0, 0, renderBuffer);
+	}
 };
 #endif

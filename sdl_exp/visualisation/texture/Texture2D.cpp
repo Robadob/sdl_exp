@@ -1,139 +1,207 @@
 #include "Texture2D.h"
+#include <cassert>
+#include <glm/gtx/component_wise.hpp>
 
-/*
-Loads the 2D texture
-@param texturePath The path to the image to be used as the texture
-@param uniformName Name of the uniform to be used, defaults to the value of Texture::TEXTURE_UNIFORM_NAME
+const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
+std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache;
+
+/**
+* Constructors
 */
-Texture2D::Texture2D(const char *texturePath, const char *uniformName)
-    : Texture(GL_TEXTURE_2D, texturePath, uniformName)
-    , texturePath(texturePath)
-    , dimensions(0)
+Texture2D::Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const unsigned long long options)
+	: Texture(GL_TEXTURE_2D, genTextureUnit(), getFormat(image), reference, options)
+	, dimensions(image->w, image->h)
+    , immutable(true)
 {
-    _reload();
+	assert(image);
+	allocateTextureImmutable(image);
+	applyOptions();
 }
-/*
-Loads the provided 2D texture into texture memory
-This paramters of this function wrap setTexture()
-@param uniformName Name of the uniform to be used, defaults to the value of Texture::TEXTURE_UNIFORM_NAME
-@see setTexture(...)
-*/
-Texture2D::Texture2D(const char *uniformName, void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
-    : Texture(GL_TEXTURE_2D, "", uniformName)
-    , texturePath(0)
+Texture2D::Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const unsigned long long &options)
+	: Texture(GL_TEXTURE_2D, genTextureUnit(), format, RAW_TEXTURE_FLAG, options)
+	, dimensions(dimensions)
+    , immutable(false)
 {
-    setTexture(image, imageSize, width, height, internalFormat, format, type);
-}
-/*
-Loads a texture from the provided pointer
-@param image The pointer to the texture data
-@param imageSize Size of the tex pointed to by image
-@param width Width of the image
-@param height Height of the image
-@param internalFormat See GL docs for glTexImage2D
-@param format See GL docs for glTexImage2D
-@param type See GL docs for glTexImage2D
-@note This function will not free the memory, you should do that yourself
-@see https://www.opengl.org/sdk/docs/man/html/glTexImage2D.xhtml
-*/
-void Texture2D::setTexture(void *image, size_t imageSize, unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
-{
-    GL_CALL(glBindTexture(texType, texName));
-    if (width%4!=0)
-    {
-        GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-    }
-    GL_CALL(glTexImage2D(texType, 0, internalFormat, width, height, 0, format, type, image));
-	GL_CALL(glBindTexture(texType, 0));
-	dimensions = glm::uvec2(width, height);
+    allocateTextureMutable(dimensions, data);
+	applyOptions();
 }
 /**
- * Allocates a texture with specified params
-@param width Width of the image
-@param height Height of the image
-@param internalFormat See GL docs for glTexImage2D
-@param format See GL docs for glTexImage2D
-@param type See GL docs for glTexImage2D
-@note This function will not free the memory, you should do that yourself
-@see https://www.opengl.org/sdk/docs/man/html/glTexImage2D.xhtml
+ * Copy/Assignment handling
  */
-void Texture2D::setTexture(unsigned int width, unsigned int height, GLint internalFormat, GLenum format, GLenum type)
+Texture2D::Texture2D(const Texture2D& b)
+	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
+	, dimensions(b.dimensions)
+    , immutable(false)
 {
-	setTexture(nullptr, 0, width, height, internalFormat, format, type);
-}
-/*
-Loads the 2D texture
-@overrides Texture::reload()
-*/
-void Texture2D::reload() {
-    _reload();
-}
-/*
-Loads the 2D texture
-@note this method is required, so that the constructor doesn't call a virtual function
-*/
-void Texture2D::_reload()
-{
-    if (texturePath)
-    {
-        SDL_Surface *img = readImage(texturePath);
-        if (!img)
-            return;
-		flipRows(img);
-        dimensions = glm::uvec2((unsigned int)img->w, (unsigned int)img->h);
-        Texture::setTexture(img);
-    }
+    allocateTextureMutable(dimensions, nullptr);
+    GL_CALL(glCopyImageSubData(
+        b.glName, b.type, 0, 0, 0, 0,
+        glName, type, 0, 0, 0, 0, 
+        b.dimensions.x, b.dimensions.y, 0));
+	applyOptions();
 }
 /**
- * We use this when loading an image with SDL_Image to invert the image rows.
- * This is because most image formats label images with the origin in the top left corner
- * Whereas glTexImage2D expects the origin to be in the bottom left corner.
- * We could handle this by negating Y when using texcoords, however this better allows us to standardise shaders
- * @param img The SDL_Surface to be flipped
- * @return 0 on success, else failure
- * @note original source: http://www.gribblegames.com/articles/game_programming/sdlgl/invert_sdl_surfaces.html
+ * Factory
  */
-int Texture2D::flipRows(SDL_Surface *img)
+std::shared_ptr<Texture2D> Texture2D::make(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const unsigned long long &options)
 {
-	if (!img)
-	{
-		SDL_SetError("Surface is NULL");
-		return -1;
-	}
-	int pitch = img->pitch;
-	int height = img->h;
-	void* image_pixels = img->pixels;
-	int index;
-	void* temp_row;
-	int height_div_2;
-
-	temp_row = (void *)malloc(pitch);
-	if (NULL == temp_row)
-	{
-		SDL_SetError("Not enough memory for image inversion");
-		return -1;
-	}
-	//if height is odd, don't need to swap middle row
-	height_div_2 = (int)(height * .5);
-	for (index = 0; index < height_div_2; index++) 	{
-		//uses string.h
-		memcpy((Uint8 *)temp_row,
-			(Uint8 *)(image_pixels)+
-			pitch * index,
-			pitch);
-
-		memcpy(
-			(Uint8 *)(image_pixels)+
-			pitch * index,
-			(Uint8 *)(image_pixels)+
-			pitch * (height - index - 1),
-			pitch);
-		memcpy(
-			(Uint8 *)(image_pixels)+
-			pitch * (height - index - 1),
-			temp_row,
-			pitch);
-	}
-	free(temp_row);
-	return 0;
+	return std::shared_ptr<Texture2D>(new Texture2D(dimensions, format, data, options));
 }
+std::shared_ptr<Texture2D> Texture2D::make(const glm::uvec2 &dimensions, const Texture::Format &format, const unsigned long long &options)
+{
+	return make(dimensions, format, nullptr, options);
+}
+/**
+ * Cache handling
+ */
+std::shared_ptr<const Texture2D> Texture2D::loadFromCache(const std::string &filePath)
+{
+	auto a = cache.find(filePath);
+	if (a != cache.end())
+	{
+        if (auto b = a->second.lock())
+		{
+			return b;
+		}
+		//Weak pointer has expired, erase record 
+		//This should be redundant, if custom deleter has been used
+		cache.erase(a);
+	}
+	return nullptr;
+}
+std::shared_ptr<const Texture2D> Texture2D::load(const char * filePath, const unsigned long long options, bool skipCache)
+{
+    if (filePath)
+        return load(std::string(filePath), options, skipCache);
+    return std::shared_ptr <const Texture2D>();
+}
+std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, const unsigned long long options, bool skipCache)
+{
+	//Attempt from cache
+	std::shared_ptr<const Texture2D> rtn;
+	if (!skipCache)
+	{
+		rtn = loadFromCache(filePath);
+	}
+	//Load using loader
+	if (!rtn)
+	{
+		auto image = loadImage(filePath);
+		if (image)
+		{
+			rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
+				[&](Texture2D *ptr){//Custom deleter, which purges cache of item
+					Texture2D::purgeCache(ptr->getReference());
+					delete ptr;
+				});
+		}
+	}
+	//If we've loaded something, store in cache
+	if (rtn&&!skipCache)
+	{
+		cache.emplace(filePath, rtn);
+	}
+	return rtn;
+}
+bool Texture2D::isCached(const std::string &filePath)
+{
+	auto a = cache.find(filePath);
+	if (a != cache.end())
+	{
+		if (a->second.lock())
+			return true;
+		//Weak pointer has expired, erase record 
+		//This should be redundant, if custom deleter has been used
+		cache.erase(a);
+	}
+	return false;
+}
+void Texture2D::purgeCache(const std::string &filePath)
+{
+	auto a = cache.find(filePath);
+	if (a != cache.end())
+	{
+		//Erase record
+		cache.erase(a);
+	}
+}
+void Texture2D::resize(const glm::uvec2 &dimensions, void *data, size_t size)
+{
+    if (immutable)
+    {
+        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        return;
+    }
+    if (data&&size)
+		assert(size == format.pixelSize*compMul(dimensions));
+	this->dimensions = dimensions;
+	allocateTextureMutable(dimensions, data);
+	//If image data has been updated, regen mipmap
+	if (data)
+	{
+		GL_CALL(glBindTexture(type, glName));
+		GL_CALL(glGenerateMipmap(type));
+		GL_CALL(glBindTexture(type, 0));
+	}
+}
+void Texture2D::setTexture(void *data, size_t size)
+{
+	Texture2D::setSubTexture(data, this->dimensions, glm::ivec2(0), size);
+}
+void Texture2D::setSubTexture(void *data, glm::uvec2 dimensions, glm::ivec2 offset, size_t size)
+{
+	if (immutable)
+	{
+        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+		return;
+	}
+	if (size)
+		assert(size == format.pixelSize*compMul(dimensions));
+	this->dimensions = dimensions;
+	Texture::setTexture(data, dimensions, offset);
+	//If image data has been updated, regen mipmap
+	if (data)
+	{
+		GL_CALL(glBindTexture(type, glName));
+		GL_CALL(glGenerateMipmap(type));
+		GL_CALL(glBindTexture(type, 0));
+	}
+}
+/**
+ * Required methods for handling texture units
+ */
+GLuint Texture2D::genTextureUnit()
+{
+	static GLuint texUnit = 1;
+	GLint maxUnits;
+	GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));//192 on Modern GPUs, spec minimum 80
+#ifdef _DEBUG
+	assert(texUnit < (GLuint)maxUnits);
+#endif
+	if (texUnit >= (GLuint)maxUnits)
+	{
+		texUnit = 1;
+		fprintf(stderr, "Max texture units exceeded by GL_TEXTURE_2D, enable texture switching.\n");
+		//If we ever notice this being triggered, need to add a static flag to Shaders which tells it to rebind textures to units at use.
+		//Possibly even notifying it of duplicate units
+	}
+	return texUnit++;
+}
+bool Texture2D::isBound() const
+{
+	GL_CALL(glActiveTexture(GL_TEXTURE0+textureUnit));
+	GLint whichID;
+	GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID));
+	return whichID == glName;
+}
+//Comment out this include if not making use of GaussianBlur
+#include "../shader/GaussianBlur.h"
+#ifdef __GaussianBlur_h__
+void GaussianBlur::blurR32F(std::shared_ptr<Texture2D> inTex, std::shared_ptr<Texture2D> outTex)
+{
+#ifdef _DEBUG
+	assert(inTex->getDimensions() == outTex->getDimensions());
+#endif
+	blurR32F(inTex->getName(), outTex->getName(), inTex->getDimensions());
+}
+#endif

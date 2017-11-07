@@ -2,15 +2,18 @@
 #define __FrameBuffer_h__
 
 #include "glm/glm.hpp"
+#include "../interface/FBuffer.h"
 #include "FrameBufferAttachment.h"
 #include <map>
-#include "../interface/FBuffer.h"
 #include <unordered_set>
+
+class Texture;
+class RenderBuffer;
 
 /**
  * This class represents a Framebuffer with custom 2D texture and renderbuffer attachments
- * The class supports multisampling, however that required you to instead use Sampler2DMS to sample any textures inside shaders
- * If a scaling framebuffer is used, it will be resized whenever the viewport dimensions are changed
+ * The class supports multisampling, however that requires you to instead use Sampler2DMS to sample any textures inside shaders
+ * If a scaling framebuffer is used, it will be resized whenever the viewport dimensions are changed (this includes resizing unmanaged textures/renderbuffers)
  * You can use Shaders::setFragOutAttribute() to bind the attachment point to a named output
  * @todo Improve stencilbuffer (control when writing/clearing/using) //https://en.wikipedia.org/wiki/Stencil_buffer
  * @todo Add support for cubemap framebuffers
@@ -100,16 +103,64 @@ public:
 	 * @note This will only return a value if you bound a DepthStencil renderbuffer
 	 */
 	GLuint getDepthStencilRenderBufferName() const;
+	/**
+	 * @param attachPt The attachment point required, these are 0-indexed in the order color attachments were bound
+	 * @return The texture bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as renderbuffer
+	 */
+	std::shared_ptr<Texture> getColorTexture(GLuint attachPt = 0) const;
+	/**
+	 * @return The texture bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as renderbuffer
+	 * @note This will return a value if you bound a Depth texture or a DepthStencil texture
+	 */
+	std::shared_ptr<Texture> getDepthTexture() const;
+	/**
+	 * @return The texture bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as renderbuffer
+	 * @note This will return a value if you bound a Stencil texture or a DepthStencil texture
+	 */
+	std::shared_ptr<Texture> getStencilTexture() const;
+	/**
+	 * @return The texture bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as renderbuffer
+	 * @note This will only return a value if you bound a DepthStencil texture
+	 */
+	std::shared_ptr<Texture> getDepthStencilTexture() const;
+	/**
+	 * @param attachPt The attachment point required, these are 0-indexed in the order color attachments were bound
+	 * @return The renderbuffer bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as texture
+	 */
+	std::shared_ptr<RenderBuffer> getColorRenderBuffer(GLuint attachPt = 0) const;
+	/**
+	 * @return The renderbuffer bound to the specified attachment point
+	 * @note 0 is returned if not bound or bound as texture
+	 * @note This will return a value if you bound a Depth renderbuffer or a DepthStencil renderbuffer
+	 */
+	std::shared_ptr<RenderBuffer> getDepthRenderBuffer() const;
+	/**
+	 * @return The renderbuffer bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as texture
+	 * @note This will return a value if you bound a Stencil renderbuffer or a DepthStencil renderbuffer
+	 */
+	std::shared_ptr<RenderBuffer> getStencilRenderBuffer() const;
+	/**
+	 * @return The renderbuffer bound to the specified attachment point
+	 * @note An empty shared_ptr is returned if not bound or bound as texture
+	 * @note This will only return a value if you bound a DepthStencil renderbuffer
+	 */
+	std::shared_ptr<RenderBuffer> getDepthStencilRenderBuffer() const;
     /**
      * @return The number of samples
      * @note 0 Means that multisampling for the FrameBuffer is disabled
      */
-    unsigned int getSampleCount(){ return samples; }
+    unsigned int getSampleCount() const { return samples; }
     /**
      * @return The current dimensions of the FrameBuffer
      * @note If this is a scaling FrameBuffer this value may change over time
      */
-    glm::uvec2 getDimensions(){ return dimensions; }
+    glm::uvec2 getDimensions() const { return dimensions; }
     /**
      * Sets whether the Framebuffer is to be automatically cleared before use
      */
@@ -117,7 +168,7 @@ public:
     /**
      * @return Whether the Framebuffer is to be automatically cleared before use
      */
-    bool getDoClear(){ return doClear; }
+    bool getDoClear() const { return doClear; }
     /**
      * Sets the clear color to be used
      */
@@ -126,7 +177,7 @@ public:
     /**
      * @return The clear color to be used
      */
-    glm::vec4 getClearColor(){ return clearColor; }
+    glm::vec4 getClearColor() const { return clearColor; }
 	/**
 	 * Disables filtering for the specified color attachment's texture
 	 * @param attachPt The attachment point to disable filtering for, default 0 (aka single color texture)
@@ -141,7 +192,7 @@ private:
     /**
      * Does all the heavy lifting for generating attachments
      */
-    void makeAttachment(const FrameBufferAttachment &attachmentConfig, GLenum attachPoint, GLuint *texNameOut) const;
+	void makeAttachment(const FrameBufferAttachment &attachmentConfig, GLenum attachPoint, std::shared_ptr<RenderTarget> &renderTarget);
     /**
 	 * Generates and resizes all attachments
 	 */
@@ -174,15 +225,15 @@ private:
     struct ConfNamePair
     {
         ConfNamePair(FrameBufferAttachment fbaConf)
-            : conf(fbaConf), texName(0){ }
+            : conf(fbaConf), renderTarget(nullptr){ }
         /**
          * The frame buffer attachment configuration
          */
         const FrameBufferAttachment conf;
-        /**
-         * The GL texture/renderbuffer name for the attachment (as returned by glGenTextures() or glGenRenderbuffers())
-         */
-        GLuint texName;
+		/**
+		 * The GL texture/renderbuffer for the attachment
+		 */
+		std::shared_ptr<RenderTarget> renderTarget;
     };
 	/**
 	 * Config for each color attachment

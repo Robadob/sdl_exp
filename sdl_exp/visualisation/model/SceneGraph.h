@@ -2,19 +2,61 @@
 #define __SceneGraph_h__
 #include <glm/mat4x4.hpp>
 #include <glm/gtx/transform.hpp>
+#include <memory>
+#include <list>
 
+class SceneGraphEdge;
+/**
+ * This class represents a vertex in a scene graph
+ * These recursively combine to produce a hierarchy 
+ */
+class SceneGraphVertex
+{
+    friend class SceneGraphEdge; //Accesses private renderSceneGraph
+    typedef SceneGraphVertex SGVertex;
+public:
+    virtual ~SceneGraphVertex() = default;
+    virtual glm::mat4 getModelMat() const=0;
+    virtual const glm::mat4 *getModelMatPtr() const=0;
+    //virtual void setModelMat(const glm::mat4 *newModelMat)=0;
+    /**
+     * Renders the current object applying transform before the internal model matrix
+     * @param transform Transformation matrix to be applied before the model matrix
+     * @note Matrix order: projection x view x transform x model
+     */
+    virtual void render(const glm::mat4 &transform)=0;
+    /**
+     * Renders the scene graph hierarchy below the current item
+     * @param transform Transformation matrix to be applied before the scene graph and model matrix
+     * @note Matrix order: projection x view x transform x scene x model
+     */
+    inline void renderSceneGraph(const glm::mat4 &transform)
+    {
+        renderSceneGraph(transform, glm::mat4(1));
+    }
+    /**
+     * Forwards propogation to each child
+     * @param parentTransform Transform to be applied before local transform
+     */
+    void propagateUpdate(const glm::mat4 &parentTransform);
+private:
+    void renderSceneGraph(const glm::mat4 &rootTransform, const glm::mat4 &sceneTransform);
+    std::list<SceneGraphEdge> children;
+};
+
+/**
+ * This class represents an edge in a scene graph
+ * These recursively combine to produce a hierarchy
+ * The edge holds a sceneGraph transformation and an associated SceneGraphVertex
+ */
 class SceneGraphEdge
 {
+    typedef SceneGraphVertex SGEdge;
+public:
     /**
      *
      */
-    SceneGraphEdge()
-        : localTransform(1)
-        , computedGlobalTransform(1)
-        , hasChanged(false)
-    {
-        
-    }
+    SceneGraphEdge(const std::shared_ptr<SceneGraphVertex> &vertex, const glm::mat4 &localTransform = glm::mat4(1));
     /////////////////////////
     // Matrix Manipulation //
     /////////////////////////
@@ -83,28 +125,26 @@ class SceneGraphEdge
     inline bool expired() const { return hasChanged; }
     inline glm::mat4 getTransform() const { return computedGlobalTransform; }
     inline const glm::mat4 *getTransformPtr() const { return &computedGlobalTransform; }
-    inline void updateTransform(const glm::mat4 &parentTransform) { computedGlobalTransform = parentTransform * localTransform; hasChanged = false; }
+    /**
+     * Updates computedGlobalTransform in this and all child edges
+     * @param parentTransform Applies this matrix before localTransform
+     * @note computedGlobalTransform = parentTransform x localTransform
+     */
+    void propagateUpdate(const glm::mat4 &parentTransform);
+    /**
+     * Renders the hierarchy below this edge of the scene graph
+     * @param rootTransform Model matrix applied before the scene's transformation matrix and leafs model matrix
+     */
+    inline void renderSceneGraph(const glm::mat4 &rootTransform) const
+    {
+        //Render hierarchy
+        vertex->renderSceneGraph(rootTransform, computedGlobalTransform);
+    }
 private:
+    std::shared_ptr<SceneGraphVertex> vertex;
     glm::mat4 localTransform;
     glm::mat4 computedGlobalTransform;
     bool hasChanged;
 };
-/**
- * This class represents a vertex in a scene graph
- * These recursively combine to produce a hierarchy 
- */
-class SceneGraphVertex
-{
-    typedef SceneGraphVertex SGVertex;
 
-    virtual glm::mat4 getModelMat() const;
-    virtual const glm::mat4 *getModelMatPtr() const;
-    virtual void setModelMat(glm::mat4 newModelMat) const;
-
-};
-class Renderable : public SceneGraphVertex
-{
-    
-};
-
-#endif __SceneGraph_h__
+#endif //__SceneGraph_h__

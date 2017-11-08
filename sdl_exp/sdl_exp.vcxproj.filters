@@ -54,6 +54,12 @@
     <Filter Include="Header Files\Visualisation\Shader\Buffer">
       <UniqueIdentifier>{fa904b7b-5604-4ee4-9ca2-2aefd0495c65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Model">
+      <UniqueIdentifier>{643a2507-51fd-4f47-96c2-0e9c15e07e09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Model">
+      <UniqueIdentifier>{1c23bd8a-cd02-4584-bcaa-ed5fd8b38886}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -151,6 +157,9 @@
     </ClCompile>
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
       <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\SceneGraph.cpp">
+      <Filter>Source Files\Visualisation\Model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -272,6 +281,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\interface\RenderTarget.h">
       <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\SceneGraph.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

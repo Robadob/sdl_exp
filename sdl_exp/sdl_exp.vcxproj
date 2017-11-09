@@ -169,7 +169,8 @@
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\Material.cpp" />
-    <ClCompile Include="visualisation\model\SceneGraph.cpp" />
+    <ClCompile Include="visualisation\model\SceneGraphEdge.cpp" />
+    <ClCompile Include="visualisation\model\SceneGraphVertex.cpp" />
     <ClCompile Include="visualisation\multipass\BackBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\FrameBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
@@ -215,7 +216,8 @@
     <ClInclude Include="visualisation\interface\Scene.h" />
     <ClInclude Include="visualisation\interface\Viewport.h" />
     <ClInclude Include="visualisation\Material.h" />
-    <ClInclude Include="visualisation\model\SceneGraph.h" />
+    <ClInclude Include="visualisation\model\SceneGraphEdge.h" />
+    <ClInclude Include="visualisation\model\SceneGraphVertex.h" />
     <ClInclude Include="visualisation\multipass\BackBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h" />

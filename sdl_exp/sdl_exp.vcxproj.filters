@@ -158,10 +158,10 @@
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
       <Filter>Source Files\Visualisation\MultiPass</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\model\SceneGraphEdge.cpp">
+    <ClCompile Include="visualisation\model\SceneGraphVertex.cpp">
       <Filter>Source Files\Visualisation\Model</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\model\SceneGraphVertex.cpp">
+    <ClCompile Include="visualisation\model\SceneGraphJoint.cpp">
       <Filter>Source Files\Visualisation\Model</Filter>
     </ClCompile>
   </ItemGroup>
@@ -288,7 +288,7 @@
     <ClInclude Include="visualisation\model\SceneGraphVertex.h">
       <Filter>Header Files\Visualisation\Model</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\model\SceneGraphEdge.h">
+    <ClInclude Include="visualisation\model\SceneGraphJoint.h">
       <Filter>Header Files\Visualisation\Model</Filter>
     </ClInclude>
   </ItemGroup>

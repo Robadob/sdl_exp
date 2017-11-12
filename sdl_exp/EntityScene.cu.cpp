@@ -18,15 +18,21 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , texBuf(TextureBuffer<float>::make(100, 3))
 #endif
 {
-    registerEntity(deerModel);
-    registerEntity(colorModel);
-    registerEntity(instancedSphere);
+	if (this->deerModel)
+		registerEntity(deerModel);
+	if (this->colorModel)
+		registerEntity(colorModel);
+	if (this->instancedSphere)
+		registerEntity(instancedSphere);
     this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
     srand((unsigned int)time(0));
-    //this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
-    this->colorModel->setCullFace(false);
+	if (this->colorModel)
+	{
+		this->colorModel->rotate(glm::vec3(1.0, 0.0, 0.0), -90);
+		this->colorModel->setCullFace(false);
+	}
 #ifdef __CUDACC__
     cuInit();
 #else
@@ -40,8 +46,11 @@ EntityScene::EntityScene(Visualisation &visualisation)
     texBuf->setData(tempData);
     free(tempData);
 #endif
-    this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
-    this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	if (this->instancedSphere)
+	{
+		this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
+		this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	}
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -49,10 +58,15 @@ Called once per frame when Scene animation calls should be
 */
 void EntityScene::update(unsigned int frameTime)
 {
-    this->tick += this->polarity*((frameTime*60)/1000.0f)*0.01f;
+	float tickLen = this->polarity*((frameTime * 60) / 1000.0f)*0.01f;
+	this->tick += tickLen;
     this->tick = (float)fmod(this->tick,360);
-    //this->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
-   // this->deerModel->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
+
+	if (this->deerModel)
+	{
+		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), tickLen*-5);
+		this->deerModel->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
+	}
 #ifdef __CUDACC__
     cuUpdate();
 #endif
@@ -62,16 +76,20 @@ Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
-    colorModel->render();
-    deerModel->render();
-    this->instancedSphere->renderInstances(100);
+	if (this->colorModel)
+		colorModel->render();
+	if (this->deerModel)
+		deerModel->render();
+	if (this->instancedSphere)
+		this->instancedSphere->renderInstances(100);
 }
 /*
 Called when the user requests a reload
 */
 void EntityScene::reload()
 {
-    this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	if (this->instancedSphere)
+		this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
@@ -81,9 +99,11 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
     case SDLK_p:
         this->polarity = ++this->polarity>1 ? -1 : this->polarity;
         break;
-    case SDLK_HASH:
-        this->colorModel->exportModel();
-        this->deerModel->exportModel();
+	case SDLK_HASH:
+		if (this->colorModel)
+			this->colorModel->exportModel();
+		if (this->deerModel)
+			this->deerModel->exportModel();
     default:
         //Permit the keycode to be processed if we haven't handled personally
         return true;

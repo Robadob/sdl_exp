@@ -16,10 +16,15 @@ TwoPassScene::SceneContent::SceneContent()
 	, shadowIn()
     , shadowOut(Texture2D::make(shadowDims, { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
-    planeModel->setColor(glm::vec3(1));//White
-    deerModel->exportModel();
-    sphereModel->exportModel();
-    //sphereModel->setLocation(glm::vec3(10, 5, 10));
+	if (planeModel)
+		planeModel->setColor(glm::vec3(1));//White
+	if (deerModel)
+		deerModel->exportModel();
+	if (sphereModel)
+	{
+		sphereModel->exportModel();
+		sphereModel->setLocation(glm::vec3(10, 5, 10));
+	}
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
@@ -31,10 +36,14 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	, polarity(-1)
 {
 	//Register models
-    registerEntity(content->deerModel);
-    registerEntity(content->sphereModel);
-    registerEntity(content->planeModel);
-    registerEntity(content->lightModel);
+	if (content->deerModel)
+		registerEntity(content->deerModel);
+	if (content->sphereModel)
+		registerEntity(content->sphereModel);
+	if (content->planeModel)
+		registerEntity(content->planeModel);
+	if (content->lightModel)
+		registerEntity(content->lightModel);
 	////Register render passes in correct order
 	addPass(0, sPass);
 	addPass(1, cPass);
@@ -86,9 +95,13 @@ void TwoPassScene::update(unsigned int frameTime)
         content->pointlightTarget,
         glm::vec3(0, 1, 0)
         );
-    //this->content->lightModel->setLocation(this->content->pointlightPos);
-	//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
-	//this->content->deerModel->setLocation(glm::vec3(20 * sin(this->tick), 0, 20 * cos(this->tick)));
+	if (this->content->lightModel)
+		this->content->lightModel->setLocation(this->content->pointlightPos);
+	//if (this->content->deerModel)
+	//{
+		//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
+		//this->content->deerModel->setLocation(glm::vec3(20 * sin(this->tick), 0, 20 * cos(this->tick)));
+	//}
 }
 
 bool TwoPassScene::keypress(SDL_Keycode keycode, int x, int y)
@@ -120,10 +133,13 @@ TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
     {
 		content->shadowIn = std::dynamic_pointer_cast<Texture2D>(t->getColorTexture());
         //content->shadowOut = content->shadowIn;//Uses the pre blur shadow map (aka hard shadows)
-    }
-	content->deerModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
-	content->sphereModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
-	content->planeModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	}
+	if (this->content->deerModel)
+		content->deerModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	if (this->content->sphereModel)
+		content->sphereModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	if (this->content->planeModel)
+		content->planeModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 }
 TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())

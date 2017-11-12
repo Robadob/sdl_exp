@@ -7,7 +7,8 @@ BasicScene::BasicScene(Visualisation& vis)
 	, renderAxisState(true)
 	, renderSkyboxState(true)
 {
-	registerEntity(axis);
+	if (axis)
+		registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
 	this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
 	this->skybox->setYOffset(-1.0f);
@@ -33,9 +34,9 @@ void BasicScene::_render()
 	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	//Reset viewport
 	GL_CALL(glViewport(0, 0, visualisation.getWindowWidth(), visualisation.getWindowHeight()));
-	if (this->renderSkyboxState)
+	if (this->renderSkyboxState&&this->skybox)
 		this->skybox->render();
-	if (this->renderAxisState)
+	if (this->renderAxisState&&this->axis)
 		this->axis->render();
 	this->defaultLighting();
 	render();

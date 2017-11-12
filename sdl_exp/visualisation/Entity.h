@@ -119,6 +119,10 @@ public:
 	glm::vec3 getMin() const { return modelMin; }
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
+	void setLocation(glm::vec3 loc);
+	void translate(glm::vec3 offset);
+	void rotate(glm::vec3 axis, float angleRadians);
+	glm::vec3 getLocation() const { return location; };
 protected:
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;
@@ -140,6 +144,7 @@ protected:
     void freeMaterial();
     void generateVertexBufferObjects();
 private:
+	glm::vec3 location;
 	glm::vec3 modelMin, modelMax, modelDims;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{

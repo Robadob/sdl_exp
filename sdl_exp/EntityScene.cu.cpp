@@ -58,14 +58,16 @@ Called once per frame when Scene animation calls should be
 */
 void EntityScene::update(unsigned int frameTime)
 {
-	float tickLen = this->polarity*((frameTime * 60) / 1000.0f)*0.01f;
-	this->tick += tickLen;
-    this->tick = (float)fmod(this->tick,360);
+	const float CIRCLE_RAD = 50.0f;
+	const float MS_PER_CIRCLE = (2 * M_PI) / 10000;
+	const float MS_PER_SPIN_DIV_2PI = (2 * M_PI) / 5000;
+	this->tick += this->polarity*MS_PER_CIRCLE*frameTime;
+	this->tick = (float)fmod((2 * M_PI)+this->tick, 2 * M_PI);//FMOD can't handle negatives
 
 	if (this->deerModel)
 	{
-		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), tickLen*-5);
-		this->deerModel->setLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
+		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), frameTime*MS_PER_SPIN_DIV_2PI);
+		this->deerModel->setLocation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
 	}
 #ifdef __CUDACC__
     cuUpdate();

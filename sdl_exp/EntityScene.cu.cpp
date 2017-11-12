@@ -1,5 +1,6 @@
 #include "EntityScene.h"
 #include <ctime>
+#include "visualisation/TowerCrane.h"
 
 /*
 Constructor, modify this to change what happens
@@ -21,6 +22,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #endif
 	, teapotJoint(SGJoint::make())
 	, teapotJoint2(SGJoint::make())
+	, crane(TowerCrane::make())
 {
 	if (this->deerModel)
 		registerEntity(deerModel);
@@ -32,6 +34,10 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	{
 		registerEntity(teapotModel);
 		teapotModel->setColor(glm::vec3(0, 1, 0));
+	}
+	if (this->crane)
+	{
+		registerEntity(crane);
 	}
 	if (this->teapotModel2)
 		registerEntity(teapotModel2);
@@ -109,6 +115,8 @@ void EntityScene::render()
 		deerModel->renderSceneGraph();
 	if (this->instancedSphere)
 		this->instancedSphere->renderInstances(100);
+	if (this->crane)
+		this->crane->renderSceneGraph();
 }
 /*
 Called when the user requests a reload

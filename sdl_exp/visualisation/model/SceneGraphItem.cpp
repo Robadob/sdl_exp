@@ -1,4 +1,5 @@
 #include "SceneGraphItem.h"
+#include <csignal>
 
 SceneGraphItem::SceneGraphItem()
 	:expired(false)
@@ -158,7 +159,15 @@ bool SceneGraphItem::attach(
 	//Add child as new attachment
 	{
 		//Add me as parent
-		child->addParent(this->shared_from_this());
+		try
+		{
+			child->addParent(this->shared_from_this());
+		}
+		catch (std::exception&)
+		{
+			fprintf(stderr, "%s:%d Exception occured when attaching child to scene graph.\nattachments cannot be made to an object inside it's constructor, before it has been placed into a shared pointer.", __FILE__, __LINE__); 
+			throw;
+		}
 		//Add to me as child
 		children.insert(children.begin(), { reference, child, parentAttachOffset, childAttachOffset, glm::mat4(1) });
 		//Mark this node as expired so it gets recursively updated at next render

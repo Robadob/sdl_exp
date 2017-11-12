@@ -8,6 +8,7 @@
 #include "visualisation/texture/TextureBuffer.h"
 #include "visualisation/model/SceneGraphJoint.h"
 
+class TowerCrane;
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
@@ -32,6 +33,7 @@ private:
 	std::shared_ptr<Entity> colorModel;
 	std::shared_ptr<Entity> teapotModel, teapotModel2;
 	std::shared_ptr<SceneGraphJoint> teapotJoint, teapotJoint2;
+	std::shared_ptr<TowerCrane> crane;
     float tick;
     int polarity;
 };

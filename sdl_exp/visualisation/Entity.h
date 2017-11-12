@@ -123,6 +123,7 @@ public:
 	void translate(const glm::vec3 &offset);
 	void rotate(const glm::vec3 &axis, const float &angleRadians);
 	glm::vec3 getLocation() const { return getModelMat()[3]; };
+	using SceneGraphItem::setModelMat;
 protected:
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;

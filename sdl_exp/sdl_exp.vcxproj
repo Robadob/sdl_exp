@@ -192,6 +192,7 @@
     <ClCompile Include="visualisation\texture\Texture2D_Multisample.cpp" />
     <ClCompile Include="visualisation\texture\TextureBuffer.cu.cpp" />
     <ClCompile Include="visualisation\texture\TextureCubeMap.cpp" />
+    <ClCompile Include="visualisation\TowerCrane.cpp" />
     <ClCompile Include="visualisation\util\Optimus.cpp" />
     <ClCompile Include="visualisation\Visualisation.cpp" />
   </ItemGroup>
@@ -240,6 +241,7 @@
     <ClInclude Include="visualisation\texture\Texture2D_Multisample.h" />
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
+    <ClInclude Include="visualisation\TowerCrane.h" />
     <ClInclude Include="visualisation\util\GLcheck.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
   </ItemGroup>

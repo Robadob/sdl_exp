@@ -164,6 +164,9 @@
     <ClCompile Include="visualisation\model\SceneGraphItem.cpp">
       <Filter>Source Files\Visualisation\Model</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\TowerCrane.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -290,6 +293,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\model\SceneGraphItem.h">
       <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\TowerCrane.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

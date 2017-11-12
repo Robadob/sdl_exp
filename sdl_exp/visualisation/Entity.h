@@ -12,7 +12,7 @@
 #include "Camera.h"
 #include "interface/Viewport.h"
 #include "interface/Renderable.h"
-#include "model/SceneGraphVertex.h"
+#include "model/SceneGraphItem.h"
 
 namespace Stock
 {
@@ -37,7 +37,7 @@ namespace Stock
 /**
  * A renderable model loaded from a .obj file
  */
-class Entity : public Renderable, public SceneGraphVertex, public Reloadable
+class Entity : public Renderable, public SceneGraphItem, public Reloadable
 {
     friend class Shaders;
 public:

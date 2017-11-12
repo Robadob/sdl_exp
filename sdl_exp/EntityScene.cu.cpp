@@ -9,6 +9,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     , deerModel(Entity::load(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
 	, colorModel(Entity::load(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
 	, teapotModel(Entity::load(Stock::Models::TEAPOT, 1.0f, Stock::Shaders::PHONG))
+	, teapotModel2(Entity::load(Stock::Models::TEAPOT, 1.0f, Stock::Shaders::PHONG))
     , tick(0.0f)
     , polarity(-1)
 	, instancedSphere(Entity::load(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
@@ -18,6 +19,8 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #else
     , texBuf(TextureBuffer<float>::make(100, 3))
 #endif
+	, teapotJoint(SGJoint::make())
+	, teapotJoint2(SGJoint::make())
 {
 	if (this->deerModel)
 		registerEntity(deerModel);
@@ -26,7 +29,12 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	if (this->instancedSphere)
 		registerEntity(instancedSphere);
 	if (this->teapotModel)
+	{
 		registerEntity(teapotModel);
+		teapotModel->setColor(glm::vec3(0, 1, 0));
+	}
+	if (this->teapotModel2)
+		registerEntity(teapotModel2);
     this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
@@ -38,7 +46,14 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	}
 	if(this->deerModel)
 	{
-		this->deerModel->attach(this->teapotModel, "teapot", glm::vec3(0), glm::vec3(0,1,0));
+
+		//Attach teapoint Joint to 0,7,0
+		this->deerModel->attach(this->teapotJoint, "teapot_joint", glm::vec3(0, 7, 0));
+		//Attach teapot (0,1,0) to (0,7,0) = (0,6,0)
+		this->teapotJoint->attach(this->teapotModel, "teapot1", glm::vec3(0,1,0));
+		//Attach teapot (0,-1,0) to (0,7,0) = (0,8,0)
+		this->teapotModel->attach(this->teapotJoint2, "teapot_joint2", glm::vec3(0, 1, 0));
+		this->teapotJoint2->attach(this->teapotModel2, "teapot2", glm::vec3(0, 0, 0));
 	}
 #ifdef __CUDACC__
     cuInit();
@@ -65,20 +80,23 @@ Called once per frame when Scene animation calls should be
 */
 void EntityScene::update(unsigned int frameTime)
 {
-	const float CIRCLE_RAD = 50.0f;
-	const float MS_PER_CIRCLE = (2 * M_PI) / 10000;
-	const float MS_PER_SPIN_DIV_2PI = (2 * M_PI) / 5000;
+	frameTime = 12;
+	const float CIRCLE_RAD = 10.0f;
+	const float MS_PER_CIRCLE = (float)(2 * M_PI) / 10000;
+	const float MS_PER_SPIN_DIV_2PI = (float)(2 * M_PI) / 5000;
 	this->tick += this->polarity*MS_PER_CIRCLE*frameTime;
 	this->tick = (float)fmod((2 * M_PI)+this->tick, 2 * M_PI);//FMOD can't handle negatives
 
 	if (this->deerModel)
 	{
-		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), -this->polarity*frameTime*MS_PER_SPIN_DIV_2PI);
+		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), -(float)this->polarity*frameTime*MS_PER_SPIN_DIV_2PI);
 		this->deerModel->setLocation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
 	}
 #ifdef __CUDACC__
     cuUpdate();
 #endif
+	this->teapotJoint->rotate(glm::vec3(1.0, 0.0, 0.0), frameTime*MS_PER_SPIN_DIV_2PI);
+	this->teapotJoint2->rotate(glm::vec3(0.0, 0.0, 1.0), frameTime*MS_PER_SPIN_DIV_2PI);
 }
 /*
 Called once per frame when Scene render calls should be executed

@@ -6,6 +6,8 @@
 #include "visualisation/Text.h"
 
 #include "visualisation/texture/TextureBuffer.h"
+#include "visualisation/model/SceneGraphJoint.h"
+
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
@@ -28,7 +30,8 @@ private:
     std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> deerModel;
 	std::shared_ptr<Entity> colorModel;
-	std::shared_ptr<Entity> teapotModel;
+	std::shared_ptr<Entity> teapotModel, teapotModel2;
+	std::shared_ptr<SceneGraphJoint> teapotJoint, teapotJoint2;
     float tick;
     int polarity;
 };

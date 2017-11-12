@@ -1,42 +1,43 @@
-#ifndef __SceneGraphVertex_h__
-#define __SceneGraphVertex_h__
+#ifndef __SceneGraphItem_h__
+#define __SceneGraphItem_h__
 #include <glm/mat4x4.hpp>
 #include <memory>
 #include <list>
 #include <glm/gtx/transform.hpp>
 
-class SceneGraphEdge;
+class SceneGraphItem;
+class SceneGraphJoint;
+typedef SceneGraphItem SGItem;
 /**
  * This class represents a vertex in a scene graph
  * These recursively combine to produce a hierarchy
  */
-class SceneGraphVertex : public std::enable_shared_from_this<SceneGraphVertex>
+class SceneGraphItem : public std::enable_shared_from_this<SceneGraphItem>
 {
-	friend class SceneGraphEdge; //Accesses private renderSceneGraph(const glm::mat4 &, const glm::mat4 &)
-	typedef SceneGraphVertex SGVertex;
-public:
-	SceneGraphVertex();
+protected:
+	SceneGraphItem();
 	/**
 	 * Copy constructor
 	 * @TODO: Decide how to handle children/parents on copy
 	 */
-	SceneGraphVertex(const SceneGraphVertex& b) = delete;
+	SceneGraphItem(const SceneGraphItem& b) = delete;
 	/**
 	 * Move constructor
 	 * Transfers values and children/parent relationships
 	 */
-	SceneGraphVertex(SceneGraphVertex&& b);
+	SceneGraphItem(SceneGraphItem&& b);
+public:
 	/**
 	 * Copy assignment operator
 	 * @TODO: Decide how to handle children/parents on copy
 	 */
-	SceneGraphVertex& operator= (const SceneGraphVertex& b) = delete;
+	SceneGraphItem& operator= (const SceneGraphItem& b) = delete;
 	/**
 	 * Move assignment operator
 	 * Transfers values and children/parent relationships
 	 */
-	SceneGraphVertex& operator= (SceneGraphVertex&& b);
-	virtual ~SceneGraphVertex() = default;
+	SceneGraphItem& operator= (SceneGraphItem&& b);
+	virtual ~SceneGraphItem() = default;
 	glm::mat4 getModelMat() const { return modelMat; };
 	const glm::mat4 *getModelMatPtr() const{ return &modelMat; }
 	const glm::mat4 &getModelMatRef() const{ return modelMat; }
@@ -89,8 +90,13 @@ public:
 	///////////////////////////////////////
 	// Scene Graph Attachment Management //
 	///////////////////////////////////////
-	bool attach(const std::shared_ptr<SceneGraphVertex> &child, const std::string &reference, unsigned int parentAttachOffsetIndex, unsigned int childAttachOffsetIndex = 0);
-	bool attach(const std::shared_ptr<SceneGraphVertex> &child, const std::string &reference, glm::vec3 parentAttachOffset, glm::vec3 childAttachOffset = glm::vec3(0));
+	bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0, unsigned int childAttachOffsetIndex = 0);
+	bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, glm::vec3 parentAttachOffset, glm::vec3 childAttachOffset = glm::vec3(0));
+	//SceneGraphJoint versions
+	//Implemented in SceneGraphJoint.cpp
+	bool attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0);
+	bool attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, glm::vec3 parentAttachOffset);
+
 	/**
 	 * Detatches the first child which shares the reference
 	 * First checks direct children
@@ -106,14 +112,14 @@ public:
 	 * @param reference The attachment reference to return
 	 * @return The found attachment, else empty shared_ptr
 	 */
-	std::shared_ptr<SceneGraphVertex> getAttachment(const std::string &reference);	
+	std::shared_ptr<SceneGraphItem> getAttachment(const std::string &reference);	
 	/**
 	* Confirms whether any children (direct or recursively found) already exists of the provided instance 'child'
 	* @param child The instance to check for
 	* @return True if the provided instance is already attached
 	* @note Does not confirm whether children of the instance already exist
 	*/
-	bool hasChildAttachment(const std::shared_ptr<const SceneGraphVertex> &child) const;
+	bool hasChildAttachment(const std::shared_ptr<const SceneGraphItem> &child) const;
 	/////////////////////////////////
 	// Scene Graph Parent Tracking //
 	// --prevents cycle creation-- //
@@ -123,33 +129,33 @@ public:
 	 * @param parent to check for
 	 * @return True if parent found, else false
 	 */
-	bool hasParentAttachment(const std::shared_ptr<const SceneGraphVertex> &parent) const;
+	bool hasParentAttachment(const std::shared_ptr<const SceneGraphItem> &parent) const;
 private:
 	/**
 	 * Internally used when adding/removing children to prevent cycles
 	 * @param parent The new parent
 	 * @note An instance can have the same parent multiple times in which case it is inserted multiple times into the list
 	 */
-	void addParent(const std::shared_ptr<SceneGraphVertex> &parent);
+	void addParent(const std::shared_ptr<SceneGraphItem> &parent);
 	/**
 	 * Internally used when adding/removing children to prevent cycles
 	 * @param parent The leaving parent
 	 * @note An instance can have the same parent multiple times in which case it is removed ONCE
 	 * @note Will throw an assertion if the parent is not found to be removed
 	 */
-	void removeParent(const std::shared_ptr<const SceneGraphVertex> &parent);
+	void removeParent(const std::shared_ptr<const SceneGraphItem> &parent);
 #ifdef _DEBUG
 	/**
 	 * Recursively returns a list of child
 	 * @note Convert to raw pointer because cheaper than copying shared pointers
 	 */
-	std::list<std::shared_ptr<SceneGraphVertex>> getChildPtrs() const;
+	std::list<std::shared_ptr<SceneGraphItem>> getChildPtrs() const;
 #endif
 	/**
 	 * This is used for comparing parental heritage only
 	 * These pointers shouldn't be used for anything else
 	 */
-	std::list<const std::weak_ptr<SceneGraphVertex>> parents;
+	std::list<const std::weak_ptr<SceneGraphItem>> parents;
 	/**
 	 * Called by parent SceneGraphEdge's, passing the computedGlobalTransform as sceneTransform
 	 */
@@ -160,7 +166,7 @@ private:
 	struct AttachmentDetail
 	{
 		std::string reference;
-		std::shared_ptr<SceneGraphVertex> child;
+		std::shared_ptr<SceneGraphItem> child;
 		glm::vec3 parentOffset;
 		glm::vec3 childOffset;
 		glm::mat4 computedTransformMat;
@@ -183,4 +189,4 @@ protected:
 	inline void setModelMat(const glm::mat4 &m) { modelMat = m; expired = true; }
 };
 
-#endif //__SceneGraphVertex_h__
+#endif //__SceneGraphItem_h__

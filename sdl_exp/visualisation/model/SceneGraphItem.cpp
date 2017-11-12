@@ -1,9 +1,9 @@
-#include "SceneGraphVertex.h"
+#include "SceneGraphItem.h"
 
-SceneGraphVertex::SceneGraphVertex()
+SceneGraphItem::SceneGraphItem()
 	:expired(false)
 { }
-//SceneGraphVertex::SceneGraphVertex(const SceneGraphVertex& b)
+//SceneGraphItem::SceneGraphItem(const SceneGraphItem& b)
 //	: parents(b.parents)
 //	, children(children)
 //	, expired(b.expired)
@@ -17,7 +17,7 @@ SceneGraphVertex::SceneGraphVertex()
 * Move constructor
 * @TODO?
 */
-SceneGraphVertex::SceneGraphVertex(SceneGraphVertex&& b)
+SceneGraphItem::SceneGraphItem(SceneGraphItem&& b)
 	: parents(b.parents)
 	, children(children)
 	, expired(b.expired)
@@ -47,7 +47,7 @@ SceneGraphVertex::SceneGraphVertex(SceneGraphVertex&& b)
 	}
 	b.parents.clear();
 }
-//SceneGraphVertex& SceneGraphVertex::operator = (const SceneGraphVertex& b)
+//SceneGraphItem& SceneGraphItem::operator = (const SceneGraphItem& b)
 //{
 //	//TODO: Decide how to handle children/parents on copy
 //	//If we copy construct a SGV we need to handle what will happen to parents/children
@@ -58,7 +58,7 @@ SceneGraphVertex::SceneGraphVertex(SceneGraphVertex&& b)
 * Move assignment operator
 * @TODO?
 */
-SceneGraphVertex& SceneGraphVertex::operator= (SceneGraphVertex&& b)
+SceneGraphItem& SceneGraphItem::operator= (SceneGraphItem&& b)
 {
 	this->parents = b.parents;
 	this->children = children;
@@ -88,7 +88,7 @@ SceneGraphVertex& SceneGraphVertex::operator= (SceneGraphVertex&& b)
 	b.parents.clear();
 	return *this;
 }
-void SceneGraphVertex::propagateUpdate(const glm::mat4 &sceneTransform)
+void SceneGraphItem::propagateUpdate(const glm::mat4 &sceneTransform)
 {
 	//Recompute child transforms recursively
 	if (children.size())
@@ -97,13 +97,13 @@ void SceneGraphVertex::propagateUpdate(const glm::mat4 &sceneTransform)
 		for (auto &it : children)
 		{
 			it.setComputedTransformMat(sceneModelTransform);
-			it.child->propagateUpdate(sceneTransform);
+			it.child->propagateUpdate(it.computedTransformMat);
 		}
 	}
 	//Nolonger expired!
 	expired = false;
 }
-void SceneGraphVertex::renderSceneGraph(const glm::mat4 &rootTransform, const glm::mat4 &computedSceneTransform)
+void SceneGraphItem::renderSceneGraph(const glm::mat4 &rootTransform, const glm::mat4 &computedSceneTransform)
 {
 	//If expired, compute each child's tranform mat from scene transform (and model mat)
 	if (expired)
@@ -120,8 +120,8 @@ void SceneGraphVertex::renderSceneGraph(const glm::mat4 &rootTransform, const gl
 ///////////////////////////////////////
 // Scene Graph Attachment Management //
 ///////////////////////////////////////
-bool SceneGraphVertex::attach(
-	const std::shared_ptr<SceneGraphVertex> &child, 
+bool SceneGraphItem::attach(
+	const std::shared_ptr<SceneGraphItem> &child, 
 	const std::string &reference, 
 	unsigned int parentAttachOffsetIndex, 
 	unsigned int childAttachOffsetIndex
@@ -133,8 +133,8 @@ bool SceneGraphVertex::attach(
 		child->getAttachmentOffset(childAttachOffsetIndex)
 		);
 }
-bool SceneGraphVertex::attach(
-	const std::shared_ptr<SceneGraphVertex> &child,
+bool SceneGraphItem::attach(
+	const std::shared_ptr<SceneGraphItem> &child,
 	const std::string &reference, 
 	glm::vec3 parentAttachOffset, 
 	glm::vec3 childAttachOffset
@@ -143,7 +143,7 @@ bool SceneGraphVertex::attach(
 #ifdef _DEBUG
 	//Recurse scene graph to ensure we won't be creating a cycle
 	{
-		std::list<std::shared_ptr<SceneGraphVertex>> prospectiveChildren = child->getChildPtrs();
+		std::list<std::shared_ptr<SceneGraphItem>> prospectiveChildren = child->getChildPtrs();
 		for (const auto &itC : prospectiveChildren)
 		{
 			//Check if child is me
@@ -167,7 +167,7 @@ bool SceneGraphVertex::attach(
 
 	return true;
 }
-bool SceneGraphVertex::detach(const std::string &reference)
+bool SceneGraphItem::detach(const std::string &reference)
 {
 	//Check my children
 	for (auto &&it = children.begin(); it != children.end(); ++it)
@@ -192,7 +192,7 @@ bool SceneGraphVertex::detach(const std::string &reference)
 	//Else false
 	return false;
 }
-std::shared_ptr<SceneGraphVertex> SceneGraphVertex::getAttachment(const std::string &reference)
+std::shared_ptr<SceneGraphItem> SceneGraphItem::getAttachment(const std::string &reference)
 {
 	//Check my children
 	for (auto &&it = children.begin(); it != children.end(); ++it)
@@ -213,7 +213,7 @@ std::shared_ptr<SceneGraphVertex> SceneGraphVertex::getAttachment(const std::str
 	//Else failure
 	return nullptr;
 }
-bool SceneGraphVertex::hasChildAttachment(const std::shared_ptr<const SceneGraphVertex> &child) const
+bool SceneGraphItem::hasChildAttachment(const std::shared_ptr<const SceneGraphItem> &child) const
 {
 	//Check my children
 	for (auto &&it = children.begin(); it != children.end(); ++it)
@@ -238,7 +238,7 @@ bool SceneGraphVertex::hasChildAttachment(const std::shared_ptr<const SceneGraph
 // Scene Graph Parent Tracking //
 // --prevents cycle creation-- //
 /////////////////////////////////
-bool SceneGraphVertex::hasParentAttachment(const std::shared_ptr<const SceneGraphVertex> &parent) const
+bool SceneGraphItem::hasParentAttachment(const std::shared_ptr<const SceneGraphItem> &parent) const
 {
 	//Check my parents
 	for (auto &&it = parents.begin(); it != parents.end(); ++it)
@@ -260,11 +260,11 @@ bool SceneGraphVertex::hasParentAttachment(const std::shared_ptr<const SceneGrap
 	//Else failure
 	return false;
 }
-void SceneGraphVertex::addParent(const std::shared_ptr<SceneGraphVertex> &parent)
+void SceneGraphItem::addParent(const std::shared_ptr<SceneGraphItem> &parent)
 {
 	parents.push_back(parent);
 }
-void SceneGraphVertex::removeParent(const std::shared_ptr<const SceneGraphVertex> &parent)
+void SceneGraphItem::removeParent(const std::shared_ptr<const SceneGraphItem> &parent)
 {
 	for (auto &&it = parents.begin(); it != parents.end(); ++it)
 	{
@@ -279,15 +279,15 @@ void SceneGraphVertex::removeParent(const std::shared_ptr<const SceneGraphVertex
 	assert(false);
 }
 #ifdef _DEBUG
-std::list<std::shared_ptr<SceneGraphVertex>> SceneGraphVertex::getChildPtrs() const
+std::list<std::shared_ptr<SceneGraphItem>> SceneGraphItem::getChildPtrs() const
 {
-	std::list<std::shared_ptr<SceneGraphVertex>> rtn;
+	std::list<std::shared_ptr<SceneGraphItem>> rtn;
 	for (const auto &it : children)
 	{
 		//Add child
 		rtn.push_back(it.child);
 		//Recurse child's children
-		const std::list<std::shared_ptr<SceneGraphVertex>> &a = it.child->getChildPtrs();
+		const std::list<std::shared_ptr<SceneGraphItem>> &a = it.child->getChildPtrs();
 		rtn.insert(rtn.end(), a.begin(), a.end());
 	}
 	return rtn;

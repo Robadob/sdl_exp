@@ -149,8 +149,6 @@ Entity::Entity(
     , material(0)
     , color(1, 0, 0, 1)
     , cullFace(true)
-	, renderModelMat(1)
-	, location(0)
 {
     GL_CHECK();
     if(!loadModelFromFile())

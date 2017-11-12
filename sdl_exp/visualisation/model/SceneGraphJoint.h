@@ -1,42 +1,45 @@
-#ifndef __SceneGraphEdge_h__
-#define __SceneGraphEdge_h__
+#ifndef __SceneGraphJoint_h__
+#define __SceneGraphJoint_h__
 #include <glm/mat4x4.hpp>
 #include <glm/gtx/transform.hpp>
 #include <memory>
 
-#include "SceneGraphVertex.h"
+#include "SceneGraphItem.h"
 
+class SceneGraphJoint;
+typedef SceneGraphJoint SGJoint;
 /**
  * This class represents an adjustable rotational joint for attaching items to scene graph
  * Add one of these as a child between two renderables
  * You can also do scales and translation, however that's not recommended unless you want scene nodes to be connected by an invisible link
  */
-class SceneGraphJoint : public SceneGraphVertex
+class SceneGraphJoint : public SceneGraphItem
 {
-	typedef SceneGraphJoint SGJoint;
+public:
+	static std::shared_ptr<SceneGraphJoint> make(const glm::mat4 &attachmentTransform = glm::mat4(1));
 private:
 	SceneGraphJoint(const glm::mat4 &attachmentTransform);
 	/**
 	* TODO
-	* Can't implement until SceneGraphVertex copy constructor is ready
+	* Can't implement until SceneGraphItem copy constructor is ready
 	*/
 	SceneGraphJoint(const SceneGraphJoint& b) = delete;
 	/**
-	* Default behaviour, this object is a simple interface over SceneGraphVertex and has no member vars
+	* Default behaviour, this object is a simple interface over SceneGraphItem and has no member vars
 	*/
 	SceneGraphJoint(SceneGraphJoint&& b);
 	/**
 	 * TODO
-	 * Can't implement until SceneGraphVertex copy assignment operator is ready
+	 * Can't implement until SceneGraphItem copy assignment operator is ready
 	 */
 	SceneGraphJoint& operator= (const SceneGraphJoint& b) = delete;
 	/**
-	 * Default behaviour, this object is a simple interface over SceneGraphVertex and has no member vars
+	 * Default behaviour, this object is a simple interface over SceneGraphItem and has no member vars
 	 */
 	SceneGraphJoint& operator= (SceneGraphJoint&& b);
 	/**
 	* TODO
-	* Can't implement until SceneGraphVertex copy constructor is ready
+	* Can't implement until SceneGraphItem copy constructor is ready
 	*/
 	//std::shared_ptr<SceneGraphJoint> SceneGraphJoint::clone();
 	/**
@@ -45,7 +48,13 @@ private:
 	 */
 	void render(const glm::mat4 &transform) override { }
 public:
-	static std::shared_ptr<SceneGraphJoint> make(const glm::mat4 &attachmentTransform = glm::mat4(1));
+	/////////////////////////////////////////////////////////////////////////
+	//                 ~Scene Graph Attachment Management~                 //
+	// Joints have no attachment points, so we treat it slightly different //
+	/////////////////////////////////////////////////////////////////////////
+	bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int childAttachOffsetIndex = 0);
+	bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, glm::vec3 childAttachOffset);
+
 	//std::shared_ptr<SceneGraphJoint> clone();
     /////////////////////////
     // Matrix Manipulation //
@@ -113,4 +122,4 @@ public:
 	inline SceneGraphJoint& setOffset(float x, float y, float z){ return this->setOffset(glm::vec3(x, y, z)); }
 };
 
-#endif //__SceneGraph_h__
+#endif //__SceneGraphJoint_h__

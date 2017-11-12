@@ -1518,30 +1518,30 @@ void printMat(glm::mat4 m)
 		m[3][0], m[3][1], m[3][2], m[3][3]);
 }
 
-void Entity::setLocation(glm::vec3 loc)
+void Entity::setLocation(const glm::vec3 &loc)
 {
 	glm::mat4 mm = getModelMat();
 	mm[3] = glm::vec4(loc, 1);	
 	setModelMat(mm);
-	location = loc;
 }
-void Entity::translate(glm::vec3 offset)
+void Entity::translate(const glm::vec3 &offset)
 {
 	glm::mat4 mm = getModelMat();
 	mm[3] += glm::vec4(offset, 0);
 	setModelMat(mm);
-	location = mm[3];
 }
-void Entity::rotate(glm::vec3 axis, float angleRadians)
+void Entity::rotate(const glm::vec3 &axis, const float &angleRadians)
 {
 	//Get current model mat
 	glm::mat4 mm = getModelMat();
+	//Get current translation
+	glm::vec4 location = mm[3];
 	//Purge translation
 	mm[3] = glm::vec4(0, 0, 0, 1);
 	//Apply rotation
 	mm *= glm::rotate(angleRadians, axis);
 	//Reapply translation
-	mm[3] = glm::vec4(location, 1);
+	mm[3] = location;
 	//Set model mat
 	setModelMat(mm);
 }

@@ -27,7 +27,8 @@ private:
     std::shared_ptr<TextureBuffer<float>> texBuf;
     std::shared_ptr<Entity> instancedSphere;
     std::shared_ptr<Entity> deerModel;
-    std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Entity> teapotModel;
     float tick;
     int polarity;
 };

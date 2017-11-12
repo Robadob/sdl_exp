@@ -119,10 +119,10 @@ public:
 	glm::vec3 getMin() const { return modelMin; }
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
-	void setLocation(glm::vec3 loc);
-	void translate(glm::vec3 offset);
-	void rotate(glm::vec3 axis, float angleRadians);
-	glm::vec3 getLocation() const { return location; };
+	void setLocation(const glm::vec3 &loc);
+	void translate(const glm::vec3 &offset);
+	void rotate(const glm::vec3 &axis, const float &angleRadians);
+	glm::vec3 getLocation() const { return getModelMat()[3]; };
 protected:
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;
@@ -144,7 +144,6 @@ protected:
     void freeMaterial();
     void generateVertexBufferObjects();
 private:
-	glm::vec3 location;
 	glm::vec3 modelMin, modelMax, modelDims;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{
@@ -180,6 +179,5 @@ private:
     };
     const static unsigned char FILE_TYPE_FLAG = 0x12;
     const static unsigned char FILE_TYPE_VERSION = 1;
-	glm::mat4 renderModelMat;
 };
 #endif //ifndef __Entity_h__

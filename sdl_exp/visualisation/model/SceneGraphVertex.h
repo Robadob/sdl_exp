@@ -55,7 +55,7 @@ public:
 	 * @param transform Transformation matrix to be applied before the scene graph and model matrix
 	 * @note Matrix order: projection x view x transform x scene x model
 	 */
-	inline void renderSceneGraph(const glm::mat4 &transform)
+	inline void renderSceneGraph(const glm::mat4 &transform=glm::mat4(1))
 	{
 		renderSceneGraph(transform, glm::mat4(1));
 	}
@@ -166,7 +166,7 @@ private:
 		glm::mat4 computedTransformMat;
 		void setComputedTransformMat(const glm::mat4 &sceneParentTransform)
 		{
-			computedTransformMat = sceneParentTransform * glm::translate(childOffset - parentOffset);
+			computedTransformMat = sceneParentTransform * glm::translate(parentOffset - childOffset);
 		}
 	};
 	std::list<AttachmentDetail> children;
@@ -180,7 +180,7 @@ protected:
 	 * Used by subclasses to updated the model matrix
 	 * This also sets the flag 'expired' to true so that scene graphs can be rebuilt
 	 */
-	inline void setModelMat(const glm::mat4 &m) { modelMat = m; }
+	inline void setModelMat(const glm::mat4 &m) { modelMat = m; expired = true; }
 };
 
 #endif //__SceneGraphVertex_h__

@@ -8,6 +8,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     : BasicScene(visualisation)
     , deerModel(Entity::load(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
 	, colorModel(Entity::load(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
+	, teapotModel(Entity::load(Stock::Models::TEAPOT, 1.0f, Stock::Shaders::PHONG))
     , tick(0.0f)
     , polarity(-1)
 	, instancedSphere(Entity::load(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
@@ -24,6 +25,8 @@ EntityScene::EntityScene(Visualisation &visualisation)
 		registerEntity(colorModel);
 	if (this->instancedSphere)
 		registerEntity(instancedSphere);
+	if (this->teapotModel)
+		registerEntity(teapotModel);
     this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
@@ -32,6 +35,10 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	{
 		this->colorModel->rotate(glm::vec3(1.0, 0.0, 0.0), -90);
 		this->colorModel->setCullFace(false);
+	}
+	if(this->deerModel)
+	{
+		this->deerModel->attach(this->teapotModel, "teapot", glm::vec3(0), glm::vec3(0,1,0));
 	}
 #ifdef __CUDACC__
     cuInit();
@@ -66,7 +73,7 @@ void EntityScene::update(unsigned int frameTime)
 
 	if (this->deerModel)
 	{
-		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), frameTime*MS_PER_SPIN_DIV_2PI);
+		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), -this->polarity*frameTime*MS_PER_SPIN_DIV_2PI);
 		this->deerModel->setLocation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
 	}
 #ifdef __CUDACC__
@@ -81,7 +88,7 @@ void EntityScene::render()
 	if (this->colorModel)
 		colorModel->render();
 	if (this->deerModel)
-		deerModel->render();
+		deerModel->renderSceneGraph();
 	if (this->instancedSphere)
 		this->instancedSphere->renderInstances(100);
 }

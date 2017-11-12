@@ -20,9 +20,12 @@ void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
 }
 void MultiPassScene::_reload()
 {
-    printf("Reloading Shaders.\n");
-	for (auto&& it : entities)//byRef
-        it->reload();
+	printf("Reloading Shaders.\n");
+	for (std::vector<std::shared_ptr<Renderable>>::iterator i = entities.begin(); i != entities.end(); i++)
+	{
+		if (auto a = std::dynamic_pointer_cast<Reloadable>(*i))
+			a->reload();
+	}
     reload();
 }
 

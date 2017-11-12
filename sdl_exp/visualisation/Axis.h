@@ -4,7 +4,7 @@
 #include "shader/Shaders.h"
 #include <memory>
 
-class Axis : public Renderable
+class Axis : public Renderable, public Reloadable
 {
 public:
 	/**

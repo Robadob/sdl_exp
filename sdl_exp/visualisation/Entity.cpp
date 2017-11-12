@@ -14,95 +14,115 @@
 
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
-/*
-Convenience constructor.
-*/
-Entity::Entity(
+
+std::shared_ptr<Entity> Entity::load(
 	Stock::Models::Model const model,
-	float modelScale,
+	float scale,
 	std::shared_ptr<Shaders> shaders,
 	std::shared_ptr<const Texture> texture
-	) : Entity(model, modelScale, { shaders }, texture){ }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
+	)
+{
+	return load(model, scale, { shaders }, texture);
+}
+std::shared_ptr<Entity> Entity::load(
 	Stock::Models::Model const model,
+	float scale,
+	Stock::Shaders::ShaderSet const ss,
+	std::shared_ptr<const Texture> texture
+	)
+{
+	return load(model, scale, { ss }, texture);
+}
+std::shared_ptr<Entity> Entity::load(
+	const char *modelPath,
 	float modelScale,
 	Stock::Shaders::ShaderSet const ss,
 	std::shared_ptr<const Texture> texture
-	) : Entity(model, modelScale, { ss }, texture){ }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-	const char *modelPath,
-	float modelScale,
-	Stock::Shaders::ShaderSet const ss,
-	std::shared_ptr<const Texture> texture
-	) : Entity(modelPath, modelScale, { ss }, texture){ }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
+	)
+{
+	return load(modelPath, modelScale, { ss }, texture);
+}
+std::shared_ptr<Entity> Entity::load(
 	const char *modelPath,
 	float modelScale,
 	std::shared_ptr<Shaders> shaders,
 	std::shared_ptr<const Texture> texture
-	) : Entity(modelPath, modelScale, { shaders }, texture){ }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    Stock::Models::Model const model,
-    float modelScale,
+	)
+{
+	return load(modelPath, modelScale, { shaders }, texture);
+}
+std::shared_ptr<Entity> Entity::load(
+	Stock::Models::Model const model,
+	float scale,
 	std::initializer_list<std::shared_ptr<Shaders>> shaders,
-    std::shared_ptr<const Texture> texture
-    ) : Entity(
-    model.modelPath,
-    modelScale,
-	shaders.size() > 0 ? shaders : std::vector<std::shared_ptr<Shaders>>({std::make_shared<Shaders>(model.defaultShaders)}),
-    texture ? texture : Texture2D::load(model.texturePath)
-    ){ }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    Stock::Models::Model const model,
-    float modelScale,
+	std::shared_ptr<const Texture> texture
+	)
+{
+	return load(
+		model.modelPath,
+		scale,
+		shaders.size() > 0 ? shaders : std::vector<std::shared_ptr<Shaders>>({ std::make_shared<Shaders>(model.defaultShaders) }),
+		texture ? texture : Texture2D::load(model.texturePath));
+}
+std::shared_ptr<Entity> Entity::load(
+	Stock::Models::Model const model,
+	float scale,
 	std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-    std::shared_ptr<const Texture> texture
-    ) : Entity(
-    model.modelPath,
-    modelScale,
-	convertToShader(ss),
-    texture.get() ? texture : Texture2D::load(model.texturePath)
-    ) { }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    const char *modelPath,
-    float modelScale,
+	std::shared_ptr<const Texture> texture
+	)
+{
+	return load(
+		model.modelPath,
+		scale,
+		convertToShader(ss),
+		texture ? texture : Texture2D::load(model.texturePath)
+		);
+}
+std::shared_ptr<Entity> Entity::load(
+	const char *modelPath,
+	float modelScale,
 	std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-    std::shared_ptr<const Texture> texture
-    ): Entity(
-    modelPath,
-	modelScale,
-	convertToShader(ss),
-    texture
-    ) { }
-Entity::Entity(
+	std::shared_ptr<const Texture> texture
+	)
+{
+	return load(
+		modelPath,
+		modelScale,
+		convertToShader(ss),
+		texture
+		);
+}
+std::shared_ptr<Entity> Entity::load(
 	const char *modelPath,
 	float modelScale,
 	std::initializer_list<std::shared_ptr<Shaders>> shaders,
-    std::shared_ptr<const Texture> texture
-	) : Entity(
-	modelPath,
-	modelScale,
-	std::vector<std::shared_ptr<Shaders>>(shaders),
-	texture
-	) { }
+	std::shared_ptr<const Texture> texture
+	)
+{
+	return load(
+		modelPath,
+		modelScale,
+		std::vector<std::shared_ptr<Shaders>>(shaders),
+		texture
+		);
+}
+std::shared_ptr<Entity> Entity::load(
+	const char *modelPath,
+	float modelScale,
+	std::vector<std::shared_ptr<Shaders>> shaders,
+	std::shared_ptr<const Texture> texture
+	)
+{
+	try
+	{
+		return std::shared_ptr<Entity>(new Entity(modelPath, modelScale, shaders, texture));
+	}
+	catch (std::exception &)
+	{
+		//Do nothing, we will return at the end
+	}
+	return nullptr;
+}
 /*
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
@@ -116,24 +136,27 @@ Entity::Entity(
 	std::vector<std::shared_ptr<Shaders>> shaders,
     std::shared_ptr<const Texture> texture
     )
-    : positions(GL_FLOAT, 3, sizeof(float))
+    : shaders(shaders)
+    , texture(texture)
+    , SCALE(modelScale)
+    , modelPath(modelPath)
+    , vn_count(0)
+    , positions(GL_FLOAT, 3, sizeof(float))
     , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
     , colors(GL_FLOAT, 3, sizeof(float))
     , texcoords(GL_FLOAT, 2, sizeof(float))
     , faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
-    , vn_count(0)
-    , SCALE(modelScale)
-    , modelPath(modelPath)
     , material(0)
     , color(1, 0, 0, 1)
-    , location(0.0f)
-    , rotation(0.0f, 0.0f, 1.0f, 0.0f)
-    , shaders(shaders)
-    , texture(texture)
     , cullFace(true)
+	, renderModelMat(1)
 {
     GL_CHECK();
-    loadModelFromFile();
+    if(!loadModelFromFile())
+    {
+	    //Load failed, throw exception that load() can capture
+		throw std::exception("Model Load Failed");
+    }
     //If texture has been provided, set up
     if (texture)
     {
@@ -155,8 +178,7 @@ Entity::Entity(
 			it->setNormalsAttributeDetail(normals);
 			it->setColorsAttributeDetail(colors);
 			it->setTexCoordsAttributeDetail(texcoords);
-			it->setRotationPtr(&this->rotation);
-			it->setTranslationPtr(&this->location);
+			it->setModelMatPtr(getModelMatPtr());
 		}
 	}
     if (needsExport)
@@ -224,6 +246,32 @@ void Entity::renderInstances(int count, unsigned int shaderIndex){
     if (shaderIndex<shaders.size())
         shaders[shaderIndex]->clearProgram();
 }
+/**
+ * Scene graph render method
+ */
+void Entity::render(const glm::mat4 &transform)
+{
+	unsigned int shaderIndex = 0;
+	if (shaderIndex<shaders.size())
+	{
+		shaders[shaderIndex]->useProgram();
+		glm::mat4 m = transform * getModelMat();
+		shaders[shaderIndex]->overrideModelMat(&m);
+	}
+	//Bind the faces to be rendered
+	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+
+	if (!cullFace)
+		GL_CALL(glDisable(GL_CULL_FACE));
+	//Translate the model according to it's location
+	if (this->material)
+		this->material->useMaterial();
+	GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
+	if (!cullFace)
+		GL_CALL(glEnable(GL_CULL_FACE));
+	if (shaderIndex<shaders.size())
+		shaders[shaderIndex]->clearProgram();
+}
 /*
 Creates a vertex buffer object of the specified size
 @param vbo The pointer to store the buffer objects location in
@@ -287,7 +335,7 @@ Textures: 2-3 components (the optional 3rd component is wrapped in [], and is ex
 Faces: 3 components per, each indexing a vertex, and optionally a normal, or a normal and a texture.
 The attributes that support variable length chars are designed according to the wikipedia spec
 */
-void Entity::loadModelFromFile()
+bool Entity::loadModelFromFile()
 {
 	FILE* file;
 	//Redirect pre-exported models, and cancel if not .obj
@@ -298,20 +346,18 @@ void Entity::loadModelFromFile()
 		exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
 		if (endsWith(modelPath, EXPORT_TYPE))
 		{
-			importModel(modelPath);
-			return;
+			return importModel(modelPath);
 		}
 		else if ((file = fopen(exportPath.c_str(), "r")))
 		{
 			fclose(file);
-			importModel(exportPath.c_str());
-			return;
+			return importModel(exportPath.c_str());
 		}
 	}
 	else
 	{
 		fprintf(stderr, "Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);
-		return;
+		return false;
 	}
 	printf("\r Loading Model: %s", modelPath);
 
@@ -319,7 +365,7 @@ void Entity::loadModelFromFile()
 	file = fopen(modelPath, "r");
 	if (!file){
 		printf("\rLoading Model: Could not open model '%s'!\n", modelPath);
-		return;
+		return false;
 	}
 
 	//Counters
@@ -456,7 +502,7 @@ exit_loop:;
 
 	if (parameters_read > 0){
 		fprintf(stderr, "\nModel '%s' contains parameter space vertices, these are unsupported at this time.", modelPath);
-		return;
+		return false;
 	}
 
 	//Set instance var counts
@@ -469,7 +515,7 @@ exit_loop:;
 	{
 		fprintf(stderr, "\nVertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n", modelPath);
 		fclose(file);
-		return;
+		return false;
 	}
 	if ((colors.count != 0 && positions.count != colors.count))
 	{
@@ -928,6 +974,7 @@ exit_loop2:;
 	}
 	free(mtllib);
 	free(usemtl);
+	return true;
 }
 /*
 Loads a single material from a .mtl file
@@ -1047,35 +1094,6 @@ void Entity::setColor(glm::vec3 color){
 			it->setColor(this->color);
 		}
 	}
-}
-/*
-Set the location of the model in world space
-*/
-void Entity::setLocation(glm::vec3 location){
-	this->location = location;
-}
-/*
-Set the rotation of the model in world space
-@param rotation glm::vec4(axis.x, axis.y, axis.z, degrees)
-*/
-void Entity::setRotation(glm::vec4 rotation){
-	this->rotation = rotation;
-}
-/*
-Returns the location of the entity
-@return a vec3 containing the x, y, z coords the model should be translated to
-*/
-glm::vec3 Entity::getLocation() const
-{
-	return this->location;
-}
-/*
-Returns the rotation of the entity
-@return a vec4 containing the x, y, z coords of the axis the model should be rotated w degrees around
-*/
-glm::vec4 Entity::getRotation() const
-{
-	return this->rotation;
 }
 /*
 Public alias to freeMaterial() for backwards compatibility purposes
@@ -1207,7 +1225,7 @@ bool Entity::endsWith(const char *candidate, const char *suffix)
 Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
 @param file Path to the desired output file
 */
-void Entity::importModel(const char *path)
+bool Entity::importModel(const char *path)
 {
 	//Generate import path
 	std::string importPath(path);
@@ -1219,7 +1237,7 @@ void Entity::importModel(const char *path)
 	else if (!endsWith(path, EXPORT_TYPE))
 	{
 		fprintf(stderr, "Model File: %s, is not a support filetype (e.g. %s, %s)\n", path, OBJ_TYPE, EXPORT_TYPE);
-		return;
+		return false;
 	}
 	//Open file
 	FILE * file;
@@ -1227,6 +1245,7 @@ void Entity::importModel(const char *path)
 	if (!file)
 	{
 		fprintf(stderr, "Could not open file for reading: %s. Aborting import\n", importPath.c_str());
+		return false;
 	}
 	printf("Importing Model: %s\n", importPath.c_str());
 	//Read in the export mask
@@ -1237,14 +1256,14 @@ void Entity::importModel(const char *path)
 	{
 		fprintf(stderr, "FILE TYPE FLAG missing from file header: %s. Aborting import\n", importPath.c_str());
 		fclose(file);
-		return;
+		return false;
 	}
 	//Check version is supported
 	if (mask.VERSION_FLAG > FILE_TYPE_VERSION)
 	{
 		fprintf(stderr, "File %s is of newer version %i, this software supports a maximum version of %i. Aborting import\n", importPath.c_str(), (unsigned int)mask.VERSION_FLAG, (unsigned int)FILE_TYPE_VERSION);
 		fclose(file);
-		return;
+		return false;
 	}
 	else if (mask.VERSION_FLAG < FILE_TYPE_VERSION)
 	{
@@ -1257,13 +1276,13 @@ void Entity::importModel(const char *path)
 	{
 		fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %i bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
 		fclose(file);
-		return;
+		return false;
 	}
 	if (sizeof(unsigned int) != mask.SIZE_OF_UINT)
 	{
 		fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %i bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
 		fclose(file);
-		return;
+		return false;
 	}
 	vn_count = mask.VN_COUNT;
 	//Set components (sizes should be defaults)
@@ -1345,7 +1364,7 @@ void Entity::importModel(const char *path)
 	if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG)
 	{
 		fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
-		return;
+		//return false;
 	}
 	fclose(file);
 	//Check model scale
@@ -1374,6 +1393,7 @@ void Entity::importModel(const char *path)
 	//Allocate VBOs
 	generateVertexBufferObjects();
 	printf("Model import was successful: %s\n", importPath.c_str());
+	return true;
 }
 /*
 Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.

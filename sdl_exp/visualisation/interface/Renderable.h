@@ -1,19 +1,21 @@
 #ifndef __Renderable_h__
 #define __Renderable_h__
 
-#include "Reloadable.h"
-#include <glm/mat4x4.hpp>
-
 #include "Viewport.h"
 #include "../Camera.h"
+
+#include <glm/mat4x4.hpp>
 
 /**
  * Represents things which hold shaders (and can be rendered)
  * @note Entities are the target audience
  */
-class Renderable : public Reloadable
+class Renderable
 {
 public:
+	virtual ~Renderable()
+	{ }
+
 	/**
 	 * Binds the provided modelview matrix to the internal shader
 	 * @param viewMat Ptr to modelview matrix

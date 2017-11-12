@@ -1,5 +1,8 @@
 #ifndef __ViewPort_h__
 #define __ViewPort_h__
+
+#include <glm/mat4x4.hpp>
+
 class Viewport
 {
 public:

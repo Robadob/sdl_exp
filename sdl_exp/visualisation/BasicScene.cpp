@@ -58,7 +58,8 @@ void BasicScene::_reload()
 {
 	for (std::vector<std::shared_ptr<Renderable>>::iterator i = entities.begin(); i != entities.end(); i++)
 	{
-		(*i)->reload();
+		if (auto a = std::dynamic_pointer_cast<Reloadable>(*i))
+			a->reload();
 	}
 	reload();
 }

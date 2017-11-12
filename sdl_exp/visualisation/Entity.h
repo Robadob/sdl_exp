@@ -12,6 +12,7 @@
 #include "Camera.h"
 #include "interface/Viewport.h"
 #include "interface/Renderable.h"
+#include "model/SceneGraphVertex.h"
 
 namespace Stock
 {
@@ -33,75 +34,80 @@ namespace Stock
 		const Model PLANE{ "../models/plane.obj", 0, Stock::Shaders::FLAT };
     };
 };
-/*
-A renderable model loaded from a .obj file
-*/
-class Entity : public Renderable
+/**
+ * A renderable model loaded from a .obj file
+ */
+class Entity : public Renderable, public SceneGraphVertex, public Reloadable
 {
     friend class Shaders;
-public:    
-	explicit Entity(
+public:
+	static std::shared_ptr<Entity> load(
 		Stock::Models::Model const model,
 		float scale = 1.0f,
 		std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
 		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
-	explicit Entity(
+	static std::shared_ptr<Entity> load(
 		Stock::Models::Model const model,
 		float scale,
 		Stock::Shaders::ShaderSet const ss,
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
-	explicit Entity(
+	static std::shared_ptr<Entity> load(
 		const char *modelPath,
 		float modelScale = 1.0f,
 		Stock::Shaders::ShaderSet const ss = Stock::Shaders::FIXED_FUNCTION,
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
-		);
-	explicit Entity(
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		); 
+	static std::shared_ptr<Entity> load(
 		const char *modelPath,
 		float modelScale,
 		std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
-    explicit Entity(
-        Stock::Models::Model const model,
-        float scale = 1.0f,
+	static std::shared_ptr<Entity> load(
+		Stock::Models::Model const model,
+		float scale = 1.0f,
 		std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
-        );
-    Entity(
-        Stock::Models::Model const model,
-        float scale,
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		);
+	static std::shared_ptr<Entity> load(
+		Stock::Models::Model const model,
+		float scale,
 		std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
-        );
-    explicit Entity(
-        const char *modelPath,
-        float modelScale = 1.0f,
-		std::initializer_list<const Stock::Shaders::ShaderSet> ss = {},
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
-        );
-    explicit Entity(
-        const char *modelPath,
-        float modelScale,
-		std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
 		);
+	static std::shared_ptr<Entity> load(
+		const char *modelPath,
+		float modelScale = 1.0f,
+		std::initializer_list<const Stock::Shaders::ShaderSet> ss = {},
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		);
+	static std::shared_ptr<Entity> load(
+		const char *modelPath,
+		float modelScale,
+		std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
+		std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr)
+		);
+	static std::shared_ptr<Entity> load(
+		const char *modelPath,
+		float modelScale,
+		std::vector<std::shared_ptr<Shaders>> shaders,
+		std::shared_ptr<const Texture> texture
+		);
+protected:    
 	explicit Entity(
 		const char *modelPath,
 		float modelScale,
 		std::vector<std::shared_ptr<Shaders>> shaders,
         std::shared_ptr<const Texture> texture
 		);
+public:
     virtual ~Entity();
 	virtual void render(unsigned int shaderIndex = 0);
-	void renderInstances(int count, unsigned int shaderIndex=0);
+	virtual void renderInstances(int count, unsigned int shaderIndex = 0);
+	virtual void render(const glm::mat4 &transform) override;
     void setColor(glm::vec3 color);
-    void setLocation(glm::vec3 location);
-    void setRotation(glm::vec4 rotation);
-    glm::vec3 getLocation() const;
-    glm::vec4 getRotation() const;
     inline void clearMaterial();
     void exportModel() const;
     virtual void reload();
@@ -126,12 +132,10 @@ protected:
     //Optional material (loaded automaically if detected within model file)
     Material *material;
     glm::vec4 color;
-    glm::vec3 location;
-    glm::vec4 rotation;
 
     static void createVertexBufferObject(GLuint *vbo, GLenum target, GLuint size, void *data);
     static void deleteVertexBufferObject(GLuint *vbo);
-    void loadModelFromFile();
+    bool loadModelFromFile();
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
     void freeMaterial();
     void generateVertexBufferObjects();
@@ -150,7 +154,7 @@ private:
     const static char *OBJ_TYPE;
     const static char *EXPORT_TYPE;
     inline static bool endsWith(const char *candidate, const char *suffix);
-    void importModel(const char *path);
+	bool importModel(const char *path);
     struct ExportMask
     {
         unsigned char FILE_TYPE_FLAG;
@@ -171,5 +175,6 @@ private:
     };
     const static unsigned char FILE_TYPE_FLAG = 0x12;
     const static unsigned char FILE_TYPE_VERSION = 1;
+	glm::mat4 renderModelMat;
 };
 #endif //ifndef __Entity_h__

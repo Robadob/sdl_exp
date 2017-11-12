@@ -8,14 +8,14 @@ Constructs a skybox entity
 */
 Skybox::Skybox(const char *texturePath, float yOffset)
     : Entity(
-        Stock::Models::CUBE, 
+        Stock::Models::CUBE.modelPath, 
         50.0f,//Make it adequate distance away
-		{ Stock::Shaders::SKYBOX },
+		{std::make_shared<Shaders>(Stock::Shaders::SKYBOX)},
         TextureCubeMap::load(texturePath)
     )
 {    
     //Set height
-    setLocation(glm::vec3(0, yOffset, 0));
+    //setLocation(glm::vec3(0, yOffset, 0));
     //Flip entity vertex order
     flipVertexOrder();
     //Flip normals
@@ -28,6 +28,21 @@ void Skybox::render(unsigned int shaderIndex)
     // Enable/Disable features
     GL_CALL(glDisable(GL_DEPTH_TEST));
 	Entity::render(shaderIndex);
+	GL_CALL(glEnable(GL_DEPTH_TEST));
+}
+void Skybox::renderInstances(int count, unsigned int shaderIndex)
+{
+	// Enable/Disable features
+	GL_CALL(glDisable(GL_DEPTH_TEST));
+	Entity::renderInstances(count, shaderIndex);
+	GL_CALL(glEnable(GL_DEPTH_TEST));
+}
+
+void Skybox::render(const glm::mat4 &transform)
+{
+	// Enable/Disable features
+	GL_CALL(glDisable(GL_DEPTH_TEST));
+	Entity::render(transform);
 	GL_CALL(glEnable(GL_DEPTH_TEST));
 }
 /**
@@ -46,5 +61,5 @@ void Skybox::setViewMatPtr(const Camera *camera)
  */
 void Skybox::setYOffset(float yOffset)
 {
-    setLocation(glm::vec3(0, yOffset, 0));
+    //setLocation(glm::vec3(0, yOffset, 0));
 }

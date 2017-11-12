@@ -1,14 +1,14 @@
 #include "TwoPassScene.h"
 #include "visualisation/multipass/FrameBuffer.h"
 #include "visualisation/multipass/BackBuffer.h"
-#include <glm/gtc/matrix_transform.inl>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 //Create content struct
 TwoPassScene::SceneContent::SceneContent()
-    : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::TEXTURE_SHADOW }))
-    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
-    , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
-    , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
+    : deerModel(Entity::load(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::TEXTURE_SHADOW }))
+	, sphereModel(Entity::load(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+	, planeModel(Entity::load(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+	, lightModel(Entity::load(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
     , blur(new GaussianBlur(5,1.75f))
     , pointlightPos(75, 100, 0)//100 units up, radius of 75
     , pointlightTarget(0)
@@ -19,7 +19,7 @@ TwoPassScene::SceneContent::SceneContent()
     planeModel->setColor(glm::vec3(1));//White
     deerModel->exportModel();
     sphereModel->exportModel();
-    sphereModel->setLocation(glm::vec3(10, 5, 10));
+    //sphereModel->setLocation(glm::vec3(10, 5, 10));
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
@@ -86,7 +86,7 @@ void TwoPassScene::update(unsigned int frameTime)
         content->pointlightTarget,
         glm::vec3(0, 1, 0)
         );
-    this->content->lightModel->setLocation(this->content->pointlightPos);
+    //this->content->lightModel->setLocation(this->content->pointlightPos);
 	//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
 	//this->content->deerModel->setLocation(glm::vec3(20 * sin(this->tick), 0, 20 * cos(this->tick)));
 }

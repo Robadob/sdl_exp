@@ -17,8 +17,8 @@ class SceneGraphJoint : public SceneGraphItem
 {
 public:
 	static std::shared_ptr<SceneGraphJoint> make(const glm::mat4 &attachmentTransform = glm::mat4(1));
-private:
-	SceneGraphJoint(const glm::mat4 &attachmentTransform);
+protected:
+	SceneGraphJoint(const glm::mat4 &attachmentTransform = glm::mat4(1));
 	/**
 	* TODO
 	* Can't implement until SceneGraphItem copy constructor is ready
@@ -72,23 +72,23 @@ public:
      * Scales the existing transformation matrix
      * @param scale The 3-dimensional scale factor to be used
      */
-	inline SceneGraphJoint& scale(glm::vec3 scale) { setSceneMat(getModelMatRef() * glm::scale(scale)); return *this; }
+	inline SceneGraphJoint& scale(const glm::vec3 &scale) { setSceneMat(getSceneMatRef() * glm::scale(scale)); return *this; }
     /**
      * Rotates the existing transformation matrix about an axis
      * @param axis The axis to rotate about
      * @param angleDegrees The number of degrees to rotate
      */
-	inline SceneGraphJoint& rotate(glm::vec3 axis, float angleDegrees) { setSceneMat(getModelMatRef() * glm::rotate(angleDegrees, axis)); return *this; }
+	inline SceneGraphJoint& rotate(const float &angleDegrees, const glm::vec3 &axis) { setSceneMat(getSceneMatRef() * glm::rotate(angleDegrees, axis)); return *this; }
     /**
      * Translates the existing transformation matrix
      * @param translation The translation to use
      */
-	inline SceneGraphJoint& translate(glm::vec3 translation){ setSceneMat(getModelMatRef() * glm::translate(translation)); return *this; }
+	inline SceneGraphJoint& translate(const glm::vec3 &translation){ setSceneMat(getSceneMatRef() * glm::translate(translation)); return *this; }
     /**
      * Replaces the absolute translation of the transformation matrix
      * @param offset The new absolute translation
      */
-	inline SceneGraphJoint& setOffset(glm::vec3 offset) {
+	inline SceneGraphJoint& setOffset(const glm::vec3 &offset) {
 		glm::mat4 localTransform = getSceneMat();
         localTransform[3][0] = offset.x;
         localTransform[3][1] = offset.y;
@@ -103,23 +103,23 @@ public:
      * Uniformly scales the existing transformation matrix
      * @param scale The scale factor to be used
      */
-	inline SceneGraphJoint& scale(float scale) { return this->scale(glm::vec3(scale)); }
+	inline SceneGraphJoint& scale(const float &scale) { return this->scale(glm::vec3(scale)); }
     /**
      * @see scale(glm::vec3)
      */
-	inline SceneGraphJoint& scale(float x, float y, float z) { return this->scale(glm::vec3(x, y, z)); }
+	inline SceneGraphJoint& scale(const float &x, const float &y, const float &z) { return this->scale(glm::vec3(x, y, z)); }
     /**
      * @see rotate(glm::vec3, float)
      */
-	inline SceneGraphJoint& rotate(float axisX, float axisY, float axisZ, float angleDegrees) { return this->rotate(glm::vec3(axisX, axisY, axisZ), angleDegrees); }
+	inline SceneGraphJoint& rotate(const float &angleDegrees, const float &axisX, const float &axisY, const float &axisZ) { return this->rotate(angleDegrees, glm::vec3(axisX, axisY, axisZ)); }
     /**
      * @see translate(glm::vec3)
      */
-	inline SceneGraphJoint& translate(float x, float y, float z){ return this->translate(glm::vec3(x, y, z)); }
+	inline SceneGraphJoint& translate(const float &x, const float &y, const float &z){ return this->translate(glm::vec3(x, y, z)); }
     /**
      * @see setOffset(glm::vec3)
      */
-	inline SceneGraphJoint& setOffset(float x, float y, float z){ return this->setOffset(glm::vec3(x, y, z)); }
+	inline SceneGraphJoint& setOffset(const float &x, const float &y, const float &z){ return this->setOffset(glm::vec3(x, y, z)); }
 };
 
 #endif //__SceneGraphJoint_h__

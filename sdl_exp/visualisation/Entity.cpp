@@ -177,7 +177,7 @@ Entity::Entity(
 			it->setNormalsAttributeDetail(normals);
 			it->setColorsAttributeDetail(colors);
 			it->setTexCoordsAttributeDetail(texcoords);
-			it->setModelMatPtr(getModelMatPtr());
+			it->setModelMatPtr(&modelMat);
 		}
 	}
     if (needsExport)
@@ -254,7 +254,7 @@ void Entity::render(const glm::mat4 &transform)
 	if (shaderIndex<shaders.size())
 	{
 		shaders[shaderIndex]->useProgram();
-		glm::mat4 m = transform * getSceneMat();
+		glm::mat4 m = transform * getSceneMat() * getModelMat();
 		shaders[shaderIndex]->overrideModelMat(&m);
 	}
 	//Bind the faces to be rendered
@@ -1528,7 +1528,7 @@ void Entity::translateScene(const glm::vec3 &offset)
 	mm[3] += glm::vec4(offset, 0);
 	setSceneMat(mm);
 }
-void Entity::rotateScene(const glm::vec3 &axis, const float &angleRadians)
+void Entity::rotateScene(const float &angleRadians, const glm::vec3 &axis)
 {
 	//Get current model mat
 	glm::mat4 mm = getSceneMat();
@@ -1552,17 +1552,17 @@ void Entity::scaleScene(const glm::vec3 &scale)
     //Set model mat
     setSceneMat(mm);
 }
-void Entity::resetSceneScale(const glm::vec3 &scale)
-{
-    //Get current model mat
-    glm::mat4 mm = getSceneMat();
-    glm::vec3 sceneScale = glm::vec3(
-        length(glm::vec3(mm[0][0], mm[1][0], mm[2][0])),
-        length(glm::vec3(mm[0][1], mm[1][1], mm[2][1])),
-        length(glm::vec3(mm[0][2], mm[1][2], mm[2][2]))
-        );
-    //Apply scale
-    mm *= glm::scale(1.0f / sceneScale);
-    //Set model mat
-    setSceneMat(mm);
-}
+//void Entity::resetSceneScale(const glm::vec3 &scale)
+//{
+//    //Get current model mat
+//    glm::mat4 mm = getSceneMat();
+//    glm::vec3 sceneScale = glm::vec3(
+//        length(glm::vec3(mm[0][0], mm[1][0], mm[2][0])),
+//        length(glm::vec3(mm[0][1], mm[1][1], mm[2][1])),
+//        length(glm::vec3(mm[0][2], mm[1][2], mm[2][2]))
+//        );
+//    //Apply scale
+//    mm *= glm::scale(1.0f / sceneScale);
+//    //Set model mat
+//    setSceneMat(mm);
+//}

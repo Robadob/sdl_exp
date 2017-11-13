@@ -15,7 +15,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
     )
 {    
     //Set height
-    setLocation(glm::vec3(0, yOffset, 0));
+	setModelLocation(glm::vec3(0, yOffset, 0));
     //Flip entity vertex order
     flipVertexOrder();
     //Flip normals
@@ -61,5 +61,5 @@ void Skybox::setViewMatPtr(const Camera *camera)
  */
 void Skybox::setYOffset(float yOffset)
 {
-    setLocation(glm::vec3(0, yOffset, 0));
+	setModelLocation(glm::vec3(0, yOffset, 0));
 }

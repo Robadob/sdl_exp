@@ -23,7 +23,7 @@ TwoPassScene::SceneContent::SceneContent()
 	if (sphereModel)
 	{
 		sphereModel->exportModel();
-		sphereModel->setLocation(glm::vec3(10, 5, 10));
+		sphereModel->setModelLocation(glm::vec3(10, 5, 10));
 	}
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
@@ -96,7 +96,7 @@ void TwoPassScene::update(unsigned int frameTime)
         glm::vec3(0, 1, 0)
         );
 	if (this->content->lightModel)
-		this->content->lightModel->setLocation(this->content->pointlightPos);
+		this->content->lightModel->setModelLocation(this->content->pointlightPos);
 	//if (this->content->deerModel)
 	//{
 		//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));

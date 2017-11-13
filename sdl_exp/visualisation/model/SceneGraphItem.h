@@ -39,8 +39,8 @@ public:
 	SceneGraphItem& operator= (SceneGraphItem&& b);
 	virtual ~SceneGraphItem() = default;
 	glm::mat4 getSceneMat() const { return sceneMat; };
-	const glm::mat4 *getModelMatPtr() const{ return &sceneMat; }
-	const glm::mat4 &getModelMatRef() const{ return sceneMat; }
+	const glm::mat4 *getSceneMatPtr() const{ return &sceneMat; }
+	const glm::mat4 &getSceneMatRef() const{ return sceneMat; }
 	///////////////////////
 	// Scene Graph Usage //
 	///////////////////////

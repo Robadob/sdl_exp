@@ -47,7 +47,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
     srand((unsigned int)time(0));
 	if (this->colorModel)
 	{
-		this->colorModel->rotate(glm::vec3(1.0, 0.0, 0.0), -90);
+		this->colorModel->rotateModel(-90, glm::vec3(1.0, 0.0, 0.0));
 		this->colorModel->setCullFace(false);
 	}
 	if(this->deerModel)
@@ -95,14 +95,14 @@ void EntityScene::update(unsigned int frameTime)
 
 	if (this->deerModel)
 	{
-		this->deerModel->rotate(glm::vec3(0.0, 1.0, 0.0), -(float)this->polarity*frameTime*MS_PER_SPIN_DIV_2PI);
-		this->deerModel->setLocation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
+		this->deerModel->rotateScene(-(float)this->polarity*frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 1.0, 0.0));
+		this->deerModel->setSceneLocation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
 	}
 #ifdef __CUDACC__
     cuUpdate();
 #endif
-	this->teapotJoint->rotate(glm::vec3(1.0, 0.0, 0.0), frameTime*MS_PER_SPIN_DIV_2PI);
-	this->teapotJoint2->rotate(glm::vec3(0.0, 0.0, 1.0), frameTime*MS_PER_SPIN_DIV_2PI);
+	this->teapotJoint->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(1.0, 0.0, 0.0));
+	this->teapotJoint2->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 0.0, 1.0));
 }
 /*
 Called once per frame when Scene render calls should be executed
@@ -139,6 +139,9 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
 			this->colorModel->exportModel();
 		if (this->deerModel)
 			this->deerModel->exportModel();
+	case SDLK_KP_0://Numpad 0
+		if (this->crane)
+			this->crane->update();
     default:
         //Permit the keycode to be processed if we haven't handled personally
         return true;

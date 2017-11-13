@@ -13,6 +13,7 @@
 #include "interface/Viewport.h"
 #include "interface/Renderable.h"
 #include "model/SceneGraphItem.h"
+#include "model/TransformationMatrix.h"
 
 namespace Stock
 {
@@ -120,20 +121,21 @@ public:
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
     //Model Space/Mat Transforms
-	void setModelLocation(const glm::vec3 &loc);
-    void translateModel(const glm::vec3 &offset);
-    void rotateModel(const glm::vec3 &axis, const float &angleRadians);
+	void setModelLocation(const glm::vec3 &loc){ modelMat.translateA(loc); };
+	void translateModel(const glm::vec3 &offset){ modelMat.translateR(offset); };
+	void rotateModel(const float &angleRads, const glm::vec3 &axis) { modelMat.rotateE(angleRads, axis); };
+	void setModelMat(const glm::mat4 &modelMat) { this->modelMat = modelMat; };
     glm::vec3 getModelLocation() const { return getSceneMat()[3]; };
     glm::mat4 getModelMat() const { return modelMat; }
     //Scene Space/Mat Transforms, these affect children of the entity
     void setSceneLocation(const glm::vec3 &loc);
     void translateScene(const glm::vec3 &offset);
-    void rotateScene(const glm::vec3 &axis, const float &angleRadians);
+	void rotateScene(const float &angleRadians, const glm::vec3 &axis);
     void scaleScene(const glm::vec3 &scale);
     glm::vec3 getSceneLocation() const { return getSceneMat()[3]; };
 	using SceneGraphItem::setSceneMat;
 protected:
-    glm::mat4 modelMat;
+    glm::matT modelMat;
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;
     //World scale of the longest side (in the axis x, y or z)

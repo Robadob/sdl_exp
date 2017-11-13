@@ -38,9 +38,9 @@ public:
 	 */
 	SceneGraphItem& operator= (SceneGraphItem&& b);
 	virtual ~SceneGraphItem() = default;
-	glm::mat4 getModelMat() const { return modelMat; };
-	const glm::mat4 *getModelMatPtr() const{ return &modelMat; }
-	const glm::mat4 &getModelMatRef() const{ return modelMat; }
+	glm::mat4 getSceneMat() const { return sceneMat; };
+	const glm::mat4 *getModelMatPtr() const{ return &sceneMat; }
+	const glm::mat4 &getModelMatRef() const{ return sceneMat; }
 	///////////////////////
 	// Scene Graph Usage //
 	///////////////////////
@@ -168,11 +168,20 @@ private:
 		std::string reference;
 		std::shared_ptr<SceneGraphItem> child;
 		glm::vec3 parentOffset;
-		glm::vec3 childOffset;
+        glm::vec3 childOffset;
+        glm::vec3 inverseScale;//Used to ignore parents scale transform
 		glm::mat4 computedTransformMat;
+        static glm::vec3 getScale(const glm::mat4 &m)
+        {
+            return glm::vec3(
+                length(glm::vec3(m[0][0], m[1][0], m[2][0])),
+                length(glm::vec3(m[0][1], m[1][1], m[2][1])),
+                length(glm::vec3(m[0][2], m[1][2], m[2][2]))
+                );
+        }
 		void setComputedTransformMat(const glm::mat4 &sceneParentTransform)
 		{
-			computedTransformMat = sceneParentTransform * glm::translate(parentOffset - childOffset);
+			computedTransformMat = sceneParentTransform *glm::scale(inverseScale) * glm::translate(parentOffset - childOffset);
 		}
 	};
 	std::list<AttachmentDetail> children;
@@ -180,13 +189,13 @@ private:
 	 * Marks whether the subscene graph requires recomputing transform matrices
 	 */
 	bool expired;
-	glm::mat4 modelMat;
+	glm::mat4 sceneMat;
 protected:
 	/**
 	 * Used by subclasses to updated the model matrix
 	 * This also sets the flag 'expired' to true so that scene graphs can be rebuilt
 	 */
-	inline void setModelMat(const glm::mat4 &m) { modelMat = m; expired = true; }
+	inline void setSceneMat(const glm::mat4 &m) { sceneMat = m; expired = true; }
 };
 
 #endif //__SceneGraphItem_h__

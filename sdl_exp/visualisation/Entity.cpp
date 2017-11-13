@@ -254,7 +254,7 @@ void Entity::render(const glm::mat4 &transform)
 	if (shaderIndex<shaders.size())
 	{
 		shaders[shaderIndex]->useProgram();
-		glm::mat4 m = transform * getModelMat();
+		glm::mat4 m = transform * getSceneMat();
 		shaders[shaderIndex]->overrideModelMat(&m);
 	}
 	//Bind the faces to be rendered
@@ -1516,22 +1516,22 @@ void printMat(glm::mat4 m)
 		m[3][0], m[3][1], m[3][2], m[3][3]);
 }
 
-void Entity::setLocation(const glm::vec3 &loc)
+void Entity::setSceneLocation(const glm::vec3 &loc)
 {
-	glm::mat4 mm = getModelMat();
+	glm::mat4 mm = getSceneMat();
 	mm[3] = glm::vec4(loc, 1);	
-	setModelMat(mm);
+	setSceneMat(mm);
 }
-void Entity::translate(const glm::vec3 &offset)
+void Entity::translateScene(const glm::vec3 &offset)
 {
-	glm::mat4 mm = getModelMat();
+	glm::mat4 mm = getSceneMat();
 	mm[3] += glm::vec4(offset, 0);
-	setModelMat(mm);
+	setSceneMat(mm);
 }
-void Entity::rotate(const glm::vec3 &axis, const float &angleRadians)
+void Entity::rotateScene(const glm::vec3 &axis, const float &angleRadians)
 {
 	//Get current model mat
-	glm::mat4 mm = getModelMat();
+	glm::mat4 mm = getSceneMat();
 	//Get current translation
 	glm::vec4 location = mm[3];
 	//Purge translation
@@ -1541,5 +1541,28 @@ void Entity::rotate(const glm::vec3 &axis, const float &angleRadians)
 	//Reapply translation
 	mm[3] = location;
 	//Set model mat
-	setModelMat(mm);
+	setSceneMat(mm);
+}
+void Entity::scaleScene(const glm::vec3 &scale)
+{
+    //Get current model mat
+    glm::mat4 mm = getSceneMat();
+    //Apply scale
+    mm *= glm::scale(scale);
+    //Set model mat
+    setSceneMat(mm);
+}
+void Entity::resetSceneScale(const glm::vec3 &scale)
+{
+    //Get current model mat
+    glm::mat4 mm = getSceneMat();
+    glm::vec3 sceneScale = glm::vec3(
+        length(glm::vec3(mm[0][0], mm[1][0], mm[2][0])),
+        length(glm::vec3(mm[0][1], mm[1][1], mm[2][1])),
+        length(glm::vec3(mm[0][2], mm[1][2], mm[2][2]))
+        );
+    //Apply scale
+    mm *= glm::scale(1.0f / sceneScale);
+    //Set model mat
+    setSceneMat(mm);
 }

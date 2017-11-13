@@ -8,7 +8,7 @@ SceneGraphItem::SceneGraphItem()
 //	: parents(b.parents)
 //	, children(children)
 //	, expired(b.expired)
-//	, modelMat(b.modelMat)
+//	, sceneMat(b.sceneMat)
 //{
 //	//TODO: Decide how to handle children/parents on copy
 //	//If we copy construct a SGV we need to handle what will happen to parents/children
@@ -22,7 +22,7 @@ SceneGraphItem::SceneGraphItem(SceneGraphItem&& b)
 	: parents(b.parents)
 	, children(children)
 	, expired(b.expired)
-	, modelMat(b.modelMat)
+	, sceneMat(b.sceneMat)
 {
 	//Steal children from b
 	for (auto &it : children)
@@ -64,7 +64,7 @@ SceneGraphItem& SceneGraphItem::operator= (SceneGraphItem&& b)
 	this->parents = b.parents;
 	this->children = children;
 	this->expired = b.expired;
-	this->modelMat = b.modelMat;
+	this->sceneMat = b.sceneMat;
 	//Steal children from b
 	for (auto &it : children)
 	{
@@ -94,7 +94,7 @@ void SceneGraphItem::propagateUpdate(const glm::mat4 &sceneTransform)
 	//Recompute child transforms recursively
 	if (children.size())
 	{
-		glm::mat4 sceneModelTransform = sceneTransform * modelMat;
+		glm::mat4 sceneModelTransform = sceneTransform * sceneMat;
 		for (auto &it : children)
 		{
 			it.setComputedTransformMat(sceneModelTransform);
@@ -169,7 +169,7 @@ bool SceneGraphItem::attach(
 			throw;
 		}
 		//Add to me as child
-		children.insert(children.begin(), { reference, child, parentAttachOffset, childAttachOffset, glm::mat4(1) });
+        children.insert(children.begin(), { reference, child, parentAttachOffset, childAttachOffset, 1.0f / AttachmentDetail::getScale(this->sceneMat), glm::mat4(1) });
 		//Mark this node as expired so it gets recursively updated at next render
 		expired = true;
 	}

@@ -119,12 +119,21 @@ public:
 	glm::vec3 getMin() const { return modelMin; }
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
-	void setLocation(const glm::vec3 &loc);
-	void translate(const glm::vec3 &offset);
-	void rotate(const glm::vec3 &axis, const float &angleRadians);
-	glm::vec3 getLocation() const { return getModelMat()[3]; };
-	using SceneGraphItem::setModelMat;
+    //Model Space/Mat Transforms
+	void setModelLocation(const glm::vec3 &loc);
+    void translateModel(const glm::vec3 &offset);
+    void rotateModel(const glm::vec3 &axis, const float &angleRadians);
+    glm::vec3 getModelLocation() const { return getSceneMat()[3]; };
+    glm::mat4 getModelMat() const { return modelMat; }
+    //Scene Space/Mat Transforms, these affect children of the entity
+    void setSceneLocation(const glm::vec3 &loc);
+    void translateScene(const glm::vec3 &offset);
+    void rotateScene(const glm::vec3 &axis, const float &angleRadians);
+    void scaleScene(const glm::vec3 &scale);
+    glm::vec3 getSceneLocation() const { return getSceneMat()[3]; };
+	using SceneGraphItem::setSceneMat;
 protected:
+    glm::mat4 modelMat;
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;
     //World scale of the longest side (in the axis x, y or z)

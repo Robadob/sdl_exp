@@ -2,7 +2,7 @@
 
 SceneGraphJoint::SceneGraphJoint(const glm::mat4 &attachmentTransform)
 {
-	setModelMat(attachmentTransform);
+	setSceneMat(attachmentTransform);
 }
 std::shared_ptr<SceneGraphJoint> SceneGraphJoint::make(const glm::mat4 &attachmentTransform)
 {
@@ -77,7 +77,7 @@ bool SceneGraphItem::attach(const std::shared_ptr<SceneGraphJoint> &child, const
 //	if (edge)
 //	{
 //		assert(target->attachmentCount() == 1);//Changing model matrix will do bad stuff if this is attached elsewhere
-//		target->setModelMat(computedGlobalTransform*edge->localTransform*target->getModelMat());
+//		target->setSceneMat(computedGlobalTransform*edge->localTransform*target->getSceneMat());
 //		vertex->removeChild(*edge);
 //		return true;
 //	}

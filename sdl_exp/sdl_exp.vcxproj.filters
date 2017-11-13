@@ -297,6 +297,9 @@
     <ClInclude Include="visualisation\TowerCrane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="visualisation\model\TransformationMatrix.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">

@@ -62,38 +62,38 @@ public:
     /**
      * Resets the transformation matrix to the identity matrix
      */
-	inline SceneGraphJoint& resetTransform() { setModelMat(glm::mat4(1)); return *this; }
+	inline SceneGraphJoint& resetTransform() { setSceneMat(glm::mat4(1)); return *this; }
     /**
      * Replaces the transformation matrix with the provided one
      * @param newTransform The new transform matrix to be used
      */
-	inline SceneGraphJoint& setTransform(const glm::mat4 &newTransform) { setModelMat(newTransform); return *this; }
+	inline SceneGraphJoint& setTransform(const glm::mat4 &newTransform) { setSceneMat(newTransform); return *this; }
     /**
      * Scales the existing transformation matrix
      * @param scale The 3-dimensional scale factor to be used
      */
-	inline SceneGraphJoint& scale(glm::vec3 scale) { setModelMat(getModelMatRef() * glm::scale(scale)); return *this; }
+	inline SceneGraphJoint& scale(glm::vec3 scale) { setSceneMat(getModelMatRef() * glm::scale(scale)); return *this; }
     /**
      * Rotates the existing transformation matrix about an axis
      * @param axis The axis to rotate about
      * @param angleDegrees The number of degrees to rotate
      */
-	inline SceneGraphJoint& rotate(glm::vec3 axis, float angleDegrees) { setModelMat(getModelMatRef() * glm::rotate(angleDegrees, axis)); return *this; }
+	inline SceneGraphJoint& rotate(glm::vec3 axis, float angleDegrees) { setSceneMat(getModelMatRef() * glm::rotate(angleDegrees, axis)); return *this; }
     /**
      * Translates the existing transformation matrix
      * @param translation The translation to use
      */
-	inline SceneGraphJoint& translate(glm::vec3 translation){ setModelMat(getModelMatRef() * glm::translate(translation)); return *this; }
+	inline SceneGraphJoint& translate(glm::vec3 translation){ setSceneMat(getModelMatRef() * glm::translate(translation)); return *this; }
     /**
      * Replaces the absolute translation of the transformation matrix
      * @param offset The new absolute translation
      */
 	inline SceneGraphJoint& setOffset(glm::vec3 offset) {
-		glm::mat4 localTransform = getModelMat();
+		glm::mat4 localTransform = getSceneMat();
         localTransform[3][0] = offset.x;
         localTransform[3][1] = offset.y;
         localTransform[3][2] = offset.z;
-		setModelMat(localTransform);
+		setSceneMat(localTransform);
 		return *this;
     };
     /////////////////////////////////////

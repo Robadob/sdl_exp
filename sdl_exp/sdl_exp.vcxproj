@@ -219,6 +219,7 @@
     <ClInclude Include="visualisation\Material.h" />
     <ClInclude Include="visualisation\model\SceneGraphJoint.h" />
     <ClInclude Include="visualisation\model\SceneGraphItem.h" />
+    <ClInclude Include="visualisation\model\TransformationMatrix.h" />
     <ClInclude Include="visualisation\multipass\BackBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h" />

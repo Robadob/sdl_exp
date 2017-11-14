@@ -102,7 +102,9 @@ void EntityScene::update(unsigned int frameTime)
     cuUpdate();
 #endif
 	this->teapotJoint->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(1.0, 0.0, 0.0));
-	this->teapotJoint2->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 0.0, 1.0));
+    this->teapotJoint2->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 0.0, 1.0));
+    if (this->crane)
+        this->crane->update(frameTime);
 }
 /*
 Called once per frame when Scene render calls should be executed
@@ -138,10 +140,26 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
 		if (this->colorModel)
 			this->colorModel->exportModel();
 		if (this->deerModel)
-			this->deerModel->exportModel();
-	case SDLK_KP_0://Numpad 0
-		if (this->crane)
-			this->crane->update();
+            this->deerModel->exportModel();
+        if (this->teapotModel)
+            this->teapotModel->exportModel();
+        break;
+	case SDLK_KP_7://Numpad 7
+        if (this->crane)
+            this->crane->rotateJib(0.01f, false);
+        break;
+    case SDLK_KP_8://Numpad 8
+        if (this->crane)
+            this->crane->rotateJib(-0.01f, false);
+        break;
+    case SDLK_KP_4://Numpad 7
+        if (this->crane)
+            this->crane->slideTrolley(0.05f, false);
+        break;
+    case SDLK_KP_5://Numpad 8
+        if (this->crane)
+            this->crane->slideTrolley(-0.05f, false);
+        break;
     default:
         //Permit the keycode to be processed if we haven't handled personally
         return true;

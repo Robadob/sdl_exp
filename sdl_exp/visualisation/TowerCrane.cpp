@@ -25,6 +25,8 @@ TowerCrane::TowerCrane(glm::vec3 location, float scale)
 	, trolleySlideJoint(SlideJoint::makeX())
 	, scale(scale)
 	, location(location)
+    , jibRot(0)
+    , trolleyOffset(0)
 {
 	if (!(craneBase&&craneTower&&craneCounterWeight&&craneJib&&craneTrolley))
 		throw std::exception("Crane was unable to load all entities!");
@@ -48,18 +50,19 @@ void TowerCrane::setProjectionMatPtr(glm::mat4 const* projectionMat)
 	craneTrolley->setProjectionMatPtr(projectionMat);
 }
 
+const float BASE_HEIGHT = 4;
+const float BASE_WIDTH = 10;
+const float TOWER_HEIGHT = 25;
+const float TOWER_WIDTH = 1;
+const float JIB_LENGTH = 30;
+const float JIB_WIDTH = TOWER_WIDTH;
+const float JIB_HEIGHT = 0.5f;
+const float TROLLEY_WIDTH = JIB_WIDTH;
+const float TROLLEY_LENGTH = 3.0f;
+const float TROLLEY_HEIGHT = 0.5f;
+const float TROLLEY_TRACK_LENGTH = (JIB_LENGTH *0.75f) - TROLLEY_LENGTH - (0.5f*TOWER_WIDTH);
 void TowerCrane::setupCraneSceneGraph()
 {
-	const float BASE_HEIGHT = 4;
-	const float BASE_WIDTH = 10;
-	const float TOWER_HEIGHT = 25;
-	const float TOWER_WIDTH = 1;
-	const float JIB_LENGTH = 30;
-	const float JIB_WIDTH = TOWER_WIDTH;
-	const float JIB_HEIGHT = 0.5f;
-	const float TROLLEY_WIDTH = JIB_WIDTH;
-	const float TROLLEY_LENGTH = 3.0f;
-	const float TROLLEY_HEIGHT = 0.5f;
 	//Crane Base
 	{
 		glm::mat4 mm = glm::mat4(1);
@@ -144,19 +147,55 @@ void TowerCrane::setupCraneSceneGraph()
 	}
 
 }
-void TowerCrane::rotate(float rads)
+void TowerCrane::update(unsigned int frameTime)
 {
-	const float limit = 0.01f;
-	rads = rads > 0 ? glm::clamp(rads, 0.0f, limit) : glm::clamp(rads, -limit, 0.0f);
-	spinJoint->rotate(rads, glm::vec3(0, 1, 0));
+    //Jib Rot
+    if (jibRot!=0)
+    {
+        const float FULL_SPIN_MS = 10000.0f;
+        const float MAX_SPIN_FRAME  = 2 * (float)M_PI * frameTime / FULL_SPIN_MS;
+        float jibRotFrame = glm::min(jibRot, MAX_SPIN_FRAME);
+        spinJoint->rotate(jibRotFrame, glm::vec3(0, 1, 0));
+        jibRot -= jibRotFrame;
+    }
+    //Trolley Slide
+    if (trolleyOffset != 0)
+    {
+        const float FULL_SLIDE_MS = 10000.0f;
+        const float MAX_SLIDE_FRAME = TROLLEY_TRACK_LENGTH * frameTime / FULL_SLIDE_MS;
+        float trolleyOffsetFrame = glm::min(trolleyOffset, MAX_SLIDE_FRAME);
+        trolleySlideJoint->move(trolleyOffsetFrame);
+        trolleyOffset -= trolleyOffsetFrame;
+    }
 }
-void TowerCrane::moveBasket(float offset)
+void TowerCrane::setJibRotation(const float &rads)
 {
-	const float limit = 0.2f;
-	offset = offset > 0 ? glm::clamp(offset, 0.0f, limit) : glm::clamp(offset, -limit, 0.0f);
-	trolleySlideJoint->move(offset);
+    //spintJoint->setModelMat(glm::rotate(rads, glm::vec3(0,1,0)));
 }
-void TowerCrane::update()
+void TowerCrane::rotateJib(const float &rads, const bool &limitSpeed)
+{
+    if (limitSpeed)
+    {
+        jibRot += rads;
+    }
+    else
+    {
+       spinJoint->rotate(rads, glm::vec3(0, 1, 0));
+    }
+}
+void TowerCrane::setTrolleyPosition(const float &pos)
+{
+    trolleySlideJoint->set(pos);
+}
+void TowerCrane::slideTrolley(const float &offset, const bool &limitSpeed)
 {
 
+    if (limitSpeed)
+    {
+        trolleyOffset += offset;
+    }
+    else
+    {
+        trolleySlideJoint->move(offset);
+    }
 }

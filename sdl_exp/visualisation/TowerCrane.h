@@ -14,6 +14,8 @@ public:
 	void render(const glm::mat4 &transform) override { }//Do nothing, root is not renderable
 	void setViewMatPtr(glm::mat4 const *viewMat) override;
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+	void rotate(float rads);
+	void moveBasket(float offset);
 	void update();
 private:
 	TowerCrane(glm::vec3 location, float scale = 1.0f);

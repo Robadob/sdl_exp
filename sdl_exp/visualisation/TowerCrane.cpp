@@ -135,8 +135,7 @@ void TowerCrane::setupCraneSceneGraph()
 		trolleySlideJoint->attach(craneTrolley, "crane_slide_trolley", glm::vec3(0));
 		craneTrolley->setColor(glm::vec3(0.2, 0.4, 0.2));
 	}
-	//Cable
-	{
+	//Cablea
 		
 	}
 	//Hook
@@ -145,8 +144,19 @@ void TowerCrane::setupCraneSceneGraph()
 	}
 
 }
+void TowerCrane::rotate(float rads)
+{
+	const float limit = 0.01f;
+	rads = rads > 0 ? glm::clamp(rads, 0.0f, limit) : glm::clamp(rads, -limit, 0.0f);
+	spinJoint->rotate(rads, glm::vec3(0, 1, 0));
+}
+void TowerCrane::moveBasket(float offset)
+{
+	const float limit = 0.2f;
+	offset = offset > 0 ? glm::clamp(offset, 0.0f, limit) : glm::clamp(offset, -limit, 0.0f);
+	trolleySlideJoint->move(offset);
+}
 void TowerCrane::update()
 {
-	spinJoint->rotate(0.01f, glm::vec3(0,1,0));
-	trolleySlideJoint->set(trolleySlideJoint->getOffset() == 0.5 ? 200 : 0.5);
+
 }

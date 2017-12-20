@@ -139,9 +139,22 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
 			this->colorModel->exportModel();
 		if (this->deerModel)
 			this->deerModel->exportModel();
-	case SDLK_KP_0://Numpad 0
+	case SDLK_KP_7:
 		if (this->crane)
-			this->crane->update();
+			this->crane->rotate(1.0f);
+		break;
+	case SDLK_KP_8:
+		if (this->crane)
+			this->crane->rotate(-1.0f);
+		break;
+	case SDLK_KP_4:
+		if (this->crane)
+			this->crane->moveBasket(-10.0f);
+		break;
+	case SDLK_KP_5:
+		if (this->crane)
+			this->crane->moveBasket(10.0f);
+		break;
     default:
         //Permit the keycode to be processed if we haven't handled personally
         return true;

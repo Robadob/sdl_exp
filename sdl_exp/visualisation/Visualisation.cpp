@@ -17,9 +17,9 @@
 #define SHIFT_MULTIPLIER 5.0f
 
 #define MOUSE_SPEED_FPS 0.05f
-#define DELTA_MOVE 0.1f
-#define DELTA_STRAFE 0.1f
-#define DELTA_ASCEND 0.1f
+#define DELTA_MOVE 0.05f
+#define DELTA_STRAFE 0.05f
+#define DELTA_ASCEND 0.05f
 #define DELTA_ROLL 0.01f
 #define ONE_SECOND_MS 1000
 #define VSYNC 1
@@ -183,10 +183,15 @@ void Visualisation::render()
 {
     //Static fn var for tracking the time to send to scene->update()
     static unsigned int updateTime = 0;
+	unsigned int t_updateTime = SDL_GetTicks();
+	//If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
+	unsigned int frameTime = t_updateTime < updateTime ? (t_updateTime + (UINT_MAX - updateTime)) : t_updateTime - updateTime;
+	updateTime = t_updateTime;
     SDL_Event e;
     // Handle continuous key presses (movement)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
+	turboMultiplier *= frameTime;
     if (state[SDL_SCANCODE_W]) {
         this->camera.move(DELTA_MOVE*turboMultiplier);
     }
@@ -237,19 +242,8 @@ void Visualisation::render()
 
         }
     }
-
     // update
-    unsigned int t_updateTime = SDL_GetTicks();
-    //If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
-    if (t_updateTime < updateTime)
-    {
-        this->scene->_update(t_updateTime + (UINT_MAX - updateTime));
-    }
-    else
-    {
-        this->scene->_update(t_updateTime - updateTime);
-    }
-    updateTime = t_updateTime;
+	this->scene->_update(frameTime);
     // render
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	GL_CALL(glClearColor(0, 0, 0, 1));

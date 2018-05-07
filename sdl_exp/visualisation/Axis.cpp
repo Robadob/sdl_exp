@@ -38,11 +38,3 @@ void Axis::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	pen.setProjectionMatPtr(projectionMat);
 }
-void Axis::setModelMatPtr(const glm::mat4* modelMat)
-{
-#pragma message ("TODO: Axis::setModelMatPtr()")
-}
-void Axis::overrideModelMat(const glm::mat4* modelMat)
-{
-#pragma message ("TODO: Axis::overrideModelMat()")
-}

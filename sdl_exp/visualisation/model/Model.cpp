@@ -665,22 +665,6 @@ void Model::setProjectionMatPtr(const glm::mat4 *projectionMat)
 		skeletonPen.setProjectionMatPtr(projectionMat);
 	}
 }
-void Model::setModelMatPtr(const glm::mat4 *modelMat)
-{
-#pragma message ("TODO: Model::setModelMatPtr()")
-	//if (data)
-	//	for (unsigned int i = 0; i < data->materialsSize; ++i)
-	//		if (auto s = data->materials[i]->getShaders())
-	//			s->setProjectionMatPtr(modelMat);
-}
-void Model::overrideModelMat(const glm::mat4 *modelMat)
-{
-#pragma message ("TODO: Model::overrideModelMat()")
-	//if (data)
-	//	for (unsigned int i = 0; i < data->materialsSize; ++i)
-	//		if (auto s = data->materials[i]->getShaders())
-	//			s->setProjectionMatPtr(modelMat);
-}
 std::unique_ptr<ShadersVec> Model::getShaders(unsigned int shaderIndex) const
 {
 	auto ret = std::make_unique<ShadersVec>();

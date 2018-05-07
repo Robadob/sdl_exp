@@ -26,10 +26,6 @@ public:
 		for (auto s : vec)
 			s->setModelMatPtr(modelMat);
 	}
-	void overrideModelMat(const glm::mat4 *modelMat){
-		for (auto s : vec)
-			s->overrideModelMat(modelMat);
-	}
 	void setMaterialProperties(GLuint materialName){
 		for (auto s : vec)
 			s->setMaterialProperties(materialName);

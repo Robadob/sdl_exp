@@ -86,20 +86,6 @@ void Material::setProjectionMatPtr(const glm::mat4 *projectionMat)
 		if (it)
 			it->setProjectionMatPtr(projectionMat);
 }
-void Material::setModelMatPtr(const glm::mat4 *modelMat)
-{
-#pragma message ("TODO: Material::setModelMatPtr()")
-	//for (auto &&it : shaders)
-	//	if (it)
-	//		it->setProjectionMatPtr(modelMat);
-}
-void Material::overrideModelMat(const glm::mat4 *modelMat)
-{
-#pragma message ("TODO: Material::overrideModelMat()")
-	//for (auto &&it : shaders)
-	//	if (it)
-	//		it->setProjectionMatPtr(modelMat);
-}
 
 void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
 {

@@ -1448,14 +1448,6 @@ void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 		if (it)
 			it->setProjectionMatPtr(projectionMat);
 }
-void Entity::setModelMatPtr(glm::mat4 const *modelMat)
-{
-#pragma message ( "TODO : Entity::setModelMatPtr()" )
-}
-void Entity::overrideModelMat(glm::mat4 const *modelMat)
-{
-#pragma message ( "TODO : Entity::overrideModelMat()" )
-}
 /*
 Switches the vertex order of the model
 @note Exporting a model after calling this WILL reverse it in the export

@@ -303,11 +303,3 @@ void Draw::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	shaders->setProjectionMatPtr(projectionMat);
 }
-void Draw::setModelMatPtr(const glm::mat4* modelMat)
-{
-#pragma message ("TODO: Draw::setModelMatPtr()")
-}
-void Draw::overrideModelMat(const glm::mat4* modelMat)
-{
-#pragma message ("TODO: Draw::overrideModelMat()")
-}

@@ -351,17 +351,6 @@ public:
 	* @note This pointer is likely provided by the Visualisation object
 	*/
 	void setProjectionMatPtr(const glm::mat4 *projectionMat) override;
-	/**
-	* Sets the pointer from which the Model matrix should be loaded from
-	* @param modelMat A pointer to the modelMatrix to be tracked
-	* @note This pointer is likely provided by the Visualisation object
-	*/
-	void setModelMatPtr(const glm::mat4 *modelMat) override;
-	/**
-	* Overrides the model matrix (and all dependent matrices) until useProgram() is next called
-	* @param modelMat Pointer to the overriding modelMat
-	*/
-	void overrideModelMat(const glm::mat4 *modelMat) override;
 };
 
 #endif //__Model_h__

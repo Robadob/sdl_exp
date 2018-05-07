@@ -80,8 +80,6 @@ public:
 	* @param projectionMat Set the projection matrix to be used for rendering
 	*/
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
-	void setModelMatPtr(const glm::mat4* modelMat) override;
-	void overrideModelMat(const glm::mat4* modelMat) override;
 	/**
 	 * Sets the width to use for the current drawing
 	 * The last value set before end() or save() will be taken

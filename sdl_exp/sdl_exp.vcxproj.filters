@@ -152,6 +152,9 @@
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
       <Filter>Source Files\Visualisation\MultiPass</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\Draw.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -272,6 +275,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\interface\RenderTarget.h">
       <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Draw.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\util\StringUtils.h">
+      <Filter>Header Files\Visualisation\Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

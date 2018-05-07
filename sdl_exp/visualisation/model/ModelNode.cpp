@@ -23,7 +23,7 @@ void ModelNode::render(glm::mat4 transform)
 		child->render(transform);
 	}
 }
-void ModelNode::renderSkeleton(glm::mat4 parentTransform, glm::vec4 pt0)
+void ModelNode::renderSkeleton(Draw &pen, glm::mat4 parentTransform, glm::vec4 pt0)
 {//https://github.com/Madsy/Assimp-GL-Wrapper/blob/master/assimp_wrapper/scene.cpp#L145
 
 	//Calculate & apply transform
@@ -38,16 +38,13 @@ void ModelNode::renderSkeleton(glm::mat4 parentTransform, glm::vec4 pt0)
 		if (pt0!=glm::vec4(0,0,0,1))
 		{//If parentPoint has been set
 			//Render bone limb
-			glBegin(GL_LINES);
-				glColor4f(1.0, 1.0, 1.0, 1.0);//white
-				glVertex4fv(glm::value_ptr(pt0));
-				glVertex4fv(glm::value_ptr(pt1));
-			glEnd();
+			pen.vertex3(&pt0);
+			pen.vertex3(&pt1);
 		}
 	}
 
 	for (auto &c : children) {
-		c->renderSkeleton(parentTransform, pt1);
+		c->renderSkeleton(pen, parentTransform, pt1);
 	}
 }
 BoundingBox3D ModelNode::calculateBoundingBox(glm::mat4 transform)

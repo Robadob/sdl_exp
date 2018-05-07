@@ -8,6 +8,7 @@
 #include "BoundingBox.h"
 #include "Animation.h"
 
+class Draw;
 struct ModelData;
 
 /**
@@ -38,7 +39,7 @@ public:
 	BoundingBox3D calculateBoundingBox(glm::mat4 transform = glm::mat4());
 	void render(glm::mat4 transform);
 	//debugging test method
-	void renderSkeleton(glm::mat4 transform, glm::vec4 pt0 = glm::vec4(0, 0, 0, 1));
+	void renderSkeleton(Draw &pen, glm::mat4 transform, glm::vec4 pt0 = glm::vec4(0, 0, 0, 1));
 	void addChild(std::shared_ptr<ModelNode> child)
 	{
 		this->children.push_back(child);

@@ -26,6 +26,7 @@ Model::Model(const char *modelPath, float scale, bool setAllMeshesVisible, std::
 	, boneIDs(GL_UNSIGNED_INT, 4, sizeof(unsigned int))
 	, boneWeights(GL_FLOAT, 4, sizeof(float))
 	, boneBuffer(nullptr)
+	, skeletonIsValid(false)
 {
 	loadModel();
 	if (data)
@@ -622,7 +623,7 @@ void Model::render() const
         if (auto s = data->materials[i]->getShaders())
             s->clearProgram();
 }
-void Model::renderSkeleton() const
+void Model::renderSkeleton()
 {
 #if _DEBUG
 	if (!this->root)
@@ -630,30 +631,39 @@ void Model::renderSkeleton() const
 		return;
 	}
 #endif 
-	//Use default shader
-	glUseProgram(0); 
-	glDisable(GL_LIGHTING);
-
-	//Trigger recursive render
-	root->renderSkeleton(getModelMat());
+	if (!skeletonIsValid)
+	{
+		skeletonPen.begin(Draw::Lines, "skeleton");
+		//Trigger recursive render
+		root->renderSkeleton(skeletonPen, getModelMat());
+		skeletonPen.save(true);
+		skeletonIsValid = true;
+	}
+	skeletonPen.render("skeleton");
 }
 
 //HasMatrices overrides
 void Model::setViewMatPtr(const glm::mat4 *viewMat)
 {
 	if (data)
+	{
 		for (unsigned int i = 0; i < data->materialsSize; ++i)
 			for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
 				if (auto s = data->materials[i]->getShaders(j))
 					s->setViewMatPtr(viewMat);
+		skeletonPen.setViewMatPtr(viewMat);
+	}
 }
 void Model::setProjectionMatPtr(const glm::mat4 *projectionMat)
 {
 	if (data)
+	{
 		for (unsigned int i = 0; i < data->materialsSize; ++i)
 			for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
 				if (auto s = data->materials[i]->getShaders(j))
 					s->setProjectionMatPtr(projectionMat);
+		skeletonPen.setProjectionMatPtr(projectionMat);
+	}
 }
 void Model::setModelMatPtr(const glm::mat4 *modelMat)
 {
@@ -829,6 +839,7 @@ void Model::updateBoneTransforms(float seconds)
 		}
 		mPreviousLocation = newLocation;
 	}
+	skeletonIsValid = false;
 }
 void Model::disableAnimationTravel(bool disable)
 {

@@ -173,6 +173,9 @@
     <ClCompile Include="visualisation\MaterialOld.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\Draw.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -311,6 +314,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\model\Material.h">
       <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Draw.h">
+      <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\util\StringUtils.h">
       <Filter>Header Files\Visualisation\Util</Filter>

@@ -10,6 +10,7 @@
 #include "../shader/buffer/UniformBuffer.h"
 #include <assimp/config.h>
 #include "../shader/ShadersVec.h"
+#include "../Draw.h"
 
 struct VFCcount
 {
@@ -203,7 +204,7 @@ public:
 	//Rendering methods
 	void update(float time);
     void render() const;
-	void renderSkeleton() const;
+	void renderSkeleton();
     void setLocation(glm::vec3 location){ this->location = location; }
     void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
     glm::vec3 getLocation() const{ return location; }
@@ -255,6 +256,8 @@ public:
 
 	void disableAnimationTravel(bool disable);
 private:
+	Draw skeletonPen;
+	bool skeletonIsValid;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{
 		std::vector<std::shared_ptr<Shaders>> rtn;

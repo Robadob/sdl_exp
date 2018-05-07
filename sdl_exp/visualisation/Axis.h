@@ -1,8 +1,7 @@
 #ifndef __Axis_h__
 #define __Axis_h__
 #include "interface/Renderable.h"
-#include "shader/Shaders.h"
-#include <memory>
+#include "Draw.h"
 
 class Axis : public Renderable
 {
@@ -12,10 +11,6 @@ public:
 	 * @param length The length of each axis marker line
 	 */
     Axis(float length = 1.0);
-	/**
-	 * Frees buffer objects allocated by constructor
-	 */
-    ~Axis();
 	/**
 	 * Renders a simple axis marker. Red displays the positive x, Green the positive y and Blue the positive z.
 	 */
@@ -35,9 +30,7 @@ public:
 	void setModelMatPtr(const glm::mat4* modelMat) override;
 	void overrideModelMat(const glm::mat4* modelMat) override;
 private:
-	GLuint vbo, fvbo;
-	Shaders::VertexAttributeDetail vertices, colors, faces;
-	std::shared_ptr<Shaders> shaders;
+	Draw pen;
 };
 
 #endif //ifndef __Axis_h__

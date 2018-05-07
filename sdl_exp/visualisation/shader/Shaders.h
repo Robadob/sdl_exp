@@ -212,10 +212,10 @@ public:
      */
     inline void setMaterialProperties(GLuint materialName){ this->materialStruct.bufferName = materialName; }
     /**
-     * Overrides the model matrix (and all dependent matrices) until useProgram() is next called
-     * @param modelMat Pointer to the overriding modelMat
+     * Overrides the material index until useProgram() is next called
+     * @param materialIndex Pointer to the overriding modelMat
      */
-    void overrideMaterial(GLuint materialName);
+    void overrideMaterial(unsigned  int materialIndex);
 	/**
      * Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
      * @param rotationPtr A pointer to the rotation will be tracked

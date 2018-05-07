@@ -203,7 +203,7 @@ public:
 	void reload() override;
 	//Rendering methods
 	void update(float time);
-    void render() const;
+	void render(unsigned int shaderIndex = 0) const;
 	void renderSkeleton();
     void setLocation(glm::vec3 location){ this->location = location; }
     void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
@@ -336,6 +336,7 @@ private:
 	*/
 	Shaders::VertexAttributeDetail boneWeights;
 	std::shared_ptr<UniformBuffer> boneBuffer;
+	std::shared_ptr<UniformBuffer> materialBuffer;
 	//HasMatrices overrides
 public:
 	glm::mat4 getModelMat() const;

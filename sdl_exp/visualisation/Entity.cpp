@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <locale>
 #include <sparsehash/dense_hash_map>
+#include "util/StringUtils.h"
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
@@ -313,7 +314,7 @@ void Entity::loadModelFromFile()
 		fprintf(stderr, "Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);
 		return;
 	}
-	printf("\r Loading Model: %s", modelPath);
+	printf("\rLoading Model: %s", su::getFilenameFromPath(modelPath).c_str());
 
 	//Open file
 	file = fopen(modelPath, "r");
@@ -337,7 +338,7 @@ void Entity::loadModelFromFile()
 	bool face_hasNormals = false;
 	bool face_hasTexcoords = false;
 
-	printf("\rLoading Model: %s [Counting Elements]", modelPath);
+	printf("\rLoading Model: %s [Counting Elements]", su::getFilenameFromPath(modelPath).c_str());
 	//MTL details
 	char mtllib_tag[7] = "mtllib";
 	char usemtl_tag[7] = "usemtl";
@@ -813,7 +814,7 @@ exit_loop:;
 exit_loop2:;
 	//Cleanup buffer
 	delete[] buffer;
-	printf("\rLoading Model: %s [Calculating Pairs]", modelPath);
+	printf("\rLoading Model: %s [Calculating Pairs]", su::getFilenameFromPath(modelPath).c_str());
 	auto vn_pairs = new google::dense_hash_map<VN_PAIR, unsigned int, std::hash<VN_PAIR>, eqVN_PAIR>();
 	vn_pairs->set_empty_key({ UINT_MAX, UINT_MAX, UINT_MAX });
 	vn_pairs->resize(faces.count*faces.components);
@@ -864,7 +865,7 @@ exit_loop2:;
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
 		scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-	printf("\rLoading Model: %s [Assigning Elements]", modelPath);
+	printf("\rLoading Model: %s [Assigning Elements]", su::getFilenameFromPath(modelPath).c_str());
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
 	{
@@ -908,7 +909,7 @@ exit_loop2:;
 	free(t_norm_pos);
 	free(t_tex_pos);
 	//Load VBOs
-	printf("\rLoading Model: %s [Generating VBOs!]              ", modelPath);
+	printf("\rLoading Model: %s [Generating VBOs!]              ", su::getFilenameFromPath(modelPath).c_str());
 	generateVertexBufferObjects();
 	//Can the host copies be freed after a bind?
 	//No, we want to keep faces around as a minimum for easier vertex order switching
@@ -921,7 +922,7 @@ exit_loop2:;
 	//    free(textures);
 	//free(faces);
 	fclose(file);
-	printf("\rLoading Model: %s [Complete!]                 \n", modelPath);
+	printf("\rLoading Model: %s [Complete!]                 \n", su::getFilenameFromPath(modelPath).c_str());
 	if (mtllib&&usemtl)
 	{
 		loadMaterialFromFile(modelPath, mtllib, usemtl);
@@ -1032,7 +1033,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 		}
 	}
 	fclose(file);
-	printf("Material file loaded: '%s'!\n", materialPath.c_str());
+	printf("\rLoading Material: %s [Complete!]\n", su::getFilenameFromPath(materialPath).c_str());
 }
 /*
 Set the color of the model

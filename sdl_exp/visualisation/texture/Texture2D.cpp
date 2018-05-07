@@ -97,27 +97,30 @@ std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, co
 {
 	//Attempt from cache
 	std::shared_ptr<const Texture2D> rtn;
-	if (!skipCache)
+	if (!filePath.empty())
 	{
-		rtn = loadFromCache(filePath);
-	}
-	//Load using loader
-	if (!rtn)
-	{
-		auto image = loadImage(filePath);
-		if (image)
+		if (!skipCache)
 		{
-			rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
-				[&](Texture2D *ptr){//Custom deleter, which purges cache of item
+			rtn = loadFromCache(filePath);
+		}
+		//Load using loader
+		if (!rtn)
+		{
+			auto image = loadImage(filePath);
+			if (image)
+			{
+				rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
+					[&](Texture2D *ptr){//Custom deleter, which purges cache of item
 					Texture2D::purgeCache(ptr->getReference());
 					delete ptr;
 				});
+			}
 		}
-	}
-	//If we've loaded something, store in cache
-	if (rtn&&!skipCache)
-	{
-		cache.emplace(filePath, rtn);
+		//If we've loaded something, store in cache
+		if (rtn&&!skipCache)
+		{
+			cache.emplace(filePath, rtn);
+		}
 	}
 	return rtn;
 }

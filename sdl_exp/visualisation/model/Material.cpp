@@ -1,37 +1,40 @@
 #include "Material.h"
 #include "../Texture/Texture2D.h"
 Material *Material::active = nullptr;
-Material::Material(const char* name)
+Material::Material(std::shared_ptr<UniformBuffer> buffer, unsigned int bufferIndex, const char* name)
     : name(name==nullptr?"":name)
     , properties()
-    , propertiesUniformBuffer(0)
-    , isWireframe(false)
-    , faceCull(true)
+    , buffer(buffer)
+    , bufferIndex(bufferIndex)
+	, hasBaked(false)
+	, isWireframe(false)
+	, faceCull(true)
 	, shaderMode(Phong)
 	//, alphaBlendMode{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }//C++11 required (maybe usable VS2015?)
 {
 	alphaBlendMode[0] = GL_SRC_ALPHA;
 	alphaBlendMode[1] = GL_ONE_MINUS_SRC_ALPHA;
-    GL_CALL(glGenBuffers(1, &propertiesUniformBuffer));
-    updatePropertiesUniform();
-	shaders = { std::make_shared<Shaders>(Stock::Shaders::TEXTURE_BONE) };
+	shaders = {  };
 }
 
 Material::~Material()
 {
-    GL_CALL(glDeleteBuffers(1, &propertiesUniformBuffer));
+
 }
-void Material::updatePropertiesUniform()
+void Material::updatePropertiesUniform(bool force)
 {
-    GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, propertiesUniformBuffer));
-    GL_CALL(glBufferData(GL_UNIFORM_BUFFER, sizeof(MaterialProperties), &properties, GL_STATIC_READ));
-    GL_CALL(glBindBuffer(GL_UNIFORM_BUFFER, 0));
+	//To save updating the Material buffer during it's initial construction, wait for it to be baked before allowing accessors to update
+	if (!force&&!hasBaked)
+		return;
+	hasBaked = true;
+	buffer->setData(&properties, sizeof(MaterialProperties), bufferIndex*sizeof(MaterialProperties));
 }
 std::shared_ptr<Shaders> Material::getShaders(unsigned int shaderIndex) const
 {
+	shaderIndex--;
 	if (shaderIndex < shaders.size())
 		return shaders[shaderIndex];
-	return std::shared_ptr<Shaders>(0);
+	return defaultShader;
 }
 /**
  * Todo: compare textures
@@ -59,19 +62,16 @@ bool  Material::operator==(Material& other) const
 /**
  * Temporary texture solution before proper materials
  */
-void Material::addTexture(std::shared_ptr<const Texture> texPtr, TextureType type)
+void Material::addTexture(TextureFrame texFrame, TextureType type)
 {
-	if (!texPtr)
+	textures[type].push_back(texFrame);
+	if (hasBaked)
 	{
-		fprintf(stderr, "Material::addTexture() Tex missing\n");
-		return;
+		defaultShader->addTexture("_texture", texFrame.texture);
+		for (auto &&it : shaders)
+			if (it && type == (Diffuse && it))
+				it->addTexture("_texture", texFrame.texture);
 	}
-	TextureFrame t;
-	t.texture = texPtr;
-	textures[type].push_back(t);
-	for (auto &&it : shaders)
-		if (it && type == (Diffuse && it))
-			it->addTexture("_texture", texPtr);	
 }
 //HasMatrices overrides
 void Material::setViewMatPtr(const glm::mat4 *viewMat)
@@ -89,10 +89,16 @@ void Material::setProjectionMatPtr(const glm::mat4 *projectionMat)
 
 void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
 {
+	shaderIndex--;
 	if (shaderIndex < shaders.size())
 	{
 		shaders[shaderIndex]->useProgram(false);
 		shaders[shaderIndex]->overrideModelMat(&transform);
+	}
+	else
+	{
+		defaultShader->useProgram(false);
+		defaultShader->overrideModelMat(&transform);
 	}
     if (active != this)
 	{
@@ -119,7 +125,9 @@ void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
 
         //Setup material properties with shader (If we can guarantee shader is unique, we can skip this)
 		if (shaderIndex < shaders.size())
-			shaders[shaderIndex]->overrideMaterial(propertiesUniformBuffer);
+			shaders[shaderIndex]->overrideMaterial(bufferIndex);
+		else
+			defaultShader->overrideMaterial(bufferIndex);
         
     	active = this;
     }
@@ -161,4 +169,15 @@ void Material::reload()
 void setViewMatPtr(const Camera* camera)
 {
 #pragma message ( "TODO : Material::setViewMatPtr()" )
+}
+
+void Material::bake()
+{
+	//Update material properties buffer
+	updatePropertiesUniform(true);
+	//Create default shader
+	defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE_BONE);//Temp
+	//Setup default shader, e.g. textures
+	if (textures[TextureType::Diffuse].size())
+		defaultShader->addTexture("_texture", textures[TextureType::Diffuse][0].texture);//Temp
 }

@@ -4,6 +4,7 @@
 #include "../interface/Renderable.h"
 #include "../shader/Shaders.h"
 #include "../shader/ShaderHeader.h"
+#include "../shader/buffer/UniformBuffer.h"
 class Material : protected Renderable
 {
     /**
@@ -11,6 +12,7 @@ class Material : protected Renderable
      * Used to prevent rebinding material states if unchanged
      */
     static Material *active;
+public:
     enum ShadingMode
     {
         Constant,           //No shading, Constant light=1
@@ -52,24 +54,23 @@ class Material : protected Renderable
             Subtract,       //T1 - T2
             Divide,         //T1 / T2
             SmoothAdd,      //(T1 + T2) - (T1 * T2)
-            SignedAdd       //T1 + (T2-0.5)
+            SignedAdd,       //T1 + (T2-0.5)
+			Null
         };
         std::shared_ptr<const Texture> texture;
         float weight=1.0f;//This value is multiplied by the textures color
-        float uvIndex=0;//Some meshes have dual texture coordinates
+        unsigned int uvIndex=0;//Some meshes have dual texture coordinates
         BlendOperation operation;//How to process the n-1 texture?
-        //MAPPING: aiProcess_GenUVCoords() to convert coords 
         GLenum mappingModeU;//GL_TEXTURE_WRAP_S=GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, or GL_REPEAT.
         GLenum mappingModeV;//GL_TEXTURE_WRAP_T=GL_CLAMP_TO_EDGE, GL_MIRRORED_REPEAT, or GL_REPEAT.
         bool isDecal=false;//Invalid tex coords cause frame dump
         bool invertColor = false;//color=1-color
         bool useAlpha = true;//useAlpha if present
     };
-public:
     /**
      * Creates a named material with the default configuration
      */
-    Material(const char* name = nullptr);
+	Material(std::shared_ptr<UniformBuffer> buffer, unsigned int bufferIndex, const char* name="");
     /**
      *
      */
@@ -100,13 +101,7 @@ public:
     void setWireframe(const bool isWireframe) { this->isWireframe = isWireframe; }
 	void setTwoSided(const bool twoSided) { this->faceCull = !twoSided; }
     void setShadingMode(const ShadingMode shaderMode) { this->shaderMode = shaderMode; }
-#pragma message ("TODO: remove Material::setShader()")
-    //void setShader(const std::shared_ptr<Shaders> shader)
-    //{
-    //    //We should make a copy of this shader
-    //    this->shaders = shader;
-    //};
-	void addTexture(std::shared_ptr<const Texture> texPtr, TextureType type = Diffuse);
+	void addTexture(TextureFrame, TextureType type = Diffuse);
 
     /**
      * @see glBlendFunc()
@@ -128,21 +123,29 @@ public:
     bool getTwoSided() const { return !faceCull; }
     ShadingMode getShadingMode() const { return shaderMode; }
 	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex = 0) const;
-	size_t getShadersCount() const { return shaders.size(); }
-    std::pair<GLenum, GLenum> getAlphaBlendMode() const { return std::make_pair(alphaBlendMode[0], alphaBlendMode[1]); };
+	size_t getShadersCount() const { return shaders.size() + 1; }
+    std::pair<GLenum, GLenum> getAlphaBlendMode() const { return std::make_pair(alphaBlendMode[0], alphaBlendMode[1]); }
+	/**
+	 * Creates and sets up the default shader
+	 * Copies material properties to the uniform buffer for the first time
+	 */
+	void bake();
 private:
     //Id
     std::string name;
 
     MaterialProperties properties;
-    GLuint propertiesUniformBuffer;
-    void updatePropertiesUniform();
+	std::shared_ptr<UniformBuffer> buffer;
+	const unsigned int bufferIndex;
+	bool hasBaked;
+    void updatePropertiesUniform(bool force=false);
     //Textures
     std::map<TextureType, std::vector<TextureFrame>> textures;
     //Modifiers
     bool isWireframe;
     bool faceCull;
 	ShadingMode shaderMode;
+	std::shared_ptr<Shaders> defaultShader;
 	std::vector<std::shared_ptr<Shaders>> shaders;
     GLenum alphaBlendMode[2]; //GL_SRC_ALPHA, GL_ONE for additive blending//GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA for default
 //HasMatrices overrides

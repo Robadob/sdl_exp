@@ -348,6 +348,7 @@ std::shared_ptr<ModelNode> Model::buildHierarchy(const struct aiScene* scene, co
 }
 void Model::loadModel()
 {
+	printf("\rLoading Model: %s ", su::getFilenameFromPath(modelPath).c_str());
     //Import model with assimp
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(modelPath, aiProcessPreset_TargetRealtime_MaxQuality);
@@ -355,12 +356,13 @@ void Model::loadModel()
 	if (!scene)
 	{
 #ifdef _DEBUG
-		fprintf(stderr, "Error Model load failed '%s'\n%s\n", modelPath.c_str(), importer.GetErrorString());
+		fprintf(stderr, "\rError Model load failed '%s'\n%s\n", modelPath.c_str(), importer.GetErrorString());
 #else
-		throw std::runtime_error(su::format("Error Model load failed '%s'\n%s\n", modelPath.c_str(), importer.GetErrorString()).c_str());
+		throw std::runtime_error(su::format("\rError Model load failed '%s'\n%s\n", modelPath.c_str(), importer.GetErrorString()).c_str());
 #endif
 	}
 
+	printf("\rLoading Model: %s [Parsing Assimp Model Data]      ", su::getFilenameFromPath(modelPath).c_str());
     //Calculate total number of vertices, faces, components and bones within hierarchy
     {
 		this->vfc = countVertices(scene, scene->mRootNode);
@@ -391,31 +393,30 @@ void Model::loadModel()
 	boneIDs.data = nullptr;//Not store in right format, swap before create buffer
 	boneWeights.data = nullptr;//Not store in right format, swap before create buffer
 
+	printf("\rLoading Model: %s [Parsing Assimp Material Data]      ", su::getFilenameFromPath(modelPath).c_str());
     if (scene->HasTextures()){ fprintf(stderr, "Model '%s' has embedded textures, these are currently unsupported.\n", modelPath.c_str()); }
 	std::string modelFolder = su::getFolderFromPath(modelPath);
     //Copy materials
+	materialBuffer = std::make_shared<UniformBuffer>(sizeof(MaterialProperties)*data->materialsSize);
     for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
     {
-        int texIndex = 0;
-        aiReturn texFound = AI_SUCCESS;
-
-        aiString path;	// filename
-
-        //while (texFound == AI_SUCCESS)
-        {
-            texFound = scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
-			assert(texFound == AI_SUCCESS);
-            if(path.length)
-            {
-				aiString name;
-				scene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
-                data->materials[i] = std::make_shared<Material>(name.C_Str());
-				//Temporary till proper mat tex handling added
-				data->materials[i]->addTexture(Texture2D::load(path.data, modelFolder.c_str()));
-                texIndex++;
-            }
-        }
-		//TODO
+		//Create new blank material
+		data->materials[i] = std::make_shared<Material>(materialBuffer, i);
+		//Setup basic material properties
+		au::getMaterialProps(data->materials[i], scene->mMaterials[i]);
+		//Textures
+		for (unsigned int tType = 0; tType < AI_TEXTURE_TYPE_MAX; ++tType)
+		{
+			const aiTextureType textureType = aiTextureType(tType);
+			unsigned int texCount = scene->mMaterials[i]->GetTextureCount(textureType);
+			for (unsigned int texIndex = 0; texIndex < texCount; texIndex++)
+			{
+				Material::TextureFrame frame = au::getTextureProps(textureType, scene->mMaterials[i], texIndex, modelFolder.c_str());
+				if (frame.texture)//If texture was loaded correctly
+					data->materials[i]->addTexture(frame, au::toTexType_internal(textureType));
+			}
+		}
+		data->materials[i]->bake();
     }
 
     //Convert assimp hierarchy to our custom hierarchy
@@ -424,6 +425,7 @@ void Model::loadModel()
 	data->inverseRootTransform = glm::inverse(data->transforms[0]);//Default Inverse Root	
 	this->root->constructRootChain(data->rootChain);
 
+	printf("\rLoading Model: %s [Parsing Assimp Animation Data]       ", su::getFilenameFromPath(modelPath).c_str());
 	loadAnimationsFromScene(scene, modelPath);
 	
     //Calculate model scale
@@ -436,6 +438,7 @@ void Model::loadModel()
 		this->scaleFactor = 1.0f / (maxDim / loadScale);
 	}
 
+	printf("\rLoading Model: %s [Parsing Assimp Filling Buffers]       ", su::getFilenameFromPath(modelPath).c_str());
     //Calc VBO size
     size_t vboSize = 0;
     vboSize += this->vfc.v*sizeof(glm::vec3);
@@ -517,6 +520,7 @@ void Model::loadModel()
     GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->vfc.f*sizeof(unsigned int), data->faces, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
+	printf("\rLoading Model: %s [Configuring Shaders]           ", su::getFilenameFromPath(modelPath).c_str());
 	//Inform shaders
 	for (unsigned int i = 0; i < data->materialsSize; ++i)
 		for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
@@ -546,11 +550,14 @@ void Model::loadModel()
 		assert(glm::epsilonEqual(c, 1.0f, 0.001f) || glm::epsilonEqual(c, 0.0f, 0.001f));
 	}
 
+	printf("\rLoading Model: %s [Performing First Animation]           ", su::getFilenameFromPath(modelPath).c_str());
 	//Fbx needs special handling...
 	//Handle missing inverseRootTransform
 	updateBoneTransforms(0);
 	if (su::endsWith(modelPath, ".fbx", false))
 		computeInverseRootTransform();
+
+	printf("\rLoading Model: %s [Complete!]                           \n", su::getFilenameFromPath(modelPath).c_str());
 }
 unsigned int Model::loadExternalAnimation(const std::string &path)
 {
@@ -598,7 +605,7 @@ void Model::update(float time)
 #endif
 	updateBoneTransforms(time);
 }
-void Model::render() const
+void Model::render(unsigned int shaderIndex) const
 {
 #if _DEBUG
     static bool aborted = false;
@@ -612,16 +619,17 @@ void Model::render() const
 #endif
     //Prepare all shaders to update dynamics
 	for (unsigned int i = 0; i < data->materialsSize; ++i)
-        if (auto s = data->materials[i]->getShaders())
-            s->prepare();
+		if (auto s = data->materials[i]->getShaders(shaderIndex))
+			s->prepare();
+
     Material::clearActive();
 
     //Trigger recursive render
 	root->render(getModelMat());
 
 	for (unsigned int i = 0; i < data->materialsSize; ++i)
-        if (auto s = data->materials[i]->getShaders())
-            s->clearProgram();
+		if (auto s = data->materials[i]->getShaders(shaderIndex))
+			s->clearProgram();
 }
 void Model::renderSkeleton()
 {

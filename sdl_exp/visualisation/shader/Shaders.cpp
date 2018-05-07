@@ -198,7 +198,7 @@ void Shaders::overrideModelMat(const glm::mat4 *force)
     _useProgramModelMatrices(force);
 }
 
-void Shaders::overrideMaterial(GLuint materialName)
+void Shaders::overrideMaterial(unsigned int materialIndex)
 {
 #ifdef _DEBUG
     int currProgram = 0;
@@ -209,8 +209,7 @@ void Shaders::overrideMaterial(GLuint materialName)
         return;
     }
 #endif
-    if (materialStruct.location!=-1)
-        GL_CALL(glBindBufferBase(GL_UNIFORM_BUFFER, materialStruct.location, materialName));
+#pragma message ("TODO: Shaders::overrideMaterial() needs to actually handle the input value.")
 }
 void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
 {

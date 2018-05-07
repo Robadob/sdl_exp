@@ -86,3 +86,11 @@ void Axis::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	shaders->setProjectionMatPtr(projectionMat);
 }
+void Axis::setModelMatPtr(const glm::mat4* modelMat)
+{
+#pragma message ("TODO: Axis::setModelMatPtr()")
+}
+void Axis::overrideModelMat(const glm::mat4* modelMat)
+{
+#pragma message ("TODO: Axis::overrideModelMat()")
+}

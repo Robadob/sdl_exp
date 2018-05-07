@@ -54,6 +54,12 @@
     <Filter Include="Header Files\Visualisation\Shader\Buffer">
       <UniqueIdentifier>{fa904b7b-5604-4ee4-9ca2-2aefd0495c65}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Model">
+      <UniqueIdentifier>{ccf2d315-1143-40c1-a4f4-fcf20f491d84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Model">
+      <UniqueIdentifier>{39361c0f-24f0-4428-8f4b-ae2ba2bb67ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -63,9 +69,6 @@
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Entity.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
-    <ClCompile Include="visualisation\Material.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Skybox.cpp">
@@ -152,6 +155,24 @@
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
       <Filter>Source Files\Visualisation\MultiPass</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\model\Mesh.cpp">
+      <Filter>Source Files\Visualisation\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\Model.cpp">
+      <Filter>Source Files\Visualisation\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\ModelNode.cpp">
+      <Filter>Source Files\Visualisation\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\Animation.cpp">
+      <Filter>Source Files\Visualisation\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\Material.cpp">
+      <Filter>Source Files\Visualisation\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\MaterialOld.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -166,9 +187,6 @@
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Entity.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Material.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Skybox.h">
@@ -272,6 +290,39 @@
     </ClInclude>
     <ClInclude Include="visualisation\interface\RenderTarget.h">
       <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\Mesh.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\Model.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\Model_assimpUtils.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\ModelNode.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\Animation.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\BoundingBox.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\Material.h">
+      <Filter>Header Files\Visualisation\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\util\StringUtils.h">
+      <Filter>Header Files\Visualisation\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\ShaderHeader.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\MaterialOld.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\ShadersVec.h">
+      <Filter>Source Files\Visualisation\Shader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

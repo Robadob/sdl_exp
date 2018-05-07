@@ -963,7 +963,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 	const char* DISSOLVE_IDENTIFEIR = "d"; //alpha
 	const char* ILLUMINATION_MODE_IDENTIFIER = "illum";
 
-	this->material = new MaterialOld();
+	this->material = new Material();
 
 	// iter file
 	while (!feof(file)) {
@@ -1447,14 +1447,6 @@ void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 	for (auto &&it : shaders)
 		if (it)
 			it->setProjectionMatPtr(projectionMat);
-}
-void Entity::setModelMatPtr(glm::mat4 const *modelMat)
-{
-#pragma message ( "TODO : Entity::setModelMatPtr()" )
-}
-void Entity::overrideModelMat(glm::mat4 const *modelMat)
-{
-#pragma message ( "TODO : Entity::overrideModelMat()" )
 }
 /*
 Switches the vertex order of the model

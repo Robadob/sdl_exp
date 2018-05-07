@@ -49,14 +49,12 @@ Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::ini
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
     , geometryShaderVersion(-1)
-	, vao(0)
+    //, prevModelview()//Identity
 {
-	GL_CALL(glGenVertexArrays(1, &vao));
 	reload();
 }
 Shaders::~Shaders(){
     this->destroyProgram();
-	GL_CALL(glDeleteVertexArrays(1, &vao));
 	delete vertexShaderFiles;
 	delete fragmentShaderFiles;
 	delete geometryShaderFiles;

@@ -17,10 +17,12 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #else
     , texBuf(TextureBuffer<float>::make(100, 3))
 #endif
+	, bob(std::make_shared<Model>("..\\models\\bob\\bob.md5mesh", 10.0f))
 {
     registerEntity(deerModel);
     registerEntity(colorModel);
-    registerEntity(instancedSphere);
+	registerEntity(instancedSphere);
+	registerEntity(bob);
     this->setSkybox(true);
     this->visualisation.setWindowTitle("Entity Render Sample");
     this->setRenderAxis(true); 
@@ -56,6 +58,7 @@ void EntityScene::update(unsigned int frameTime)
 #ifdef __CUDACC__
     cuUpdate();
 #endif
+	this->bob->update(SDL_GetTicks()/1000.0f);
 }
 /*
 Called once per frame when Scene render calls should be executed
@@ -65,6 +68,8 @@ void EntityScene::render()
     colorModel->render();
     deerModel->render();
     this->instancedSphere->renderInstances(100);
+	bob->render();
+	bob->renderSkeleton();
 }
 /*
 Called when the user requests a reload

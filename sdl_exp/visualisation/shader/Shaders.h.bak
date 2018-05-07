@@ -411,19 +411,6 @@ private:
 	 * Information for binding the projection matrix
 	 */
     UniformMatrixDetail projectionMat;
-    struct UniformMaterialDetail
-    {
-        UniformMaterialDetail(int location = -1, GLuint bufferName = 0)
-            :location(location), bufferName(bufferName) { }
-        /**
-        * This value is set internally when we detect that your shader has a suitable uniform location
-        */
-        int location;
-        /**
-        * Const pointer to the matrix to be loaded
-        */
-        GLuint bufferName;
-    };
     /**
      * Information for binding the material properties uniform buffer
      */

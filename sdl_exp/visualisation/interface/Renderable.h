@@ -45,6 +45,17 @@ public:
 	{
 		setProjectionMatPtr(visualisation->getFrustrumPtr());
 	}
+	/**
+	* Sets the pointer from which the Model matrix should be loaded from
+	* @param modelMat A pointer to the modelMatrix to be tracked
+	* @note This pointer is likely provided by the Visualisation object
+	*/
+	virtual void setModelMatPtr(const glm::mat4 *modelMat) = 0;
+	/**
+	* Overrides the model matrix (and all dependent matrices) until useProgram() is next called
+	* @param modelMat Pointer to the overriding modelMat
+	*/
+	virtual void overrideModelMat(const glm::mat4 *modelMat) = 0;
 
 };
 

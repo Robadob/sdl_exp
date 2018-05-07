@@ -6,7 +6,7 @@
 #include <memory>
 #include <glm/glm.hpp>
 
-#include "MaterialOld.h"
+#include "Material.h"
 #include "shader/Shaders.h"
 #include "texture/Texture2D.h"
 #include "Camera.h"
@@ -23,14 +23,14 @@ namespace Stock
             char *texturePath;
             Stock::Shaders::ShaderSet defaultShaders;
 		};
-		const Model SPHERE{ "../models/sphere.obj", "", Stock::Shaders::PHONG };
-		const Model ICOSPHERE{ "../models/icosphere.obj", "", Stock::Shaders::FLAT };
-		const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", "", Stock::Shaders::COLOR };//Remove texture?
-		const Model CUBE{ "../models/cube.obj", "", Stock::Shaders::COLOR };
-		const Model ROTHWELL{ "../models/rothwell-wy-1.obj", "", Stock::Shaders::PHONG };
+		const Model SPHERE{ "../models/sphere.obj", 0, Stock::Shaders::PHONG };
+        const Model ICOSPHERE{ "../models/icosphere.obj", 0, Stock::Shaders::FLAT };
+        const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", 0, Stock::Shaders::COLOR };//Remove texture?
+        const Model CUBE{ "../models/cube.obj", 0, Stock::Shaders::COLOR };
+        const Model ROTHWELL{ "../models/rothwell-wy-1.obj", 0, Stock::Shaders::PHONG };
 		const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::TEXTURE };
-		const Model TEAPOT{ "../models/teapot.obj", "", Stock::Shaders::PHONG };
-		const Model PLANE{ "../models/plane.obj", "", Stock::Shaders::FLAT };
+		const Model TEAPOT{ "../models/teapot.obj", 0, Stock::Shaders::PHONG };
+		const Model PLANE{ "../models/plane.obj", 0, Stock::Shaders::FLAT };
     };
 };
 /*
@@ -107,18 +107,7 @@ public:
     virtual void reload();
 	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex=0) const;
     void setViewMatPtr(glm::mat4 const *modelViewMat) override;
-	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
-	/**
-	* Sets the pointer from which the Model matrix should be loaded from
-	* @param modelMat A pointer to the modelMatrix to be tracked
-	* @note This pointer is likely provided by the Visualisation object
-	*/
-	void setModelMatPtr(const glm::mat4 *modelMat) override;
-	/**
-	* Overrides the model matrix (and all dependent matrices) until useProgram() is next called
-	* @param modelMat Pointer to the overriding modelMat
-	*/
-	void overrideModelMat(const glm::mat4 *modelMat) override;
+    void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
     void flipVertexOrder();
 	void setCullFace(const bool cullFace);
 	glm::vec3 getMin() const { return modelMin; }
@@ -135,7 +124,7 @@ protected:
     Shaders::VertexAttributeDetail positions, normals, colors, texcoords, faces;
 
     //Optional material (loaded automaically if detected within model file)
-    MaterialOld *material;
+    Material *material;
     glm::vec4 color;
     glm::vec3 location;
     glm::vec4 rotation;

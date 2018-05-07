@@ -93,7 +93,12 @@
     <ClCompile Include="visualisation\Camera.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
-    <ClCompile Include="visualisation\Material.cpp" />
+    <ClCompile Include="visualisation\MaterialOld.cpp" />
+    <ClCompile Include="visualisation\model\Animation.cpp" />
+    <ClCompile Include="visualisation\model\Material.cpp" />
+    <ClCompile Include="visualisation\model\Mesh.cpp" />
+    <ClCompile Include="visualisation\model\Model.cpp" />
+    <ClCompile Include="visualisation\model\ModelNode.cpp" />
     <ClCompile Include="visualisation\multipass\BackBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\FrameBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
@@ -138,7 +143,14 @@
     <ClInclude Include="visualisation\interface\RenderTarget.h" />
     <ClInclude Include="visualisation\interface\Scene.h" />
     <ClInclude Include="visualisation\interface\Viewport.h" />
-    <ClInclude Include="visualisation\Material.h" />
+    <ClInclude Include="visualisation\MaterialOld.h" />
+    <ClInclude Include="visualisation\model\Animation.h" />
+    <ClInclude Include="visualisation\model\BoundingBox.h" />
+    <ClInclude Include="visualisation\model\Material.h" />
+    <ClInclude Include="visualisation\model\Mesh.h" />
+    <ClInclude Include="visualisation\model\Model.h" />
+    <ClInclude Include="visualisation\model\ModelNode.h" />
+    <ClInclude Include="visualisation\model\Model_assimpUtils.h" />
     <ClInclude Include="visualisation\multipass\BackBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h" />
@@ -152,7 +164,9 @@
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
     <ClInclude Include="visualisation\shader\GaussianBlur.h" />
     <ClInclude Include="visualisation\shader\ShaderCore.h" />
+    <ClInclude Include="visualisation\shader\ShaderHeader.h" />
     <ClInclude Include="visualisation\shader\Shaders.h" />
+    <ClInclude Include="visualisation\shader\ShadersVec.h" />
     <ClInclude Include="visualisation\Skybox.h" />
     <ClInclude Include="visualisation\Sprite2D.h" />
     <ClInclude Include="visualisation\Text.h" />
@@ -162,6 +176,7 @@
     <ClInclude Include="visualisation\texture\TextureBuffer.h" />
     <ClInclude Include="visualisation\texture\TextureCubeMap.h" />
     <ClInclude Include="visualisation\util\GLcheck.h" />
+    <ClInclude Include="visualisation\util\StringUtils.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

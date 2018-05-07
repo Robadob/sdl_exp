@@ -32,6 +32,8 @@ public:
 	* Provides projection matrix to the shader
 	*/
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+	void setModelMatPtr(const glm::mat4* modelMat) override;
+	void overrideModelMat(const glm::mat4* modelMat) override;
 private:
 	GLuint vbo, fvbo;
 	Shaders::VertexAttributeDetail vertices, colors, faces;

@@ -1,4 +1,4 @@
-#include "Material.h"
+#include "MaterialOld.h"
 
 #include <stdio.h>
 
@@ -7,11 +7,11 @@
 
 #define DEFAULT_SHININESS 32
 
-Material::Material() : ambient(glm::vec4(0, 0, 0, 1)), diffuse(glm::vec4(0, 0, 0, 1)), specular(glm::vec4(0, 0, 0, 1)), emission(glm::vec4(0, 0, 0, 1)), shininess(DEFAULT_SHININESS), dissolve(1){
+MaterialOld::MaterialOld() : ambient(glm::vec4(0, 0, 0, 1)), diffuse(glm::vec4(0, 0, 0, 1)), specular(glm::vec4(0, 0, 0, 1)), emission(glm::vec4(0, 0, 0, 1)), shininess(DEFAULT_SHININESS), dissolve(1){
 
 }
 
-Material::Material(glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec4 emission, float shininess, float dissolve)
+MaterialOld::MaterialOld(glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm::vec4 emission, float shininess, float dissolve)
 {
     this->ambient = ambient;
     this->diffuse = diffuse;
@@ -22,11 +22,11 @@ Material::Material(glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, glm
 }
 
 
-Material::~Material()
+MaterialOld::~MaterialOld()
 {
 }
 
-void Material::useMaterial(){
+void MaterialOld::useMaterial(){
     // Set material properties from stored vars.
     float amb[4] = { this->ambient.x, this->ambient.y, this->ambient.z, this->ambient.w};
     float diff[4] = { this->diffuse.x, this->diffuse.y, this->diffuse.z, this->diffuse.w };
@@ -40,7 +40,7 @@ void Material::useMaterial(){
     
 }
 
-void Material::printToConsole(){
+void MaterialOld::printToConsole(){
     printf("Material::\n");
     printf("  > ambient {%f, %f, %f}\n", this->ambient.x, this->ambient.y, this->ambient.z);
     printf("  > diffuse {%f, %f, %f}\n", this->diffuse.x, this->diffuse.y, this->diffuse.z);

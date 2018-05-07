@@ -23,15 +23,9 @@ public:
 	 * @param filepath The path to the image to be loaded
 	 * @param options A bitmask of options which correspond to various GL texture options
 	 * @param skipCache If false the returned Texture2D will be added to or loaded from the cache
-	 * @note If filePath is nullptr, will return empty shared ptr
+	 * @param folder A surplus folder to search for the texture in, useful for finding model textures
 	 */
-    static std::shared_ptr<const Texture2D> load(const char * filepath, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
-	/**
-	 * Returns an immutable std::shared_ptr<Texture2D> of the specified file
-	 * @param filepath The path to the image to be loaded
-	 * @param options A bitmask of options which correspond to various GL texture options
-	 * @param skipCache If false the returned Texture2D will be added to or loaded from the cache
-	 */
+	static std::shared_ptr<const Texture2D> load(const std::string &filepath, const std::string &folder, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
 	static std::shared_ptr<const Texture2D> load(const std::string &filepath, const unsigned long long options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
 	/**
 	 * Creates a mutable texture with the given paremeters

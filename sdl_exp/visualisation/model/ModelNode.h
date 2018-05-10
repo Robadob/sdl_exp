@@ -37,7 +37,7 @@ private:
 	{ }
 public:
 	BoundingBox3D calculateBoundingBox(glm::mat4 transform = glm::mat4());
-	void render(glm::mat4 transform);
+	void render(glm::mat4 transform, const std::shared_ptr<Shaders> &shader = nullptr);
 	//debugging test method
 	void renderSkeleton(Draw &pen, glm::mat4 transform, glm::vec4 pt0 = glm::vec4(0, 0, 0, 1));
 	void addChild(std::shared_ptr<ModelNode> child)

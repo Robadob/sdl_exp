@@ -206,8 +206,9 @@ public:
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
 	 * @param bufferType The type of buffer (probably GL_SHADER_STORAGE_BUFFER or GL_UNIFORM_BUFFER)
 	 * @param bufferName The buffer name as set by glGenBuffers(GLsizei, GLuint)
+	 * @return True if buffer name is found in the current shader to be bound
 	 */
-	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName);
+	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferBindingPoint);
 	/**
 	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
@@ -215,6 +216,7 @@ public:
 	 * This will not retain the shared_ptr, it's upto you to keep it alive
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
 	 * @param buffer The buffer to be used
+	 * @return True if buffer name is found in the current shader to be bound
 	 * @note Convenience method, implemented in BufferCore.cpp
 	 */
 	bool addBuffer(const char *bufferNameInShader, const std::shared_ptr<BufferCore> &buffer);

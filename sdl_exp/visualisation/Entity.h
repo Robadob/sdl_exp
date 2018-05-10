@@ -108,6 +108,11 @@ public:
 	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex=0) const;
     void setViewMatPtr(glm::mat4 const *modelViewMat) override;
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+	/**
+	* Provides lights buffer to the shader
+	* @param bufferBindingPoint Set the buffer binding point to be used for rendering
+	*/
+	void setLightsBuffer(GLuint bufferBindingPoint) override;
     void flipVertexOrder();
 	void setCullFace(const bool cullFace);
 	glm::vec3 getMin() const { return modelMin; }
@@ -151,6 +156,8 @@ private:
     const static char *EXPORT_TYPE;
     inline static bool endsWith(const char *candidate, const char *suffix);
     void importModel(const char *path);
+
+private:
     struct ExportMask
     {
         unsigned char FILE_TYPE_FLAG;

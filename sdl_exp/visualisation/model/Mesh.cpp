@@ -2,11 +2,11 @@
 #include "Model.h"
 #include <glm/mat4x4.hpp>
 
-void Mesh::render(glm::mat4 &transform) const
+void Mesh::render(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader) const
 {
 	if (!visible)
 		return;
-    data->materials[materialIndex]->use(transform);
+	data->materials[materialIndex]->use(transform, shader);
 	//Render
 	GL_CALL(glDrawElements(faceType, faceSize, GL_UNSIGNED_INT, (void *)(byteOffset)));
 }

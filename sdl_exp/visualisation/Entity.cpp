@@ -338,7 +338,7 @@ void Entity::loadModelFromFile()
 	bool face_hasNormals = false;
 	bool face_hasTexcoords = false;
 
-	printf("\rLoading Model: %s [Counting Elements]", su::getFilenameFromPath(modelPath).c_str());
+	printf("\rLoading Model: %s [Counting Elements]          ", su::getFilenameFromPath(modelPath).c_str());
 	//MTL details
 	char mtllib_tag[7] = "mtllib";
 	char usemtl_tag[7] = "usemtl";
@@ -516,7 +516,7 @@ exit_loop:;
 	unsigned int bufferLen = lnLenMax + 2;
 	char *buffer = new char[bufferLen];
 
-	printf("\rLoading Model: %s [Loading Elements] ", modelPath);
+	printf("\rLoading Model: %s [Loading Elements]           ", modelPath);
 	modelMin = glm::vec3(FLT_MAX);
 	modelMax = glm::vec3(-FLT_MAX);
 	//Read file by line, again.
@@ -814,7 +814,7 @@ exit_loop:;
 exit_loop2:;
 	//Cleanup buffer
 	delete[] buffer;
-	printf("\rLoading Model: %s [Calculating Pairs]", su::getFilenameFromPath(modelPath).c_str());
+	printf("\rLoading Model: %s [Calculating Pairs]         ", su::getFilenameFromPath(modelPath).c_str());
 	auto vn_pairs = new google::dense_hash_map<VN_PAIR, unsigned int, std::hash<VN_PAIR>, eqVN_PAIR>();
 	vn_pairs->set_empty_key({ UINT_MAX, UINT_MAX, UINT_MAX });
 	vn_pairs->resize(faces.count*faces.components);
@@ -865,7 +865,7 @@ exit_loop2:;
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
 		scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-	printf("\rLoading Model: %s [Assigning Elements]", su::getFilenameFromPath(modelPath).c_str());
+	printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
 	{
@@ -1448,6 +1448,12 @@ void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 	for (auto &&it : shaders)
 		if (it)
 			it->setProjectionMatPtr(projectionMat);
+}
+void Entity::setLightsBuffer(GLuint bufferBindingPoint)
+{
+	for (auto &&it : shaders)
+		if (it)
+			it->setLightsBuffer(bufferBindingPoint);
 }
 /*
 Switches the vertex order of the model

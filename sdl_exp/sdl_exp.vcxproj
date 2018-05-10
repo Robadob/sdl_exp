@@ -111,6 +111,13 @@
     <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp" />
     <ClCompile Include="visualisation\shader\ComputeShader.cpp" />
     <ClCompile Include="visualisation\shader\GaussianBlur.cpp" />
+    <ClCompile Include="visualisation\shader\lights\LightsBuffer.cpp" />
+    <None Include="visualisation\shader\lights\PointLight.imp">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="visualisation\shader\lights\SpotLight.imp">
+      <FileType>CppCode</FileType>
+    </None>
     <ClCompile Include="visualisation\shader\ShaderCore.cpp" />
     <ClCompile Include="visualisation\shader\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
@@ -165,6 +172,9 @@
     <ClInclude Include="visualisation\shader\buffer\UniformBuffer.h" />
     <ClInclude Include="visualisation\shader\ComputeShader.h" />
     <ClInclude Include="visualisation\shader\GaussianBlur.h" />
+    <ClInclude Include="visualisation\shader\lights\LightsBuffer.h" />
+    <ClInclude Include="visualisation\shader\lights\PointLight.h" />
+    <ClInclude Include="visualisation\shader\lights\Spotlight.h" />
     <ClInclude Include="visualisation\shader\ShaderCore.h" />
     <ClInclude Include="visualisation\shader\ShaderHeader.h" />
     <ClInclude Include="visualisation\shader\Shaders.h" />

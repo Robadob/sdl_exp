@@ -1,0 +1,31 @@
+#include "Spotlight.h"
+#include "LightsBuffer.h"
+
+inline SpotLight::SpotLight(const PointLight &old)
+	: PointLight(old)
+{ }
+
+inline SpotLight::SpotLight(LightsBuffer *buffer, LightProperties *props, unsigned int index)
+	: PointLight(buffer, props, index)
+{
+	properties->spotCutoff = 45.0f;//Set the spotlight setting
+	properties->spotCosCutoff = cos(properties->spotCutoff);
+	buffer->HasChanged();
+}
+
+inline void SpotLight::Direction(const glm::vec3 &dir)
+{
+	properties->spotDirection = dir;
+	buffer->HasChanged();
+}
+inline void SpotLight::CutOff(const float &degrees)
+{
+	properties->spotCutoff = degrees;
+	properties->spotCosCutoff = cos(properties->spotCutoff);
+	buffer->HasChanged();
+}
+inline void SpotLight::Exponent(const float &exponent)
+{
+	properties->spotExponent = exponent;
+	buffer->HasChanged();
+}

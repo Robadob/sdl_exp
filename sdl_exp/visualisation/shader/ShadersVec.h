@@ -26,16 +26,20 @@ public:
 		for (auto s : vec)
 			s->setModelMatPtr(modelMat);
 	}
-	void setMaterialProperties(GLuint materialName){
+	void setMaterialBuffer(GLuint materialName){
 		for (auto s : vec)
-			s->setMaterialProperties(materialName);
+			s->setMaterialBuffer(materialName);
 	}
-	void setRotationPtr(glm::vec4 const *rotationPtr)
+	void setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer){
+		for (auto s : vec)
+			s->setMaterialBuffer(buffer);
+	}
+	void setRotationPtr(const glm::vec4 *rotationPtr)
 	{
 		for (auto s : vec)
 			s->setRotationPtr(rotationPtr);
 	}
-	void setTranslationPtr(glm::vec3 const *translationPtr)
+	void setTranslationPtr(const glm::vec3 *translationPtr)
 	{
 		for (auto s : vec)
 			s->setTranslationPtr(translationPtr);

@@ -5,11 +5,17 @@
 #include "../shader/Shaders.h"
 #include "../shader/ShaderHeader.h"
 #include "../shader/buffer/UniformBuffer.h"
+
+/**
+ * This class holds all the necessary data to configure a material
+ * It holds a default shader specific to the material, however can be passed a shared shader with useMaterial()
+ */
 class Material : protected Renderable
 {
     /**
      * Pointer to the last used material
      * Used to prevent rebinding material states if unchanged
+     * Less than ideal this being static, should be hosted in model data
      */
     static Material *active;
 public:
@@ -26,21 +32,22 @@ public:
         CookTorrance,       //Metallic surface shader
         Fresnel             //The effect of light passing between materials
     };
+	static const char * TEX_NAME[13];
     enum TextureType
     {
-        None,               //Material properties not related to textures?
-        Diffuse,            //Combined with diffuse light value
-        Specular,           //Combined with specular light value
-        Ambient,            //Combined with ambient light value
-        Emmisive,           //Added to the result of the light equation
-        Height,             //Height map
-        Normals,            //Normal map
-        Shininess,          //Glossiness of the material
-        Opacity,            //Opacity
-        Displacement,       //Displacement map (none-standard handling required)
-        LightMap,           //Ambient occlusion, how bright light is at the specified point
-        Reflection,         //Perfect mirror reflection (slow to calculate)
-        Unknown             //Unknown, will be treated as diffuse if diffuse isn't present
+        None = 0,               //Material properties not related to textures?
+		Ambient = 1,            //Combined with ambient light value
+        Diffuse = 2,            //Combined with diffuse light value
+        Specular = 3,           //Combined with specular light value
+        Emmisive = 4,           //Added to the result of the light equation
+        Height = 5,             //Height map
+        Normals = 6,            //Normal map
+        Shininess = 7,          //Glossiness of the material
+        Opacity = 8,            //Opacity
+        Displacement = 9,       //Displacement map (none-standard handling required)
+        LightMap = 10,          //Ambient occlusion, how bright light is at the specified point
+        Reflection = 11,        //Perfect mirror reflection (slow to calculate)
+        Unknown =12             //Unknown, will be treated as diffuse if diffuse isn't present
     };
     /**
      * Holds a Texture and it's relevant blending operations
@@ -83,7 +90,7 @@ public:
     /**
      * Enables the materials settings
      */
-	void use(glm::mat4 &transform, unsigned int shaderIndex = 0);
+	void use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shaders = nullptr);
     static void clearActive() { Material::active = nullptr; }
     //Setters
     void setName(const std::string name) { this->name = name; };
@@ -122,8 +129,7 @@ public:
     bool getWireframe() const { return isWireframe; }
     bool getTwoSided() const { return !faceCull; }
     ShadingMode getShadingMode() const { return shaderMode; }
-	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex = 0) const;
-	size_t getShadersCount() const { return shaders.size() + 1; }
+	std::shared_ptr<Shaders> getShaders() const { return defaultShader; }
     std::pair<GLenum, GLenum> getAlphaBlendMode() const { return std::make_pair(alphaBlendMode[0], alphaBlendMode[1]); }
 	/**
 	 * Creates and sets up the default shader
@@ -146,7 +152,6 @@ private:
     bool faceCull;
 	ShadingMode shaderMode;
 	std::shared_ptr<Shaders> defaultShader;
-	std::vector<std::shared_ptr<Shaders>> shaders;
     GLenum alphaBlendMode[2]; //GL_SRC_ALPHA, GL_ONE for additive blending//GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA for default
 //HasMatrices overrides
 public:
@@ -161,7 +166,12 @@ public:
     * @param projectionMat A pointer to the projectionMatrix to be tracked
     * @note This pointer is likely provided by the Visualisation object
     */
-    void setProjectionMatPtr(const glm::mat4 *projectionMat) override;
+	void setProjectionMatPtr(const glm::mat4 *projectionMat) override;
+	/**
+	* Provides lights buffer to the shader
+	* @param bufferBindingPoint Set the buffer binding point to be used for rendering
+	*/
+	void setLightsBuffer(GLuint bufferBindingPoint) override;
 	void reload() override;
 };
 #endif //__Material_h__

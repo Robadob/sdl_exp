@@ -7,6 +7,8 @@
 
 #define NORMALS_SIZE 3
 
+class UniformBuffer;//Implementation of setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer) found in UniformBuffer.cpp
+
 namespace Stock
 {
     namespace Shaders
@@ -20,9 +22,10 @@ namespace Stock
         const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
         const ShaderSet FLAT{ "../shaders/flat.vert", "../shaders/flat.frag", nullptr };
         const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", nullptr };
-        const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
+		const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
+		const ShaderSet COLOR_NOSHADE{ "../shaders/color.vert", "../shaders/color_noshade.frag", nullptr };
 		const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", nullptr };
-		const ShaderSet TEXTURE_BONE{ "../shaders/texture_bone.vert", "../shaders/texture.frag", nullptr };
+		const ShaderSet TEXTURE_BONE{ "../shaders/texture_bone.vert", "../shaders/texture_material.frag", nullptr };
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
 		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", nullptr };
 		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", nullptr };
@@ -32,8 +35,8 @@ namespace Stock
         const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
         const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/phongShadow.frag", nullptr };
         const ShaderSet TEXTURE_SHADOW{ "../shaders/textureShadow.vert", "../shaders/textureShadow.frag", nullptr };
-    };
-};
+    }
+}
 /**
  * Abstracts compilation of Shaders, and attempts to automatically bind provided uniforms and vertex attributes on useProgram()
  * Bindings are tied to the specific shader, if you wish to use the same shader for 2 entities it might be best to make a 2nd instance
@@ -52,7 +55,9 @@ public:
 	static const char *NORMAL_MATRIX_UNIFORM_NAME;// = "_normalMat";
     static const char *MODEL_MATRIX_UNIFORM_NAME;// = "_modelMat";
     static const char *VIEW_MATRIX_UNIFORM_NAME;// = "_viewMat";
-    static const char *MATERIAL_UNIFORM_NAME;// = "_material";
+	static const char *LIGHT_UNIFORM_BLOCK_NAME;// = "_lights";
+	static const char *MATERIAL_UNIFORM_BLOCK_NAME;// = "_materials";
+	static const char *MATERIAL_ID_UNIFORM_NAME;// = "_materialID";
 	static const char *VERTEX_ATTRIBUTE_NAME;// = "_vertex";
 	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
 	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
@@ -201,21 +206,45 @@ public:
     inline void setModelMatPtr(const glm::mat4 *modelMat){ this->modelMat.matrixPtr = modelMat; }
     /**
      * Overrides the model matrix (and all dependent matrices) until useProgram() is next called
+     * This is a fast version that doesnt switch around bound shaders
      * @param modelMat Pointer to the overriding modelMat
+     * @note This will only throw exceptions in Debug mode
+     * @throws runtime_error When called whilst current shader is not active
      */
     void overrideModelMat(const glm::mat4 *modelMat);
+	void setLightsBuffer(GLuint bufferBindingPoint) { addBuffer(LIGHT_UNIFORM_BLOCK_NAME, GL_UNIFORM_BUFFER, bufferBindingPoint); }
     /**
-     * Sets the buffer which the material should be loaded from
-     * @param materialName GL buffer name
-     * @note This value is provided by glGenBuffers()
-     * @note This should really manage the buffer for us if we pass it a pointer
+     * Sets the uniform buffer which should be bound to the material uniform buffer block
+     * @param bufferBindingPoint GL binding point where buffer is bound
+     * @return Returns true if the current shader has a detected material buffer block
+	 * @see addBuffer(const char *, const GLenum, const GLuint)
      */
-    inline void setMaterialProperties(GLuint materialName){ this->materialStruct.bufferName = materialName; }
+	bool setMaterialBuffer(const GLuint bufferBindingPoint) { return addBuffer(MATERIAL_UNIFORM_BLOCK_NAME, GL_UNIFORM_BUFFER, bufferBindingPoint); }
+	/**
+     * Sets the uniform buffer which should be bound to the material uniform buffer block
+	 * This will not retain the shared_ptr, it's upto you to keep it alive
+	 * @param buffer The buffer to be used
+	 * @note Convenience method, implemented in BufferCore.cpp
+	 * @see addBuffer(const char *, const std::shared_ptr<BufferCore> &)
+	 */
+	bool setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer);
+	/**
+	 * Updates the material index
+	 * This version is only to be called whilst the shader is active
+     * @param materialIndex Index of the material to be used in the bound materials buffer
+	 * @see overrideMaterialID(unsigned int)
+	 */
+	void setMaterialID(unsigned int materialIndex);
     /**
-     * Overrides the material index until useProgram() is next called
-     * @param materialIndex Pointer to the overriding modelMat
+     * Updates the material index
+     * This version is only to be called whilst the shader is active
+     * This is a fast version that doesnt switch around bound shaders
+     * @param materialIndex Index of the material to be used in the bound materials buffer
+     * @note This will only throw exceptions in Debug mode
+     * @throws runtime_error When called whilst current shader is not active
+     * @see setMaterialId(unsigned int)
      */
-    void overrideMaterial(unsigned  int materialIndex);
+    void overrideMaterialID(unsigned int materialIndex);
 	/**
      * Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
      * @param rotationPtr A pointer to the rotation will be tracked
@@ -352,10 +381,10 @@ private:
      * Utility method for binding uniforms
      * @param rtn Pointer to store the uniform location in
      * @param uniformName The name of the uniform to locate
-     * @param uniformType The type of uniform to check for
+	 * @param uniformType The type of uniform to check for
      * @note On failure rtn is set to -1
      */
-    inline void bindUniform(int *rtn, const char *uniformName, GLenum uniformType) const;
+	inline void bindUniform(int *rtn, const char *uniformName, GLenum uniformType) const;
     /**
      * Utility method for binding attributes
      * @param rtn Pointer to store the attribute location in
@@ -411,23 +440,11 @@ private:
 	 * Information for binding the projection matrix
 	 */
     UniformMatrixDetail projectionMat;
-    struct UniformMaterialDetail
-    {
-        UniformMaterialDetail(int location = -1, GLuint bufferName = 0)
-            :location(location), bufferName(bufferName) { }
-        /**
-        * This value is set internally when we detect that your shader has a suitable uniform location
-        */
-        int location;
-        /**
-        * Const pointer to the matrix to be loaded
-        */
-        GLuint bufferName;
-    };
     /**
-     * Information for binding the material properties uniform buffer
+     * Information for binding the material id
      */
-    UniformMaterialDetail materialStruct;
+	int materialIDLocation;
+	int materialIDVal;
 	/**
 	 * When positive this variable holds the location of the (combined) modelviewprojection matrix in the shader
 	 */

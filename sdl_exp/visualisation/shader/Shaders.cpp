@@ -12,7 +12,9 @@ const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjec
 const char *Shaders::NORMAL_MATRIX_UNIFORM_NAME = "_normalMat";
 const char *Shaders::MODEL_MATRIX_UNIFORM_NAME = "_modelMat";
 const char *Shaders::VIEW_MATRIX_UNIFORM_NAME = "_viewMat";
-const char *Shaders::MATERIAL_UNIFORM_NAME = "_material";
+const char *Shaders::LIGHT_UNIFORM_BLOCK_NAME = "_lights";
+const char *Shaders::MATERIAL_UNIFORM_BLOCK_NAME = "_materials";
+const char *Shaders::MATERIAL_ID_UNIFORM_NAME = "_materialID";
 const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
 const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
 const char *Shaders::COLOR_ATTRIBUTE_NAME = "_color";
@@ -30,26 +32,29 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
 { }
 Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath, std::initializer_list <const char *> geometryShaderPath)
     : ShaderCore()
+    , vao(0)
     , modelMat()
     , viewMat()
     , projectionMat()
+    , materialIDLocation(-1)
+    , materialIDVal(0)
     , modelviewprojectionMatLoc(-1)
     , modelviewMatLoc(-1)
     , normalMatLoc(-1)
     , rotationPtr(nullptr)
     , translationPtr(nullptr)
     , positions(GL_FLOAT, 3, sizeof(float))
-    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
-    , colors(GL_FLOAT, 3, sizeof(float))
-    , texcoords(GL_FLOAT, 2, sizeof(float))
-    , colorUniformValue(1, 0, 0, 1)//Red
+	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))//Red
+	, colors(GL_FLOAT, 3, sizeof(float))
+	, texcoords(GL_FLOAT, 2, sizeof(float))
+	, colorUniformLocation(-1)
+    , colorUniformValue(1, 0, 0, 1)
     , vertexShaderFiles(buildFileVector(vertexShaderPath))
     , fragmentShaderFiles(buildFileVector(fragmentShaderPath))
     , geometryShaderFiles(buildFileVector(geometryShaderPath))
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
-    , geometryShaderVersion(-1)
-	, vao(0)
+	, geometryShaderVersion(-1)
 {
 	GL_CALL(glGenVertexArrays(1, &vao));
 	reload();
@@ -112,7 +117,7 @@ void Shaders::bindUniform(int *rtn, const char *uniformName, GLenum uniformType)
 {
     //Locate the view matrix uniform (modelview matrix, before model-specific transformations are applied)
     std::pair<int, GLenum> u_M = findUniform(uniformName, this->getProgram());
-    if (u_M.first >= 0 && u_M.second == uniformType)
+	if (u_M.first >= 0 && (u_M.second == uniformType))
         *rtn = u_M.first;
     else
         *rtn = -1;
@@ -140,6 +145,9 @@ void Shaders::_setupBindings(){
     bindAttribute(&this->normals.location, NORMAL_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
     bindAttribute(&this->colors.location, COLOR_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
     bindAttribute(&this->texcoords.location, TEXCOORD_ATTRIBUTE_NAME, GL_FLOAT_VEC2, GL_FLOAT_VEC3);
+	//Material ID uniform
+	bindUniform(&this->materialIDLocation, MATERIAL_ID_UNIFORM_NAME, GL_UNSIGNED_INT);
+	if (this->materialIDLocation != -1) overrideMaterialID(this->materialIDVal);
     //Locate the color uniform
     std::pair<int, GLenum> u_C = findUniform(COLOR_ATTRIBUTE_NAME, this->getProgram());
     if (u_C.first >= 0 && (u_C.second == GL_FLOAT_VEC3 || u_C.second == GL_FLOAT_VEC4))
@@ -152,12 +160,6 @@ void Shaders::_setupBindings(){
     {
         this->colorUniformLocation = -1;
         this->colorUniformSize = u_C.second == GL_FLOAT_VEC3 ? 3 : 4;
-    }
-    //Locate the material uniform
-	materialStruct.location = GL_CALL(glGetProgramResourceIndex(this->getProgram(), GL_BUFFER_VARIABLE, MATERIAL_UNIFORM_NAME));
-    if (materialStruct.location != GL_INVALID_INDEX)
-    {
-        materialStruct.location = -1;
     }
     //Refresh generic vertex attribs
     std::list<GenericVAD> t_gvad;
@@ -189,27 +191,40 @@ void Shaders::overrideModelMat(const glm::mat4 *force)
 #ifdef _DEBUG
     int currProgram = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
-    if (currProgram != getProgram())
+    if (currProgram != getProgram() || getProgram()==-1)
     {
-        fprintf(stderr, "Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
-        return;
+		throw std::runtime_error("Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
     }
 #endif
     _useProgramModelMatrices(force);
 }
-
-void Shaders::overrideMaterial(unsigned int materialIndex)
+void Shaders::overrideMaterialID(unsigned int materialIndex)
 {
 #ifdef _DEBUG
     int currProgram = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
-    if (currProgram != getProgram())
-    {
-        fprintf(stderr, "Error: Shader::overrideMaterial() should only be called whilst the shader is in use.\n");
-        return;
+	if (currProgram != getProgram() || getProgram() == -1)
+	{
+		throw std::runtime_error("Error: Shader::overrideMaterialID() should only be called whilst the shader is in use.\n");
     }
 #endif
-#pragma message ("TODO: Shaders::overrideMaterial() needs to actually handle the input value.")
+	materialIDVal = materialIndex;
+	//Set the color uniform if present
+	if (this->getProgram()>0 && this->materialIDLocation >= 0)
+	{//If colour uniform location is known
+		GL_CALL(glUniform1ui(this->materialIDLocation, materialIDVal));
+	}
+}
+void Shaders::setMaterialID(unsigned int materialIndex)
+{
+	materialIDVal = materialIndex;
+	//Set the color uniform if present
+	if (this->getProgram()>0 && this->materialIDLocation >= 0)
+	{//If colour uniform location is known
+		GL_CALL(glUseProgram(this->getProgram()));
+		GL_CALL(glUniform1ui(this->materialIDLocation, materialIDVal));
+		GL_CALL(glUseProgram(0));
+	}
 }
 void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
 {
@@ -415,18 +430,13 @@ void Shaders::_prepare()
     {//If view matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->viewMat.location, 1, GL_FALSE, glm::value_ptr(*this->viewMat.matrixPtr)));
     }
-
-
-
-    //Material uniform
-    if (materialStruct.location != -1 && materialStruct.bufferName>0)
-        GL_CALL(glBindBufferBase(GL_UNIFORM_BUFFER, materialStruct.location, materialStruct.bufferName));
 }
 void Shaders::_useProgram()
 {
 	GL_CALL(glBindVertexArray(vao));
 }
-void Shaders::_clearProgram(){
+void Shaders::_clearProgram()
+{
 	GL_CALL(glBindVertexArray(0));
 }
 //Bindings
@@ -510,7 +520,7 @@ void Shaders::setColor(glm::vec4 color)
 	colorUniformValue = color;
     //Set the color uniform if present
     if (this->getProgram()>0 && this->colorUniformLocation >= 0)
-    {//If projection matrix location and camera ptr are known
+    {//If colour uniform location is known
         GL_CALL(glUseProgram(this->getProgram()));
         if (this->colorUniformSize == 3)
         {

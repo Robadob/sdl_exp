@@ -203,7 +203,7 @@ public:
 	void reload() override;
 	//Rendering methods
 	void update(float time);
-	void render(unsigned int shaderIndex = 0) const;
+	void render(unsigned int shaderIndex = UINT_MAX) const;
 	void renderSkeleton();
     void setLocation(glm::vec3 location){ this->location = location; }
     void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
@@ -337,7 +337,15 @@ private:
 	Shaders::VertexAttributeDetail boneWeights;
 	std::shared_ptr<UniformBuffer> boneBuffer;
 	std::shared_ptr<UniformBuffer> materialBuffer;
+	/**
+	 * Custom shaders, shared by all materials
+	 * e.g. for shadow etc
+	 */
+	std::vector<std::shared_ptr<Shaders>> shaders;
 	//HasMatrices overrides
+	const glm::mat4 *viewMatPtr;
+	const glm::mat4 *projMatPtr;
+	GLuint lightsBufferBindPt;
 public:
 	glm::mat4 getModelMat() const;
 	/**
@@ -352,6 +360,11 @@ public:
 	* @note This pointer is likely provided by the Visualisation object
 	*/
 	void setProjectionMatPtr(const glm::mat4 *projectionMat) override;
+	/**
+	* Provides lights buffer to the shader
+	* @param bufferBindingPoint Set the buffer binding point to be used for rendering
+	*/
+	void setLightsBuffer(GLuint bufferBindingPoint) override;
 };
 
 #endif //__Model_h__

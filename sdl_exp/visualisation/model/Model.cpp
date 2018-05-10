@@ -15,21 +15,26 @@ const float Model::DEFAULT_KEYFRAME_TRANSITION_DURATION = 0.4f;//seconds
 const unsigned int Model::DEFAULT_TICKS_PER_SECOND = 25;
 
 Model::Model(const char *modelPath, float scale, bool setAllMeshesVisible, std::vector<std::shared_ptr<Shaders>> shaders)
-    : root(nullptr)
-    , data(nullptr)
-    , modelPath(modelPath)
-    , loadScale(scale)
-    , positions(GL_FLOAT, 3, sizeof(float))
-    , normals(GL_FLOAT, 3, sizeof(float))
-    , colors(GL_FLOAT, 4, sizeof(float))
-    , texcoords(GL_FLOAT, 3, sizeof(float))
+	: skeletonIsValid(false)
+	, root(nullptr)
+	, data(nullptr)
+	, modelPath(modelPath)
+	, loadScale(scale)
+	, positions(GL_FLOAT, 3, sizeof(float))
+	, normals(GL_FLOAT, 3, sizeof(float))
+	, colors(GL_FLOAT, 4, sizeof(float))
+	, texcoords(GL_FLOAT, 3, sizeof(float))
 	, boneIDs(GL_UNSIGNED_INT, 4, sizeof(unsigned int))
 	, boneWeights(GL_FLOAT, 4, sizeof(float))
 	, boneBuffer(nullptr)
-	, skeletonIsValid(false)
+	, shaders(shaders)
+	, projMatPtr(nullptr)
+	, viewMatPtr(nullptr)
+	, lightsBufferBindPt(-1)
 {
 	loadModel();
 	if (data)
+	{
 		for (auto &a : data->meshDirectory)
 		{
 			if (auto b = a.second.lock())
@@ -37,10 +42,11 @@ Model::Model(const char *modelPath, float scale, bool setAllMeshesVisible, std::
 				b->setVisible(setAllMeshesVisible);
 			}
 		}
-	//Init mTransitonKeyFrame, create an item for each node
-	for (auto &a:data->nodeDirectory)
-	{
-		mTransitionKeyFrame[a.first] = new Animation::NodeAnimation(1, 1, 1);
+		//Init mTransitonKeyFrame, create an item for each node
+		for (auto &a : data->nodeDirectory)
+		{
+			mTransitionKeyFrame[a.first] = new Animation::NodeAnimation(1, 1, 1);
+		}
 	}
 }
 Model::Model(const char *modelPath, float scale, bool setAllMeshesVisible, std::initializer_list<const Stock::Shaders::ShaderSet> ss)
@@ -77,6 +83,7 @@ void Model::reload()
     loadModel();
 	//Reconfigure new mesh directory to match old
 	if (data)
+	{
 		for (auto &a : data->meshDirectory)
 		{
 			auto b = oldMeshDirectory.find(a.first);
@@ -84,6 +91,13 @@ void Model::reload()
 				if (auto c = a.second.lock())
 					c->setVisible(b->second);
 		}
+		if (viewMatPtr)
+			setViewMatPtr(viewMatPtr);
+		if (projMatPtr)
+			setProjectionMatPtr(projMatPtr);
+		if (lightsBufferBindPt >= 0)
+			setLightsBuffer(lightsBufferBindPt);
+	}
 }
 VFCcount countVertices(const struct aiScene* scene, const struct aiNode* nd)
 {
@@ -523,22 +537,36 @@ void Model::loadModel()
 	printf("\rLoading Model: %s [Configuring Shaders]           ", su::getFilenameFromPath(modelPath).c_str());
 	//Inform shaders
 	for (unsigned int i = 0; i < data->materialsSize; ++i)
-		for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
-			if (auto s = data->materials[i]->getShaders(j))
-			{
-				s->setPositionsAttributeDetail(positions);
-				s->setNormalsAttributeDetail(normals);
-				s->setColorsAttributeDetail(colors);
-				s->setTexCoordsAttributeDetail(texcoords);
-				s->setFaceVBO(fbo);
-				//Set bone weights
-				if (data->bonesSize)
-				{
-					s->addGenericAttributeDetail("_boneIDs", boneIDs);
-					s->addGenericAttributeDetail("_boneWeights", boneWeights);
-					s->addBuffer("_bones", boneBuffer);
-				}
-			}
+	{
+		auto s = data->materials[i]->getShaders();
+		s->setPositionsAttributeDetail(positions);
+		s->setNormalsAttributeDetail(normals);
+		s->setColorsAttributeDetail(colors);
+		s->setTexCoordsAttributeDetail(texcoords);
+		s->setFaceVBO(fbo);
+		//Set bone weights
+		if (data->bonesSize)
+		{
+			s->addGenericAttributeDetail("_boneIDs", boneIDs);
+			s->addGenericAttributeDetail("_boneWeights", boneWeights);
+			s->addBuffer("_bones", boneBuffer);
+		}
+	}
+	for (auto &s:shaders)
+	{
+		s->setPositionsAttributeDetail(positions);
+		s->setNormalsAttributeDetail(normals);
+		s->setColorsAttributeDetail(colors);
+		s->setTexCoordsAttributeDetail(texcoords);
+		s->setFaceVBO(fbo);
+		//Set bone weights
+		if (data->bonesSize)
+		{
+			s->addGenericAttributeDetail("_boneIDs", boneIDs);
+			s->addGenericAttributeDetail("_boneWeights", boneWeights);
+			s->addBuffer("_bones", boneBuffer);
+		}
+	}
 	//Check vertex weights make sense
 	for (unsigned int i = 0; i < data->verticesSize;++i)
 	{
@@ -617,19 +645,39 @@ void Model::render(unsigned int shaderIndex) const
         return;
     }
 #endif
+
     //Prepare all shaders to update dynamics
-	for (unsigned int i = 0; i < data->materialsSize; ++i)
-		if (auto s = data->materials[i]->getShaders(shaderIndex))
+	if (shaderIndex>shaders.size())
+	{//Default shaders
+		for (unsigned int i = 0; i < data->materialsSize; ++i)
+		{
+			auto s = data->materials[i]->getShaders();
 			s->prepare();
+		}
+	}
+	else
+	{//Custom shader from vector
+		shaders[shaderIndex]->useProgram(true);//Use program once, just update modelMat and matIndex throughout
+	}
 
     Material::clearActive();
 
     //Trigger recursive render
-	root->render(getModelMat());
+	root->render(getModelMat(), shaderIndex>shaders.size() ? nullptr : shaders[shaderIndex]);
 
-	for (unsigned int i = 0; i < data->materialsSize; ++i)
-		if (auto s = data->materials[i]->getShaders(shaderIndex))
+	//Clear shaders (only need to do this once, due to shared vao)
+	if (shaderIndex>shaders.size())
+	{//Default shaders
+		for (unsigned int i = 0; i < data->materialsSize && i < 1; ++i)
+		{
+			auto s = data->materials[0]->getShaders();
 			s->clearProgram();
+		}
+	}
+	else
+	{//Custom shader from vector
+		shaders[shaderIndex]->clearProgram();
+	}
 }
 void Model::renderSkeleton()
 {
@@ -653,24 +701,47 @@ void Model::renderSkeleton()
 //HasMatrices overrides
 void Model::setViewMatPtr(const glm::mat4 *viewMat)
 {
+	viewMatPtr = viewMat;
 	if (data)
 	{
 		for (unsigned int i = 0; i < data->materialsSize; ++i)
-			for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
-				if (auto s = data->materials[i]->getShaders(j))
-					s->setViewMatPtr(viewMat);
+		{
+			auto s = data->materials[i]->getShaders();
+			s->setViewMatPtr(viewMat);
+		}
+		for (auto &s : shaders)
+			s->setViewMatPtr(viewMat);
 		skeletonPen.setViewMatPtr(viewMat);
 	}
 }
 void Model::setProjectionMatPtr(const glm::mat4 *projectionMat)
 {
+	projMatPtr = projectionMat;
 	if (data)
 	{
 		for (unsigned int i = 0; i < data->materialsSize; ++i)
-			for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
-				if (auto s = data->materials[i]->getShaders(j))
-					s->setProjectionMatPtr(projectionMat);
+		{
+			auto s = data->materials[i]->getShaders();
+			s->setProjectionMatPtr(projectionMat);
+		}
+		for (auto &s : shaders)
+			s->setProjectionMatPtr(projectionMat);
 		skeletonPen.setProjectionMatPtr(projectionMat);
+	}
+}
+void Model::setLightsBuffer(GLuint bufferBindingPoint)
+{
+	lightsBufferBindPt = bufferBindingPoint;
+	if (data)
+	{
+		for (unsigned int i = 0; i < data->materialsSize; ++i)
+		{
+			auto s = data->materials[i]->getShaders();
+			s->setLightsBuffer(bufferBindingPoint);
+		}
+		for (auto &s : shaders)
+			s->setLightsBuffer(bufferBindingPoint);
+		skeletonPen.setLightsBuffer(bufferBindingPoint);
 	}
 }
 std::unique_ptr<ShadersVec> Model::getShaders(unsigned int shaderIndex) const
@@ -678,10 +749,10 @@ std::unique_ptr<ShadersVec> Model::getShaders(unsigned int shaderIndex) const
 	auto ret = std::make_unique<ShadersVec>();
 	if (data)
 	{
+		for (auto &s : shaders)
+			ret->add(s);
 		for (unsigned int i = 0; i < data->materialsSize; ++i)
-			for (unsigned int j = 0; j < data->materials[i]->getShadersCount(); ++j)
-				if (auto s = data->materials[i]->getShaders(j))
-					ret->add(s);
+			ret->add(data->materials[i]->getShaders());
 	}
 	return ret;
 }

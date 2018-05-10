@@ -1,6 +1,7 @@
 #include "Material.h"
 #include "../Texture/Texture2D.h"
 Material *Material::active = nullptr;
+const char * Material::TEX_NAME[13] = { "t_none", "t_ambient", "t_diffuse", "t_specular", "t_emissive", "t_height", "t_normal", "t_shininess", "t_opacity", "t_displacement", "t_light", "t_reflection", "t_unknown" };
 Material::Material(std::shared_ptr<UniformBuffer> buffer, unsigned int bufferIndex, const char* name)
     : name(name==nullptr?"":name)
     , properties()
@@ -14,7 +15,6 @@ Material::Material(std::shared_ptr<UniformBuffer> buffer, unsigned int bufferInd
 {
 	alphaBlendMode[0] = GL_SRC_ALPHA;
 	alphaBlendMode[1] = GL_ONE_MINUS_SRC_ALPHA;
-	shaders = {  };
 }
 
 Material::~Material()
@@ -28,13 +28,6 @@ void Material::updatePropertiesUniform(bool force)
 		return;
 	hasBaked = true;
 	buffer->setData(&properties, sizeof(MaterialProperties), bufferIndex*sizeof(MaterialProperties));
-}
-std::shared_ptr<Shaders> Material::getShaders(unsigned int shaderIndex) const
-{
-	shaderIndex--;
-	if (shaderIndex < shaders.size())
-		return shaders[shaderIndex];
-	return defaultShader;
 }
 /**
  * Todo: compare textures
@@ -65,35 +58,41 @@ bool  Material::operator==(Material& other) const
 void Material::addTexture(TextureFrame texFrame, TextureType type)
 {
 	textures[type].push_back(texFrame);
+	this->properties.bitmask |= (1 << type);
+	updatePropertiesUniform();
 	if (hasBaked)
 	{
-		defaultShader->addTexture("_texture", texFrame.texture);
-		for (auto &&it : shaders)
-			if (it && type == (Diffuse && it))
-				it->addTexture("_texture", texFrame.texture);
+		if (textures[type].size() == 1)
+		{
+			defaultShader->addTexture(TEX_NAME[type], texFrame.texture);
+		}
+	}
+	if (textures[type].size() > 1)
+	{
+		fprintf(stderr, "Warning: Material '%s' contains multiple textures of type %s\n Texture stacks are currently unsupported.\n", name.c_str(), TEX_NAME[type]);
 	}
 }
 //HasMatrices overrides
 void Material::setViewMatPtr(const glm::mat4 *viewMat)
 {
-	for (auto &&it : shaders)
-		if (it)
-			it->setViewMatPtr(viewMat);
+	defaultShader->setViewMatPtr(viewMat);
 }
 void Material::setProjectionMatPtr(const glm::mat4 *projectionMat)
 {
-	for (auto &&it : shaders)
-		if (it)
-			it->setProjectionMatPtr(projectionMat);
+	defaultShader->setProjectionMatPtr(projectionMat);
+}
+void Material::setLightsBuffer(GLuint bufferBindingPoint)
+{
+	defaultShader->setLightsBuffer(bufferBindingPoint);
 }
 
-void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
+void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
 {
-	shaderIndex--;
-	if (shaderIndex < shaders.size())
+	if (shader)
 	{
-		shaders[shaderIndex]->useProgram(false);
-		shaders[shaderIndex]->overrideModelMat(&transform);
+		//shader->useProgram(false);//Material should already be in use
+		shader->overrideModelMat(&transform);
+		shader->overrideMaterialID(bufferIndex);
 	}
 	else
 	{
@@ -121,13 +120,11 @@ void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
 			GL_CALL(glDisable(GL_CULL_FACE));
         }
         
-        GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
+		GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
 
-        //Setup material properties with shader (If we can guarantee shader is unique, we can skip this)
-		if (shaderIndex < shaders.size())
-			shaders[shaderIndex]->overrideMaterial(bufferIndex);
-		else
-			defaultShader->overrideMaterial(bufferIndex);
+		//Setup material properties with shader (we can guarantee default shader is unique, so it skips this)
+		if (shader)
+			shader->overrideMaterialID(bufferIndex);
         
     	active = this;
     }
@@ -141,7 +138,7 @@ void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
 		{
 			fprintf(stderr, "Warning: Material::use() detected GL_CULL_FACE has been changed.\nUse Material::clearActive() before to prevent this warning.\n");
         }
-        ////Polygon mode
+        //Polygon mode
         GLint polygonMode[2];
         GL_CALL(glGetIntegerv(GL_POLYGON_MODE, &polygonMode[0]));
         if ((polygonMode[0] != GL_LINE&&isWireframe) || (polygonMode[0] != GL_FILL&&!isWireframe))
@@ -156,28 +153,25 @@ void Material::use(glm::mat4 &transform, unsigned int shaderIndex)
         {
             fprintf(stderr, "Warning: Material::use() detected glBlendFunc() has been called.\nUse Material::clearActive() before to prevent this warning.\n");
         }
-
     }
 #endif
 }
 
 void Material::reload()
 {
-#pragma message ( "TODO : Material::reload()" )
+	defaultShader->reload();
 }
-
-void setViewMatPtr(const Camera* camera)
-{
-#pragma message ( "TODO : Material::setViewMatPtr()" )
-}
-
 void Material::bake()
 {
 	//Update material properties buffer
 	updatePropertiesUniform(true);
 	//Create default shader
 	defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE_BONE);//Temp
+	//Setup material buffer
+	defaultShader->setMaterialBuffer(buffer);
+	defaultShader->setMaterialID(bufferIndex);
 	//Setup default shader, e.g. textures
-	if (textures[TextureType::Diffuse].size())
-		defaultShader->addTexture("_texture", textures[TextureType::Diffuse][0].texture);//Temp
+	for (auto &typeVec:textures)
+		if (typeVec.second.size())
+			defaultShader->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
 }

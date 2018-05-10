@@ -60,6 +60,12 @@
     <Filter Include="Source Files\Visualisation\Model">
       <UniqueIdentifier>{39361c0f-24f0-4428-8f4b-ae2ba2bb67ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Visualisation\Shader\Lights">
+      <UniqueIdentifier>{d5170f88-9f78-4e76-8d75-c3b9246bd899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualisation\Shader\Lights">
+      <UniqueIdentifier>{916a45d1-87cf-4b02-9a49-06ff7937c4da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -176,10 +182,19 @@
     <ClCompile Include="visualisation\Draw.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\shader\lights\LightsBuffer.cpp">
+      <Filter>Source Files\Visualisation\Shader\Lights</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
       <Filter>Header Files\Visualisation\Util</Filter>
+    </None>
+    <None Include="visualisation\shader\lights\PointLight.imp">
+      <Filter>Source Files\Visualisation\Shader\Lights</Filter>
+    </None>
+    <None Include="visualisation\shader\lights\SpotLight.imp">
+      <Filter>Source Files\Visualisation\Shader\Lights</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -329,6 +344,15 @@
     </ClInclude>
     <ClInclude Include="visualisation\shader\ShadersVec.h">
       <Filter>Source Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\PointLight.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\LightsBuffer.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\Spotlight.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

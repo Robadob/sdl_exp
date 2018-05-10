@@ -40,3 +40,12 @@ GLint UniformBuffer::MaxBuffers()
 {
 	return BufferCore::maxBuffers(GL_UNIFORM_BUFFER);
 }
+
+//Comment out this include if not making use of Shaders/ShaderCore
+#include "../Shaders.h"
+#ifdef __Shaders_h__
+bool Shaders::setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer)
+{
+	return addBuffer(MATERIAL_UNIFORM_BLOCK_NAME, buffer);
+};
+#endif //__Shaders_h__

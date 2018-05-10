@@ -1,49 +1,56 @@
 #include "EntityScene.h"
 #include <ctime>
-
 /*
 Constructor, modify this to change what happens
 */
 EntityScene::EntityScene(Visualisation &visualisation)
-    : BasicScene(visualisation)
-    , deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
-    , colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
-    , tick(0.0f)
-    , polarity(-1)
-    , instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
+	: BasicScene(visualisation)
+	, deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
+	, colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
+	, tick(0.0f)
+	, polarity(-1)
+	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
 #ifdef __CUDACC__
-    , cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
-    , texBuf(TextureBuffer<float>::make(cuTexBuf, true))
+	, cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
+	, texBuf(TextureBuffer<float>::make(cuTexBuf, true))
 #else
-    , texBuf(TextureBuffer<float>::make(100, 3))
+	, texBuf(TextureBuffer<float>::make(100, 3))
 #endif
 	, bob(std::make_shared<Model>("..\\models\\bob\\bob.md5mesh", 10.0f))
 {
-    registerEntity(deerModel);
-    registerEntity(colorModel);
+	registerEntity(deerModel);
+	registerEntity(colorModel);
 	registerEntity(instancedSphere);
 	registerEntity(bob);
-    this->setSkybox(true);
-    this->visualisation.setWindowTitle("Entity Render Sample");
-    this->setRenderAxis(true); 
-    srand((unsigned int)time(0));
-    this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
-    this->colorModel->setCullFace(false);
+	this->setSkybox(true);
+	this->visualisation.setWindowTitle("Entity Render Sample");
+	this->setRenderAxis(true);
+	srand((unsigned int)time(0));
+	this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
+	this->colorModel->setCullFace(false);
 #ifdef __CUDACC__
-    cuInit();
+	cuInit();
 #else
-    float *tempData = (float*)malloc(sizeof(float) * 3 * 100);
-    for (int i = 0; i < 100;i++)
-    {
-        tempData[(i * 3) + 0] = 100 * (float)sin(i*3.6);
-        tempData[(i * 3) + 1] = -50.0f;
-        tempData[(i * 3) + 2] = 100 * (float)cos(i*3.6);
-    }
-    texBuf->setData(tempData);
-    free(tempData);
+	float *tempData = (float*)malloc(sizeof(float) * 3 * 100);
+	for (int i = 0; i < 100; i++)
+	{
+		tempData[(i * 3) + 0] = 100 * (float)sin(i*3.6);
+		tempData[(i * 3) + 1] = -50.0f;
+		tempData[(i * 3) + 2] = 100 * (float)cos(i*3.6);
+	}
+	texBuf->setData(tempData);
+	free(tempData);
 #endif
-    this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
-    this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
+	this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	//Approx sun point light 
+	//Really wants to be abitrary directional light, but putting it really far out with constant attenuation should also work
+	PointLight p = Lights()->addPointLight();
+	p.Position(glm::vec3(100000, 0, -100000));
+	p.Ambient(glm::vec3(0.89f, 0.64f, 0.36f));
+	p.Diffuse(glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
+	p.Specular(glm::vec3(1, 1, 1));
+	p.ConstantAttenuation(1.0f);
 }
 /*
 Called once per frame when Scene animation calls should be 

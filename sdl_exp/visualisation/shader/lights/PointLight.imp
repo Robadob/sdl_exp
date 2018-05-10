@@ -1,0 +1,63 @@
+#include "PointLight.h"
+#include "LightsBuffer.h"
+
+PointLight::PointLight(const PointLight &old)
+	: properties(old.properties)
+	, buffer(old.buffer)
+	, index(old.index)
+{ }
+
+PointLight::PointLight(LightsBuffer *buffer, LightProperties *props, unsigned int index)
+	: properties(props)
+	, buffer(buffer)
+	, index(index)
+{
+	properties[0] = LightProperties();//Initialise light
+	properties->spotCutoff = 180.0f;
+	properties->spotCosCutoff = cos(properties->spotCutoff);
+	buffer->HasChanged();
+}
+
+void PointLight::Color(const glm::vec3 &rgb, const float &ambiFactor, const float &diffFactor, const float &specFactor)
+{
+	properties->ambient = ambiFactor * rgb;
+	properties->diffuse = diffFactor * rgb;
+	properties->specular = specFactor * rgb;
+	buffer->HasChanged();
+}
+
+void PointLight::Position(const glm::vec3 &xyz)
+{
+	properties->position = xyz;
+	buffer->HasChanged();
+}
+void PointLight::Ambient(const glm::vec3 &rgb)
+{
+	properties->ambient = rgb;
+	buffer->HasChanged();
+}
+void PointLight::Diffuse(const glm::vec3 &rgb)
+{
+	properties->diffuse = rgb;
+	buffer->HasChanged();
+}
+void PointLight::Specular(const glm::vec3 &rgb)
+{
+	properties->specular = rgb;
+	buffer->HasChanged();
+}
+void PointLight::ConstantAttenuation(const float &factor)
+{
+	properties->constantAttenuation = factor;
+	buffer->HasChanged();
+}
+void PointLight::LinearAttenuation(const float &factor)
+{
+	properties->linearAttenuation = factor;
+	buffer->HasChanged();
+}
+void PointLight::QuadraticAttenuation(const float &factor)
+{
+	properties->quadraticAttenuation = factor;
+	buffer->HasChanged();
+}

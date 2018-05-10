@@ -6,7 +6,7 @@
 #include "../util/StringUtils.h"
 #include <glm/gtx/matrix_decompose.inl>
 
-void ModelNode::render(glm::mat4 transform)
+void ModelNode::render(glm::mat4 transform, const std::shared_ptr<Shaders> &shader)
 {
 	//Calculate & apply transform
 	//using data->_transforms here doesn't make a difference? but required to animate renderSkeleton() 
@@ -15,12 +15,12 @@ void ModelNode::render(glm::mat4 transform)
 	//Render all meshes
 	for (auto &&mesh : meshes)
 	{
-        mesh->render(transform);
+		mesh->render(transform, shader);
 	}
 	//Recursively render all children
 	for (auto &&child : children)
 	{
-		child->render(transform);
+		child->render(transform, shader);
 	}
 }
 void ModelNode::renderSkeleton(Draw &pen, glm::mat4 parentTransform, glm::vec4 pt0)

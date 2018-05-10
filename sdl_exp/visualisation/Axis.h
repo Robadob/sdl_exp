@@ -27,6 +27,11 @@ public:
 	* Provides projection matrix to the shader
 	*/
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+	/**
+	* Provides lights buffer to the shader
+	* @param bufferBindingPoint Set the buffer binding point to be used for rendering
+	*/
+	void setLightsBuffer(GLuint bufferBindingPoint) override;
 private:
 	Draw pen;
 };

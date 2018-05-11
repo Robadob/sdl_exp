@@ -87,15 +87,13 @@ void main()
     
     //Init general values used in light computation
     
-    for(unsigned int i = 0;i<lightsCount;i++)
+    for(uint i = 0;i<lightsCount;i++)
     {
       //Init light specific values      
-      vec3 eyeLightPosition = (_viewMat * vec4(light[i].position,1)).xyz;
-      vec3 surfaceToLight = normalize(eyeLightPosition - eyeVertex);
+      vec3 surfaceToLight = normalize(light[i].position.xyz - eyeVertex);
       if(light[i].spotCosCutoff>=0&&light[i].spotCosCutoff<=1.0f)
       {//Spotlight
-        vec3 eyeLightDirection = (_viewMat * vec4(light[i].spotDirection,0.0f)).xyz;
-        if(dot(surfaceToLight,eyeLightDirection)>=light[i].spotCosCutoff)
+        if(dot(surfaceToLight,light[i].spotDirection)>=light[i].spotCosCutoff)
         {//Skip spotlight if we are out of it's cone
           continue;
         }

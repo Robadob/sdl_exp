@@ -14,9 +14,32 @@ class SpotLight;
  */
 class LightsBuffer : private UniformBuffer
 {
+	struct LightUniformBlock
+	{
+		unsigned int lightsCount;
+		unsigned int padding1;
+		unsigned int padding2;
+		unsigned int padding3;
+		LightProperties lights[MAX_LIGHTS];
+	};
 public:
-	LightsBuffer();
-	~LightsBuffer();
+	/**
+	 * Struct to hold temp properties
+	 */
+	struct TLightProperties
+	{
+		TLightProperties()
+			: spotCutoff(180.0f)
+			, position(0, 0, 1, 1)
+			, spotDirection(0, 0, -1, 0)
+		{
+			
+		}
+		float spotCutoff;
+		glm::vec4 position;
+		glm::vec4 spotDirection;
+	};
+	LightsBuffer(const glm::mat4 *viewMatPtr = nullptr);
 	/**
 	 * Increments the number of lights and returns the newest light as a point light
 	 * @throws runtime_error If the number of lights would exceed MAX_LIGHTS
@@ -40,17 +63,13 @@ public:
 	 */
 	SpotLight getSpotLight(unsigned int index);
 	/**
-	 * Tells the buffer that internal data has been changed, so that it will update the GPU copy of the buffer
-	 */
-	void HasChanged() { hasChanged = true; }
-	/**
 	 * Asks the buffer to update the GPU copy if necessary
 	 */
 	void update();
 	/**
 	 * Returns the number of allocated lights
 	 */
-	unsigned int getCount() const { return lightsCount; }
+	unsigned int getCount() const { return uniformBlock.lightsCount; }
 	/**
 	 * Returns the maximum number of lights that can be allocated
 	 */
@@ -58,11 +77,16 @@ public:
 	using BufferCore::getName;
 	using BufferCore::getType;
 	using BufferCore::getBufferBindPoint;
+	/**
+	* Sets the pointer from which the View matrix should be loaded from
+	* @param viewMat A pointer to the viewMatrix to be tracked
+	* @note This pointer is likely provided by a Camera subclass
+	*/
+	void setViewMatPtr(const glm::mat4  *viewMat) { viewMatPtr = viewMat; };
 private:
-	void *data;
-	unsigned int &lightsCount;
-	LightProperties* const lights;
-	bool hasChanged;
+	LightUniformBlock uniformBlock;
+	TLightProperties tProperties[MAX_LIGHTS];
+	const glm::mat4 *viewMatPtr;
 };
 
 #include "PointLight.h"

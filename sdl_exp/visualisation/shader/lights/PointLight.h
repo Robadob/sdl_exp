@@ -9,12 +9,12 @@ class PointLight
 {
 protected:
 	friend class LightsBuffer;
-	inline PointLight(LightsBuffer *buffer, LightProperties *props, unsigned int index);
+	inline PointLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index);
 	/**
 	 * Direct write access to  position in light buffer
 	 */
 	LightProperties * const properties;
-	LightsBuffer * const buffer;
+	LightsBuffer::TLightProperties * const tProperties;
 	const unsigned int index;
 public:
 	inline PointLight(const PointLight &old);
@@ -26,7 +26,7 @@ public:
 	 * The position of the light in world space
 	 */
 	inline void Position(const glm::vec3 &xyz);
-	glm::vec3 Position() const { return properties->position; }
+	glm::vec3 Position() const { return tProperties->position; }
 	/**
 	 * Convenience method for setting a single colour light
 	 * @param rgb Full colour of light

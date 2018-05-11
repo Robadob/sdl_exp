@@ -7,7 +7,7 @@ BasicScene::BasicScene(Visualisation& vis)
 	, renderSkyboxState(true)
 	, axis(std::make_shared<Axis>(25.0f))
 	, skybox(std::make_unique<Skybox>())
-	, lighting(std::make_shared<LightsBuffer>())
+	, lighting(std::make_shared<LightsBuffer>(vis.getCamera()->getViewMatPtr()))
 {
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());

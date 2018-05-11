@@ -5,27 +5,23 @@ inline SpotLight::SpotLight(const PointLight &old)
 	: PointLight(old)
 { }
 
-inline SpotLight::SpotLight(LightsBuffer *buffer, LightProperties *props, unsigned int index)
-	: PointLight(buffer, props, index)
+inline SpotLight::SpotLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index)
+	: PointLight(props, tProps, index)
 {
-	properties->spotCutoff = 45.0f;//Set the spotlight setting
-	properties->spotCosCutoff = cos(properties->spotCutoff);
-	buffer->HasChanged();
+	tProperties->spotCutoff = 45.0f;//Set the spotlight setting
+	properties->spotCosCutoff = cos(tProperties->spotCutoff);
 }
 
 inline void SpotLight::Direction(const glm::vec3 &dir)
 {
-	properties->spotDirection = dir;
-	buffer->HasChanged();
+	tProperties->spotDirection = glm::vec4(dir, 0.0f);
 }
 inline void SpotLight::CutOff(const float &degrees)
 {
-	properties->spotCutoff = degrees;
-	properties->spotCosCutoff = cos(properties->spotCutoff);
-	buffer->HasChanged();
+	tProperties->spotCutoff = degrees;
+	properties->spotCosCutoff = cos(tProperties->spotCutoff);
 }
 inline void SpotLight::Exponent(const float &exponent)
 {
 	properties->spotExponent = exponent;
-	buffer->HasChanged();
 }

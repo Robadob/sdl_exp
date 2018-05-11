@@ -6,20 +6,20 @@ class SpotLight : public PointLight
 {
 protected:
 	friend class LightsBuffer;
-	inline SpotLight(LightsBuffer *buffer, LightProperties *props, unsigned int index);
+	inline SpotLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index);
 public:
 	inline SpotLight(const PointLight &old);
 	/**
 	 * The direction that the spotlight faces
 	 */
 	inline void Direction(const glm::vec3 &dir);
-	glm::vec3 Direction() const { return properties->spotDirection; }
+	glm::vec3 Direction() const { return tProperties->spotDirection; }
 	/**
 	 * The angle of the spotlight's beam in degrees
 	 * This value is valid from 0-90 inclusive
 	 */
 	inline void CutOff(const float &degrees);
-	float CutOff() const { return properties->spotCutoff; }
+	float CutOff() const { return tProperties->spotCutoff; }
 	float CosCutOff() const { return properties->spotCosCutoff; }
 	/**
 	 * The light's intensity is highest in the center of the cone.

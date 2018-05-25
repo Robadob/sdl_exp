@@ -262,23 +262,27 @@ public:
 	/**
 	 * Stores the details necessary for passing vertex position attributes to the shader via the modern method
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setPositionsAttributeDetail(VertexAttributeDetail vad);
+	void setPositionsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Stores the details necessary for passing vertex normal attributes
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setNormalsAttributeDetail(VertexAttributeDetail vad);
+	void setNormalsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Stores the details necessary for passing vertex color attributes to the shader
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setColorsAttributeDetail(VertexAttributeDetail vad);
+	void setColorsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Stores the details necessary for passing vertex texture attributes to the shader
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
+	void setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Binds the named fragment shader output attribute to the specified framebuffer attachment point
 	 * @param attachmentPoint The GL_COLOR_ATTACHMENT index (likely in the range 0-7) 
@@ -318,7 +322,13 @@ public:
 	 * or went missing after a shader reload
 	 */
 	std::list<GenericVAD> lostGvads;
-	bool addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad);
+	/**
+	 * Stores the details necessary for passing generic vertex attributes to the shader
+	 * @param attributeName The name of the attribute in the shader
+	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
+	 */
+	bool addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad, bool update = true);
 
     inline void clearModelMatPtr(){ this->modelMat.matrixPtr = nullptr; }
     inline void clearViewMatPtr(){ this->viewMat.matrixPtr = nullptr; }

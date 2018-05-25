@@ -40,7 +40,8 @@ inline static void InitGlew() {
         fprintf(stderr, "Error: %s\n", (char *)glewGetErrorString(err));
         getchar();
         exit(1);
-    }
+	}
+	GLuint error = glGetError();//This error can be ignored, GL_INVALID_ENUMERANT
 }
 #define GLEW_INIT() (InitGlew())
 

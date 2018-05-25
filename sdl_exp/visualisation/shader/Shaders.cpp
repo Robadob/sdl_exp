@@ -32,7 +32,8 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
 { }
 Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath, std::initializer_list <const char *> geometryShaderPath)
     : ShaderCore()
-    , vao(0)
+    , fbo(0)
+	, vao(0)
     , modelMat()
     , viewMat()
     , projectionMat()
@@ -440,31 +441,35 @@ void Shaders::_clearProgram()
 	GL_CALL(glBindVertexArray(0));
 }
 //Bindings
-void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad)
+void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad, bool update)
 {
     vad.location = this->positions.location;
     this->positions = vad;
-	buildVAO();
+	if (update)
+		buildVAO();
 }
-void Shaders::setNormalsAttributeDetail(VertexAttributeDetail vad)
+void Shaders::setNormalsAttributeDetail(VertexAttributeDetail vad, bool update)
 {
     vad.location = this->normals.location;
-    this->normals = vad;
-	buildVAO();
+	this->normals = vad;
+	if (update)
+		buildVAO();
 }
-void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad)
+void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad, bool update)
 {
     vad.location = this->colors.location;
 	this->colors = vad;
-	buildVAO();
+	if (update)
+		buildVAO();
 }
-void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
+void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update)
 {
     vad.location = this->texcoords.location;
 	this->texcoords = vad;
-	buildVAO();
+	if (update)
+		buildVAO();
 }
-bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad)
+bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad, bool update)
 {
 	GenericVAD gvad(vad, attributeName);
 	gvad.location = -1;
@@ -478,6 +483,8 @@ bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttribu
 		{
 			gvad.location = a_N.first;
 			gvads.push_back(gvad);
+			if (update)
+				buildVAO();
 			buildVAO();
 			return true;
 		}

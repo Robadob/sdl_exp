@@ -27,8 +27,8 @@ void Skybox::render(unsigned int shaderIndex)
 {
     // Enable/Disable features
     GL_CALL(glDisable(GL_DEPTH_TEST));
-	Entity::render(shaderIndex);
-	GL_CALL(glEnable(GL_DEPTH_TEST));
+    Entity::render(shaderIndex);
+    GL_CALL(glEnable(GL_DEPTH_TEST));
 }
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used

@@ -69,16 +69,17 @@ void BasicScene::setRenderAxis(bool state){
     this->renderAxisState = state;
 }
 void BasicScene::defaultLighting(){
-    glEnable(GL_LIGHT0);
-    glm::vec3 eye = this->visualisation.getCamera()->getEye();
-    float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
-    float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
-    float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
-    float white[4] = { 1, 1, 1, 1 };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+	fprintf(stderr, "No lighting atm ff removed.\n");
+    //glEnable(GL_LIGHT0);
+    //glm::vec3 eye = this->visualisation.getCamera()->getEye();
+    //float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
+    //float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
+    //float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
+    //float white[4] = { 1, 1, 1, 1 };
+    //glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+    //glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
     // Spotlight stuff
     //float angle = 180.0f;

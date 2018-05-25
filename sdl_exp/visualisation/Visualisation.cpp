@@ -68,9 +68,9 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
     this->window = SDL_CreateWindow
         (
@@ -106,16 +106,16 @@ bool Visualisation::init(){
         GL_CALL(glEnable(GL_CULL_FACE));
         GL_CALL(glShadeModel(GL_SMOOTH));
         GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-        GL_CALL(glEnable(GL_LIGHTING));
-        GL_CALL(glEnable(GL_LIGHT0));
-        GL_CALL(glEnable(GL_COLOR_MATERIAL));
-        GL_CALL(glEnable(GL_NORMALIZE));
         GL_CALL(glBlendEquation(GL_FUNC_ADD));
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         setMSAA(this->msaaState);
 
         // Setup the projection matrix
-        this->resizeWindow();
+		this->resizeWindow(); 
+    	
+		GLuint vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
         GL_CHECK();
         return true;
     }
@@ -330,7 +330,6 @@ void Visualisation::_run()
 			while (this->continueRender){
 				// Update the fps in the window title
 				this->updateFPS();
-
 				this->render();
 			}
 			SDL_StopTextInput();
@@ -341,8 +340,31 @@ void Visualisation::_run()
 			//Hide window
 			SDL_HideWindow(window);
 		}
+  }
+  this->close();
+}
+/*
+Toggles whether the skybox should be used or not
+@param state The desired skybox state
+*/
+void Visualisation::setSkybox(bool state){
+    if (state&&!this->skybox)
+    {
+        this->skybox = new Skybox();
+        this->skybox->setModelViewMatPtr(&this->camera);
+        this->skybox->setProjectionMatPtr(this);
+        this->skybox->setYOffset(-1.0f);
+    }
+    else if (!state&&this->skybox)
+    {
+        delete this->skybox;
+        this->skybox = 0;
     }
 }
+/*
+Toggles whether Multi-Sample Anti-Aliasing should be used or not
+@param state The desired MSAA state
+*/
 void Visualisation::setMSAA(bool state){
     this->msaaState = state;
     if (this->msaaState)
@@ -422,7 +444,7 @@ void Visualisation::resizeWindow(){
     // Use the sdl drawable size
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
     // Get the view frustum using GLM. Alternatively glm::perspective could be used.
-	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
+    this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
     // Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
     if (this->scene)

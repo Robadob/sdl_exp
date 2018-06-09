@@ -26,7 +26,7 @@ namespace Stock
 		const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", "", Stock::Shaders::COLOR };//Remove texture?
 		const Model CUBE{ "../models/cube.obj", "", Stock::Shaders::COLOR };
 		const Model ROTHWELL{ "../models/rothwell-wy-1.obj", "", Stock::Shaders::PHONG };
-		const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::TEXTURE };
+		const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::PHONG };
 		const Model TEAPOT{ "../models/teapot.obj", "", Stock::Shaders::PHONG };
 		const Model PLANE{ "../models/plane.obj", "", Stock::Shaders::FLAT };
     };
@@ -108,7 +108,7 @@ public:
 	/**
 	 * Overrides the material in use, this will lose any textures from the exiting material
 	 */
-	void setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular = glm::vec3(1), const float &shininess = 128 * 0.6f, const float &opacity = 1.0f);
+	void setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular = glm::vec3(0.1f), const float &shininess = 10.0f, const float &opacity = 1.0f);
 	void setMaterial(const Stock::Materials::Material &mat);
     void setLocation(glm::vec3 location);
     void setRotation(glm::vec4 rotation);

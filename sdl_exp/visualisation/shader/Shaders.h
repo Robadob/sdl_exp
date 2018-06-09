@@ -20,21 +20,21 @@ namespace Stock
             char *geometry;
         };
         const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
-        const ShaderSet FLAT{ "../shaders/flat.vert", "../shaders/flat.frag", nullptr };
-        const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", nullptr };
+        const ShaderSet FLAT{ "../shaders/flat.vert", "../shaders/material_flat.frag", nullptr };
+        const ShaderSet PHONG{ "../shaders/default.vert", "../shaders/material_phong.frag", nullptr };
 		const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
 		const ShaderSet COLOR_NOSHADE{ "../shaders/color.vert", "../shaders/color_noshade.frag", nullptr };
-		const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture_material.frag", nullptr };
-		const ShaderSet TEXTURE_BONE{ "../shaders/texture_bone.vert", "../shaders/texture_material.frag", nullptr };
+		const ShaderSet BONE{ "../shaders/bone.vert", "../shaders/material_phong.frag", nullptr };
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
-		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", nullptr };
-		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", nullptr };
-		const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", nullptr };
-		const ShaderSet SPRITE2D_HEAT{ "../shaders/texture.vert", "../shaders/sprite2dHeat.frag", nullptr };
+		const ShaderSet INSTANCED_FLAT{ "../shaders/instanced_flat.vert", "../shaders/material_flat.frag", nullptr };
+		const ShaderSet INSTANCED_PHONG{ "../shaders/instanced_default.vert", "../shaders/material_phong.frag", nullptr };
+		const ShaderSet TEXT{ "../shaders/default.vert", "../shaders/text.frag", nullptr };
+		const ShaderSet SPRITE2D{ "../shaders/default.vert", "../shaders/sprite2d.frag", nullptr };
+		const ShaderSet SPRITE2D_HEAT{ "../shaders/default.vert", "../shaders/sprite2dHeat.frag", nullptr };
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
         const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
-        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/shadow.frag", nullptr };
-        const ShaderSet TEXTURE_SHADOW{ "../shaders/shadow.vert", "../shaders/shadow.frag", nullptr };
+        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
+        const ShaderSet TEXTURE_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
     }
 }
 /**

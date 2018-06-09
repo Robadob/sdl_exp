@@ -1,16 +1,19 @@
 #version 430
 
+uniform mat3 _normalMat;
+uniform mat4 _modelViewProjectionMat;
 uniform mat4 _modelViewMat;
-uniform mat4 _projectionMat;
 
 in vec3 _vertex;
+in vec2 _texCoords;
 
-out vec3 u_normal;
+out vec3 eyeVertex;
+out vec2 texCoords;
 
 void main()
 {
-  //pass _vertex to frag shader to calculate face normal
-  u_normal = (_modelViewMat * vec4(_vertex,1.0f)).rgb;
-  //apply model view proj
-  gl_Position = _projectionMat * _modelViewMat * vec4(_vertex,1.0f);
+  gl_Position = _modelViewProjectionMat * vec4(_vertex,1.0f);
+
+  eyeVertex = (_modelViewMat * vec4(_vertex, 1.0f)).rgb;
+  texCoords = _texCoords;
 }

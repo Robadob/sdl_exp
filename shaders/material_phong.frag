@@ -125,7 +125,7 @@ void main()
     specular *= lightSpecular;   
   }
 
-  vec3 color = ambient + diffuse.rgb + specular;
+  vec3 color = clamp(ambient + diffuse.rgb + specular,0,1);
 
   fragColor = vec4(color, min(diffuse.a, material[_materialID].opacity));//What to do with opac?
   

@@ -12,7 +12,7 @@ namespace Stock
 	{
 		struct Material
 		{
-			Material(const char *name, const glm::vec3 &ambient, const glm::vec3 &specular, const glm::vec3 &diffuse, const float &shininess, const float &opacity = 1.0f)
+			Material(const char *name, const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular, const float &shininess, const float &opacity = 1.0f)
 				: name(name)
 				, ambient(ambient)
 				, diffuse(diffuse)

@@ -190,9 +190,9 @@ void Material::bake()
 	updatePropertiesUniform(true);
 	//Create default shader
 	if (shaderRequiresBones)
-		defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE_BONE);//Temp
+		defaultShader = std::make_shared<Shaders>(Stock::Shaders::BONE);//Temp
 	else
-		defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE);//Temp
+		defaultShader = std::make_shared<Shaders>(Stock::Shaders::PHONG);//Temp
 	//Setup material buffer
 	defaultShader->setMaterialBuffer(buffer);
 	defaultShader->setMaterialID(bufferIndex);

@@ -6,7 +6,7 @@
 //Create content struct
 TwoPassScene::SceneContent::SceneContent()
     : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::TEXTURE_SHADOW }))
-    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
     , blur(new GaussianBlur(5,1.75f))

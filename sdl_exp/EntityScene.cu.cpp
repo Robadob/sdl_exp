@@ -5,11 +5,11 @@ Constructor, modify this to change what happens
 */
 EntityScene::EntityScene(Visualisation &visualisation)
 	: BasicScene(visualisation)
-	, deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::TEXTURE))
+	, deerModel(new Entity(Stock::Models::DEER, 10.0f, Stock::Shaders::PHONG))
 	, colorModel(new Entity(Stock::Models::ROTHWELL, 45.0f, Stock::Shaders::COLOR))
 	, tick(0.0f)
 	, polarity(-1)
-	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED))
+	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED_FLAT))
 #ifdef __CUDACC__
 	, cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
 	, texBuf(TextureBuffer<float>::make(cuTexBuf, true))
@@ -43,7 +43,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #endif
 	this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
 	glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
-	this->instancedSphere->setMaterial(color / 0.1f, color);
+	this->instancedSphere->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
 	//Approx sun point light 
 	//Really wants to be abitrary directional light, but putting it really far out with constant attenuation should also work
 	PointLight p = Lights()->addPointLight();
@@ -54,7 +54,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	p.ConstantAttenuation(1.0f);
 	PointLight _p = Lights()->addPointLight();
 	_p.Ambient(glm::vec3(0.0f));
-	_p.Diffuse(glm::vec3(0.2f));
+	_p.Diffuse(glm::vec3(0.5f));
 	_p.Specular(glm::vec3(0.02f));
 	_p.ConstantAttenuation(1.0f);
 }
@@ -86,7 +86,6 @@ void EntityScene::render()
     deerModel->render();
     this->instancedSphere->renderInstances(100);
 
-
 	bob->render();
 	bob->renderSkeleton();
 }
@@ -96,7 +95,7 @@ Called when the user requests a reload
 void EntityScene::reload()
 {
 	glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
-    this->instancedSphere->setMaterial(color/0.1f, color);
+	this->instancedSphere->setMaterial(color / 5.0f, color, glm::vec3(0), 0.0f);
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)

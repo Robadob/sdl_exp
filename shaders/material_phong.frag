@@ -60,7 +60,7 @@ uniform sampler2D t_ambient;
 uniform sampler2D t_diffuse;
 uniform sampler2D t_specular;
 
-in vec3 eyeVertex;//Vertex in world coordinates
+in vec3 eyeVertex;
 in vec3 eyeNormal;
 in vec2 texCoords;
 

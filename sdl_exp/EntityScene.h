@@ -27,6 +27,7 @@ private:
 #endif
     std::shared_ptr<TextureBuffer<float>> texBuf;
     std::shared_ptr<Entity> instancedSphere;
+	const unsigned int INSTANCE_COUNT;
     std::shared_ptr<Entity> deerModel;
 	std::shared_ptr<Entity> colorModel;
 	std::shared_ptr<Model> bob;

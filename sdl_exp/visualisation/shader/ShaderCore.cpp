@@ -4,6 +4,7 @@
 #include <regex>
 #include <glm/gtc/type_ptr.hpp>
 #include "../util/StringUtils.h"
+#include "Shaders.h"
 
 bool ShaderCore::exitOnError = false;//Tempted to use pre-processor macros to swap this default to true on release mode
 
@@ -162,8 +163,8 @@ void ShaderCore::setupBindings()
 			if (!rtn.second)fprintf(stderr, "Somehow a buffer was bound twice.");
 			GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, d.bindingPoint));
 		}
-		else//If the buffer isn't found, remind the user
-		{
+		else if (strcmp(d.nameInShader, Shaders::LIGHT_UNIFORM_BLOCK_NAME) && strcmp(d.nameInShader, Shaders::MATERIAL_UNIFORM_BLOCK_NAME))
+		{//If the buffer isn't found, remind the user, Don't warn for known system bufferS
 			lostBuffers.push_front(d);
 			printf("%s: Buffer '%s' could not be located on shader reload.\n", this->shaderTag, d.nameInShader);
 		}
@@ -512,8 +513,8 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 			GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, bufferBindingPoint));
 			return true;
 		}
-		else
-		{
+		else if (strcmp(bufferNameInShader, Shaders::LIGHT_UNIFORM_BLOCK_NAME) && strcmp(bufferNameInShader, Shaders::MATERIAL_UNIFORM_BLOCK_NAME))
+		{//Don't warn for known system buffers
 			fprintf(stderr, "%s: Buffer named: %s was not found.\n", shaderTag, bufferNameInShader);
 		}
 	}

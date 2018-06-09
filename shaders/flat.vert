@@ -1,6 +1,5 @@
 #version 430
 
-uniform mat3 _normalMat;
 uniform mat4 _modelViewProjectionMat;
 uniform mat4 _modelViewMat;
 

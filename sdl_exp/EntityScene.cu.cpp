@@ -10,6 +10,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, tick(0.0f)
 	, polarity(-1)
 	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED_FLAT))
+	, INSTANCE_COUNT(100)
 #ifdef __CUDACC__
 	, cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
 	, texBuf(TextureBuffer<float>::make(cuTexBuf, true))
@@ -31,12 +32,13 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #ifdef __CUDACC__
 	cuInit();
 #else
-	float *tempData = (float*)malloc(sizeof(float) * 3 * 100);
-	for (int i = 0; i < 100; i++)
+	const float PI = 3.14159265f * 2.0f / INSTANCE_COUNT;
+	float *tempData = (float*)malloc(sizeof(float) * 3 * INSTANCE_COUNT);
+	for (unsigned int i = 0; i < INSTANCE_COUNT; i++)
 	{
-		tempData[(i * 3) + 0] = 100 * (float)sin(i*3.6);
-		tempData[(i * 3) + 1] = -50.0f;
-		tempData[(i * 3) + 2] = 100 * (float)cos(i*3.6);
+		tempData[(i * 3) + 0] = INSTANCE_COUNT * (float)sin(i*PI);
+		tempData[(i * 3) + 1] = INSTANCE_COUNT/-2.0f;
+		tempData[(i * 3) + 2] = INSTANCE_COUNT * (float)cos(i*PI);
 	}
 	texBuf->setData(tempData);
 	free(tempData);
@@ -71,7 +73,8 @@ void EntityScene::update(unsigned int frameTime)
 #ifdef __CUDACC__
     cuUpdate();
 #endif
-	this->bob->update(SDL_GetTicks()/1000.0f);
+	if (this->polarity)
+		this->bob->update(SDL_GetTicks()/1000.0f);
 
 	//Emulate full bright, attach the one light source to the camera
 	auto p = Lights()->getPointLight(1);
@@ -84,7 +87,7 @@ void EntityScene::render()
 {
     colorModel->render();
     deerModel->render();
-    this->instancedSphere->renderInstances(100);
+	this->instancedSphere->renderInstances(INSTANCE_COUNT);
 
 	bob->render();
 	bob->renderSkeleton();

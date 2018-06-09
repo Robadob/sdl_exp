@@ -9,7 +9,7 @@ class PointLight
 {
 protected:
 	friend class LightsBuffer;
-	inline PointLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index);
+	inline PointLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index, bool init=true);
 	/**
 	 * Direct write access to  position in light buffer
 	 */

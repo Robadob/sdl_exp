@@ -30,7 +30,7 @@ PointLight LightsBuffer::getPointLight(unsigned int index)
 {
 	if (index<uniformBlock.lightsCount)
 	{
-		return PointLight(&uniformBlock.lights[index], &tProperties[index], index);
+		return PointLight(&uniformBlock.lights[index], &tProperties[index], index, false);
 	}
 	throw std::runtime_error("LightsBuffer::getSpotLight(): Light index is invalid.\n");
 }
@@ -38,7 +38,7 @@ SpotLight LightsBuffer::getSpotLight(unsigned int index)
 {
 	if (index<uniformBlock.lightsCount)
 	{
-		return SpotLight(&uniformBlock.lights[index], &tProperties[index], index);
+		return SpotLight(&uniformBlock.lights[index], &tProperties[index], index, false);
 	}
 	throw std::runtime_error("LightsBuffer::getSpotLight(): Light index is invalid.\n");
 }

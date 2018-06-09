@@ -52,6 +52,11 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	p.Diffuse(glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
 	p.Specular(glm::vec3(1, 1, 1));
 	p.ConstantAttenuation(1.0f);
+	PointLight _p = Lights()->addPointLight();
+	_p.Ambient(glm::vec3(0.0f));
+	_p.Diffuse(glm::vec3(0.2f));
+	_p.Specular(glm::vec3(0.02f));
+	_p.ConstantAttenuation(1.0f);
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -69,7 +74,8 @@ void EntityScene::update(unsigned int frameTime)
 	this->bob->update(SDL_GetTicks()/1000.0f);
 
 	//Emulate full bright, attach the one light source to the camera
-	Lights()->getPointLight(0).Position(visualisation.getCamera()->getEye());
+	auto p = Lights()->getPointLight(1);
+	p.Position(visualisation.getCamera()->getEye());
 }
 /*
 Called once per frame when Scene render calls should be executed

@@ -6,7 +6,7 @@ class SpotLight : public PointLight
 {
 protected:
 	friend class LightsBuffer;
-	inline SpotLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index);
+	inline SpotLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index, bool init = true);
 public:
 	inline SpotLight(const PointLight &old);
 	/**

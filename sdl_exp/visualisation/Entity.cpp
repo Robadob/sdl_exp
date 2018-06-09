@@ -1337,7 +1337,7 @@ void Entity::exportModel() const
 	}
 	if (normals.count && (NORMALS_SIZE == 3))
 	{
-		fwrite(positions.data, positions.componentSize, positions.count*positions.components, file);
+		fwrite(normals.data, positions.componentSize, positions.count*positions.components, file);
 	}
 	if (colors.count && (colors.components == 3 || colors.components == 4))
 	{

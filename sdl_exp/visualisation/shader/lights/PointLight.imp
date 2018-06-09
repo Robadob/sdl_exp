@@ -7,14 +7,17 @@ PointLight::PointLight(const PointLight &old)
 	, index(old.index)
 { }
 
-PointLight::PointLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index)
+PointLight::PointLight(LightProperties * const props, LightsBuffer::TLightProperties * const tProps, unsigned int index, bool init)
 	: properties(props)
 	, tProperties(tProps)
 	, index(index)
 {
-	properties[0] = LightProperties();//Initialise light
-	tProperties->spotCutoff = 180.0f;
-	properties->spotCosCutoff = cos(tProperties->spotCutoff);
+	if(init)
+	{
+		properties[0] = LightProperties();//Initialise light
+		tProperties->spotCutoff = 180.0f;
+		properties->spotCosCutoff = cos(tProperties->spotCutoff);
+	}
 }
 
 void PointLight::Color(const glm::vec3 &rgb, const float &ambiFactor, const float &diffFactor, const float &specFactor)

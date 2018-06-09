@@ -94,7 +94,6 @@
     <ClCompile Include="visualisation\Draw.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
-    <ClCompile Include="visualisation\MaterialOld.cpp" />
     <ClCompile Include="visualisation\model\Animation.cpp" />
     <ClCompile Include="visualisation\model\Material.cpp" />
     <ClCompile Include="visualisation\model\Mesh.cpp" />
@@ -152,7 +151,6 @@
     <ClInclude Include="visualisation\interface\RenderTarget.h" />
     <ClInclude Include="visualisation\interface\Scene.h" />
     <ClInclude Include="visualisation\interface\Viewport.h" />
-    <ClInclude Include="visualisation\MaterialOld.h" />
     <ClInclude Include="visualisation\model\Animation.h" />
     <ClInclude Include="visualisation\model\BoundingBox.h" />
     <ClInclude Include="visualisation\model\Material.h" />

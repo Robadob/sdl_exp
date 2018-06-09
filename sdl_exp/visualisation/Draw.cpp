@@ -35,7 +35,7 @@ Draw::Draw(const unsigned int &bufferLength, const glm::vec4 &initialColor, cons
 	colors.count = DEFAULT_INITIAL_VBO_LENGTH;
 	colors.data = nullptr;
 
-	shaders->setPositionsAttributeDetail(vertices);
+	shaders->setPositionsAttributeDetail(vertices, false);
 	shaders->setColorsAttributeDetail(colors);
 }
 Draw::~Draw()
@@ -287,7 +287,7 @@ void Draw::resize(unsigned int newLength)
 	GL_CALL(glDeleteBuffers(1, &colors.vbo));
 	vertices.vbo = _vbo;
 	colors.vbo = _cvbo;
-	shaders->setPositionsAttributeDetail(vertices);
+	shaders->setPositionsAttributeDetail(vertices, false);
 	shaders->setColorsAttributeDetail(colors);
 	vboLen = newLength;
 }

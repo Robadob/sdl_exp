@@ -14,14 +14,6 @@ class SpotLight;
  */
 class LightsBuffer : private UniformBuffer
 {
-	struct LightUniformBlock
-	{
-		unsigned int lightsCount;
-		unsigned int padding1;
-		unsigned int padding2;
-		unsigned int padding3;
-		LightProperties lights[MAX_LIGHTS];
-	};
 public:
 	/**
 	 * Struct to hold temp properties

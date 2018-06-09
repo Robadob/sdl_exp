@@ -16,7 +16,8 @@ TwoPassScene::SceneContent::SceneContent()
 	, shadowIn()
     , shadowOut(Texture2D::make(shadowDims, { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
-    planeModel->setColor(glm::vec3(1));//White
+	planeModel->setMaterial(Stock::Materials::RED_PLASTIC);
+	sphereModel->setMaterial(Stock::Materials::COPPER);
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
@@ -43,11 +44,19 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
-    content->lightModel->setColor(glm::vec3(1));
+	content->lightModel->setMaterial(Stock::Materials::WHITE_PLASTIC);
 
-    content->deerModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos),3);
-    content->sphereModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
-    content->planeModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
+	SpotLight p = Lights()->addSpotLight();
+	p.Position(this->content->pointlightPos);
+	p.Ambient(glm::vec3(0.1f));
+	p.Diffuse(glm::vec3(0.9f));
+	p.Specular(glm::vec3(1, 1, 1));
+	p.ConstantAttenuation(1.0f);
+	p.Direction(this->content->pointlightTarget - this->content->pointlightPos);
+	p.CutOff(45.0f);
+    //content->deerModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos),3);
+    //content->sphereModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
+    //content->planeModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
 
     //Spotlight camera at pointlightPos looking in pointlightTarget, with up vector looking up y axis
     //These must be set *AFTER* the parent entities have been registered (need to fiddle with shaders to better handle this use case)
@@ -86,7 +95,11 @@ void TwoPassScene::update(unsigned int frameTime)
         content->pointlightTarget,
         glm::vec3(0, 1, 0)
         );
-    this->content->lightModel->setLocation(this->content->pointlightPos);
+
+	//Emulate full bright, attach the one light source to the camera
+	Lights()->getSpotLight(0).Position(this->content->pointlightPos);
+	Lights()->getSpotLight(0).Direction(this->content->pointlightTarget - this->content->pointlightPos);
+	this->content->lightModel->setLocation(this->content->pointlightPos);
 	//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
 	//this->content->deerModel->setLocation(glm::vec3(20 * sin(this->tick), 0, 20 * cos(this->tick)));
 }
@@ -134,6 +147,7 @@ TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content
 //Renders the scene to a depth texture from the lights perspective
 void TwoPassScene::ShadowPass::render()
 {
+	GL_CALL(glDisable(GL_BLEND));
     content->deerModel->render(0);
     content->sphereModel->render(0);
     content->planeModel->render(0);

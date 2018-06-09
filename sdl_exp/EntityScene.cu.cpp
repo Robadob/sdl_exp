@@ -42,7 +42,8 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	free(tempData);
 #endif
 	this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
-	this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
+	this->instancedSphere->setMaterial(color / 0.1f, color);
 	//Approx sun point light 
 	//Really wants to be abitrary directional light, but putting it really far out with constant attenuation should also work
 	PointLight p = Lights()->addPointLight();
@@ -66,6 +67,9 @@ void EntityScene::update(unsigned int frameTime)
     cuUpdate();
 #endif
 	this->bob->update(SDL_GetTicks()/1000.0f);
+
+	//Emulate full bright, attach the one light source to the camera
+	Lights()->getPointLight(0).Position(visualisation.getCamera()->getEye());
 }
 /*
 Called once per frame when Scene render calls should be executed
@@ -75,6 +79,8 @@ void EntityScene::render()
     colorModel->render();
     deerModel->render();
     this->instancedSphere->renderInstances(100);
+
+
 	bob->render();
 	bob->renderSkeleton();
 }
@@ -83,7 +89,8 @@ Called when the user requests a reload
 */
 void EntityScene::reload()
 {
-    this->instancedSphere->setColor(glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX));
+	glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
+    this->instancedSphere->setMaterial(color/0.1f, color);
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)

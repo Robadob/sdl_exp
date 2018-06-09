@@ -2,7 +2,7 @@
 #include "../Texture/Texture2D.h"
 Material *Material::active = nullptr;
 const char * Material::TEX_NAME[13] = { "t_none", "t_ambient", "t_diffuse", "t_specular", "t_emissive", "t_height", "t_normal", "t_shininess", "t_opacity", "t_displacement", "t_light", "t_reflection", "t_unknown" };
-Material::Material(std::shared_ptr<UniformBuffer> buffer, unsigned int bufferIndex, const char* name)
+Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const char* name, const bool &shaderRequiresBones)
     : name(name==nullptr?"":name)
     , properties()
     , buffer(buffer)
@@ -11,12 +11,24 @@ Material::Material(std::shared_ptr<UniformBuffer> buffer, unsigned int bufferInd
 	, isWireframe(false)
 	, faceCull(true)
 	, shaderMode(Phong)
+	, hasAlpha(false)
+	, shaderRequiresBones(shaderRequiresBones)
 	//, alphaBlendMode{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }//C++11 required (maybe usable VS2015?)
 {
 	alphaBlendMode[0] = GL_SRC_ALPHA;
 	alphaBlendMode[1] = GL_ONE_MINUS_SRC_ALPHA;
 }
 
+Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones)
+	: Material(buffer, bufferIndex, set.name, shaderRequiresBones)
+{
+	properties.ambient = set.ambient;
+	properties.diffuse = set.diffuse;
+	properties.specular = set.specular;
+	properties.shininess = set.shininess;
+	properties.opacity = set.opacity;
+	bake();
+}
 Material::~Material()
 {
 
@@ -92,7 +104,6 @@ void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
 	{
 		//shader->useProgram(false);//Material should already be in use
 		shader->overrideModelMat(&transform);
-		shader->overrideMaterialID(bufferIndex);
 	}
 	else
 	{
@@ -119,8 +130,20 @@ void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
 		{
 			GL_CALL(glDisable(GL_CULL_FACE));
         }
-        
-		GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
+		//Treat all materials as having alpha until we can add a suitable check/switch
+		//if (hasAlpha || this->properties.opacity>1.0f)
+		//{
+			if (!shader)
+			{
+				GL_CALL(glEnable(GL_BLEND));
+				GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
+			}
+		//}
+		//else
+		//{
+		//	GL_CALL(glDisable(GL_BLEND));
+		//}
+
 
 		//Setup material properties with shader (we can guarantee default shader is unique, so it skips this)
 		if (shader)
@@ -166,7 +189,10 @@ void Material::bake()
 	//Update material properties buffer
 	updatePropertiesUniform(true);
 	//Create default shader
-	defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE_BONE);//Temp
+	if (shaderRequiresBones)
+		defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE_BONE);//Temp
+	else
+		defaultShader = std::make_shared<Shaders>(Stock::Shaders::TEXTURE);//Temp
 	//Setup material buffer
 	defaultShader->setMaterialBuffer(buffer);
 	defaultShader->setMaterialID(bufferIndex);

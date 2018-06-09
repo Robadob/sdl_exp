@@ -415,7 +415,7 @@ void Model::loadModel()
     for (unsigned int i = 0; i < scene->mNumMaterials; ++i)
     {
 		//Create new blank material
-		data->materials[i] = std::make_shared<Material>(materialBuffer, i);
+		data->materials[i] = std::make_shared<Material>(materialBuffer, i, "", boneWeights.count!=0);
 		//Setup basic material properties
 		au::getMaterialProps(data->materials[i], scene->mMaterials[i]);
 		//Textures

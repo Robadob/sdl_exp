@@ -24,7 +24,7 @@ namespace Stock
         const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", nullptr };
 		const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
 		const ShaderSet COLOR_NOSHADE{ "../shaders/color.vert", "../shaders/color_noshade.frag", nullptr };
-		const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", nullptr };
+		const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture_material.frag", nullptr };
 		const ShaderSet TEXTURE_BONE{ "../shaders/texture_bone.vert", "../shaders/texture_material.frag", nullptr };
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
 		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", nullptr };
@@ -33,8 +33,8 @@ namespace Stock
 		const ShaderSet SPRITE2D_HEAT{ "../shaders/texture.vert", "../shaders/sprite2dHeat.frag", nullptr };
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
         const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
-        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/phongShadow.frag", nullptr };
-        const ShaderSet TEXTURE_SHADOW{ "../shaders/textureShadow.vert", "../shaders/textureShadow.frag", nullptr };
+        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/shadow.frag", nullptr };
+        const ShaderSet TEXTURE_SHADOW{ "../shaders/shadow.vert", "../shaders/shadow.frag", nullptr };
     }
 }
 /**

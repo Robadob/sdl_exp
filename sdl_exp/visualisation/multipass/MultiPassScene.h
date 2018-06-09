@@ -8,6 +8,7 @@
 #include "../shader/Shaders.h"
 #include "../Visualisation.h"
 #include "RenderPass.h"
+#include "../shader/lights/LightsBuffer.h"
 
 /**
  * This Scene implementation allows each render to occur over multiple passes
@@ -45,6 +46,7 @@ public:
 	 * @return Returning true permits the visualisation to also handle the keypress
 	 */
 	virtual bool keypress(SDL_Keycode keycode, int x, int y) = 0;
+	std::shared_ptr<LightsBuffer> Lights(){ return lighting; }
 protected:
 	/**
 	 * Registers an entity, so the scene can manage it's modelview and projection matrices and reloads
@@ -84,7 +86,11 @@ private:
 	/**
 	* Holds registered render passes so they can be triggered during render
 	*/
-    std::map<int, std::shared_ptr<RenderPass>> rpMap;
+	std::map<int, std::shared_ptr<RenderPass>> rpMap;
+	/**
+	* Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
+	*/
+	std::shared_ptr<LightsBuffer> lighting;
 };
 
 #endif //ifndef __MultiPassScene_h__

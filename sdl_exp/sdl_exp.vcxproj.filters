@@ -176,9 +176,6 @@
     <ClCompile Include="visualisation\model\Material.cpp">
       <Filter>Source Files\Visualisation\Model</Filter>
     </ClCompile>
-    <ClCompile Include="visualisation\MaterialOld.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
     <ClCompile Include="visualisation\Draw.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
@@ -339,12 +336,6 @@
     <ClInclude Include="visualisation\shader\ShaderHeader.h">
       <Filter>Header Files\Visualisation\Shader</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\MaterialOld.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\shader\ShadersVec.h">
-      <Filter>Source Files\Visualisation\Shader</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\shader\lights\PointLight.h">
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
     </ClInclude>
@@ -353,6 +344,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\shader\lights\Spotlight.h">
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\ShadersVec.h">
+      <Filter>Header Files\Visualisation\Shader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -6,12 +6,10 @@
 #include <memory>
 #include <glm/glm.hpp>
 
-#include "MaterialOld.h"
 #include "shader/Shaders.h"
 #include "texture/Texture2D.h"
-#include "Camera.h"
-#include "interface/Viewport.h"
 #include "interface/Renderable.h"
+#include "model/Material.h"
 
 namespace Stock
 {
@@ -94,19 +92,32 @@ public:
 		std::vector<std::shared_ptr<Shaders>> shaders,
         std::shared_ptr<const Texture> texture
 		);
+	explicit Entity(
+		const char *modelPath,
+		Stock::Materials::Material const material,
+		float modelScale = 1.0f
+		);
+	explicit Entity(
+		Stock::Models::Model const model,
+		Stock::Materials::Material const material,
+		float modelScale = 1.0f
+		);
     virtual ~Entity();
 	virtual void render(unsigned int shaderIndex = 0);
-	void renderInstances(int count, unsigned int shaderIndex=0);
-    void setColor(glm::vec3 color);
+	void renderInstances(int count, unsigned int shaderIndex = 0);
+	/**
+	 * Overrides the material in use, this will lose any textures from the exiting material
+	 */
+	void setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular = glm::vec3(1), const float &shininess = 128 * 0.6f, const float &opacity = 1.0f);
+	void setMaterial(const Stock::Materials::Material &mat);
     void setLocation(glm::vec3 location);
     void setRotation(glm::vec4 rotation);
     glm::vec3 getLocation() const;
     glm::vec4 getRotation() const;
-    inline void clearMaterial();
     void exportModel() const;
-    virtual void reload();
+	void reload() override;
 	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex=0) const;
-    void setViewMatPtr(glm::mat4 const *modelViewMat) override;
+    void setViewMatPtr(glm::mat4 const *viewMat) override;
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
 	/**
 	* Provides lights buffer to the shader
@@ -119,18 +130,22 @@ public:
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
 protected:
+	glm::mat4 const * viewMatPtr;
+	glm::mat4 const * projectionMatPtr;
+	GLuint lightBufferBindPt;
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;
     //World scale of the longest side (in the axis x, y or z)
     const float SCALE;
+	float scaleFactor;
     const char *modelPath;
     //Model vertex and face counts
     unsigned int vn_count;
     Shaders::VertexAttributeDetail positions, normals, colors, texcoords, faces;
 
     //Optional material (loaded automaically if detected within model file)
-    MaterialOld *material;
-    glm::vec4 color;
+	std::vector<Material> materials;
+	std::shared_ptr<UniformBuffer> materialBuffer;
     glm::vec3 location;
     glm::vec4 rotation;
 
@@ -138,9 +153,9 @@ protected:
     static void deleteVertexBufferObject(GLuint *vbo);
     void loadModelFromFile();
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
-    void freeMaterial();
     void generateVertexBufferObjects();
 private:
+	glm::mat4 getModelMat() const;
 	glm::vec3 modelMin, modelMax, modelDims;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{
@@ -154,7 +169,6 @@ private:
     bool cullFace;
     const static char *OBJ_TYPE;
     const static char *EXPORT_TYPE;
-    inline static bool endsWith(const char *candidate, const char *suffix);
     void importModel(const char *path);
 
 private:

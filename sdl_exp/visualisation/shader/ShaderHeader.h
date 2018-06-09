@@ -9,19 +9,19 @@
  */
 #ifdef __cplusplus
 #include <glm/glm.hpp>
-//#pragma push_macro("vec3")
 #define vec3 glm::vec3
+#define uint glm::uint
 #endif //#ifdef __cplusplus
     
     struct MaterialProperties
     {
 #ifdef __cplusplus
         MaterialProperties()
-            : diffuse(0)
+            : ambient(0)
             , opacity(1.0f)
-            , specular(0)
+            , diffuse(0)
             , shininess(0)
-            , ambient(0)
+            , specular(0)
             , shininessStrength(1.0f)
             , emissive(0)
             , refractionIndex(1.0f)
@@ -38,7 +38,7 @@
 		vec3 emissive;          //Emissive color (light emitted)
         float refractionIndex;
 		vec3 transparent;       //Transparent color, multiplied with translucent light to construct final color
-        unsigned int bitmask;   //bitmask to calculate which textures are available
+        uint bitmask;           //bitmask to calculate which textures are available
     };
 
 	struct LightProperties
@@ -52,7 +52,7 @@
 			: ambient(0)
 			, spotExponent(0)
 			, diffuse(1)
-			, spotCutoff(180.0f)
+			, PADDING1(0)
 			, specular(1)
 			, spotCosCutoff(cos(180.0f))
 			, position(0,0,1)
@@ -66,11 +66,9 @@
 		vec3 ambient;              // Aclarri   
 		float spotExponent;        // Srli   
 		vec3 diffuse;              // Dcli   
-		float spotCutoff;          // Crli                              
-		// (range: [0.0,90.0], 180.0)   
+		float PADDING1;            // Crli   (ex spot cutoff, this value is nolonger set internally)
 		vec3 specular;             // Scli   
-		float spotCosCutoff;       // Derived: cos(Crli)                 
-		// (range: [1.0,0.0],-1.0)   
+		float spotCosCutoff;       // Derived: cos(Crli) // (range: [1.0,0.0],-1.0)   
 		vec3 position;             // Ppli   
 		float constantAttenuation; // K0   
 		vec3 halfVector;           // Derived: Hi  (This is calculated as the vector half way between vector-light and vector-viewer) 
@@ -79,16 +77,13 @@
 		float quadraticAttenuation;// K2  
 	};
 	
-#ifdef __cplusplus
-#undef vec3
-//#pragma pop_macro("vec3")
-#endif //#ifdef __cplusplus
 
-const unsigned int MAX_MATERIALS = 50;//Abitrary limit, haven't done maths to solve max in min uniform buffer requirement
-const unsigned int MAX_LIGHTS = 50;//Abitrary limit, haven't done maths to solve max in min uniform buffer requirement
+	const uint MAX_MATERIALS = 50;//Abitrary limit, haven't done maths to solve max in min uniform buffer requirement
+	const uint MAX_LIGHTS = 50;//Abitrary limit, haven't done maths to solve max in min uniform buffer requirement
+
 #ifndef __cplusplus
 //Include in shader
-	uniform unsigned int _materialID;
+	uniform uint _materialID;
 	uniform _materials
 	{
 		MaterialProperties material[MAX_MATERIALS];
@@ -96,11 +91,28 @@ const unsigned int MAX_LIGHTS = 50;//Abitrary limit, haven't done maths to solve
 
 	uniform _lights
 	{
-		unsigned int lightsCount;
+		uint lightsCount;
 		//<12 bytes of padding>
 		LightProperties light[MAX_LIGHTS];
 	};
-#endif //#ifndef __cplusplus
 
+	uniform sampler2D t_ambient;
+	uniform sampler2D t_diffuse;
+	uniform sampler2D t_specular;
+#else
+	struct LightUniformBlock
+	{
+		unsigned int lightsCount;
+		unsigned int padding1;
+		unsigned int padding2;
+		unsigned int padding3;
+		LightProperties lights[MAX_LIGHTS];
+	};
+#endif //#ifndef __cplusplus
+	
+#ifdef __cplusplus
+#undef uint
+#undef vec3
+#endif //#ifdef __cplusplus
 
 #endif //#ifndef __ShaderHeader_h__

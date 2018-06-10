@@ -8,7 +8,8 @@ TwoPassScene::SceneContent::SceneContent()
     : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::TEXTURE_SHADOW }))
     , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
-    , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
+	, lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
+	, bob(new Model("..\\models\\bob\\bob.md5mesh", 35.0f, true, { Stock::Shaders::BONE_LINEAR_DEPTH, Stock::Shaders::BONE_SHADOW }))
     , blur(new GaussianBlur(5,1.75f))
     , pointlightPos(75, 100, 0)//100 units up, radius of 75
     , pointlightTarget(0)
@@ -21,6 +22,8 @@ TwoPassScene::SceneContent::SceneContent()
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
+	bob->setLocation(glm::vec3(-20,0,10));
+	lightModel->setMaterial(Stock::Materials::WHITE);
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
@@ -35,7 +38,8 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     registerEntity(content->deerModel);
     registerEntity(content->sphereModel);
     registerEntity(content->planeModel);
-    registerEntity(content->lightModel);
+	registerEntity(content->lightModel);
+	registerEntity(content->bob);
 	////Register render passes in correct order
 	addPass(0, sPass);
 	addPass(1, cPass);
@@ -62,18 +66,25 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     //These must be set *AFTER* the parent entities have been registered (need to fiddle with shaders to better handle this use case)
     content->deerModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
     content->sphereModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-    content->planeModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
+	content->planeModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
+	content->bob->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
+	//
     content->deerModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
     content->sphereModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
-    content->planeModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	content->planeModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	content->bob->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
     //Define the entire space the light touches
     this->content->pointlightP = glm::ortho(-71.0, 71.0, -71.0, 71.0, 82.0, 180.0);
+	//Specify where we are rendering from to gen linear depth map
     content->deerModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-    content->sphereModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-    content->planeModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
+	content->sphereModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
+	content->planeModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
+	content->bob->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
+	//
     content->deerModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat",&this->content->pointlightP);
     content->sphereModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
-    content->planeModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	content->planeModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	content->bob->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
 }
 /*
 Called once per frame when Scene animation calls should be
@@ -96,7 +107,9 @@ void TwoPassScene::update(unsigned int frameTime)
         glm::vec3(0, 1, 0)
         );
 
-	//Emulate full bright, attach the one light source to the camera
+	if (!this->bobPause)
+		this->content->bob->update((SDL_GetTicks() / 1000.0f) - this->bobAnimOffset);
+	//Attach light source to moving light
 	Lights()->getSpotLight(0).Position(this->content->pointlightPos);
 	Lights()->getSpotLight(0).Direction(this->content->pointlightTarget - this->content->pointlightPos);
 	this->content->lightModel->setLocation(this->content->pointlightPos);
@@ -110,6 +123,10 @@ bool TwoPassScene::keypress(SDL_Keycode keycode, int x, int y)
 	{
 	case SDLK_p:
 		this->polarity = ++this->polarity>1 ? -1 : this->polarity;
+		break;
+	case SDLK_o:
+		this->bobPause = !this->bobPause;
+		this->bobAnimOffset = (SDL_GetTicks() / 1000.0f) - this->bobAnimOffset;
 		break;
 	default:
 		//Permit the keycode to be processed if we haven't handled personally
@@ -137,6 +154,7 @@ TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
 	content->deerModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 	content->sphereModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 	content->planeModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	content->bob->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 }
 TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
@@ -150,7 +168,8 @@ void TwoPassScene::ShadowPass::render()
 	GL_CALL(glDisable(GL_BLEND));
     content->deerModel->render(0);
     content->sphereModel->render(0);
-    content->planeModel->render(0);
+	content->planeModel->render(0);
+	content->bob->render(0);
 }
 //Uses the shadow map to render the normal scene
 void TwoPassScene::CompositePass::render()
@@ -162,7 +181,8 @@ void TwoPassScene::CompositePass::render()
 	//Render models using shadow map
     content->deerModel->render(1);
     content->sphereModel->render(1);
-    content->planeModel->render(1);
+	content->planeModel->render(1);
+	content->bob->render(1);
 	//Render something at the lights location
     content->lightModel->render();
 }

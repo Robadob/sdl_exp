@@ -73,8 +73,8 @@ void EntityScene::update(unsigned int frameTime)
 #ifdef __CUDACC__
     cuUpdate();
 #endif
-	if (this->polarity)
-		this->bob->update(SDL_GetTicks()/1000.0f);
+	if (!this->bobPause)
+		this->bob->update((SDL_GetTicks() / 1000.0f) - this->bobAnimOffset);
 
 	//Emulate full bright, attach the one light source to the camera
 	auto p = Lights()->getPointLight(1);
@@ -107,7 +107,11 @@ bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)
     {
     case SDLK_p:
         this->polarity = ++this->polarity>1 ? -1 : this->polarity;
-        break;
+		break;
+	case SDLK_o:
+		this->bobPause = !this->bobPause;
+		this->bobAnimOffset = (SDL_GetTicks() / 1000.0f) - this->bobAnimOffset;
+		break;
     case SDLK_HASH:
         this->colorModel->exportModel();
         this->deerModel->exportModel();

@@ -97,6 +97,8 @@ void Model::reload()
 			setProjectionMatPtr(projMatPtr);
 		if (lightsBufferBindPt >= 0)
 			setLightsBuffer(lightsBufferBindPt);
+		for (auto &s:shaders)
+			s->setMaterialBuffer(materialBuffer);
 	}
 }
 VFCcount countVertices(const struct aiScene* scene, const struct aiNode* nd)
@@ -566,6 +568,7 @@ void Model::loadModel()
 			s->addGenericAttributeDetail("_boneWeights", boneWeights);
 			s->addBuffer("_bones", boneBuffer);
 		}
+		s->setMaterialBuffer(materialBuffer);
 	}
 	//Check vertex weights make sense
 	for (unsigned int i = 0; i < data->verticesSize;++i)
@@ -744,17 +747,20 @@ void Model::setLightsBuffer(GLuint bufferBindingPoint)
 		skeletonPen.setLightsBuffer(bufferBindingPoint);
 	}
 }
-std::unique_ptr<ShadersVec> Model::getShaders(unsigned int shaderIndex) const
+std::shared_ptr<Shaders> Model::getShaders(unsigned int shaderIndex) const
 {
-	auto ret = std::make_unique<ShadersVec>();
+	if (shaders.size()>shaderIndex)
+		return shaders[shaderIndex];
+	return nullptr;
+}
+std::shared_ptr<Material> Model::getMaterial(unsigned int materialIndex) const
+{
 	if (data)
 	{
-		for (auto &s : shaders)
-			ret->add(s);
-		for (unsigned int i = 0; i < data->materialsSize; ++i)
-			ret->add(data->materials[i]->getShaders());
+		if (data->materialsSize>materialIndex)
+			return data->materials[materialIndex];
 	}
-	return ret;
+	return nullptr;
 }
 //Animation stuff
 void Model::nextAnimation(float transitionDuration)

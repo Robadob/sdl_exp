@@ -24,7 +24,6 @@ namespace Stock
         const ShaderSet PHONG{ "../shaders/default.vert", "../shaders/material_phong.frag", nullptr };
 		const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
 		const ShaderSet COLOR_NOSHADE{ "../shaders/color.vert", "../shaders/color_noshade.frag", nullptr };
-		const ShaderSet BONE{ "../shaders/bone.vert", "../shaders/material_phong.frag", nullptr };
         const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
 		const ShaderSet INSTANCED_FLAT{ "../shaders/instanced_flat.vert", "../shaders/material_flat.frag", nullptr };
 		const ShaderSet INSTANCED_PHONG{ "../shaders/instanced_default.vert", "../shaders/material_phong.frag", nullptr };
@@ -32,9 +31,12 @@ namespace Stock
 		const ShaderSet SPRITE2D{ "../shaders/default.vert", "../shaders/sprite2d.frag", nullptr };
 		const ShaderSet SPRITE2D_HEAT{ "../shaders/default.vert", "../shaders/sprite2dHeat.frag", nullptr };
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
-        const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
+		const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
         const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
-        const ShaderSet TEXTURE_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
+		const ShaderSet TEXTURE_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
+		const ShaderSet BONE{ "../shaders/bone.vert", "../shaders/material_phong.frag", nullptr };
+		const ShaderSet BONE_LINEAR_DEPTH{ "../shaders/bone.vert", "../shaders/linear_depth.frag", nullptr };
+		const ShaderSet BONE_SHADOW{ "../shaders/bone_shadow.vert", "../shaders/material_shadow.frag", nullptr };
     }
 }
 /**
@@ -417,7 +419,6 @@ private:
 	/**
 	 * Runs any shader config that MUST be called before shader use
 	 * @note Called by ShaderCore::useProgram()	 
-	 * @todo In future this could be improved with vertex array object's to store attribute configs at shader setup
 	 */
 	void _useProgram() override;
     /**

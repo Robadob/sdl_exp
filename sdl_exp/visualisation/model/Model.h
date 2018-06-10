@@ -210,7 +210,8 @@ public:
     glm::vec3 getLocation() const{ return location; }
     glm::vec4 getRotation() const{ return rotation; }
 	BoundingBox3D getBoundingBox() const { return boundingBox; }
-	std::unique_ptr<ShadersVec> getShaders(unsigned int shaderIndex = 0) const;
+	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex = 0) const;
+	std::shared_ptr<Material> getMaterial(unsigned int materialIndex = 0) const;
 	unsigned int loadExternalAnimation(const std::string &path);
 	/**
 	 * Attempts to load animations from all files in the named directory

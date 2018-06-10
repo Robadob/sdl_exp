@@ -147,7 +147,15 @@ void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
 
 		//Setup material properties with shader (we can guarantee default shader is unique, so it skips this)
 		if (shader)
+		{
 			shader->overrideMaterialID(bufferIndex);
+			for (auto &typeVec : textures)
+				if (typeVec.second.size())
+				{
+					shader->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
+					shader->useProgram(false);//addTexture not intended to be called whilst shader is in use.
+				}
+		}
         
     	active = this;
     }

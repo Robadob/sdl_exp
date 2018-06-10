@@ -32,7 +32,9 @@ private:
 	std::shared_ptr<Entity> colorModel;
 	std::shared_ptr<Model> bob;
     float tick;
-    int polarity;
+	int polarity;
+	bool bobPause = false;
+	float bobAnimOffset = 0.0f;
 };
 
 #endif

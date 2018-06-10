@@ -7,12 +7,10 @@ out float fragColor;
 
 uniform mat4 _projectionMat;
 
-in vec3 u_normal;
-
 uniform vec3 _color;
 void main()
 {
-     int isOrtho = int(_projectionMat[3][3]);//This coord is 1 for ortho, 0 for proj
+    int isOrtho = int(_projectionMat[3][3]);//This coord is 1 for ortho, 0 for proj
     int isProj = int(-_projectionMat[2][3]);//This coord is -1 for proj, 0 for ortho
     if(isOrtho==1)
     {//Orthographic projections are already linear in the range 0-1!

@@ -5,7 +5,7 @@
 std::weak_ptr<FBuffer> BackBuffer::overrideBuffer;
 glm::uvec2 BackBuffer::dimensions = glm::uvec2(1280,720);
 bool BackBuffer::_doClear = true;
-glm::vec3 BackBuffer::_clearColor = glm::vec3(1);//Black
+glm::vec3 BackBuffer::_clearColor = glm::vec3(0);//Black
 const GLuint BackBuffer::NAME = 0;
 
 BackBuffer::BackBuffer(const bool &doClear, const glm::vec3 &clearColor)

@@ -118,8 +118,8 @@ bool VisualisationVR::init()
     vr_rightResolveFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::Disabled());
     //Setup companion
     resizeBackBuffer(this->companionWindowDims);
-    companionLeft = std::make_shared<Sprite2D>(vr_leftResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
-    companionRight = std::make_shared<Sprite2D>(vr_rightResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y);
+	companionLeft = std::make_shared<Sprite2D>(vr_leftResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_NOALPHA));
+	companionRight = std::make_shared<Sprite2D>(vr_rightResolveFB->getColorTextureName(), companionWindowDims.x / 2, companionWindowDims.y, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_NOALPHA));
     hud->add(companionLeft, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, -1024);
     hud->add(companionRight, HUD::AnchorV::South, HUD::AnchorH::East, 0, 0, -1024);
     //Load render models
@@ -432,9 +432,9 @@ void VisualisationVR::renderStereoTargets()
 	this->vr_renderModels->getCamera()->useLeft();
 	overrideBackBuffer(vr_leftRenderFB);
 	this->scene->_render();
-    this->vr_renderModels->render();
+	this->vr_renderModels->render();
 	resetBackBuffer();
-    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     //Blit left eye
     GL_CALL(glDisable(GL_MULTISAMPLE));

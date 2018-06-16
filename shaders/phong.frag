@@ -37,5 +37,5 @@ void main (void)
     Ispec = clamp(Ispec, 0.0f, 1.0f); 
 	
     // write Total Color:  
-    fragColor = Iamb + Idiff + Ispec;     
+    fragColor = vec4(vec3(Iamb + Idiff + Ispec), 1.0f);     
 }

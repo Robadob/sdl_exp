@@ -315,6 +315,7 @@ void VisualisationVR::render()
 
 	if (vr_HMD)
 	{
+		vr_renderModels->updatePoses();
 		renderStereoTargets();
 		{//Render companion window
 			//Render textures plane in either half of the screen

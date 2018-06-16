@@ -203,7 +203,6 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
 }
 void TrackedDevicesVR::render()
 {
-	updatePoses();
 	if (HMD->IsInputFocusCapturedByAnotherProcess())
 		return;
 

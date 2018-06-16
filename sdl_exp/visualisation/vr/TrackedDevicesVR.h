@@ -35,9 +35,12 @@ public:
 	void setGenericTrackerVisible(bool t){ renderTracker = t; };
 	void setHeadsetVisible(bool t){ renderHeadset = t; };
 	void setUnknownDeviceVisible(bool t){ renderUnknown = t; }
+	/**
+	 * This calls waitGetPoses() which waits for 3ms before vsync, so must be called carefully
+	 */
+	void updatePoses();
 private:
 	bool renderLighthouses, renderRightController, renderLeftController, renderInvalidController, renderTracker, renderHeadset, renderUnknown;
-	void updatePoses();
 	bool addDevice(unsigned int id);
 	bool removeDevice(unsigned int id);
     std::shared_ptr<Entity2> findLoadRenderModel(std::string &modelName);

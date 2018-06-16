@@ -30,7 +30,9 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
     this->setSkybox(true);
     this->visualisation.setWindowTitle("VR Example Companion");
     this->setRenderAxis(true);
-    getTrackedDevices()->getRightController()->addChild(lines);
+	auto rc = getTrackedDevices()->getRightController();
+	if (rc)
+		rc->addChild(lines);
     lines->addChild(this->points);
     leftCtrller = getTrackedDevices()->getLeftController();
     rightCtrller = getTrackedDevices()->getRightController();
@@ -104,7 +106,7 @@ void VRExampleScene::update(unsigned int frameTime)
     //        prevControllerRightPos = controllerRightPos;
     //    }
 
-    }
+    //}
 }
 bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, vr::EVRButtonId buttonId, vr::EVREventType buttonEvent)
 {

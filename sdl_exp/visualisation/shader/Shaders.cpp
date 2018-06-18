@@ -60,6 +60,65 @@ Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::ini
 	GL_CALL(glGenVertexArrays(1, &vao));
 	reload();
 }
+Shaders::Shaders(const Shaders &other)
+	: ShaderCore(other)
+	, fbo(other.fbo)
+	, vao(0)
+	, modelMat(UniformMatrixDetail(-1, other.modelMat.matrixPtr))
+	, viewMat(UniformMatrixDetail(-1, other.viewMat.matrixPtr))
+	, projectionMat(UniformMatrixDetail(-1, other.projectionMat.matrixPtr))
+	, materialIDLocation(-1)
+	, materialIDVal(other.materialIDVal)
+	, modelviewprojectionMatLoc(-1)
+	, modelviewMatLoc(-1)
+	, normalMatLoc(-1)
+	, rotationPtr(other.rotationPtr)
+	, translationPtr(other.translationPtr)
+	, positions(other.positions)
+	, normals(other.normals)
+	, colors(other.colors)
+	, texcoords(other.texcoords)
+	, colorUniformLocation(-1)
+	, colorUniformSize(other.colorUniformSize)
+	, colorUniformValue(other.colorUniformValue)
+	, vertexShaderFiles(nullptr)
+	, fragmentShaderFiles(nullptr)
+	, geometryShaderFiles(nullptr)
+	, vertexShaderVersion(-1)
+	, fragmentShaderVersion(-1)
+	, geometryShaderVersion(-1)
+{
+	//positions, normals, colors, texcoords
+	positions.location = -1;
+	normals.location = -1;
+	colors.location = -1;
+	texcoords.location = -1;
+	//gvads, lostGvads
+	for (const auto &i : other.gvads)
+		this->lostGvads.push_back(GenericVAD(i));
+	for (const auto &i : other.lostGvads)
+		this->lostGvads.push_back(GenericVAD(i));
+	for (auto &i : this->lostGvads)
+		i.location = -1;
+	//Rebind everything to VAO
+	GL_CALL(glGenVertexArrays(1, &vao));
+	buildVAO();
+	//fragShaderOutputLocations
+	for (const auto &i : other.fragShaderOutputLocations)
+		this->fragShaderOutputLocations.insert({ i.first, std::string(i.second) });
+	//file vectors
+	vertexShaderFiles = new std::vector<const std::string>();
+	for (const auto &i : *other.vertexShaderFiles)
+		vertexShaderFiles->push_back(std::string(i));
+	fragmentShaderFiles = new std::vector<const std::string>();
+	for (const auto &i : *other.fragmentShaderFiles)
+		fragmentShaderFiles->push_back(std::string(i));
+	geometryShaderFiles = new std::vector<const std::string>();
+	for (const auto &i : *other.geometryShaderFiles)
+		geometryShaderFiles->push_back(std::string(i));
+	//Usual shader reload
+	reload();
+}
 Shaders::~Shaders(){
     this->destroyProgram();
 	GL_CALL(glDeleteVertexArrays(1, &vao));

@@ -130,8 +130,8 @@ Entity::Entity(
 	, materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
 	, location(0.0f)
 	, rotation(0.0f, 0.0f, 1.0f, 0.0f)
-	, shaders(shaders)
-	, texture(texture)
+	, shaders()
+	, texture(nullptr)
 	, cullFace(true)
 	, scaleFactor(1.0f)
 	, viewMatPtr(nullptr)
@@ -240,6 +240,7 @@ Entity::Entity(
 			it->setMaterialBuffer(materialBuffer);
 			it->setFaceVBO(faces.vbo);
 		}
+		m.setCustomShaders(this->shaders);
 	}
     if (needsExport)
     {
@@ -282,31 +283,16 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(unsigned int shaderIndex){
-    if (shaderIndex<shaders.size())
-		shaders[shaderIndex]->useProgram(true);
-
-    //Translate the model according to it's location
-	if (shaderIndex<shaders.size())
-	{
-		glm::mat4 m = getModelMat();
-		if (this->materials.size())
-		{
-			this->materials[0].use(m, shaders[shaderIndex]);
-		}
-		else
-		{
-			shaders[shaderIndex]->useProgram(false);
-			shaders[shaderIndex]->overrideModelMat(&m);
-		}
-	}
+	glm::mat4 m = getModelMat();
+	this->materials[0].use(m, shaderIndex, true);
 
 	if (!cullFace)
 		GL_CALL(glDisable(GL_CULL_FACE));
     GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
     if (!cullFace)
         GL_CALL(glEnable(GL_CULL_FACE));
-    if (shaderIndex<shaders.size())
-        shaders[shaderIndex]->clearProgram();
+
+	this->materials[0].clear();
 }
 /*
 Calls the necessary code to render count instances of the entity
@@ -316,30 +302,16 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, unsigned int shaderIndex){
-	if (shaderIndex<shaders.size())
-		shaders[shaderIndex]->useProgram(true);
+	glm::mat4 m = getModelMat();
+	this->materials[0].use(m, shaderIndex, true);
 
     if (!cullFace)
         GL_CALL(glEnable(GL_CULL_FACE));
-    //Set the color and material
-	if (shaderIndex<shaders.size())
-	{
-		glm::mat4 m = getModelMat();
-		if (this->materials.size())
-		{
-			this->materials[0].use(m, shaders[shaderIndex]);
-		}
-		else
-		{
-			shaders[shaderIndex]->useProgram(false);
-			shaders[shaderIndex]->overrideModelMat(&m);
-		}
-	}
     GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
     if (!cullFace)
-        GL_CALL(glDisable(GL_CULL_FACE));
-    if (shaderIndex<shaders.size())
-        shaders[shaderIndex]->clearProgram();
+		GL_CALL(glDisable(GL_CULL_FACE));
+
+	this->materials[0].clear();
 }
 /*
 Creates a vertex buffer object of the specified size
@@ -1217,13 +1189,14 @@ void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, con
 			it->setTexCoordsAttributeDetail(texcoords);
 			it->setMaterialBuffer(materialBuffer);
 			it->setFaceVBO(faces.vbo);
-			if (viewMatPtr)
-				it->setViewMatPtr(viewMatPtr);
-			if (projectionMatPtr)
-				it->setProjectionMatPtr(projectionMatPtr);
-			if (lightBufferBindPt!=UINT_MAX)
-				it->setLightsBuffer(lightBufferBindPt);
 		}
+		materials[i].setCustomShaders(this->shaders);
+		if (viewMatPtr)
+			materials[i].setViewMatPtr(viewMatPtr);
+		if (projectionMatPtr)
+			materials[i].setProjectionMatPtr(projectionMatPtr);
+		if (lightBufferBindPt != UINT_MAX)
+			materials[i].setLightsBuffer(lightBufferBindPt);
 		materials[i].bake();
 	}
 }
@@ -1569,11 +1542,15 @@ void Entity::generateVertexBufferObjects()
 /*
 Returns a shared pointer to this entities shaders
 */
-std::shared_ptr<Shaders> Entity::getShaders(unsigned int shaderIndex) const
+std::unique_ptr<ShadersVec> Entity::getShaders(unsigned int shaderIndex) const
 {
-	if (shaderIndex < shaders.size())
-		return shaders[shaderIndex];
-    return std::shared_ptr<Shaders>(0);
+	std::unique_ptr<ShadersVec> s = std::make_unique<ShadersVec>();
+	//Add local copy
+	if (shaderIndex<shaders.size())
+		s->add(shaders[shaderIndex]);
+	for (auto &m:materials)
+		s->add(m.getShaders(shaderIndex));
+	return s;
 }
 /*
 Reloads the entities texture and shaders
@@ -1583,6 +1560,8 @@ void Entity::reload()
 	for (auto &&it:shaders)
 		if (it)
 			it->reload();
+	for (auto &&it : materials)
+			it.reload();
 }
 /*
 Sets the pointer to the view matrix used by this entitiy (in the shader)

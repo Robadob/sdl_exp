@@ -76,11 +76,18 @@ public:
 		for (auto s : vec)
 			s->setColor(color);
 	}
-	int addTextureUniform(std::shared_ptr<const Texture> texture, char *uniformName)
+	bool addTexture(const char *textureNameInShader, GLenum type, GLint textureName, GLuint textureUnit)
 	{
 		bool a = true;
 		for (auto s : vec)
-			a = a && s->addTexture(uniformName, texture);
+			a = a && s->addTexture(textureNameInShader, type, textureName, textureUnit);
+		return a;
+	}
+	bool addTexture(const char *textureNameInShader, const std::shared_ptr<const Texture> &texture)
+	{
+		bool a = true;
+		for (auto s : vec)
+			a = a && s->addTexture(textureNameInShader, texture);
 		return a;
 	}
 	bool addDynamicUniform(const char *uniformName, const GLfloat *arry, unsigned int count = 1)
@@ -132,11 +139,18 @@ public:
 			a = a && s->addStaticUniform(uniformName, arry, count);
 		return a;
 	}
-	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName)
+	bool addBuffer(const char *bufferNameInShader, const std::shared_ptr<BufferCore> &buffer)
 	{
 		bool a = true;
 		for (auto s : vec)
-			a = a && s->addBuffer(bufferNameInShader, bufferType, bufferName);
+			a = a && s->addBuffer(bufferNameInShader, buffer);
+		return a;
+	}
+	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferBindingPoint)
+	{
+		bool a = true;
+		for (auto s : vec)
+			a = a && s->addBuffer(bufferNameInShader, bufferType, bufferBindingPoint);
 		return a;
 	}
 	bool removeDynamicUniform(const char *uniformName)
@@ -167,7 +181,6 @@ public:
 			a = a && s->removeBuffer(nameInShader);
 		return a;
 	}
-
 };
 
 #endif //__ShadersVec_h__

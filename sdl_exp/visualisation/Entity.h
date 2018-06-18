@@ -10,6 +10,7 @@
 #include "texture/Texture2D.h"
 #include "interface/Renderable.h"
 #include "model/Material.h"
+#include "shader/ShadersVec.h"
 
 namespace Stock
 {
@@ -116,7 +117,10 @@ public:
     glm::vec4 getRotation() const;
     void exportModel() const;
 	void reload() override;
-	std::shared_ptr<Shaders> getShaders(unsigned int shaderIndex=0) const;
+	/**
+	 * Ensure updateShaders() is called after making changes to shaders returned by this method
+	 */
+	std::unique_ptr<ShadersVec> Entity::getShaders(unsigned int shaderIndex = 0) const;
     void setViewMatPtr(glm::mat4 const *viewMat) override;
 	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
 	/**

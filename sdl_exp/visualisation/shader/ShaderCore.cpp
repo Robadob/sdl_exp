@@ -13,6 +13,28 @@ ShaderCore::ShaderCore()
 	: programId(-1)
 	, shaderTag("")
 { }
+ShaderCore::ShaderCore(const ShaderCore &other)
+	: ShaderCore()
+{
+	//Copy across all member variables: e.g uniforms, textures, buffers etc
+	//floatingShaders;//This is managed by compile, it's more of a temporary data structure
+	//dynamicUniforms, lostDynamicUniforms
+	for (const auto &i : other.dynamicUniforms)
+		this->lostDynamicUniforms.push_back(DynamicUniformDetail(i.second));
+	for (const auto &i:other.lostDynamicUniforms)
+		this->lostDynamicUniforms.push_back(DynamicUniformDetail(i));
+	//staticUniforms
+	for (const auto &i : other.staticUniforms)
+		this->staticUniforms.push_back(StaticUniformDetail(i));
+	//textures
+	for (const auto &i : other.textures)
+		this->textures.insert({ i.first, UniformTextureDetail(i.second) });
+	//buffers, lostBuffers
+	for (const auto &i : other.buffers)
+		this->lostBuffers.push_back(BufferDetail(i.second));
+	for (const auto &i : other.lostBuffers)
+		this->lostBuffers.push_back(BufferDetail(i));
+}
 ShaderCore::~ShaderCore()
 {
 	if (this->shaderTag[0]!='\0') delete[] this->shaderTag;
@@ -276,7 +298,9 @@ void ShaderCore::prepare(bool autoClear)
     this->_prepare();
 	
 	if (autoClear)
+	{
 		GL_CALL(glUseProgram(0));
+	}
 }
 void ShaderCore::useProgram(bool autoPrepare)
 {

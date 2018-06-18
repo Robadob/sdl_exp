@@ -8,10 +8,10 @@ Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &b
     , buffer(buffer)
     , bufferIndex(bufferIndex)
 	, hasBaked(false)
+	, hasAlpha(false)
 	, isWireframe(false)
 	, faceCull(true)
 	, shaderMode(Phong)
-	, hasAlpha(false)
 	, shaderRequiresBones(shaderRequiresBones)
 	//, alphaBlendMode{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }//C++11 required (maybe usable VS2015?)
 {
@@ -29,6 +29,26 @@ Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &b
 	properties.opacity = set.opacity;
 	bake();
 }
+Material::Material(const Material&other)
+	: name(other.name)
+	, properties(other.properties)
+	, buffer(other.buffer)
+	, bufferIndex(other.bufferIndex)
+	, hasBaked(false)
+	, hasAlpha(other.hasAlpha)
+	, isWireframe(other.isWireframe)
+	, faceCull(other.faceCull)
+	, shaderMode(other.shaderMode)
+	, shaderRequiresBones(other.shaderRequiresBones)
+{
+	for (const auto &i : other.shaders)
+		shaders.push_back(std::make_shared<Shaders>(*i));
+	alphaBlendMode[0] = other.alphaBlendMode[0];
+	alphaBlendMode[1] = other.alphaBlendMode[1];
+	if (other.hasBaked)
+		bake();
+}
+
 Material::~Material()
 {
 
@@ -77,6 +97,8 @@ void Material::addTexture(TextureFrame texFrame, TextureType type)
 		if (textures[type].size() == 1)
 		{
 			defaultShader->addTexture(TEX_NAME[type], texFrame.texture);
+			for (const auto &i : this->shaders)
+				i->addTexture(TEX_NAME[type], texFrame.texture);
 		}
 	}
 	if (textures[type].size() > 1)
@@ -88,26 +110,57 @@ void Material::addTexture(TextureFrame texFrame, TextureType type)
 void Material::setViewMatPtr(const glm::mat4 *viewMat)
 {
 	defaultShader->setViewMatPtr(viewMat);
+	for (const auto &i : this->shaders)
+		i->setViewMatPtr(viewMat);
 }
 void Material::setProjectionMatPtr(const glm::mat4 *projectionMat)
 {
 	defaultShader->setProjectionMatPtr(projectionMat);
+	for (const auto &i : this->shaders)
+		i->setProjectionMatPtr(projectionMat);
 }
 void Material::setLightsBuffer(GLuint bufferBindingPoint)
 {
 	defaultShader->setLightsBuffer(bufferBindingPoint);
+	for (const auto &i : this->shaders)
+		i->setLightsBuffer(bufferBindingPoint);
 }
 
-void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
+void Material::setCustomShaders(const std::vector<std::shared_ptr<Shaders>> &shaders)
 {
-	if (shader)
+	this->shaders.clear();
+	//Clone all shaders
+	for (const auto &i:shaders)
+		this->shaders.push_back(std::make_shared<Shaders>(*i));
+	//Setup material in all Shaders
+	for (const auto &i : this->shaders)
 	{
-		//shader->useProgram(false);//Material should already be in use
-		shader->overrideModelMat(&transform);
+		//Setup material buffer
+		i->setMaterialBuffer(buffer);
+		i->setMaterialID(bufferIndex);
+		//Setup default shader, e.g. textures
+		for (auto &typeVec : textures)
+			if (typeVec.second.size())
+				i->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
+	}
+}
+void Material::prepare(unsigned int index)
+{
+	if (index<shaders.size())
+		shaders[index]->prepare();
+	else
+		defaultShader->prepare();
+}
+void Material::use(glm::mat4 &transform, unsigned int index, bool requiresPrepare)
+{
+	if (index<shaders.size())
+	{
+		shaders[index]->useProgram(requiresPrepare);
+		shaders[index]->overrideModelMat(&transform);
 	}
 	else
 	{
-		defaultShader->useProgram(false);
+		defaultShader->useProgram(requiresPrepare);
 		defaultShader->overrideModelMat(&transform);
 	}
     if (active != this)
@@ -133,7 +186,7 @@ void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
 		//Treat all materials as having alpha until we can add a suitable check/switch
 		//if (hasAlpha || this->properties.opacity>1.0f)
 		//{
-			if (!shader)
+			if (index>=shaders.size())
 			{
 				GL_CALL(glEnable(GL_BLEND));
 				GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
@@ -143,19 +196,6 @@ void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
 		//{
 		//	GL_CALL(glDisable(GL_BLEND));
 		//}
-
-
-		//Setup material properties with shader (we can guarantee default shader is unique, so it skips this)
-		if (shader)
-		{
-			shader->overrideMaterialID(bufferIndex);
-			for (auto &typeVec : textures)
-				if (typeVec.second.size())
-				{
-					shader->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
-					shader->useProgram(false);//addTexture not intended to be called whilst shader is in use.
-				}
-		}
         
     	active = this;
     }
@@ -187,10 +227,19 @@ void Material::use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader)
     }
 #endif
 }
+void Material::clear(unsigned int index)
+{
+	if (index<shaders.size())
+		shaders[index]->clearProgram();
+	else
+		defaultShader->clearProgram();
+}
 
 void Material::reload()
 {
 	defaultShader->reload();
+	for (auto &i : shaders)
+		i->reload();
 }
 void Material::bake()
 {
@@ -208,4 +257,15 @@ void Material::bake()
 	for (auto &typeVec:textures)
 		if (typeVec.second.size())
 			defaultShader->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
+	//Setup material in all custom shaders
+	for (const auto &i : this->shaders)
+	{
+		//Setup material buffer
+		i->setMaterialBuffer(buffer);
+		i->setMaterialID(bufferIndex);
+		//Setup default shader, e.g. textures
+		for (auto &typeVec : textures)
+			if (typeVec.second.size())
+				i->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
+	}
 }

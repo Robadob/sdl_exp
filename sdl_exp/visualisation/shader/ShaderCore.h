@@ -48,6 +48,10 @@ protected:
 	 */
 	ShaderCore();
 	/**
+	* Copy constructor
+	*/
+	ShaderCore(const ShaderCore &other);
+	/**
 	 * There is no reason to ever have a pointer to ShaderCore (the subclasses are too distinct, are used via their own methods)
 	 * Therefore no reason to delete one directly, hence protected
 	 */
@@ -205,7 +209,7 @@ public:
 	 * This is for 'program resources', NOT texture buffers
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
 	 * @param bufferType The type of buffer (probably GL_SHADER_STORAGE_BUFFER or GL_UNIFORM_BUFFER)
-	 * @param bufferName The buffer name as set by glGenBuffers(GLsizei, GLuint)
+	 * @param bufferBindingPoint The buffer's bind point
 	 * @return True if buffer name is found in the current shader to be bound
 	 */
 	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferBindingPoint);

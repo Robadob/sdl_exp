@@ -132,6 +132,7 @@ public:
 	* Creates a named material with the default configuration
 	*/
 	Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones = false);
+	Material(const Material&other);
     /**
      *
      */
@@ -141,10 +142,23 @@ public:
      * @note The material name and shaders are not considered a configuration
      */
     bool operator==(Material& other) const;
+	/**
+	 * Prepares the indexed shader
+	 * @param index The index of the chosen shader, out of bound uses default for the material
+	 */
+	void prepare(unsigned int index = UINT_MAX);
     /**
-     * Enables the materials settings
+     * Enables the materials settings and selects the corresponding shader
+     * @param transform The model matrix to be used
+     * @param index The shader index to use, leave as default if default shader is to be used
+     * @param requiresPrepare Set to true when the material's shader has not be prepared at the start of the rendercall. (This should be done if a material may be used multiple times alongside others whilst rendering a model)
      */
-	void use(glm::mat4 &transform, const std::shared_ptr<Shaders> &shaders = nullptr);
+	void use(glm::mat4 &transform, unsigned int index = UINT_MAX, bool requiresPrepare = true);
+	/**
+	 * Clears the indexed shader
+	 * @param index The index of the chosen shader, out of bound uses default for the material
+	 */
+	void clear(unsigned int index = UINT_MAX);
     static void clearActive() { Material::active = nullptr; }
     //Setters
     void setName(const std::string name) { this->name = name; };
@@ -163,7 +177,7 @@ public:
 	void setTwoSided(const bool twoSided) { this->faceCull = !twoSided; }
     void setShadingMode(const ShadingMode shaderMode) { this->shaderMode = shaderMode; }
 	void addTexture(TextureFrame, TextureType type = Diffuse);
-
+	void setCustomShaders(const std::vector<std::shared_ptr<Shaders>> &shaders);
     /**
      * @see glBlendFunc()
      */
@@ -183,7 +197,7 @@ public:
     bool getWireframe() const { return isWireframe; }
     bool getTwoSided() const { return !faceCull; }
     ShadingMode getShadingMode() const { return shaderMode; }
-	std::shared_ptr<Shaders> getShaders() const { return defaultShader; }
+	std::shared_ptr<Shaders> getShaders(unsigned int index = UINT_MAX) const { return index<shaders.size() ? shaders[index] : defaultShader; }
     std::pair<GLenum, GLenum> getAlphaBlendMode() const { return std::make_pair(alphaBlendMode[0], alphaBlendMode[1]); }
 	/**
 	 * Creates and sets up the default shader
@@ -207,6 +221,7 @@ private:
     bool faceCull;
 	ShadingMode shaderMode;
 	std::shared_ptr<Shaders> defaultShader;
+	std::vector<std::shared_ptr<Shaders>> shaders;
     GLenum alphaBlendMode[2]; //GL_SRC_ALPHA, GL_ONE for additive blending//GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA for default
 	bool shaderRequiresBones;
 //HasMatrices overrides

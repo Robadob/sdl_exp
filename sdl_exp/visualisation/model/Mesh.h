@@ -20,7 +20,7 @@ public:
 		rtn->me = rtn;
 		return rtn;
 	}
-	void render(glm::mat4 &transform, const std::shared_ptr<Shaders> &shader = nullptr) const;
+	void render(glm::mat4 &transform, const unsigned int &shaderIndex = UINT_MAX) const;
 	BoundingBox3D calculateBoundingBox(glm::mat4 transform) const;
 	std::string getName() const { return name; }
 	void setVisible(bool isVisible) { this->visible = isVisible; }

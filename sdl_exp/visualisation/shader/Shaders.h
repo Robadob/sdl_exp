@@ -32,11 +32,11 @@ namespace Stock
 		const ShaderSet SPRITE2D_HEAT{ "../shaders/default.vert", "../shaders/sprite2dHeat.frag", nullptr };
         const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
 		const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
-        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
-		const ShaderSet TEXTURE_SHADOW{ "../shaders/shadow.vert", "../shaders/material_shadow.frag", nullptr };
+		const ShaderSet FLAT_SHADOW{ "../shaders/shadow.vert", "../shaders/material_flat_shadow.frag", nullptr };
+		const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/material_phong_shadow.frag", nullptr };
 		const ShaderSet BONE{ "../shaders/bone.vert", "../shaders/material_phong.frag", nullptr };
 		const ShaderSet BONE_LINEAR_DEPTH{ "../shaders/bone.vert", "../shaders/linear_depth.frag", nullptr };
-		const ShaderSet BONE_SHADOW{ "../shaders/bone_shadow.vert", "../shaders/material_shadow.frag", nullptr };
+		const ShaderSet BONE_SHADOW{ "../shaders/bone_shadow.vert", "../shaders/material_phong_shadow.frag", nullptr };
     }
 }
 /**
@@ -172,6 +172,13 @@ public:
 	 * @note You must provide atleast 1 shader path, however it can be of any of the 3 types
 	 */
 	Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath = {}, std::initializer_list <const char *> geometryShaderPath = {});
+	/**
+	 * Copy constructor
+	 * @note This does not duplicate linked external objects, e.g. buffers, textures.
+	 * @note There if the original shaders owning model is destroyed, this shader will point to invalid data.
+	 * @note Therefore this should be used with caution outside of advanced model classes
+	 */
+	Shaders(const Shaders &other);
 	/**
 	 * Free the shader program
 	 */

@@ -6,7 +6,7 @@
 #include "../util/StringUtils.h"
 #include <glm/gtx/matrix_decompose.inl>
 
-void ModelNode::render(glm::mat4 transform, const std::shared_ptr<Shaders> &shader)
+void ModelNode::render(glm::mat4 transform, const unsigned int &shaderIndex)
 {
 	//Calculate & apply transform
 	//using data->_transforms here doesn't make a difference? but required to animate renderSkeleton() 
@@ -15,17 +15,16 @@ void ModelNode::render(glm::mat4 transform, const std::shared_ptr<Shaders> &shad
 	//Render all meshes
 	for (auto &&mesh : meshes)
 	{
-		mesh->render(transform, shader);
+		mesh->render(transform, shaderIndex);
 	}
 	//Recursively render all children
 	for (auto &&child : children)
 	{
-		child->render(transform, shader);
+		child->render(transform, shaderIndex);
 	}
 }
 void ModelNode::renderSkeleton(Draw &pen, glm::mat4 parentTransform, glm::vec4 pt0)
-{//https://github.com/Madsy/Assimp-GL-Wrapper/blob/master/assimp_wrapper/scene.cpp#L145
-
+{
 	//Calculate & apply transform
 	parentTransform *= data->_transforms[transformOffset];
 
@@ -34,7 +33,6 @@ void ModelNode::renderSkeleton(Draw &pen, glm::mat4 parentTransform, glm::vec4 p
 	{
 		//Transform point into node space
 		pt1 = parentTransform * glm::vec4(0, 0, 0, 1);
-		//printf("%s: (%g, %g, %g)\n", name.c_str(), pt1.x, pt1.y, pt1.z);
 		if (pt0!=glm::vec4(0,0,0,1))
 		{//If parentPoint has been set
 			//Render bone limb

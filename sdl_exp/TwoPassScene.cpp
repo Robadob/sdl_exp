@@ -5,8 +5,8 @@
 #include <glm/gtc/type_ptr.hpp>
 //Create content struct
 TwoPassScene::SceneContent::SceneContent()
-    : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::TEXTURE_SHADOW }))
-    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT }))
+	: deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT_SHADOW }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
 	, lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
 	, bob(new Model("..\\models\\bob\\bob.md5mesh", 35.0f, true, { Stock::Shaders::BONE_LINEAR_DEPTH, Stock::Shaders::BONE_SHADOW }))
@@ -64,27 +64,36 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 
     //Spotlight camera at pointlightPos looking in pointlightTarget, with up vector looking up y axis
     //These must be set *AFTER* the parent entities have been registered (need to fiddle with shaders to better handle this use case)
-    content->deerModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-    content->sphereModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-	content->planeModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-	content->bob->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
+	auto deer0 = content->deerModel->getShaders(0);
+	auto sphere0 = content->sphereModel->getShaders(0);
+	auto plane0 = content->planeModel->getShaders(0);
+	auto bob0 = content->bob->getShaders(0);
+	auto deer1 = content->deerModel->getShaders(1);
+	auto sphere1 = content->sphereModel->getShaders(1);
+	auto plane1 = content->planeModel->getShaders(1);
+	auto bob1 = content->bob->getShaders(1);
+
+	deer0->setViewMatPtr(&this->content->pointlightV);
+	sphere0->setViewMatPtr(&this->content->pointlightV);
+	plane0->setViewMatPtr(&this->content->pointlightV);
+	bob0->setViewMatPtr(&this->content->pointlightV);
 	//
-    content->deerModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
-    content->sphereModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
-	content->planeModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
-	content->bob->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	deer1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	sphere1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	plane1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	bob1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
     //Define the entire space the light touches
     this->content->pointlightP = glm::ortho(-71.0, 71.0, -71.0, 71.0, 82.0, 180.0);
 	//Specify where we are rendering from to gen linear depth map
-    content->deerModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-	content->sphereModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-	content->planeModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-	content->bob->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
+	deer0->setProjectionMatPtr(&this->content->pointlightP);
+	sphere0->setProjectionMatPtr(&this->content->pointlightP);
+	plane0->setProjectionMatPtr(&this->content->pointlightP);
+	bob0->setProjectionMatPtr(&this->content->pointlightP);
 	//
-    content->deerModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat",&this->content->pointlightP);
-    content->sphereModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
-	content->planeModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
-	content->bob->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	deer1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	sphere1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	plane1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	bob1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
 }
 /*
 Called once per frame when Scene animation calls should be

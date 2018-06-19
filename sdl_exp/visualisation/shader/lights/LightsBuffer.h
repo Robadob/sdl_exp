@@ -5,6 +5,7 @@
 
 class PointLight;
 class SpotLight;
+class DirectionalLight;
 
 /**
  * This class acts as a wrapper over Uniform Buffer which stores lights
@@ -43,6 +44,11 @@ public:
 	 */
 	SpotLight addSpotLight();
 	/**
+	* Increments the number of lights and returns the newest light as a directional light
+	* @throws runtime_error If the number of lights would exceed MAX_LIGHTS
+	*/
+	DirectionalLight addDirectionalLight();
+	/**
 	 * Returns the light at the given index in the buffer as a point light
 	 * @throws runtime_error if index does not point to a current light
 	 * @note If you request a light which has already been created as a spotlight
@@ -55,7 +61,14 @@ public:
 	 */
 	SpotLight getSpotLight(unsigned int index);
 	/**
+	 * Returns the light at the given index in the buffer as a directional light
+	 * @throws runtime_error if index does not point to a current light
+	 */
+	DirectionalLight getDirectionalLight(unsigned int index);
+	/**
 	 * Asks the buffer to update the GPU copy if necessary
+	 * Computes eye transform of position/spotDirection
+	 * Could go further and negate spotDirection, 
 	 */
 	void update();
 	/**
@@ -82,6 +95,7 @@ private:
 };
 
 #include "PointLight.h"
-#include "Spotlight.h"
+#include "SpotLight.h"
+#include "DirectionalLight.h"
 
 #endif //__LightsBuffer_h__

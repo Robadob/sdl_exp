@@ -10,18 +10,18 @@ inline SpotLight::SpotLight(LightProperties * const props, LightsBuffer::TLightP
 {
 	if(init)
 	{
-		tProperties->spotCutoff = 45.0f;//Set the spotlight setting
+		tProperties->spotCutoff = glm::radians(45.0f);//Set the spotlight setting
 		properties->spotCosCutoff = cos(tProperties->spotCutoff);
 	}
 }
 
 inline void SpotLight::Direction(const glm::vec3 &dir)
 {
-	tProperties->spotDirection = glm::vec4(dir, 0.0f);
+	tProperties->spotDirection = glm::vec4(glm::normalize(dir), 0.0f);
 }
 inline void SpotLight::CutOff(const float &degrees)
 {
-	tProperties->spotCutoff = degrees;
+	tProperties->spotCutoff = glm::radians(degrees);
 	properties->spotCosCutoff = cos(tProperties->spotCutoff);
 }
 inline void SpotLight::Exponent(const float &exponent)

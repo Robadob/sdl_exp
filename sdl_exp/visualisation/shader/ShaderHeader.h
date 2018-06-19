@@ -68,7 +68,7 @@
 		vec3 diffuse;              // Dcli   
 		float PADDING1;            // Crli   (ex spot cutoff, this value is nolonger set internally)
 		vec3 specular;             // Scli   
-		float spotCosCutoff;       // Derived: cos(Crli) // (range: [1.0,0.0],-1.0)   
+		float spotCosCutoff;       // Derived: cos(Crli) // (Valid spotlight range: [1.0,0.0]), negative == pointlight, greater than 1.0 == directional light
 		vec3 position;             // Ppli   
 		float constantAttenuation; // K0   
 		vec3 halfVector;           // Derived: Hi  (This is calculated as the vector half way between vector-light and vector-viewer) 

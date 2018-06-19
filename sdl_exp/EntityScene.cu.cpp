@@ -48,8 +48,8 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	this->instancedSphere->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
 	//Approx sun point light 
 	//Really wants to be abitrary directional light, but putting it really far out with constant attenuation should also work
-	PointLight p = Lights()->addPointLight();
-	p.Position(glm::vec3(100000, 0, -100000));
+	DirectionalLight p = Lights()->addDirectionalLight();
+	p.Direction(glm::normalize(glm::vec3(-1, 0, 1)));
 	p.Ambient(glm::vec3(0.89f, 0.64f, 0.36f));
 	p.Diffuse(glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
 	p.Specular(glm::vec3(1, 1, 1));
@@ -58,7 +58,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	_p.Ambient(glm::vec3(0.0f));
 	_p.Diffuse(glm::vec3(0.5f));
 	_p.Specular(glm::vec3(0.02f));
-	_p.ConstantAttenuation(1.0f);
+	_p.ConstantAttenuation(0.5f);
 }
 /*
 Called once per frame when Scene animation calls should be 

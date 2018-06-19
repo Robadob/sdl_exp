@@ -1,6 +1,8 @@
 #include "LightsBuffer.h"
 #include "PointLight.h"
-#include "Spotlight.h"
+#include "SpotLight.h"
+#include "DirectionalLight.h"
+
 LightsBuffer::LightsBuffer(const glm::mat4 *viewMatPtr)
 	: UniformBuffer(MAX_LIGHTS*sizeof(LightProperties))
 	, tProperties()
@@ -26,6 +28,15 @@ SpotLight LightsBuffer::addSpotLight()
 	}
 	throw std::runtime_error("LightsBuffer::addSpotLight(): Max lights exceeded in light buffer.\n");
 }
+DirectionalLight LightsBuffer::addDirectionalLight()
+{
+	if (uniformBlock.lightsCount<MAX_LIGHTS)
+	{
+		unsigned int index = uniformBlock.lightsCount++;
+		return DirectionalLight(&uniformBlock.lights[index], &tProperties[index], index);
+	}
+	throw std::runtime_error("LightsBuffer::addSpotLight(): Max lights exceeded in light buffer.\n");
+}
 PointLight LightsBuffer::getPointLight(unsigned int index)
 {
 	if (index<uniformBlock.lightsCount)
@@ -41,6 +52,14 @@ SpotLight LightsBuffer::getSpotLight(unsigned int index)
 		return SpotLight(&uniformBlock.lights[index], &tProperties[index], index, false);
 	}
 	throw std::runtime_error("LightsBuffer::getSpotLight(): Light index is invalid.\n");
+}
+DirectionalLight LightsBuffer::getDirectionalLight(unsigned int index)
+{
+	if (index<uniformBlock.lightsCount)
+	{
+		return DirectionalLight(&uniformBlock.lights[index], &tProperties[index], index, false);
+	}
+	throw std::runtime_error("LightsBuffer::getDirectionalLight(): Light index is invalid.\n");
 }
 void LightsBuffer::update()
 {

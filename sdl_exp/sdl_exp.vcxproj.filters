@@ -193,6 +193,9 @@
     <None Include="visualisation\shader\lights\SpotLight.imp">
       <Filter>Source Files\Visualisation\Shader\Lights</Filter>
     </None>
+    <None Include="visualisation\shader\lights\DirectionalLight.imp">
+      <Filter>Source Files\Visualisation\Shader\Lights</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="visualisation\Axis.h">
@@ -342,11 +345,14 @@
     <ClInclude Include="visualisation\shader\lights\LightsBuffer.h">
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
     </ClInclude>
-    <ClInclude Include="visualisation\shader\lights\Spotlight.h">
-      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
-    </ClInclude>
     <ClInclude Include="visualisation\shader\ShadersVec.h">
       <Filter>Header Files\Visualisation\Shader</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\DirectionalLight.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\SpotLight.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

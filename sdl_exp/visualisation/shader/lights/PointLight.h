@@ -5,6 +5,9 @@
 
 class LightsBuffer;
 
+/**
+ * Denotes pointlight by setting spotCosCutoff to invalid range spotCosCutoff<0
+ */
 class PointLight
 {
 protected:
@@ -66,7 +69,7 @@ public:
 	/**
 	 * Quadratic attenuation factor k_{q}
 	 */
-	inline void QuadraticAttenuation(const float &factor);//<Doesn't link
+	inline void QuadraticAttenuation(const float &factor);
 	float QuadraticAttenuation() const{ return properties->quadraticAttenuation; }
 };
 

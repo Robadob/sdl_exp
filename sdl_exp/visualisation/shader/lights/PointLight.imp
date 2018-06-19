@@ -15,8 +15,8 @@ PointLight::PointLight(LightProperties * const props, LightsBuffer::TLightProper
 	if(init)
 	{
 		properties[0] = LightProperties();//Initialise light
-		tProperties->spotCutoff = 180.0f;
-		properties->spotCosCutoff = cos(tProperties->spotCutoff);
+		tProperties->spotCutoff = 180.0f;//This value should never be used, but just incase it evaluates to -1.0f
+		properties->spotCosCutoff = -1.0f;//Negative signifies this is point light
 	}
 }
 

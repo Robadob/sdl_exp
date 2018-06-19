@@ -2,6 +2,9 @@
 #define __SpotLight_h__
 #include "PointLight.h"
 
+/**
+ * Denotes spotlight by setting spotCosCutoff to valid range 0<=spotCosCutoff<=1
+ */
 class SpotLight : public PointLight
 {
 protected:
@@ -11,6 +14,7 @@ public:
 	inline SpotLight(const PointLight &old);
 	/**
 	 * The direction that the spotlight faces
+	 * This automatically normalises the value
 	 */
 	inline void Direction(const glm::vec3 &dir);
 	glm::vec3 Direction() const { return tProperties->spotDirection; }
@@ -31,5 +35,5 @@ public:
 	inline void Exponent(const float &exponent);
 	float Exponent() const { return properties->spotExponent; }
 };
-#include "Spotlight.imp"
+#include "SpotLight.imp"
 #endif //__SpotLight_h__

@@ -20,23 +20,23 @@ namespace Stock
             char *geometry;
         };
         const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
-        const ShaderSet FLAT{ "../shaders/flat.vert", "../shaders/material_flat.frag", nullptr };
-        const ShaderSet PHONG{ "../shaders/default.vert", "../shaders/material_phong.frag", nullptr };
-		const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
-		const ShaderSet COLOR_NOSHADE{ "../shaders/color.vert", "../shaders/color_noshade.frag", nullptr };
-        const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
-		const ShaderSet INSTANCED_FLAT{ "../shaders/instanced_flat.vert", "../shaders/material_flat.frag", nullptr };
-		const ShaderSet INSTANCED_PHONG{ "../shaders/instanced_default.vert", "../shaders/material_phong.frag", nullptr };
-		const ShaderSet TEXT{ "../shaders/default.vert", "../shaders/text.frag", nullptr };
-		const ShaderSet SPRITE2D{ "../shaders/default.vert", "../shaders/sprite2d.frag", nullptr };
-		const ShaderSet SPRITE2D_HEAT{ "../shaders/default.vert", "../shaders/sprite2dHeat.frag", nullptr };
-        const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
-		const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
-		const ShaderSet FLAT_SHADOW{ "../shaders/shadow.vert", "../shaders/material_flat_shadow.frag", nullptr };
-		const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/material_phong_shadow.frag", nullptr };
-		const ShaderSet BONE{ "../shaders/bone.vert", "../shaders/material_phong.frag", nullptr };
-		const ShaderSet BONE_LINEAR_DEPTH{ "../shaders/bone.vert", "../shaders/linear_depth.frag", nullptr };
-		const ShaderSet BONE_SHADOW{ "../shaders/bone_shadow.vert", "../shaders/material_phong_shadow.frag", nullptr };
+        const ShaderSet FLAT{ "flat.vert", "material_flat.frag", nullptr };
+        const ShaderSet PHONG{ "default.vert", "material_phong.frag", nullptr };
+		const ShaderSet COLOR{ "color.vert", "color.frag", nullptr };
+		const ShaderSet COLOR_NOSHADE{ "color.vert", "color_noshade.frag", nullptr };
+        const ShaderSet SKYBOX{ "skybox.vert", "skybox.frag", nullptr };
+		const ShaderSet INSTANCED_FLAT{ "instanced_flat.vert", "material_flat.frag", nullptr };
+		const ShaderSet INSTANCED_PHONG{ "instanced_default.vert", "material_phong.frag", nullptr };
+		const ShaderSet TEXT{ "default.vert", "text.frag", nullptr };
+		const ShaderSet SPRITE2D{ "default.vert", "sprite2d.frag", nullptr };
+		const ShaderSet SPRITE2D_HEAT{ "default.vert", "sprite2dHeat.frag", nullptr };
+        const ShaderSet BILLBOARD{ "billboard.vert", "particle.frag", nullptr };
+		const ShaderSet LINEAR_DEPTH{ "default.vert", "linear_depth.frag", nullptr };
+		const ShaderSet FLAT_SHADOW{ "shadow.vert", "material_flat_shadow.frag", nullptr };
+		const ShaderSet PHONG_SHADOW{ "shadow.vert", "material_phong_shadow.frag", nullptr };
+		const ShaderSet BONE{ "bone.vert", "material_phong.frag", nullptr };
+		const ShaderSet BONE_LINEAR_DEPTH{ "bone.vert", "linear_depth.frag", nullptr };
+		const ShaderSet BONE_SHADOW{ "bone_shadow.vert", "material_phong_shadow.frag", nullptr };
     }
 }
 /**

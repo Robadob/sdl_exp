@@ -15,7 +15,7 @@ class Texture2D;
  */
 class GaussianBlur : public Reloadable
 {
-	const char *GAUSSIAN_BLUR_SHADER_PATH = "../shaders/gaussian_blur.comp";
+	const char *GAUSSIAN_BLUR_SHADER_PATH = "gaussian_blur.comp";
 public:
 	/**
 	 * Builds the compute shader and preconfigures the weights

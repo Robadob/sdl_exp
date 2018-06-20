@@ -729,18 +729,42 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
 	strcpy(this->shaderTag, shaderName.c_str());
 	return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
 }
+#include <filesystem>
+#ifdef _MSC_VER
+#define filesystem tr2::sys
+#endif
 char* ShaderCore::loadShaderSource(const char* file){
+	static std::string shadersRoot;
+	if (shadersRoot.empty())
+	{
+		//Locate the root directory of the solution
+		//Follow up tree a few layers checking for a shaders directory.
+		shadersRoot = "./shaders/";
+		for (unsigned int i = 0; i < 5; ++i)
+		{
+			if (std::filesystem::exists(std::filesystem::path(shadersRoot)))
+				break;
+			shadersRoot = std::string("./.") + shadersRoot;
+		}
+		if (!std::filesystem::exists(std::filesystem::path(shadersRoot)))
+			shadersRoot = "./";
+	}
 	// If file path is 0 it is being omitted. kinda gross
 	if (file != nullptr){
-		FILE* fptr = fopen(file, "rb");
-		if (!fptr){
-			fprintf(stderr, "Shader source not found: %s\n", file);
-			if(exitOnError)
-			{
-				getchar();
-				exit(1);
+		std::string shaderPath = shadersRoot + file;
+		FILE* fptr = fopen(shaderPath.c_str(), "rb");//Attempt with shader root
+		if (!fptr)
+		{
+			fptr = fopen(file, "rb");//Attempt without shader root
+			if (!fptr){
+				fprintf(stderr, "Shader source not found: %s\n", file);
+				if (exitOnError)
+				{
+					getchar();
+					exit(1);
+				}
+				return nullptr;
 			}
-			return nullptr;
 		}
 		fseek(fptr, 0, SEEK_END);
 		long length = ftell(fptr);

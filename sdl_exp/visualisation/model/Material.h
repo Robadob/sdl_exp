@@ -166,11 +166,23 @@ public:
     void setDiffuse(const glm::vec3 diffuse) { this->properties.diffuse = diffuse; updatePropertiesUniform(); }
     void setSpecular(const glm::vec3 specular) { this->properties.specular = specular; updatePropertiesUniform(); }
     void setAmbient(const glm::vec3 ambient) { this->properties.ambient = ambient; updatePropertiesUniform(); }
+	/*
+	 * Currently unused
+	 */
     void setEmissive(const glm::vec3 emissive) { this->properties.emissive = emissive; updatePropertiesUniform(); }
+	/**
+	 * Currently unused
+	 */
     void setTransparent(const glm::vec3 transparent) { this->properties.transparent = transparent; updatePropertiesUniform(); }
     void setOpacity(const float opacity) { this->properties.opacity = opacity; updatePropertiesUniform(); }
     void setShininess(const float shininess) { this->properties.shininess = shininess; updatePropertiesUniform(); }
+	/**
+	 * This is currently unused, unclear how it differs from shininess
+	 */
     void setShininessStrength(const float shininessStrength) { this->properties.shininessStrength = shininessStrength; updatePropertiesUniform(); }
+	/**
+	 * Currently unused
+	 */
     void setRefractionIndex(const float refractionIndex) { this->properties.refractionIndex = refractionIndex; updatePropertiesUniform(); }
     
     void setWireframe(const bool isWireframe) { this->isWireframe = isWireframe; }

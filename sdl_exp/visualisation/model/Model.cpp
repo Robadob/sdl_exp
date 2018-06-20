@@ -91,14 +91,9 @@ void Model::reload()
 				if (auto c = a.second.lock())
 					c->setVisible(b->second);
 		}
-		if (viewMatPtr)
-			setViewMatPtr(viewMatPtr);
-		if (projMatPtr)
-			setProjectionMatPtr(projMatPtr);
-		if (lightsBufferBindPt >= 0)
-			setLightsBuffer(lightsBufferBindPt);
-		for (auto &s:shaders)
-			s->setMaterialBuffer(materialBuffer);
+		//Can't refresh viewMat, projMat here, breaks custom shaders which have alts
+		//Would have to bind those alts as dynamicMat4 instead
+		//Not necessary anyway
 	}
 }
 VFCcount countVertices(const struct aiScene* scene, const struct aiNode* nd)

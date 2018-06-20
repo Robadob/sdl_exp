@@ -76,7 +76,7 @@ void main()
   
   //Apply shadow visibility (1 shadow map shadows all lights, but meh)
   float visibility = makeVisibility();
-  diffuse *= visibility;
+  diffuse.rgb *= visibility;
   specular *= visibility;
   
   //No lights, so render full bright

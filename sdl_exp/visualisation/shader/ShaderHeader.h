@@ -34,10 +34,10 @@
 		vec3 diffuse;           //Diffuse color
 		float shininess;
 		vec3 specular;          //Specular color
-        float shininessStrength;
-		vec3 emissive;          //Emissive color (light emitted)
-        float refractionIndex;
-		vec3 transparent;       //Transparent color, multiplied with translucent light to construct final color
+        float shininessStrength;//Unused, unclear how this differs from shininess
+		vec3 emissive;          //Unused, Emissive color (light emitted)
+        float refractionIndex;	//Unused
+		vec3 transparent;       //Unused, Transparent color, multiplied with translucent light to construct final color
         uint bitmask;           //bitmask to calculate which textures are available
     };
 

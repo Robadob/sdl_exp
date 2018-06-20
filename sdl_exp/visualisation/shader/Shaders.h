@@ -20,7 +20,9 @@ namespace Stock
             char *geometry;
         };
         const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
-        const ShaderSet FLAT{ "flat.vert", "material_flat.frag", nullptr };
+		const ShaderSet FULLBRIGHT_FLAT{ "default.vert", "material_fullbright_flat.frag", nullptr };
+		const ShaderSet FULLBRIGHT_PHONG{ "default.vert", "material_fullbright_phong.frag", nullptr };
+        const ShaderSet FLAT{ "default.vert", "material_flat.frag", nullptr };
         const ShaderSet PHONG{ "default.vert", "material_phong.frag", nullptr };
 		const ShaderSet COLOR{ "color.vert", "color.frag", nullptr };
 		const ShaderSet COLOR_NOSHADE{ "color.vert", "color_noshade.frag", nullptr };

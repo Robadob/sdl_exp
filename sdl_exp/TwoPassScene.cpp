@@ -8,7 +8,7 @@ TwoPassScene::SceneContent::SceneContent()
 	: deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT_SHADOW }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
-	, lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
+	, lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FULLBRIGHT_FLAT }))
 	, bob(new Model("..\\models\\bob\\bob.md5mesh", 35.0f, true, { Stock::Shaders::BONE_LINEAR_DEPTH, Stock::Shaders::BONE_SHADOW }))
     , blur(new GaussianBlur(5,1.75f))
     , pointlightPos(75, 100, 0)//100 units up, radius of 75
@@ -106,7 +106,7 @@ void TwoPassScene::update(unsigned int frameTime)
 	this->tick = (float)fmod(this->tick, 360*8);
 	this->tick2 = (float)fmod(this->tick2, 360*8);
     //Move spotlight
-    const float SPOTLIGHT_RAD = 75.0f;
+    const float SPOTLIGHT_RAD = 70.0f;
     this->content->pointlightPos = glm::vec3(SPOTLIGHT_RAD * sin(this->tick), 100, SPOTLIGHT_RAD * cos(this->tick));
     this->content->pointlightV = glm::lookAt(
         content->pointlightPos,
@@ -172,7 +172,6 @@ TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content
 //Renders the scene to a depth texture from the lights perspective
 void TwoPassScene::ShadowPass::render()
 {
-	GL_CALL(glDisable(GL_BLEND));
     content->deerModel->render(0);
     content->sphereModel->render(0);
 	content->planeModel->render(0);

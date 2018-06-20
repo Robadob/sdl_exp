@@ -4,9 +4,10 @@
 
 /**
  * Denotes a directional light by setting spotCosCutoff to invalid range spotCosCutoff>1
- * Stores direction in spotDirection, ignores position
+ * Stores direction in spotDirection, ignores position and hence only has constant attenuation
+ * @note Protected override to prevent unwanted casting
  */
-class DirectionalLight : public PointLight
+class DirectionalLight : protected PointLight
 {
 protected:
 	friend class LightsBuffer;
@@ -16,9 +17,18 @@ public:
 	/**
 	 * The direction that the light faces
 	 * This automatically normalises the value
+	 * @note Default value (0,0,-1)
 	 */
 	inline void Direction(const glm::vec3 &dir);
 	glm::vec3 Direction() const { return tProperties->spotDirection; }
+
+	//Shared properties
+	using PointLight::Index;
+	using PointLight::Color;
+	using PointLight::Ambient;
+	using PointLight::Diffuse;
+	using PointLight::Specular;
+	using PointLight::ConstantAttenuation;
 private:
 	//Directional light needs no position, or fancy attenuation (as it has no position)
 	using PointLight::Position;

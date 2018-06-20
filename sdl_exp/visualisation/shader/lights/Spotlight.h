@@ -4,8 +4,9 @@
 
 /**
  * Denotes spotlight by setting spotCosCutoff to valid range 0<=spotCosCutoff<=1
+ * @note Protected override to prevent unwanted casting
  */
-class SpotLight : public PointLight
+class SpotLight : protected PointLight
 {
 protected:
 	friend class LightsBuffer;
@@ -15,12 +16,14 @@ public:
 	/**
 	 * The direction that the spotlight faces
 	 * This automatically normalises the value
+	 * @note Default value (0,0,-1)
 	 */
 	inline void Direction(const glm::vec3 &dir);
 	glm::vec3 Direction() const { return tProperties->spotDirection; }
 	/**
 	 * The angle of the spotlight's beam in degrees
 	 * This value is valid from 0-90 inclusive
+	 * @note Default value 45.0f degrees
 	 */
 	inline void CutOff(const float &degrees);
 	float CutOff() const { return tProperties->spotCutoff; }
@@ -31,9 +34,22 @@ public:
 	 * the direction of the light and the direction from the light to the vertex being lit,
 	 * raised to the power of the spot exponent.
 	 * Thus, higher spot exponents result in a more focused light source.
+	 * Visible if you use a value like 50, with constant attenuation of 1
+	 * @note Default value 0.0f
 	 */
 	inline void Exponent(const float &exponent);
 	float Exponent() const { return properties->spotExponent; }
+
+	//Shared properties
+	using PointLight::Index;
+	using PointLight::Position;
+	using PointLight::Color;
+	using PointLight::Ambient;
+	using PointLight::Diffuse;
+	using PointLight::Specular;
+	using PointLight::ConstantAttenuation;
+	using PointLight::LinearAttenuation;
+	using PointLight::QuadraticAttenuation;
 };
 #include "SpotLight.imp"
 #endif //__SpotLight_h__

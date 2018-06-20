@@ -40,16 +40,19 @@ public:
 	inline void Color(const glm::vec3 &rgb, const float &ambiFactor, const float &diffFactor, const float &specFactor);
 	/**
 	 * The ambient component of the light's colour
+	 * @note Default value (0,0,0) [Black]
 	 */
 	inline void Ambient(const glm::vec3 &rgb);
 	glm::vec3 Ambient() const { return properties->ambient; }
 	/**
 	 * The diffuse component of the light's colour
+	 * @note Default value (1,1,1) [White]
 	 */
 	inline void Diffuse(const glm::vec3 &rgb);
 	glm::vec3 Diffuse() const { return properties->diffuse; }
 	/**
 	 * The specular component of the light's colour
+	 * @note Default value (1,1,1) [White]
 	 */
 	inline void Specular(const glm::vec3 &rgb);
 	glm::vec3 Specular() const { return properties->specular; }
@@ -58,16 +61,20 @@ public:
 	 */
 	/**
 	 * Constant attenuation factor k_{c}
+	 * @note Default value 1
+	 * @note The inverse of this value is used, higher values lead to weaker lights
 	 */
 	inline void ConstantAttenuation(const float &factor);
 	float ConstantAttenuation() const { return properties->constantAttenuation; }
 	/**
 	 * Linear attenuation factor k_{l}
+	 * @note Default value 0
 	 */
 	inline void LinearAttenuation(const float &factor);
 	float LinearAttenuation() const { return properties->linearAttenuation; }
 	/**
 	 * Quadratic attenuation factor k_{q}
+	 * @note Default value 0
 	 */
 	inline void QuadraticAttenuation(const float &factor);
 	float QuadraticAttenuation() const{ return properties->quadraticAttenuation; }

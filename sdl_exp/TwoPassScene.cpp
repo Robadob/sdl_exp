@@ -58,9 +58,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	p.ConstantAttenuation(1.0f);
 	p.Direction(this->content->pointlightTarget - this->content->pointlightPos);
 	p.CutOff(15.0f);
-    //content->deerModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos),3);
-    //content->sphereModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
-    //content->planeModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
+	p.Exponent(70.0f);
 
     //Spotlight camera at pointlightPos looking in pointlightTarget, with up vector looking up y axis
     //These must be set *AFTER* the parent entities have been registered (need to fiddle with shaders to better handle this use case)

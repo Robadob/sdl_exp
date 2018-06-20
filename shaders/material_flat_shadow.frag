@@ -94,6 +94,7 @@ void main()
     for(uint i = 0;i<lightsCount;i++)
     {
       float attenuation;
+      float intensity = 1.0f;
       vec3 surfaceToLight;
       //Init light specific values
       if(light[i].spotCosCutoff>1.0f)
@@ -106,18 +107,17 @@ void main()
         surfaceToLight = normalize(light[i].position.xyz - eyeVertex);
         if(light[i].spotCosCutoff>=0.0f)
         {//Spotlight
-          if(dot(surfaceToLight,-light[i].spotDirection)<light[i].spotCosCutoff)
-          {//Skip spotlight if we are out of it's cone
-            continue;
-          }
+          float spotCos = dot(surfaceToLight,-light[i].spotDirection);
+          //Step works as (spotCos>light[i].spotCosCutoff?0:1)
           //Handle spotExponent
+          intensity = step(light[i].spotCosCutoff, spotCos) * pow(spotCos, light[i].spotExponent);
         }
         //Pointlight(or in range spotlight)      
         float dist2 = dot(surfaceToLight, surfaceToLight);
         float dist = sqrt(dist2);
         attenuation = (light[i].constantAttenuation)+(light[i].linearAttenuation*dist)+(light[i].quadraticAttenuation*dist2);
       }
-      attenuation = clamp(1/attenuation,0.0f,1.0f);
+      attenuation = clamp(intensity/attenuation,0.0f,1.0f);
       
       //Process Ambient
       {

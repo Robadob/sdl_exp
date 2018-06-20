@@ -46,35 +46,43 @@ void ShaderCore::reload()
 	//Clear shadertag
 	if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
 	this->shaderTag = "";
-	//Create temporary shader program
-	GLuint t_programId = GL_CALL(glCreateProgram());
-	//Pass it to subclass to compile shaders
-	if (this->_compileShaders(t_programId))
-	{
-		// Link the program and ensure the program compiled correctly;
-		GL_CALL(glLinkProgram(t_programId));
+	while (true)
+	{//Iterate until shader compilation has been corrected
+		//Create temporary shader program
+		GLuint t_programId = GL_CALL(glCreateProgram());
+		//Pass it to subclass to compile shaders
+		if (this->_compileShaders(t_programId))
+		{
+			// Link the program and ensure the program compiled correctly;
+			GL_CALL(glLinkProgram(t_programId));
 
-		// If the program linked ok, then we update the instance variable (for live reloading)
-		if (this->checkProgramLinkError(t_programId)){
-			// Destroy the old program
-			this->destroyProgram();
-			// Update the class var for the next usage.
-			this->programId = t_programId;
+			// If the program linked ok, then we update the instance variable (for live reloading)
+			if (this->checkProgramLinkError(t_programId)){
+				// Destroy the old program
+				this->destroyProgram();
+				// Update the class var for the next usage.
+				this->programId = t_programId;
+			}
+			else
+			{
+				//Compilation failed, cleanup temp program
+				GL_CALL(glDeleteProgram(t_programId));
+				deleteShaders();
+				fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+				getchar();
+				continue;
+			}
 		}
 		else
 		{
 			//Compilation failed, cleanup temp program
 			GL_CALL(glDeleteProgram(t_programId));
 			deleteShaders();
-			return;
+			fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+			getchar();
+			continue;
 		}
-	}
-	else
-	{
-		//Compilation failed, cleanup temp program
-		GL_CALL(glDeleteProgram(t_programId));
-		deleteShaders();
-		return;
+		break;
 	}
 	this->setupBindings();
 }

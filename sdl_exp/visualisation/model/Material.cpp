@@ -186,16 +186,16 @@ void Material::use(glm::mat4 &transform, unsigned int index, bool requiresPrepar
 		//Treat all materials as having alpha until we can add a suitable check/switch
 		//if (hasAlpha || this->properties.opacity>1.0f)
 		//{
-			if (index>=shaders.size())
-			{
-				GL_CALL(glEnable(GL_BLEND));
-				GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
-			}
-		//}
-		//else
-		//{
-		//	GL_CALL(glDisable(GL_BLEND));
-		//}
+		if ((index<shaders.size() && shaders[index]->supportsGL_BLEND())
+			|| (index >= shaders.size() && defaultShader->supportsGL_BLEND()))
+		{
+			GL_CALL(glEnable(GL_BLEND));
+			GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
+		}
+		else
+		{
+			GL_CALL(glDisable(GL_BLEND));
+		}
         
     	active = this;
     }

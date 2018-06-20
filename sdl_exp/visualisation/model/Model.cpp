@@ -536,9 +536,29 @@ void Model::loadModel()
     GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->vfc.f*sizeof(unsigned int), data->faces, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-	printf("\rLoading Model: %s [Configuring Shaders]           ", su::getFilenameFromPath(modelPath).c_str());
+	//Check vertex weights make sense
+	for (unsigned int i = 0; i < data->verticesSize;++i)
+	{
+		float c = 0.0f;
+		for (unsigned int j = 0; j < data->boneData->COUNT;++j)
+		{
+			c += data->boneData[i].Weights()[j];
+		}
+		assert(glm::epsilonEqual(c, 1.0f, 0.001f) || glm::epsilonEqual(c, 0.0f, 0.001f));
+	}
+
+	printf("\rLoading Model: %s [Performing First Animation]           ", su::getFilenameFromPath(modelPath).c_str());
+	//Fbx needs special handling...
+	//Handle missing inverseRootTransform
+	updateBoneTransforms(0);
+	if (su::endsWith(modelPath, ".fbx", false))
+		computeInverseRootTransform();
+
+	//printf("\rLoading Model: %s [Configuring Shaders]           ", su::getFilenameFromPath(modelPath).c_str());
+	printf("\rLoading Model: %s [Complete!]                           \n", su::getFilenameFromPath(modelPath).c_str());
+	//Report complete early because shader setup can write to console.
 	//Inform shaders
-	for (auto &s:shaders)
+	for (auto &s : shaders)
 	{
 		s->setPositionsAttributeDetail(positions);
 		s->setNormalsAttributeDetail(normals);
@@ -571,25 +591,6 @@ void Model::loadModel()
 		}
 		data->materials[i]->setCustomShaders(shaders);//Clone shaders into every material, so they can bind their own textures etc
 	}
-	//Check vertex weights make sense
-	for (unsigned int i = 0; i < data->verticesSize;++i)
-	{
-		float c = 0.0f;
-		for (unsigned int j = 0; j < data->boneData->COUNT;++j)
-		{
-			c += data->boneData[i].Weights()[j];
-		}
-		assert(glm::epsilonEqual(c, 1.0f, 0.001f) || glm::epsilonEqual(c, 0.0f, 0.001f));
-	}
-
-	printf("\rLoading Model: %s [Performing First Animation]           ", su::getFilenameFromPath(modelPath).c_str());
-	//Fbx needs special handling...
-	//Handle missing inverseRootTransform
-	updateBoneTransforms(0);
-	if (su::endsWith(modelPath, ".fbx", false))
-		computeInverseRootTransform();
-
-	printf("\rLoading Model: %s [Complete!]                           \n", su::getFilenameFromPath(modelPath).c_str());
 }
 unsigned int Model::loadExternalAnimation(const std::string &path)
 {

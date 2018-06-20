@@ -191,6 +191,31 @@ void Shaders::bindAttribute(int *rtn, const char *attributeName, GLenum attribut
         *rtn = -1;
 }
 void Shaders::_setupBindings(){
+	//Check whether shader supports blend (has it got an output alpha channel?)
+	{
+		this->supportsBlend = false;
+		GLint numOutputs = 0;
+		GL_CALL(glGetProgramInterfaceiv(this->getProgram(), GL_PROGRAM_OUTPUT, GL_ACTIVE_RESOURCES, &numOutputs));
+		const GLenum properties[2] = { GL_TYPE, GL_REFERENCED_BY_FRAGMENT_SHADER };
+		for (int i = 0; i < numOutputs; ++i)
+		{
+			GLint vals[2] = { 0, 0 };
+			GL_CALL(glGetProgramResourceiv(this->getProgram(), GL_PROGRAM_OUTPUT, i, 2, properties, 2, nullptr, vals));
+			if (vals[1] != 0)
+			{//Output from frag shader
+				if (vals[0] == GL_FLOAT_VEC4
+					|| vals[0] == GL_DOUBLE_VEC4
+					|| vals[0] == GL_INT_VEC4
+					|| vals[0] == GL_UNSIGNED_INT_VEC4
+					|| vals[0] == GL_BOOL_VEC4
+					)
+				{//Shader has an alpha channel
+					this->supportsBlend = true;
+					break;
+				}
+			}
+		}
+	}
     //MVP
     bindUniform(&this->modelMat.location, MODEL_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
     bindUniform(&this->viewMat.location, VIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);

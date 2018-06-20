@@ -382,7 +382,16 @@ public:
 	 * @param color The RGBA value of the color
 	 */
     void setColor(glm::vec4 color);
+	/**
+	 * Returns whether shader allows GL_BLEND to be used
+	 */
+	bool supportsGL_BLEND() const { return supportsBlend; }
 private:
+	/**
+	 * Whether shader allows usage of GL_BLEND
+	 * This is based on whether a fragment output includes an alpha channel
+	 */
+	bool supportsBlend = false;
     /**
 	 * Face index vbo
 	 */

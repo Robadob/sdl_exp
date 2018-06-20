@@ -103,10 +103,11 @@ void main()
         surfaceToLight = normalize(light[i].position.xyz - eyeVertex);
         if(light[i].spotCosCutoff>=0.0f)
         {//Spotlight
-          if(dot(surfaceToLight,light[i].spotDirection)>=light[i].spotCosCutoff)
+          if(dot(surfaceToLight,-light[i].spotDirection)<light[i].spotCosCutoff)
           {//Skip spotlight if we are out of it's cone
             continue;
           }
+          //Handle spotExponent
         }
         //Pointlight(or in range spotlight)      
         float dist2 = dot(surfaceToLight, surfaceToLight);

@@ -57,7 +57,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	p.Specular(glm::vec3(1, 1, 1));
 	p.ConstantAttenuation(1.0f);
 	p.Direction(this->content->pointlightTarget - this->content->pointlightPos);
-	p.CutOff(45.0f);
+	p.CutOff(15.0f);
     //content->deerModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos),3);
     //content->sphereModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
     //content->planeModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);

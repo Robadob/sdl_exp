@@ -182,6 +182,12 @@
     <ClCompile Include="visualisation\shader\lights\LightsBuffer.cpp">
       <Filter>Source Files\Visualisation\Shader\Lights</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\shader\lights\PointLightModel.cpp">
+      <Filter>Source Files\Visualisation\Shader\Lights</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\shader\lights\SpotLightModel.cpp">
+      <Filter>Source Files\Visualisation\Shader\Lights</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -352,6 +358,12 @@
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\shader\lights\SpotLight.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\PointLightModel.h">
+      <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\shader\lights\SpotLightModel.h">
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
     </ClInclude>
   </ItemGroup>

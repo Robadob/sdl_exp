@@ -19,12 +19,12 @@ class TwoPassScene : public MultiPassScene
 	 */
 	struct SceneContent
 	{
-		SceneContent();
+		SceneContent(std::shared_ptr<LightsBuffer> lights);
+		std::shared_ptr<LightsBuffer> lights;
 		//Models used
         std::shared_ptr<Entity> deerModel;
         std::shared_ptr<Entity> sphereModel;
         std::shared_ptr<Entity> planeModel;
-		std::shared_ptr<Entity> lightModel;
 		std::shared_ptr<Model> bob;
 		//Blur provider
         std::shared_ptr<GaussianBlur> blur;

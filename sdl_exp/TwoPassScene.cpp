@@ -4,11 +4,11 @@
 #include <glm/gtc/matrix_transform.inl>
 #include <glm/gtc/type_ptr.hpp>
 //Create content struct
-TwoPassScene::SceneContent::SceneContent()
-	: deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+TwoPassScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights)
+	: lights(lights)
+	, deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
     , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT_SHADOW }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
-	, lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FULLBRIGHT_FLAT }))
 	, bob(new Model("..\\models\\bob\\bob.md5mesh", 35.0f, true, { Stock::Shaders::BONE_LINEAR_DEPTH, Stock::Shaders::BONE_SHADOW }))
     , blur(new GaussianBlur(5,1.75f))
     , pointlightPos(75, 100, 0)//100 units up, radius of 75
@@ -23,11 +23,10 @@ TwoPassScene::SceneContent::SceneContent()
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
 	bob->setLocation(glm::vec3(-20,0,10));
-	lightModel->setMaterial(Stock::Materials::WHITE);
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
-	, content(std::make_shared<SceneContent>())
+	, content(std::make_shared<SceneContent>(Lights()))
     , sPass(std::make_shared<ShadowPass>(content))
     , cPass(std::make_shared<CompositePass>(content))
 	, tick(0.0f)
@@ -38,7 +37,6 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     registerEntity(content->deerModel);
     registerEntity(content->sphereModel);
     registerEntity(content->planeModel);
-	registerEntity(content->lightModel);
 	registerEntity(content->bob);
 	////Register render passes in correct order
 	addPass(0, sPass);
@@ -48,7 +46,6 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
-	content->lightModel->setMaterial(Stock::Materials::WHITE_PLASTIC);
 
 	SpotLight p = Lights()->addSpotLight();
 	p.Position(this->content->pointlightPos);
@@ -119,7 +116,6 @@ void TwoPassScene::update(unsigned int frameTime)
 	//Attach light source to moving light
 	Lights()->getSpotLight(0).Position(this->content->pointlightPos);
 	Lights()->getSpotLight(0).Direction(this->content->pointlightTarget - this->content->pointlightPos);
-	this->content->lightModel->setLocation(this->content->pointlightPos);
 	//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
 	//this->content->deerModel->setLocation(glm::vec3(20 * sin(this->tick), 0, 20 * cos(this->tick)));
 }
@@ -190,5 +186,5 @@ void TwoPassScene::CompositePass::render()
 	content->planeModel->render(1);
 	content->bob->render(1);
 	//Render something at the lights location
-    content->lightModel->render();
+	content->lights->render();
 }

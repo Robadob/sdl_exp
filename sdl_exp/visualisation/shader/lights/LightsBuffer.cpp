@@ -7,6 +7,7 @@ LightsBuffer::LightsBuffer(const glm::mat4 *viewMatPtr)
 	: UniformBuffer(MAX_LIGHTS*sizeof(LightProperties))
 	, tProperties()
 	, viewMatPtr(viewMatPtr)
+	, projMatPtr(nullptr)
 {
 	uniformBlock.lightsCount = 0;
 }
@@ -88,6 +89,46 @@ void LightsBuffer::update()
 	}
 	setData(&uniformBlock, sizeof(glm::vec4) + (uniformBlock.lightsCount * sizeof(LightProperties)));//sizeof(LightUniformBlock)
 }
+//Rendering stuff
+void LightsBuffer::initModels()
+{
+	if (!modelPointLight)
+		modelPointLight = std::make_unique<PointLightModel>();
+	modelPointLight->setViewMatPtr(viewMatPtr);
+	modelPointLight->setProjectionMatPtr(projMatPtr);
+	if (!modelSpotLight)
+		modelSpotLight = std::make_unique<SpotLightModel>();
+	modelSpotLight->setViewMatPtr(viewMatPtr);
+	modelSpotLight->setProjectionMatPtr(projMatPtr);
+}
+void LightsBuffer::setRenderScale(const float& scale)
+{
+	if (!modelPointLight)
+		initModels();
+	modelPointLight->setScale(scale);
+	modelSpotLight->setScale(scale);
+}
+void LightsBuffer::render()
+{
+	if (!modelPointLight)
+		initModels();
+	for (unsigned int i = 0; i < uniformBlock.lightsCount; ++i)
+	{
+		if (uniformBlock.lights[i].spotCosCutoff<0)
+		{//Pointlight
+			modelPointLight->render(tProperties[i].position, uniformBlock.lights[i].diffuse);
+		}
+		else if (uniformBlock.lights[i].spotCosCutoff<=1)
+		{//Spotlight
+			modelSpotLight->render(tProperties[i].position, tProperties[i].spotDirection, tProperties[i].spotCutoff, uniformBlock.lights[i].diffuse);
+		}
+		else
+		{//Directional light
+			
+		}
+	}
+}
+
 
 //Comment out this include if not making use of Shaders/ShaderCore
 #include "../../interface/Renderable.h"

@@ -118,6 +118,8 @@
     <None Include="visualisation\shader\lights\SpotLight.imp">
       <FileType>CppCode</FileType>
     </None>
+    <ClCompile Include="visualisation\shader\lights\PointLightModel.cpp" />
+    <ClCompile Include="visualisation\shader\lights\SpotLightModel.cpp" />
     <ClCompile Include="visualisation\shader\ShaderCore.cpp" />
     <ClCompile Include="visualisation\shader\Shaders.cpp" />
     <ClCompile Include="visualisation\Skybox.cpp" />
@@ -174,7 +176,9 @@
     <ClInclude Include="visualisation\shader\lights\DirectionalLight.h" />
     <ClInclude Include="visualisation\shader\lights\LightsBuffer.h" />
     <ClInclude Include="visualisation\shader\lights\PointLight.h" />
+    <ClInclude Include="visualisation\shader\lights\PointLightModel.h" />
     <ClInclude Include="visualisation\shader\lights\SpotLight.h" />
+    <ClInclude Include="visualisation\shader\lights\SpotLightModel.h" />
     <ClInclude Include="visualisation\shader\ShaderCore.h" />
     <ClInclude Include="visualisation\shader\ShaderHeader.h" />
     <ClInclude Include="visualisation\shader\Shaders.h" />

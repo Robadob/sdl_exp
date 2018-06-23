@@ -38,7 +38,7 @@ Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::ini
     , viewMat()
     , projectionMat()
     , materialIDLocation(-1)
-    , materialIDVal(0)
+    , materialIDVal(INT_MAX)
     , modelviewprojectionMatLoc(-1)
     , modelviewMatLoc(-1)
     , normalMatLoc(-1)
@@ -529,6 +529,7 @@ void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad, bool update
 {
     vad.location = this->positions.location;
     this->positions = vad;
+	assert(this->positions.vbo > 0);//vbo must be set, else we wont render anything!
 	if (update)
 		buildVAO();
 }

@@ -2,6 +2,8 @@
 #define __LightsBuffer_h__
 #include "../buffer/UniformBuffer.h"
 #include "../ShaderHeader.h"
+#include "PointLightModel.h"
+#include "SpotLightModel.h"
 
 class PointLight;
 class SpotLight;
@@ -28,6 +30,7 @@ public:
 		{
 			
 		}
+		//Stored in radians
 		float spotCutoff;
 		glm::vec4 position;
 		glm::vec4 spotDirection;
@@ -44,9 +47,9 @@ public:
 	 */
 	SpotLight addSpotLight();
 	/**
-	* Increments the number of lights and returns the newest light as a directional light
-	* @throws runtime_error If the number of lights would exceed MAX_LIGHTS
-	*/
+	 * Increments the number of lights and returns the newest light as a directional light
+	 * @throws runtime_error If the number of lights would exceed MAX_LIGHTS
+	 */
 	DirectionalLight addDirectionalLight();
 	/**
 	 * Returns the light at the given index in the buffer as a point light
@@ -83,15 +86,27 @@ public:
 	using BufferCore::getType;
 	using BufferCore::getBufferBindPoint;
 	/**
-	* Sets the pointer from which the View matrix should be loaded from
-	* @param viewMat A pointer to the viewMatrix to be tracked
-	* @note This pointer is likely provided by a Camera subclass
-	*/
-	void setViewMatPtr(const glm::mat4  *viewMat) { viewMatPtr = viewMat; };
+	 * Sets the pointer from which the View matrix should be loaded from
+	 * @param viewMat A pointer to the viewMatrix to be tracked
+	 * @note This pointer is likely provided by a Camera subclass
+	 */
+	void setViewMatPtr(const glm::mat4  *viewMat) { viewMatPtr = viewMat; }
+	/**
+	 * Sets the pointer from which the projection matrix should be loaded from
+	 * @param projMat A pointer to the projection matrix to be tracked
+	 * @note This is only required to be set if render() will be called
+	 */
+	void setProjectionMatPtr(const glm::mat4  *projMat) { projMatPtr = projMat; }
+	void setRenderScale(const float &scale);
+	void render();
 private:
 	LightUniformBlock uniformBlock;
 	TLightProperties tProperties[MAX_LIGHTS];
 	const glm::mat4 *viewMatPtr;
+	const glm::mat4 *projMatPtr;
+	void initModels();
+	std::unique_ptr<PointLightModel> modelPointLight;
+	std::unique_ptr<SpotLightModel> modelSpotLight;
 };
 
 #include "PointLight.h"

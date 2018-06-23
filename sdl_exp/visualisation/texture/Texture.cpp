@@ -81,44 +81,83 @@ GLenum Texture::filterMagOption() const
 }
 
 //Wrap Options
-const unsigned long long Texture::WRAP_REPEAT				= 1ull << 9;//GL_Default value
-const unsigned long long Texture::WRAP_CLAMP_TO_EDGE		= 1ull << 10;
-const unsigned long long Texture::WRAP_CLAMP_TO_BORDER		= 1ull << 11;
-const unsigned long long Texture::WRAP_MIRRORED_REPEAT		= 1ull << 12;
-const unsigned long long Texture::WRAP_MIRROR_CLAMP_TO_EDGE = 1ull << 13;
-GLenum Texture::wrapOption() const
+const unsigned long long Texture::WRAP_REPEAT_U               = 1ull << 9;//GL_Default value
+const unsigned long long Texture::WRAP_CLAMP_TO_EDGE_U        = 1ull << 10;
+const unsigned long long Texture::WRAP_CLAMP_TO_BORDER_U      = 1ull << 11;
+const unsigned long long Texture::WRAP_MIRRORED_REPEAT_U      = 1ull << 12;
+const unsigned long long Texture::WRAP_MIRROR_CLAMP_TO_EDGE_U = 1ull << 13;
+const unsigned long long Texture::WRAP_REPEAT_V               = 1ull << 14;//GL_Default value
+const unsigned long long Texture::WRAP_CLAMP_TO_EDGE_V        = 1ull << 15;
+const unsigned long long Texture::WRAP_CLAMP_TO_BORDER_V      = 1ull << 16;
+const unsigned long long Texture::WRAP_MIRRORED_REPEAT_V      = 1ull << 17;
+const unsigned long long Texture::WRAP_MIRROR_CLAMP_TO_EDGE_V = 1ull << 18;
+const unsigned long long Texture::WRAP_REPEAT                 = WRAP_REPEAT_U | WRAP_REPEAT_V;
+const unsigned long long Texture::WRAP_CLAMP_TO_EDGE          = WRAP_CLAMP_TO_EDGE_U | WRAP_CLAMP_TO_EDGE_V;
+const unsigned long long Texture::WRAP_CLAMP_TO_BORDER        = WRAP_CLAMP_TO_BORDER_U | WRAP_CLAMP_TO_BORDER_V;
+const unsigned long long Texture::WRAP_MIRRORED_REPEAT        = WRAP_MIRRORED_REPEAT_U | WRAP_MIRRORED_REPEAT_V;
+const unsigned long long Texture::WRAP_MIRROR_CLAMP_TO_EDGE   = WRAP_MIRROR_CLAMP_TO_EDGE_U | WRAP_MIRROR_CLAMP_TO_EDGE_V;
+GLenum Texture::wrapOptionU() const
 {
 	GLenum rtn = GL_INVALID_ENUM;
-	if ((options & WRAP_REPEAT) == WRAP_REPEAT)
+	if ((options & WRAP_REPEAT_U) == WRAP_REPEAT_U)
 	{
 		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
 		rtn = GL_REPEAT;
 	}
-	if ((options & WRAP_CLAMP_TO_EDGE) == WRAP_CLAMP_TO_EDGE)
+	if ((options & WRAP_CLAMP_TO_EDGE_U) == WRAP_CLAMP_TO_EDGE_U)
 	{
 		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
 		rtn = GL_CLAMP_TO_EDGE;
 	}
-	if ((options & WRAP_CLAMP_TO_BORDER) == WRAP_CLAMP_TO_BORDER)
+	if ((options & WRAP_CLAMP_TO_BORDER_U) == WRAP_CLAMP_TO_BORDER_U)
 	{
 		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
 		rtn = GL_CLAMP_TO_BORDER;
 	}
-	if ((options & WRAP_MIRRORED_REPEAT) == WRAP_MIRRORED_REPEAT)
+	if ((options & WRAP_MIRRORED_REPEAT_U) == WRAP_MIRRORED_REPEAT_U)
 	{
 		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
 		rtn = GL_MIRRORED_REPEAT;
 	}
-	if ((options & WRAP_MIRROR_CLAMP_TO_EDGE) == WRAP_MIRROR_CLAMP_TO_EDGE)
+	if ((options & WRAP_MIRROR_CLAMP_TO_EDGE_U) == WRAP_MIRROR_CLAMP_TO_EDGE_U)
 	{
 		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
 		rtn = GL_MIRROR_CLAMP_TO_EDGE;
 	}
 	return rtn == GL_INVALID_ENUM ? GL_REPEAT : rtn;//If none specified, return GL default
 }
-
+GLenum Texture::wrapOptionV() const
+{
+	GLenum rtn = GL_INVALID_ENUM;
+	if ((options & WRAP_REPEAT_V) == WRAP_REPEAT_V)
+	{
+		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
+		rtn = GL_REPEAT;
+	}
+	if ((options & WRAP_CLAMP_TO_EDGE_V) == WRAP_CLAMP_TO_EDGE_V)
+	{
+		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
+		rtn = GL_CLAMP_TO_EDGE;
+	}
+	if ((options & WRAP_CLAMP_TO_BORDER_V) == WRAP_CLAMP_TO_BORDER_V)
+	{
+		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
+		rtn = GL_CLAMP_TO_BORDER;
+	}
+	if ((options & WRAP_MIRRORED_REPEAT_V) == WRAP_MIRRORED_REPEAT_V)
+	{
+		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
+		rtn = GL_MIRRORED_REPEAT;
+	}
+	if ((options & WRAP_MIRROR_CLAMP_TO_EDGE_V) == WRAP_MIRROR_CLAMP_TO_EDGE_V)
+	{
+		assert(rtn == GL_INVALID_ENUM);//Invalid bitmask, multiple conflicting options passed
+		rtn = GL_MIRROR_CLAMP_TO_EDGE;
+	}
+	return rtn == GL_INVALID_ENUM ? GL_REPEAT : rtn;//If none specified, return GL default
+}
 //MipMap Options
-const unsigned long long Texture::DISABLE_MIPMAP = 1ull << 14;
+const unsigned long long Texture::DISABLE_MIPMAP = 1ull << 19;
 bool Texture::enableMipMapOption() const
 {
     if (type == GL_TEXTURE_BUFFER || type == GL_TEXTURE_2D_MULTISAMPLE || type == GL_TEXTURE_RECTANGLE || type == GL_TEXTURE_2D_MULTISAMPLE_ARRAY)
@@ -226,10 +265,9 @@ void Texture::applyOptions()
 	GL_CALL(glTexParameteri(type, GL_TEXTURE_MAG_FILTER, filterMagOption()));
 	GL_CALL(glTexParameteri(type, GL_TEXTURE_MIN_FILTER, filterMinOption()));
 
-	GLenum wrapMode =wrapOption();
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_S, wrapMode));
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_T, wrapMode));
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_R, wrapMode));
+	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_S, wrapOptionU()));
+	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_T, wrapOptionV()));
+	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_R, wrapOptionU()));//Unused
 
 	if (enableMipMapOption())
 	{

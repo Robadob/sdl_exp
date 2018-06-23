@@ -1,9 +1,10 @@
 #include "MultiPassScene.h"
 
 MultiPassScene::MultiPassScene(Visualisation &visualisation)
-    : Scene(visualisation)
+	: Scene(visualisation)
+	, lighting(std::make_shared<LightsBuffer>(visualisation.getCamera()->getViewMatPtr()))
 {
-
+	lighting->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
 }
 void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
 {
@@ -14,6 +15,7 @@ void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
         //Setup matrices
         ent->setViewMatPtr(this->visualisation.getCamera());
 		ent->setProjectionMatPtr(&this->visualisation);
+		ent->setLightsBuffer(this->lighting);
     }
     else
         fprintf(stderr, "Can't register a null entity!\n");
@@ -41,6 +43,7 @@ std::shared_ptr<RenderPass> MultiPassScene::addPass(int index, std::shared_ptr<R
 
 void MultiPassScene::_render()
 {
+	lighting->update();
     for (auto&& it : rpMap)//byRef
         it.second->executeRender();
 }

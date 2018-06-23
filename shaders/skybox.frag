@@ -1,11 +1,12 @@
 #version 430
 
-in vec3 tex_coords;
+in vec3 texCoords;
 
-uniform samplerCube _texture;
+uniform samplerCube t_diffuse;
 
 out vec4 frag_colour;
 
 void main () {
-  frag_colour = texture(_texture, tex_coords);
+//Skybox is fullbright
+  frag_colour = texture(t_diffuse, texCoords);
 }

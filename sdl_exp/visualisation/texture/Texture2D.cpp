@@ -1,6 +1,14 @@
 #include "Texture2D.h"
 #include <cassert>
 #include <glm/gtx/component_wise.hpp>
+#include "../util/StringUtils.h"
+#ifdef _WIN32
+#include <filesystem>
+using namespace std::tr2::sys;
+#else
+#include <experimental/filesystem>
+using namespace std::experimental::filesystem::v1;
+#endif
 
 const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
 std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache;
@@ -69,37 +77,50 @@ std::shared_ptr<const Texture2D> Texture2D::loadFromCache(const std::string &fil
 	}
 	return nullptr;
 }
-std::shared_ptr<const Texture2D> Texture2D::load(const char * filePath, const unsigned long long options, bool skipCache)
+std::shared_ptr<const Texture2D> Texture2D::load(const std::string &texPath, const std::string &modelFolder, const unsigned long long options, bool skipCache)
 {
-    if (filePath)
-        return load(std::string(filePath), options, skipCache);
-    return std::shared_ptr <const Texture2D>();
+	//Locate the file
+	std::string filePath;
+	//Raw exists
+	if (exists(path(texPath)))
+		filePath = texPath;
+	//Exists in model dir
+	else if (!modelFolder.empty()&&exists(path((modelFolder + texPath).c_str())))
+		filePath = modelFolder + texPath;
+	//Exists in model dir [path incorrect]
+	else if (!modelFolder.empty() && exists(path((modelFolder + su::getFilenameFromPath(texPath)).c_str())))
+		filePath = std::string(modelFolder) + su::getFilenameFromPath(texPath);
+
+	return load(filePath, options, skipCache);
 }
 std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, const unsigned long long options, bool skipCache)
 {
 	//Attempt from cache
 	std::shared_ptr<const Texture2D> rtn;
-	if (!skipCache)
+	if (!filePath.empty())
 	{
-		rtn = loadFromCache(filePath);
-	}
-	//Load using loader
-	if (!rtn)
-	{
-		auto image = loadImage(filePath);
-		if (image)
+		if (!skipCache)
 		{
-			rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
-				[&](Texture2D *ptr){//Custom deleter, which purges cache of item
+			rtn = loadFromCache(filePath);
+		}
+		//Load using loader
+		if (!rtn)
+		{
+			auto image = loadImage(filePath);
+			if (image)
+			{
+				rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
+					[&](Texture2D *ptr){//Custom deleter, which purges cache of item
 					Texture2D::purgeCache(ptr->getReference());
 					delete ptr;
 				});
+			}
 		}
-	}
-	//If we've loaded something, store in cache
-	if (rtn&&!skipCache)
-	{
-		cache.emplace(filePath, rtn);
+		//If we've loaded something, store in cache
+		if (rtn&&!skipCache)
+		{
+			cache.emplace(filePath, rtn);
+		}
 	}
 	return rtn;
 }

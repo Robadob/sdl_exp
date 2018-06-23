@@ -4,6 +4,7 @@
 #include "visualisation/BasicScene.h"
 #include "visualisation/Entity.h"
 #include "visualisation/Text.h"
+#include "visualisation/model/Model.h"
 
 #include "visualisation/texture/TextureBuffer.h"
 /*
@@ -26,10 +27,14 @@ private:
 #endif
     std::shared_ptr<TextureBuffer<float>> texBuf;
     std::shared_ptr<Entity> instancedSphere;
+	const unsigned int INSTANCE_COUNT;
     std::shared_ptr<Entity> deerModel;
-    std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Model> bob;
     float tick;
-    int polarity;
+	int polarity;
+	bool bobPause = false;
+	float bobAnimOffset = 0.0f;
 };
 
 #endif

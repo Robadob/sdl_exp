@@ -4,6 +4,7 @@
 #include "Skybox.h"
 #include "Axis.h"
 #include "Visualisation.h"
+#include "shader/lights/LightsBuffer.h"
 /**
  * This class provides a baseclass for Scenes which only require single pass rendering
  * Natively includes a Skybox and Axis
@@ -57,10 +58,11 @@ protected:
 	 */
 	void setRenderAxis(bool state);
     
-    std::shared_ptr<Axis> axis;
-    std::unique_ptr<Skybox> skybox;
-	bool renderAxisState, renderSkyboxState;
+	std::shared_ptr<LightsBuffer> Lights(){ return lighting; }
 private:
+	bool renderAxisState, renderSkyboxState;
+	std::shared_ptr<Axis> axis;
+	std::unique_ptr<Skybox> skybox;
 	/**
 	 * Internal render functionality, calls render()
 	 */
@@ -88,6 +90,6 @@ private:
 	/**
 	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	 */
-    void defaultLighting();
+	std::shared_ptr<LightsBuffer> lighting;
 };
 #endif //__BasicScene_h__

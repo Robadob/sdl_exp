@@ -9,9 +9,12 @@
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
 const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
+const char *Shaders::NORMAL_MATRIX_UNIFORM_NAME = "_normalMat";
 const char *Shaders::MODEL_MATRIX_UNIFORM_NAME = "_modelMat";
 const char *Shaders::VIEW_MATRIX_UNIFORM_NAME = "_viewMat";
-const char *Shaders::NORMAL_MATRIX_UNIFORM_NAME = "_normalMat";
+const char *Shaders::LIGHT_UNIFORM_BLOCK_NAME = "_lights";
+const char *Shaders::MATERIAL_UNIFORM_BLOCK_NAME = "_materials";
+const char *Shaders::MATERIAL_ID_UNIFORM_NAME = "_materialID";
 const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
 const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
 const char *Shaders::COLOR_ATTRIBUTE_NAME = "_color";
@@ -29,31 +32,96 @@ Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, c
 { }
 Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath, std::initializer_list <const char *> geometryShaderPath)
     : ShaderCore()
+    , fbo(0)
+	, vao(0)
     , modelMat()
     , viewMat()
     , projectionMat()
+    , materialIDLocation(-1)
+    , materialIDVal(INT_MAX)
     , modelviewprojectionMatLoc(-1)
     , modelviewMatLoc(-1)
     , normalMatLoc(-1)
     , rotationPtr(nullptr)
     , translationPtr(nullptr)
     , positions(GL_FLOAT, 3, sizeof(float))
-    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
-    , colors(GL_FLOAT, 3, sizeof(float))
-    , texcoords(GL_FLOAT, 2, sizeof(float))
-    , colorUniformValue(1, 0, 0, 1)//Red
+	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))//Red
+	, colors(GL_FLOAT, 3, sizeof(float))
+	, texcoords(GL_FLOAT, 2, sizeof(float))
+	, colorUniformLocation(-1)
+    , colorUniformValue(1, 0, 0, 1)
     , vertexShaderFiles(buildFileVector(vertexShaderPath))
     , fragmentShaderFiles(buildFileVector(fragmentShaderPath))
     , geometryShaderFiles(buildFileVector(geometryShaderPath))
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
-    , geometryShaderVersion(-1)
-    //, prevModelview()//Identity
+	, geometryShaderVersion(-1)
 {
+	GL_CALL(glGenVertexArrays(1, &vao));
+	reload();
+}
+Shaders::Shaders(const Shaders &other)
+	: ShaderCore(other)
+	, fbo(other.fbo)
+	, vao(0)
+	, modelMat(UniformMatrixDetail(-1, other.modelMat.matrixPtr))
+	, viewMat(UniformMatrixDetail(-1, other.viewMat.matrixPtr))
+	, projectionMat(UniformMatrixDetail(-1, other.projectionMat.matrixPtr))
+	, materialIDLocation(-1)
+	, materialIDVal(other.materialIDVal)
+	, modelviewprojectionMatLoc(-1)
+	, modelviewMatLoc(-1)
+	, normalMatLoc(-1)
+	, rotationPtr(other.rotationPtr)
+	, translationPtr(other.translationPtr)
+	, positions(other.positions)
+	, normals(other.normals)
+	, colors(other.colors)
+	, texcoords(other.texcoords)
+	, colorUniformLocation(-1)
+	, colorUniformSize(other.colorUniformSize)
+	, colorUniformValue(other.colorUniformValue)
+	, vertexShaderFiles(nullptr)
+	, fragmentShaderFiles(nullptr)
+	, geometryShaderFiles(nullptr)
+	, vertexShaderVersion(-1)
+	, fragmentShaderVersion(-1)
+	, geometryShaderVersion(-1)
+{
+	//positions, normals, colors, texcoords
+	positions.location = -1;
+	normals.location = -1;
+	colors.location = -1;
+	texcoords.location = -1;
+	//gvads, lostGvads
+	for (const auto &i : other.gvads)
+		this->lostGvads.push_back(GenericVAD(i));
+	for (const auto &i : other.lostGvads)
+		this->lostGvads.push_back(GenericVAD(i));
+	for (auto &i : this->lostGvads)
+		i.location = -1;
+	//Rebind everything to VAO
+	GL_CALL(glGenVertexArrays(1, &vao));
+	buildVAO();
+	//fragShaderOutputLocations
+	for (const auto &i : other.fragShaderOutputLocations)
+		this->fragShaderOutputLocations.insert({ i.first, std::string(i.second) });
+	//file vectors
+	vertexShaderFiles = new std::vector<const std::string>();
+	for (const auto &i : *other.vertexShaderFiles)
+		vertexShaderFiles->push_back(std::string(i));
+	fragmentShaderFiles = new std::vector<const std::string>();
+	for (const auto &i : *other.fragmentShaderFiles)
+		fragmentShaderFiles->push_back(std::string(i));
+	geometryShaderFiles = new std::vector<const std::string>();
+	for (const auto &i : *other.geometryShaderFiles)
+		geometryShaderFiles->push_back(std::string(i));
+	//Usual shader reload
 	reload();
 }
 Shaders::~Shaders(){
     this->destroyProgram();
+	GL_CALL(glDeleteVertexArrays(1, &vao));
 	delete vertexShaderFiles;
 	delete fragmentShaderFiles;
 	delete geometryShaderFiles;
@@ -109,7 +177,7 @@ void Shaders::bindUniform(int *rtn, const char *uniformName, GLenum uniformType)
 {
     //Locate the view matrix uniform (modelview matrix, before model-specific transformations are applied)
     std::pair<int, GLenum> u_M = findUniform(uniformName, this->getProgram());
-    if (u_M.first >= 0 && u_M.second == uniformType)
+	if (u_M.first >= 0 && (u_M.second == uniformType))
         *rtn = u_M.first;
     else
         *rtn = -1;
@@ -123,6 +191,31 @@ void Shaders::bindAttribute(int *rtn, const char *attributeName, GLenum attribut
         *rtn = -1;
 }
 void Shaders::_setupBindings(){
+	//Check whether shader supports blend (has it got an output alpha channel?)
+	{
+		this->supportsBlend = false;
+		GLint numOutputs = 0;
+		GL_CALL(glGetProgramInterfaceiv(this->getProgram(), GL_PROGRAM_OUTPUT, GL_ACTIVE_RESOURCES, &numOutputs));
+		const GLenum properties[2] = { GL_TYPE, GL_REFERENCED_BY_FRAGMENT_SHADER };
+		for (int i = 0; i < numOutputs; ++i)
+		{
+			GLint vals[2] = { 0, 0 };
+			GL_CALL(glGetProgramResourceiv(this->getProgram(), GL_PROGRAM_OUTPUT, i, 2, properties, 2, nullptr, vals));
+			if (vals[1] != 0)
+			{//Output from frag shader
+				if (vals[0] == GL_FLOAT_VEC4
+					|| vals[0] == GL_DOUBLE_VEC4
+					|| vals[0] == GL_INT_VEC4
+					|| vals[0] == GL_UNSIGNED_INT_VEC4
+					|| vals[0] == GL_BOOL_VEC4
+					)
+				{//Shader has an alpha channel
+					this->supportsBlend = true;
+					break;
+				}
+			}
+		}
+	}
     //MVP
     bindUniform(&this->modelMat.location, MODEL_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
     bindUniform(&this->viewMat.location, VIEW_MATRIX_UNIFORM_NAME, GL_FLOAT_MAT4);
@@ -137,6 +230,9 @@ void Shaders::_setupBindings(){
     bindAttribute(&this->normals.location, NORMAL_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
     bindAttribute(&this->colors.location, COLOR_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
     bindAttribute(&this->texcoords.location, TEXCOORD_ATTRIBUTE_NAME, GL_FLOAT_VEC2, GL_FLOAT_VEC3);
+	//Material ID uniform
+	bindUniform(&this->materialIDLocation, MATERIAL_ID_UNIFORM_NAME, GL_UNSIGNED_INT);
+	if (this->materialIDLocation != -1) overrideMaterialID(this->materialIDVal);
     //Locate the color uniform
     std::pair<int, GLenum> u_C = findUniform(COLOR_ATTRIBUTE_NAME, this->getProgram());
     if (u_C.first >= 0 && (u_C.second == GL_FLOAT_VEC3 || u_C.second == GL_FLOAT_VEC4))
@@ -168,19 +264,52 @@ void Shaders::_setupBindings(){
             fprintf(stderr, "%s: Generic vertex attrib named: %s could not be located on shader reload.\n", this->getShaderTag(), gvad.attributeName);
         }
     }
+	buildVAO();
+}
+void Shaders::setFaceVBO(GLuint fbo)
+{
+	this->fbo = fbo;
+	buildVAO();
 }
 void Shaders::overrideModelMat(const glm::mat4 *force)
 {
 #ifdef _DEBUG
     int currProgram = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
-    if (currProgram != getProgram())
+    if (currProgram != getProgram() || getProgram()==-1)
     {
-        fprintf(stderr, "Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
-        return;
+		throw std::runtime_error("Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
     }
 #endif
     _useProgramModelMatrices(force);
+}
+void Shaders::overrideMaterialID(unsigned int materialIndex)
+{
+#ifdef _DEBUG
+    int currProgram = 0;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
+	if (currProgram != getProgram() || getProgram() == -1)
+	{
+		throw std::runtime_error("Error: Shader::overrideMaterialID() should only be called whilst the shader is in use.\n");
+    }
+#endif
+	materialIDVal = materialIndex;
+	//Set the color uniform if present
+	if (this->getProgram()>0 && this->materialIDLocation >= 0)
+	{//If colour uniform location is known
+		GL_CALL(glUniform1ui(this->materialIDLocation, materialIDVal));
+	}
+}
+void Shaders::setMaterialID(unsigned int materialIndex)
+{
+	materialIDVal = materialIndex;
+	//Set the color uniform if present
+	if (this->getProgram()>0 && this->materialIDLocation >= 0)
+	{//If colour uniform location is known
+		GL_CALL(glUseProgram(this->getProgram()));
+		GL_CALL(glUniform1ui(this->materialIDLocation, materialIDVal));
+		GL_CALL(glUseProgram(0));
+	}
 }
 void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
 {
@@ -244,20 +373,9 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
         GL_CALL(glUniformMatrix4fv(this->modelviewprojectionMatLoc, 1, GL_FALSE, glm::value_ptr(m)));
     }
 }
-//Overrides
-void Shaders::_useProgram()
+void Shaders::buildVAO()
 {
-    _useProgramModelMatrices();
-    if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr > nullptr)
-    {//If projection matrix location and camera ptr are known
-        GL_CALL(glUniformMatrix4fv(this->projectionMat.location, 1, GL_FALSE, glm::value_ptr(*this->projectionMat.matrixPtr)));
-    }	
-    //Set the view matrix (e.g. gluLookAt, normally provided by the Camera)
-    if (this->viewMat.location >= 0 && this->viewMat.matrixPtr > nullptr)
-    {//If view matrix location and camera ptr are known
-        GL_CALL(glUniformMatrix4fv(this->viewMat.location, 1, GL_FALSE, glm::value_ptr(*this->viewMat.matrixPtr)));
-    }
-
+	GL_CALL(glBindVertexArray(vao));
     GLuint activeVBO = 0;
     //Set the vertex (location) attribute
     if (this->positions.location >= 0 && this->positions.vbo > 0)
@@ -373,61 +491,70 @@ void Shaders::_useProgram()
 			}
 		}
 	}
+	//Face vbo
+	if (fbo)
+		GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbo));
+	GL_CALL(glBindVertexArray(0));
 }
-void Shaders::_clearProgram(){
-    //Vertex location
-    if (this->vertexShaderVersion <= 140 && this->positions.vbo > 0)
-    {//If old shaders where gl_Vertex is available
-        GL_CALL(glDisableClientState(GL_VERTEX_ARRAY));
-    }
-    if (this->positions.location >= 0 && this->positions.vbo > 0)
-    {//If vertex attribute location and vbo are known
-        GL_CALL(glDisableVertexAttribArray(this->positions.location));
-    }
-    //Vertex normal
-    if (this->vertexShaderVersion <= 140 && this->normals.vbo > 0)
-    {//If old shaders where gl_Normal is available
-        GL_CALL(glDisableClientState(GL_NORMAL_ARRAY));
-    }
-    if (this->normals.location >= 0 && this->normals.vbo > 0)
-    {//If vertex attribute location and vbo are known
-        GL_CALL(glDisableVertexAttribArray(this->normals.location));
-    }
-    //Vertex color
-    if (this->vertexShaderVersion <= 140 && this->colors.vbo > 0)
-    {//If old shaders where gl_Color is available
-        GL_CALL(glDisableClientState(GL_COLOR_ARRAY));
-    }
-    if (this->colors.location >= 0 && this->colors.vbo > 0)
-    {//If vertex attribute location and vbo are known
-        GL_CALL(glDisableVertexAttribArray(this->colors.location));
-    }
-    //Tex Coord
-    if (this->vertexShaderVersion <= 140 && this->texcoords.vbo > 0)
-    {//If old shaders where gl_Color is available
-        GL_CALL(glDisableClientState(GL_TEXTURE_COORD_ARRAY));
-    }
-    if (this->texcoords.location >= 0 && this->texcoords.vbo > 0)
-    {//If vertex attribute location and vbo are known
-        GL_CALL(glDisableVertexAttribArray(this->texcoords.location));
-    }
-	for (GenericVAD const &gvad : gvads)
-	{
-        GL_CALL(glDisableVertexAttribArray(gvad.location));
+//Overrides
+void Shaders::_prepare()
+{
+    _useProgramModelMatrices();
+	//Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
+	if (this->vertexShaderVersion <= 120 && this->projectionMat.matrixPtr > nullptr)
+	{//If old shaders where gl_ModelViewProjectionMatrix is available
+		GL_CALL(glMatrixMode(GL_PROJECTION));
+        GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projectionMat.matrixPtr)));
 	}
+    if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr > nullptr)
+	{//If projection matrix location and camera ptr are known
+        GL_CALL(glUniformMatrix4fv(this->projectionMat.location, 1, GL_FALSE, glm::value_ptr(*this->projectionMat.matrixPtr)));
+    }
+    //Set the view matrix (e.g. gluLookAt, normally provided by the Camera)
+    if (this->viewMat.location >= 0 && this->viewMat.matrixPtr > nullptr)
+    {//If view matrix location and camera ptr are known
+        GL_CALL(glUniformMatrix4fv(this->viewMat.location, 1, GL_FALSE, glm::value_ptr(*this->viewMat.matrixPtr)));
+    }
+}
+void Shaders::_useProgram()
+{
+	GL_CALL(glBindVertexArray(vao));
+}
+void Shaders::_clearProgram()
+{
+	GL_CALL(glBindVertexArray(0));
 }
 //Bindings
-void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad)
+void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad, bool update)
 {
     vad.location = this->positions.location;
     this->positions = vad;
+	assert(this->positions.vbo > 0);//vbo must be set, else we wont render anything!
+	if (update)
+		buildVAO();
 }
-void Shaders::setNormalsAttributeDetail(VertexAttributeDetail vad)
+void Shaders::setNormalsAttributeDetail(VertexAttributeDetail vad, bool update)
 {
     vad.location = this->normals.location;
-    this->normals = vad;
+	this->normals = vad;
+	if (update)
+		buildVAO();
 }
-bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad)
+void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad, bool update)
+{
+    vad.location = this->colors.location;
+	this->colors = vad;
+	if (update)
+		buildVAO();
+}
+void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update)
+{
+    vad.location = this->texcoords.location;
+	this->texcoords = vad;
+	if (update)
+		buildVAO();
+}
+bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad, bool update)
 {
 	GenericVAD gvad(vad, attributeName);
 	gvad.location = -1;
@@ -441,6 +568,9 @@ bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttribu
 		{
 			gvad.location = a_N.first;
 			gvads.push_back(gvad);
+			if (update)
+				buildVAO();
+			buildVAO();
 			return true;
 		}
 		fprintf(stderr, "%s: Generic vertex attrib named: %s was not found.\n", this->getShaderTag(), gvad.attributeName);
@@ -473,16 +603,6 @@ bool Shaders::removeGenericAttributeDetail(const char* attributeName)
 	}
 	return rtn;
 }
-void Shaders::setColorsAttributeDetail(VertexAttributeDetail vad)
-{
-    vad.location = this->colors.location;
-    this->colors = vad;
-}
-void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad)
-{
-    vad.location = this->texcoords.location;
-    this->texcoords = vad;
-}
 void Shaders::setColor(glm::vec3 color)
 {
     setColor(glm::vec4(color, 1.0f));
@@ -492,7 +612,7 @@ void Shaders::setColor(glm::vec4 color)
 	colorUniformValue = color;
     //Set the color uniform if present
     if (this->getProgram()>0 && this->colorUniformLocation >= 0)
-    {//If projection matrix location and camera ptr are known
+    {//If colour uniform location is known
         GL_CALL(glUseProgram(this->getProgram()));
         if (this->colorUniformSize == 3)
         {

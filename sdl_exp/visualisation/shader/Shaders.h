@@ -7,6 +7,8 @@
 
 #define NORMALS_SIZE 3
 
+class UniformBuffer;//Implementation of setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer) found in UniformBuffer.cpp
+
 namespace Stock
 {
     namespace Shaders
@@ -18,21 +20,28 @@ namespace Stock
             char *geometry;
         };
         const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
-        const ShaderSet FLAT{ "../shaders/flat.vert", "../shaders/flat.frag", nullptr };
-        const ShaderSet PHONG{ "../shaders/phong.vert", "../shaders/phong.frag", nullptr };
-        const ShaderSet COLOR{ "../shaders/color.vert", "../shaders/color.frag", nullptr };
-        const ShaderSet TEXTURE{ "../shaders/texture.vert", "../shaders/texture.frag", nullptr };
-        const ShaderSet SKYBOX{ "../shaders/skybox.vert", "../shaders/skybox.frag", nullptr };
-		const ShaderSet INSTANCED{ "../shaders/instanced.vert", "../shaders/flat.frag", nullptr };
-		const ShaderSet TEXT{ "../shaders/texture.vert", "../shaders/text.frag", nullptr };
-		const ShaderSet SPRITE2D{ "../shaders/texture.vert", "../shaders/sprite2d.frag", nullptr };
-		const ShaderSet SPRITE2D_HEAT{ "../shaders/texture.vert", "../shaders/sprite2dHeat.frag", nullptr };
-        const ShaderSet BILLBOARD{ "../shaders/billboard.vert", "../shaders/particle.frag", nullptr };
-        const ShaderSet LINEAR_DEPTH{ "../shaders/default.vert", "../shaders/linear_depth.frag", nullptr };
-        const ShaderSet PHONG_SHADOW{ "../shaders/shadow.vert", "../shaders/phongShadow.frag", nullptr };
-        const ShaderSet TEXTURE_SHADOW{ "../shaders/textureShadow.vert", "../shaders/textureShadow.frag", nullptr };
-    };
-};
+		const ShaderSet FULLBRIGHT{ "default.vert", "fullbright_phong.frag", nullptr };
+		const ShaderSet FULLBRIGHT_FLAT{ "default.vert", "material_fullbright_flat.frag", nullptr };
+		const ShaderSet FULLBRIGHT_PHONG{ "default.vert", "material_fullbright_phong.frag", nullptr };
+        const ShaderSet FLAT{ "default.vert", "material_flat.frag", nullptr };
+        const ShaderSet PHONG{ "default.vert", "material_phong.frag", nullptr };
+		const ShaderSet COLOR{ "color.vert", "color.frag", nullptr };
+		const ShaderSet COLOR_NOSHADE{ "color.vert", "color_noshade.frag", nullptr };
+        const ShaderSet SKYBOX{ "skybox.vert", "skybox.frag", nullptr };
+		const ShaderSet INSTANCED_FLAT{ "instanced_flat.vert", "material_flat.frag", nullptr };
+		const ShaderSet INSTANCED_PHONG{ "instanced_default.vert", "material_phong.frag", nullptr };
+		const ShaderSet TEXT{ "default.vert", "text.frag", nullptr };
+		const ShaderSet SPRITE2D{ "default.vert", "sprite2d.frag", nullptr };
+		const ShaderSet SPRITE2D_HEAT{ "default.vert", "sprite2dHeat.frag", nullptr };
+        const ShaderSet BILLBOARD{ "billboard.vert", "particle.frag", nullptr };
+		const ShaderSet LINEAR_DEPTH{ "default.vert", "linear_depth.frag", nullptr };
+		const ShaderSet FLAT_SHADOW{ "shadow.vert", "material_flat_shadow.frag", nullptr };
+		const ShaderSet PHONG_SHADOW{ "shadow.vert", "material_phong_shadow.frag", nullptr };
+		const ShaderSet BONE{ "bone.vert", "material_phong.frag", nullptr };
+		const ShaderSet BONE_LINEAR_DEPTH{ "bone.vert", "linear_depth.frag", nullptr };
+		const ShaderSet BONE_SHADOW{ "bone_shadow.vert", "material_phong_shadow.frag", nullptr };
+    }
+}
 /**
  * Abstracts compilation of Shaders, and attempts to automatically bind provided uniforms and vertex attributes on useProgram()
  * Bindings are tied to the specific shader, if you wish to use the same shader for 2 entities it might be best to make a 2nd instance
@@ -51,6 +60,9 @@ public:
 	static const char *NORMAL_MATRIX_UNIFORM_NAME;// = "_normalMat";
     static const char *MODEL_MATRIX_UNIFORM_NAME;// = "_modelMat";
     static const char *VIEW_MATRIX_UNIFORM_NAME;// = "_viewMat";
+	static const char *LIGHT_UNIFORM_BLOCK_NAME;// = "_lights";
+	static const char *MATERIAL_UNIFORM_BLOCK_NAME;// = "_materials";
+	static const char *MATERIAL_ID_UNIFORM_NAME;// = "_materialID";
 	static const char *VERTEX_ATTRIBUTE_NAME;// = "_vertex";
 	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
 	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
@@ -164,6 +176,13 @@ public:
 	 */
 	Shaders(std::initializer_list <const char *> vertexShaderPath, std::initializer_list <const char *> fragmentShaderPath = {}, std::initializer_list <const char *> geometryShaderPath = {});
 	/**
+	 * Copy constructor
+	 * @note This does not duplicate linked external objects, e.g. buffers, textures.
+	 * @note There if the original shaders owning model is destroyed, this shader will point to invalid data.
+	 * @note Therefore this should be used with caution outside of advanced model classes
+	 */
+	Shaders(const Shaders &other);
+	/**
 	 * Free the shader program
 	 */
 	~Shaders();
@@ -199,10 +218,46 @@ public:
     inline void setModelMatPtr(const glm::mat4 *modelMat){ this->modelMat.matrixPtr = modelMat; }
     /**
      * Overrides the model matrix (and all dependent matrices) until useProgram() is next called
+     * This is a fast version that doesnt switch around bound shaders
      * @param modelMat Pointer to the overriding modelMat
+     * @note This will only throw exceptions in Debug mode
+     * @throws runtime_error When called whilst current shader is not active
      */
     void overrideModelMat(const glm::mat4 *modelMat);
+	void setLightsBuffer(GLuint bufferBindingPoint) { addBuffer(LIGHT_UNIFORM_BLOCK_NAME, GL_UNIFORM_BUFFER, bufferBindingPoint); }
     /**
+     * Sets the uniform buffer which should be bound to the material uniform buffer block
+     * @param bufferBindingPoint GL binding point where buffer is bound
+     * @return Returns true if the current shader has a detected material buffer block
+	 * @see addBuffer(const char *, const GLenum, const GLuint)
+     */
+	bool setMaterialBuffer(const GLuint bufferBindingPoint) { return addBuffer(MATERIAL_UNIFORM_BLOCK_NAME, GL_UNIFORM_BUFFER, bufferBindingPoint); }
+	/**
+     * Sets the uniform buffer which should be bound to the material uniform buffer block
+	 * This will not retain the shared_ptr, it's upto you to keep it alive
+	 * @param buffer The buffer to be used
+	 * @note Convenience method, implemented in BufferCore.cpp
+	 * @see addBuffer(const char *, const std::shared_ptr<BufferCore> &)
+	 */
+	bool setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer);
+	/**
+	 * Updates the material index
+	 * This version is only to be called whilst the shader is active
+     * @param materialIndex Index of the material to be used in the bound materials buffer
+	 * @see overrideMaterialID(unsigned int)
+	 */
+	void setMaterialID(unsigned int materialIndex);
+    /**
+     * Updates the material index
+     * This version is only to be called whilst the shader is active
+     * This is a fast version that doesnt switch around bound shaders
+     * @param materialIndex Index of the material to be used in the bound materials buffer
+     * @note This will only throw exceptions in Debug mode
+     * @throws runtime_error When called whilst current shader is not active
+     * @see setMaterialId(unsigned int)
+     */
+    void overrideMaterialID(unsigned int materialIndex);
+	/**
      * Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
      * @param rotationPtr A pointer to the rotation will be tracked
      * @note Setting this pointer to nullptr will disable rotation
@@ -219,23 +274,27 @@ public:
 	/**
 	 * Stores the details necessary for passing vertex position attributes to the shader via the modern method
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setPositionsAttributeDetail(VertexAttributeDetail vad);
+	void setPositionsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Stores the details necessary for passing vertex normal attributes
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setNormalsAttributeDetail(VertexAttributeDetail vad);
+	void setNormalsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Stores the details necessary for passing vertex color attributes to the shader
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setColorsAttributeDetail(VertexAttributeDetail vad);
+	void setColorsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Stores the details necessary for passing vertex texture attributes to the shader
 	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setTexCoordsAttributeDetail(VertexAttributeDetail vad);
+	void setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update = true);
 	/**
 	 * Binds the named fragment shader output attribute to the specified framebuffer attachment point
 	 * @param attachmentPoint The GL_COLOR_ATTACHMENT index (likely in the range 0-7) 
@@ -275,7 +334,13 @@ public:
 	 * or went missing after a shader reload
 	 */
 	std::list<GenericVAD> lostGvads;
-	bool addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad);
+	/**
+	 * Stores the details necessary for passing generic vertex attributes to the shader
+	 * @param attributeName The name of the attribute in the shader
+	 * @param vad The VertexAttributeDetail object containing the attribute data
+	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
+	 */
+	bool addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad, bool update = true);
 
     inline void clearModelMatPtr(){ this->modelMat.matrixPtr = nullptr; }
     inline void clearViewMatPtr(){ this->viewMat.matrixPtr = nullptr; }
@@ -306,6 +371,11 @@ public:
 	}
 	bool removeGenericAttributeDetail(const char* attributeName);
 	/**
+	 * Sets the face vbo to be added to the vertex array object
+	 * @param fbo The face vbo index
+	 */
+	void setFaceVBO(GLuint fbo);
+	/**
 	 * Sets the color uniform
 	 * @param color The RGB value of the color
 	 */
@@ -315,15 +385,37 @@ public:
 	 * @param color The RGBA value of the color
 	 */
     void setColor(glm::vec4 color);
+	/**
+	 * Returns whether shader allows GL_BLEND to be used
+	 */
+	bool supportsGL_BLEND() const { return supportsBlend; }
 private:
+	/**
+	 * Whether shader allows usage of GL_BLEND
+	 * This is based on whether a fragment output includes an alpha channel
+	 */
+	bool supportsBlend = false;
+    /**
+	 * Face index vbo
+	 */
+	GLuint fbo;
+	/**
+	 * Vertex array object can be setup to carry all our vertex attributes
+	 * Therefore at render we are only required to bind the VAO, and not reconfigure each attribute
+	 */
+	GLuint vao;
+	/**
+	 * Configures the preexisting vao to contain vertex attribute arrays
+	 */
+	void buildVAO();
     /**
      * Utility method for binding uniforms
      * @param rtn Pointer to store the uniform location in
      * @param uniformName The name of the uniform to locate
-     * @param uniformType The type of uniform to check for
+	 * @param uniformType The type of uniform to check for
      * @note On failure rtn is set to -1
      */
-    inline void bindUniform(int *rtn, const char *uniformName, GLenum uniformType) const;
+	inline void bindUniform(int *rtn, const char *uniformName, GLenum uniformType) const;
     /**
      * Utility method for binding attributes
      * @param rtn Pointer to store the attribute location in
@@ -339,15 +431,19 @@ private:
 	 */
 	void _clearProgram() override;
 	/**
-	 * Enables the necessary vertex attribute arrays when the shader is required
+	 * Updates shader dynamics
+	 * @note Called by ShaderCore::useProgram()
+	 */
+    void _prepare() override;
+	/**
+	 * Runs any shader config that MUST be called before shader use
 	 * @note Called by ShaderCore::useProgram()	 
-	 * @note In future this could be improved with vertex array object's to store attribute configs at shader setup
 	 */
 	void _useProgram() override;
     /**
      * Updates all matrix uniforms that contain the modelMat
      * @param force If passed this value overrides the stored modelMat.matrixPtr and translation/rotations
-     * @note Called by ShaderCore::_useProgram()
+     * @note Called by ShaderCore::_prepare()
      */
     void _useProgramModelMatrices(const glm::mat4 *force = nullptr);
 	/**
@@ -374,6 +470,11 @@ private:
 	 * Information for binding the projection matrix
 	 */
     UniformMatrixDetail projectionMat;
+    /**
+     * Information for binding the material id
+     */
+	int materialIDLocation;
+	int materialIDVal;
 	/**
 	 * When positive this variable holds the location of the (combined) modelviewprojection matrix in the shader
 	 */

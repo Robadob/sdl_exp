@@ -35,9 +35,7 @@ void Skybox::render(unsigned int shaderIndex)
  */
 void Skybox::setViewMatPtr(const Camera *camera)
 {
-	for (auto &&it : shaders)
-		if (it)
-			it->setViewMatPtr(camera->getSkyboxViewMatPtr());
+	Entity::setViewMatPtr(camera->getSkyboxViewMatPtr());
 }
 /**
  * Adjusts the vertical offset of the skybox

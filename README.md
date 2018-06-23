@@ -17,6 +17,7 @@ The easiest way to utilise this library appears to be:
 * Copy the `sdl_exp/visualisation` directory into your own source directory.
 * Create a new class which extends `Scene` and overrides all of its virtual methods 
   * `EntityScene.h` & `EntityScene.cpp` are provided as an example of how to configure your own `Scene`.
+  * `TwoPassScene.h` & `TwoPassScene.cpp` are provided as an example of how to configure a more advanced multipass `Scene`.
   * Make sure to call the constructor of Scene, as this will automatically manage your Projection and ModelView matrices!
 * Within your main method you can now create the Visualisation:
 ```C++
@@ -26,21 +27,28 @@ The easiest way to utilise this library appears to be:
 ```
 
 ### Shader Uniforms & Attributes
-The `Shaders` and `Entity` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your uniforms and vertex attributes. Each shader object should only be attached to a single entity, otherwise their bindings will all be shared. You can also configure your own static and dynamic uniform floats and ints by calling `addStaticUniform()` and `addDynamicUniform()` on the relevant `Shaders` object.
+The `Shaders`, `Entity` and `Model` objects attempt to automatically manage uniforms and attributes, you can assist their functioning by using the below naming schemes for your uniforms and vertex attributes. Each shader object should only be attached to a single entity, otherwise their bindings will all be shared. You can also configure your own static and dynamic uniform floats and ints by calling `addStaticUniform()` and `addDynamicUniform()` on the relevant `Shaders` object.
 
 * Uniforms:
-  * `_modelViewMat` - ModelView Matrix[Mat4]
-  * `_projectionMat` - Projection Matrix[Mat4]
-  * `_modelViewProjectionMat` - ModelViewProjection Matrix[Mat4]
-  * `_cameraMat` - Camera Matrix[Mat4] (ModelView before transformations applied)
-  * `_normalMat` - Normal Matrix[Mat3]
+  * `_modelViewMat` - ModelView Matrix[mat4]
+  * `_projectionMat` - Projection Matrix[mat4]
+  * `_modelViewProjectionMat` - ModelViewProjection Matrix[mat4]
+  * `_viewMat` - View Matrix[mat4]
+  * `_normalMat` - Normal Matrix[mat3]
   * `_texture` - Texture Sampler[sampler2D/samplerCube]
-  * `_color` - gl_Color equivalent[Vec3/Vec4]
+  * `_materialID` - Active material index within material uniform buffer[uint]
+  * `_materials` - Materials uniform block, see example shader `material_phong.frag`
+  * `_lights` - Lighting uniform block, see example shader `material_phong.frag`
+  * `_bones` - Bones uniform block, see example shader `bone.vert`
+  * Deprecated:
+      * *`_color` - gl_Color equivalent[vec3/vec4]* (Material support has replaced this in most example shaders, partial support may still be present)
 * Attributes:
-  * `_vertex` - Vertex Position[Vec3/Vec4]
-  * `_normal` - Vertex Normal[Vec3/Vec4]
-  * `_color` - Vertex Color[Vec3/Vec4]
+  * `_vertex` - Vertex Position[vec3/vec4]
+  * `_normal` - Vertex Normal[vec3/vec4]
+  * `_color` - Vertex Color[vec3/vec4]
   * `_texCoords` - Texture Coordinates[Vec2/Vec3]
+  * `_boneIDs` - Bone indexes, carries 4 individual bone indexes for the vertex[uvec4]
+  * `_boneWeights` - Bone weights, carries 4 individual bone weights[vec4]
 
 ### Optimus Support
 It's possible to force laptops with Optimus hybrid graphics to handle this application with the dedicated GPU by building with the preprocessor macro `FORCE_OPTIMUS`, this is disabled by default to better facilitate testing on Intel integrated.
@@ -66,7 +74,7 @@ Usage:
   * Within CUDA kernels you can read the texture buffers using  the [texture object API texture fetch functions](http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#texture-object-api-appendix) (e.g. `tex1Dfetch<float4>()`) passing the `cuTextureObj` member variable as the first argument.
     * You can pass the `cuTextureObj` member variable as a kernel parameter or copy it to a device constant
   * Write a vertex shader:
-    * *The existing shader file `instanced.vert` provides an example.*
+    * *The existing shader file `instanced_flat.vert` provides an example.*
 	* **`i` and `u` respectively should be prepended to `samplerBuffer`, `texelFetch()` and `vec4` in the following steps if you are using `int` or `unsigned int` data instead of the default `float`.**
 	* Declare a `uniform samplerBuffer` sampler inside your shader.
 	* To access an element of the texture buffer use `texelFetch()`, passing the identifer of your `samplerBuffer` as the first argument, and the desired index as the second argument.
@@ -108,5 +116,6 @@ All dependent libraries are included within the repo, licenses are available on 
 * [SDL](https://www.libsdl.org/) 2.4.0
 * [SDL_image](https://www.libsdl.org/projects/SDL_image/) 2.0.1 *(texture loading)*
 * [GLM](http://glm.g-truc.net/) 0.9.7.3 *(consistent C++/GLSL vector maths functionality)*
-* [GLEW](http://glew.sourceforge.net/) 1.13.0 *(GL extensions)*
+* [GLEW](http://glew.sourceforge.net/) 1.13.0 *(GL extension loader)*
 * [FreeType](http://www.freetype.org/) 2.6.3 *(for font loading)*
+* [assimp](https://github.com/assimp/assimp) 4.1.0 *(for loading advanced models)*

@@ -130,9 +130,9 @@ private:
 	 * Called whenever any internal camera variables are updated
 	 */
     void updateViews();
-    //ModelView matrix
+    //View matrix
     glm::mat4 viewMat;
-    //Model view matrix without camera position taken into consideration
+    //View matrix without camera position taken into consideration
     glm::mat4 skyboxViewMat;
     //Up vector used for stabilisation, only rotated when roll is called
     glm::vec3 pureUp;

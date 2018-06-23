@@ -3,6 +3,8 @@
 #include <cstdlib> //<_splitpath() Windows only, need to rewrite linux ver
 #include <regex>
 #include <glm/gtc/type_ptr.hpp>
+#include "../util/StringUtils.h"
+#include "Shaders.h"
 
 bool ShaderCore::exitOnError = false;//Tempted to use pre-processor macros to swap this default to true on release mode
 
@@ -11,6 +13,28 @@ ShaderCore::ShaderCore()
 	: programId(-1)
 	, shaderTag("")
 { }
+ShaderCore::ShaderCore(const ShaderCore &other)
+	: ShaderCore()
+{
+	//Copy across all member variables: e.g uniforms, textures, buffers etc
+	//floatingShaders;//This is managed by compile, it's more of a temporary data structure
+	//dynamicUniforms, lostDynamicUniforms
+	for (const auto &i : other.dynamicUniforms)
+		this->lostDynamicUniforms.push_back(DynamicUniformDetail(i.second));
+	for (const auto &i:other.lostDynamicUniforms)
+		this->lostDynamicUniforms.push_back(DynamicUniformDetail(i));
+	//staticUniforms
+	for (const auto &i : other.staticUniforms)
+		this->staticUniforms.push_back(StaticUniformDetail(i));
+	//textures
+	for (const auto &i : other.textures)
+		this->textures.insert({ i.first, UniformTextureDetail(i.second) });
+	//buffers, lostBuffers
+	for (const auto &i : other.buffers)
+		this->lostBuffers.push_back(BufferDetail(i.second));
+	for (const auto &i : other.lostBuffers)
+		this->lostBuffers.push_back(BufferDetail(i));
+}
 ShaderCore::~ShaderCore()
 {
 	if (this->shaderTag[0]!='\0') delete[] this->shaderTag;
@@ -22,35 +46,43 @@ void ShaderCore::reload()
 	//Clear shadertag
 	if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
 	this->shaderTag = "";
-	//Create temporary shader program
-	GLuint t_programId = GL_CALL(glCreateProgram());
-	//Pass it to subclass to compile shaders
-	if (this->_compileShaders(t_programId))
-	{
-		// Link the program and ensure the program compiled correctly;
-		GL_CALL(glLinkProgram(t_programId));
+	while (true)
+	{//Iterate until shader compilation has been corrected
+		//Create temporary shader program
+		GLuint t_programId = GL_CALL(glCreateProgram());
+		//Pass it to subclass to compile shaders
+		if (this->_compileShaders(t_programId))
+		{
+			// Link the program and ensure the program compiled correctly;
+			GL_CALL(glLinkProgram(t_programId));
 
-		// If the program linked ok, then we update the instance variable (for live reloading)
-		if (this->checkProgramLinkError(t_programId)){
-			// Destroy the old program
-			this->destroyProgram();
-			// Update the class var for the next usage.
-			this->programId = t_programId;
+			// If the program linked ok, then we update the instance variable (for live reloading)
+			if (this->checkProgramLinkError(t_programId)){
+				// Destroy the old program
+				this->destroyProgram();
+				// Update the class var for the next usage.
+				this->programId = t_programId;
+			}
+			else
+			{
+				//Compilation failed, cleanup temp program
+				GL_CALL(glDeleteProgram(t_programId));
+				deleteShaders();
+				fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+				getchar();
+				continue;
+			}
 		}
 		else
 		{
 			//Compilation failed, cleanup temp program
 			GL_CALL(glDeleteProgram(t_programId));
 			deleteShaders();
-			return;
+			fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+			getchar();
+			continue;
 		}
-	}
-	else
-	{
-		//Compilation failed, cleanup temp program
-		GL_CALL(glDeleteProgram(t_programId));
-		deleteShaders();
-		return;
+		break;
 	}
 	this->setupBindings();
 }
@@ -161,8 +193,8 @@ void ShaderCore::setupBindings()
 			if (!rtn.second)fprintf(stderr, "Somehow a buffer was bound twice.");
 			GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, d.bindingPoint));
 		}
-		else//If the buffer isn't found, remind the user
-		{
+		else if (strcmp(d.nameInShader, Shaders::LIGHT_UNIFORM_BLOCK_NAME) && strcmp(d.nameInShader, Shaders::MATERIAL_UNIFORM_BLOCK_NAME))
+		{//If the buffer isn't found, remind the user, Don't warn for known system bufferS
 			lostBuffers.push_front(d);
 			printf("%s: Buffer '%s' could not be located on shader reload.\n", this->shaderTag, d.nameInShader);
 		}
@@ -171,14 +203,13 @@ void ShaderCore::setupBindings()
 	this->_setupBindings();
     GL_CALL(glUseProgram(0));
 }
-void ShaderCore::useProgram()
+void ShaderCore::prepare(bool autoClear)
 {
 	//Kill if shader isn't built
 	if (this->programId <= 0)
 	{
 		return;
 	}
-
 	GL_CALL(glUseProgram(this->programId));
 
 #ifdef _DEBUG
@@ -222,7 +253,8 @@ void ShaderCore::useProgram()
 	{
 		if (i->second.type == GL_FLOAT)
 		{
-            if (i->second.count == 1){
+            if (i->second.count == 1)
+            {
                 GL_CALL(glUniform1fv(i->first, 1, reinterpret_cast<const GLfloat *>(i->second.data)));
             }
             else if (i->second.count == 2){
@@ -271,6 +303,34 @@ void ShaderCore::useProgram()
         }
 	}
 	//Set any subclass specific stuff
+    this->_prepare();
+	
+	if (autoClear)
+	{
+		GL_CALL(glUseProgram(0));
+	}
+}
+void ShaderCore::useProgram(bool autoPrepare)
+{
+	//Kill if shader isn't built
+	if (this->programId <= 0)
+	{
+			return;
+	}
+
+    if (autoPrepare)
+        this->prepare(false);
+	else
+		GL_CALL(glUseProgram(this->programId));
+
+    //Is this required with new tex?
+	////Set any Texture buffers
+	//for (auto utd : textures)
+	//{//Why textures only here?
+	//	glActiveTexture(GL_TEXTURE0 + utd.first);
+	//	glBindTexture(utd.second.type, utd.second.name);
+	//}
+
 	this->_useProgram();
 }
 void ShaderCore::clearProgram()
@@ -485,8 +545,8 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 			GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, bufferBindingPoint));
 			return true;
 		}
-		else
-		{
+		else if (strcmp(bufferNameInShader, Shaders::LIGHT_UNIFORM_BLOCK_NAME) && strcmp(bufferNameInShader, Shaders::MATERIAL_UNIFORM_BLOCK_NAME))
+		{//Don't warn for known system buffers
 			fprintf(stderr, "%s: Buffer named: %s was not found.\n", shaderTag, bufferNameInShader);
 		}
 	}
@@ -650,7 +710,7 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
 	GLuint shaderId = createShader(type);
 	GL_CALL(glShaderSource(shaderId,(GLsizei)shaderSources.size(), &shaderSources[0], nullptr));
 	GL_CALL(glCompileShader(shaderId));
-	std::string shaderName = getFilenameFromPath(*(shaderSourceFiles->end() - 1));
+	std::string shaderName = su::getFilenameFromPath(*(shaderSourceFiles->end() - 1));
 	//Check for compile errors
 	if (!this->checkShaderCompileError(shaderId, shaderName.c_str()))
 	{
@@ -666,29 +726,53 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
 	//Append to shaderTag
 	if (shaderTag[0] == '\0')
 	{
-		shaderName = removeFileExt(shaderName);
+		shaderName = su::removeFileExt(shaderName);
 	}
 	else
 	{
-		shaderName = std::string(shaderTag) + std::string("-") + removeFileExt(shaderName);
+		shaderName = std::string(shaderTag) + std::string("-") + su::removeFileExt(shaderName);
 		delete[] this->shaderTag;
 	}
 	this->shaderTag = new char[shaderName.length() + 1];
 	strcpy(this->shaderTag, shaderName.c_str());
 	return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
 }
+#include <filesystem>
+#ifdef _MSC_VER
+#define filesystem tr2::sys
+#endif
 char* ShaderCore::loadShaderSource(const char* file){
+	static std::string shadersRoot;
+	if (shadersRoot.empty())
+	{
+		//Locate the root directory of the solution
+		//Follow up tree a few layers checking for a shaders directory.
+		shadersRoot = "./shaders/";
+		for (unsigned int i = 0; i < 5; ++i)
+		{
+			if (std::filesystem::exists(std::filesystem::path(shadersRoot)))
+				break;
+			shadersRoot = std::string("./.") + shadersRoot;
+		}
+		if (!std::filesystem::exists(std::filesystem::path(shadersRoot)))
+			shadersRoot = "./";
+	}
 	// If file path is 0 it is being omitted. kinda gross
 	if (file != nullptr){
-		FILE* fptr = fopen(file, "rb");
-		if (!fptr){
-			fprintf(stderr, "Shader source not found: %s\n", file);
-			if(exitOnError)
-			{
-				getchar();
-				exit(1);
+		std::string shaderPath = shadersRoot + file;
+		FILE* fptr = fopen(shaderPath.c_str(), "rb");//Attempt with shader root
+		if (!fptr)
+		{
+			fptr = fopen(file, "rb");//Attempt without shader root
+			if (!fptr){
+				fprintf(stderr, "Shader source not found: %s\n", file);
+				if (exitOnError)
+				{
+					getchar();
+					exit(1);
+				}
+				return nullptr;
 			}
-			return nullptr;
 		}
 		fseek(fptr, 0, SEEK_END);
 		long length = ftell(fptr);
@@ -759,40 +843,6 @@ unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSource
 		if (std::regex_search(shaderSource, match, versionRegex))
 			return stoul(match[1]);
 	return 0;
-}
-//_WIN32 is defined for both x86 and x64
-//https://msdn.microsoft.com/en-us/library/b0084kay.aspx
-#ifdef _WIN32 
-struct MatchPathSeparator
-{
-	bool operator()(char ch) const
-	{
-		return ch == '\\' || ch == '/';
-	}
-};
-#else
-struct MatchPathSeparator
-{
-	bool operator()(char ch) const
-	{
-		return ch == '/';
-	}
-};
-#endif
-std::string ShaderCore::getFilenameFromPath(const std::string &filePath)
-{
-	std::string pathname(filePath);
-	std::string result = std::string(
-		std::find_if(pathname.rbegin(), pathname.rend(),
-		MatchPathSeparator()).base(),
-		pathname.end());
-	return result;
-}
-std::string ShaderCore::removeFileExt(const std::string &filename)
-{
-	size_t lastdot = filename.find_last_of(".");
-	if (lastdot == std::string::npos) return filename;
-	return filename.substr(0, lastdot);
 }
 std::vector<const std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
 {

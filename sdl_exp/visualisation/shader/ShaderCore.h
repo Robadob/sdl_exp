@@ -48,6 +48,10 @@ protected:
 	 */
 	ShaderCore();
 	/**
+	* Copy constructor
+	*/
+	ShaderCore(const ShaderCore &other);
+	/**
 	 * There is no reason to ever have a pointer to ShaderCore (the subclasses are too distinct, are used via their own methods)
 	 * Therefore no reason to delete one directly, hence protected
 	 */
@@ -75,10 +79,16 @@ public:
 	*/
 	void clearProgram();
 	/**
-	* Calls glUseProgram(GLuint) and binds all dynamic uniforms/textures
-	* @see _useProgram()
+     * Binds all dynamic uniforms/textures and subclass stuff such as vertex attribs
+     * @param autoclear If true, the program will not remain bound after calling
+	 * @see _prepare()
 	*/
-	void useProgram();
+    void prepare(bool autoclear = true);
+	/**
+	 * Calls glUseProgram(GLuint)
+	 * @param autoPrepare Automatically calls prepare() if true is passed
+	 */
+	void useProgram(bool autoPrepare=true);
 	/**
 	 * Returns whether the shader is compiled and ready
 	 * @return True if the shader is ready to be used, else false
@@ -199,9 +209,10 @@ public:
 	 * This is for 'program resources', NOT texture buffers
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
 	 * @param bufferType The type of buffer (probably GL_SHADER_STORAGE_BUFFER or GL_UNIFORM_BUFFER)
-	 * @param bufferName The buffer name as set by glGenBuffers(GLsizei, GLuint)
+	 * @param bufferBindingPoint The buffer's bind point
+	 * @return True if buffer name is found in the current shader to be bound
 	 */
-	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferName);
+	bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferBindingPoint);
 	/**
 	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a buffer with the same bufferNameInShader is already bound, it will be replaced
@@ -209,6 +220,7 @@ public:
 	 * This will not retain the shared_ptr, it's upto you to keep it alive
 	 * @param bufferNameInShader The indentifier of the buffer within the shader source
 	 * @param buffer The buffer to be used
+	 * @return True if buffer name is found in the current shader to be bound
 	 * @note Convenience method, implemented in BufferCore.cpp
 	 */
 	bool addBuffer(const char *bufferNameInShader, const std::shared_ptr<BufferCore> &buffer);
@@ -410,7 +422,12 @@ private:
 	/**
 	 * Subclasses should use this to apply any subclass specific shader bindings
 	 * If not overriden, does nothing
-	 * Called by useProgram()
+	 * @note Called by prepare()
+	 */
+	virtual void _prepare() {}
+	/**
+	 *Subclasses should use this to config shader specifics that MUST be executed before shader use
+	 * @note Called by useProgram()
 	 */
 	virtual void _useProgram() {}
 	/**
@@ -472,19 +489,6 @@ private:
 	 * @return True if no errors were detected
 	 */
 	static bool checkShaderCompileError(const GLuint shaderId, const char *shaderPath);
-	/**
-	 * Returns the filename from the provided file path
-	 * @param filePath A null terminated string holding a file path
-	 * @return The filename extracted from the string
-	 * @note This has operating system dependent behaviour, Linux consider \\ a valid path
-	 */
-	static std::string getFilenameFromPath(const std::string &filePath);
-	/**
-	 * Returns the filename from the provided file path
-	 * @param filename A null terminated string holding a file name
-	 * @return The filename sans extension
-	 */
-	static std::string ShaderCore::removeFileExt(const std::string &filename);
 };
 
 #endif //ifndef __ShaderCore_h__

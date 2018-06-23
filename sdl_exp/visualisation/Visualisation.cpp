@@ -68,9 +68,9 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
     this->window = SDL_CreateWindow
         (
@@ -101,15 +101,11 @@ bool Visualisation::init(){
         GLEW_INIT();
         
         // Setup gl stuff
-        GL_CALL(glEnable(GL_DEPTH_TEST));
+		GL_CALL(glEnable(GL_DEPTH_TEST));
         GL_CALL(glCullFace(GL_BACK));
         GL_CALL(glEnable(GL_CULL_FACE));
         GL_CALL(glShadeModel(GL_SMOOTH));
         GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-        GL_CALL(glEnable(GL_LIGHTING));
-        GL_CALL(glEnable(GL_LIGHT0));
-        GL_CALL(glEnable(GL_COLOR_MATERIAL));
-        GL_CALL(glEnable(GL_NORMALIZE));
         GL_CALL(glBlendEquation(GL_FUNC_ADD));
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         setMSAA(this->msaaState);

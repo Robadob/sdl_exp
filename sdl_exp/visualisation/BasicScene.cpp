@@ -1,11 +1,13 @@
 #include "BasicScene.h"
+#include "shader/lights/LightsBuffer.h"
 
 BasicScene::BasicScene(Visualisation& vis)
 	: Scene(vis)
-	, axis(std::make_shared<Axis>(25.0f))
-	, skybox(std::make_unique<Skybox>())
 	, renderAxisState(true)
 	, renderSkyboxState(true)
+	, axis(std::make_shared<Axis>(25.0f))
+	, skybox(std::make_unique<Skybox>())
+	, lighting(std::make_shared<LightsBuffer>(vis.getCamera()->getViewMatPtr()))
 {
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
@@ -21,12 +23,15 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 		//Setup matrices
 		ent->setViewMatPtr(this->visualisation.getCamera());
 		ent->setProjectionMatPtr(&this->visualisation);
+		ent->setLightsBuffer(this->lighting);
 	}
 	else
 		fprintf(stderr, "Can't register a null entity!\n");
 }
 void BasicScene::_render()
 {
+	//Update lighting buffer
+	lighting->update();
 	//Bind back buffer
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	GL_CALL(glClearColor(0, 0, 0, 1));
@@ -37,7 +42,6 @@ void BasicScene::_render()
 		this->skybox->render();
 	if (this->renderAxisState)
 		this->axis->render();
-	this->defaultLighting();
 	render();
 }
 bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y) 
@@ -68,17 +72,17 @@ void BasicScene::setSkybox(bool state){
 void BasicScene::setRenderAxis(bool state){
     this->renderAxisState = state;
 }
-void BasicScene::defaultLighting(){
-    glEnable(GL_LIGHT0);
-    glm::vec3 eye = this->visualisation.getCamera()->getEye();
-    float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
-    float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
-    float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
-    float white[4] = { 1, 1, 1, 1 };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, white);
+//void BasicScene::defaultLighting(){
+    //glEnable(GL_LIGHT0);
+    //glm::vec3 eye = this->visualisation.getCamera()->getEye();
+    //float lightPosition[4] = { eye.x, eye.y, eye.z, 1 };
+    //float amb[4] = { 0.8f, 0.8f, 0.8f, 1 };
+    //float diffuse[4] = { 0.2f, 0.2f, 0.2f, 1 };
+    //float white[4] = { 1, 1, 1, 1 };
+    //glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+    //glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, white);
 
     // Spotlight stuff
     //float angle = 180.0f;
@@ -86,4 +90,4 @@ void BasicScene::defaultLighting(){
     // float direction[4] = { look.x, look.y, look.z, 0 };
     //glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, angle);
     //glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, direction);
-}
+//}

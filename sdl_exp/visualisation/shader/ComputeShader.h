@@ -29,6 +29,10 @@ public:
 	 */
 	ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
 	/**
+	 * Copy constructor
+	 */
+	ComputeShader(const ComputeShader &other);
+	/**
 	 * Cleans up shader files vector
 	 * Frees program
 	 */

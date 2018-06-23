@@ -8,7 +8,7 @@ Draw::Draw(const unsigned int &bufferLength, const glm::vec4 &initialColor, cons
 	, tColor(initialColor)
 	, tWidth(initialWidth)
 	, tType()
-	, shaders(std::make_shared<Shaders>(Stock::Shaders::COLOR))
+	, shaders(std::make_shared<Shaders>(Stock::Shaders::COLOR_NOSHADE))
 	, vertices(GL_FLOAT, 3, sizeof(float))
 	, colors(GL_FLOAT, 4, sizeof(float))
 	, vboLen(bufferLength == 0 ? DEFAULT_INITIAL_VBO_LENGTH : bufferLength)
@@ -35,7 +35,7 @@ Draw::Draw(const unsigned int &bufferLength, const glm::vec4 &initialColor, cons
 	colors.count = DEFAULT_INITIAL_VBO_LENGTH;
 	colors.data = nullptr;
 
-	shaders->setPositionsAttributeDetail(vertices);
+	shaders->setPositionsAttributeDetail(vertices, false);
 	shaders->setColorsAttributeDetail(colors);
 }
 Draw::~Draw()
@@ -287,7 +287,7 @@ void Draw::resize(unsigned int newLength)
 	GL_CALL(glDeleteBuffers(1, &colors.vbo));
 	vertices.vbo = _vbo;
 	colors.vbo = _cvbo;
-	shaders->setPositionsAttributeDetail(vertices);
+	shaders->setPositionsAttributeDetail(vertices, false);
 	shaders->setColorsAttributeDetail(colors);
 	vboLen = newLength;
 }
@@ -302,4 +302,8 @@ void Draw::setViewMatPtr(glm::mat4 const *viewMat)
 void Draw::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	shaders->setProjectionMatPtr(projectionMat);
+}
+void Draw::setLightsBuffer(GLuint bufferBindingPoint)
+{
+	shaders->setLightsBuffer(bufferBindingPoint);
 }

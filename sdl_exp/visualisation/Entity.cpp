@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <locale>
 #include <sparsehash/dense_hash_map>
+#include "util/StringUtils.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
@@ -103,6 +105,68 @@ Entity::Entity(
 	std::vector<std::shared_ptr<Shaders>>(shaders),
 	texture
 	) { }
+Entity::Entity(
+	Stock::Models::Model const model,
+	Stock::Materials::Material const material,
+	float modelScale
+	) : Entity(
+	model.modelPath,
+	material,
+	modelScale) { }
+const unsigned int MAX_OBJ_MATERIALS = 10;
+Entity::Entity(
+	const char *modelPath,
+	Stock::Materials::Material const material,
+	float modelScale
+	)
+	: positions(GL_FLOAT, 3, sizeof(float))
+	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+	, colors(GL_FLOAT, 3, sizeof(float))
+	, texcoords(GL_FLOAT, 2, sizeof(float))
+	, faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
+	, vn_count(0)
+	, SCALE(modelScale)
+	, modelPath(modelPath)
+	, materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
+	, location(0.0f)
+	, rotation(0.0f, 0.0f, 1.0f, 0.0f)
+	, shaders()
+	, texture(nullptr)
+	, cullFace(true)
+	, scaleFactor(1.0f)
+	, viewMatPtr(nullptr)
+	, projectionMatPtr(nullptr)
+	, lightBufferBindPt(UINT_MAX)
+{
+	GL_CHECK();
+	loadModelFromFile();
+	//Setup materials
+	{
+		size_t matSize = materials.size() == 0 ? 1 : materials.size();
+		materials.clear();
+		//Override material
+		for (unsigned int i = 0; i < matSize; ++i)
+		{
+			this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), material));
+			if (positions.data)
+			{
+				auto it = materials[i].getShaders();
+				it->setPositionsAttributeDetail(positions);
+				it->setNormalsAttributeDetail(normals);
+				it->setColorsAttributeDetail(colors);
+				it->setTexCoordsAttributeDetail(texcoords);
+				it->setMaterialBuffer(materialBuffer);
+				it->setFaceVBO(faces.vbo);
+			}
+			materials[i].bake();
+		}
+	}
+	if (needsExport)
+	{
+		exportModel();
+		printf("Model '%s' export was updated.\n", modelPath);
+	}
+}
 /*
 Constructs an entity from the provided .obj model
 @param modelPath Path to .obj format model file
@@ -111,40 +175,43 @@ Constructs an entity from the provided .obj model
 @param texture Pointer to the texture to be used
 */
 Entity::Entity(
-    const char *modelPath,
-    float modelScale,
+	const char *modelPath,
+	float modelScale,
 	std::vector<std::shared_ptr<Shaders>> shaders,
-    std::shared_ptr<const Texture> texture
-    )
-    : positions(GL_FLOAT, 3, sizeof(float))
-    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
-    , colors(GL_FLOAT, 3, sizeof(float))
-    , texcoords(GL_FLOAT, 2, sizeof(float))
-    , faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
-    , vn_count(0)
-    , SCALE(modelScale)
-    , modelPath(modelPath)
-    , material(0)
-    , color(1, 0, 0, 1)
+	std::shared_ptr<const Texture> texture
+	)
+	: positions(GL_FLOAT, 3, sizeof(float))
+	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+	, colors(GL_FLOAT, 3, sizeof(float))
+	, texcoords(GL_FLOAT, 2, sizeof(float))
+	, faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
+	, vn_count(0)
+	, SCALE(modelScale)
+	, modelPath(modelPath)
+	, materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
     , location(0.0f)
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
     , shaders(shaders)
     , texture(texture)
     , cullFace(true)
+	, scaleFactor(1.0f)
+	, viewMatPtr(nullptr)
+	, projectionMatPtr(nullptr)
+	, lightBufferBindPt(UINT_MAX)
 {
     GL_CHECK();
     loadModelFromFile();
     //If texture has been provided, set up
+	if (!materials.size())
+	{
+		this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size()));
+		materials[0].bake();
+	}
     if (texture)
     {
-		for (auto &&it : this->shaders)
-		{
-			if (it)
-			{
-                //Temporary hardcode uniform name with literal
-                it->addTexture("_texture", texture);
-			}
-		}
+		Material::TextureFrame frame = Material::TextureFrame();
+		frame.texture = texture;
+		materials[0].addTexture(frame, Material::TextureType::Diffuse);//This won't currently override a previous loaded diffuse tex
     }
     //If shaders have been provided, set them up
 	for (auto &&it : this->shaders)
@@ -155,9 +222,25 @@ Entity::Entity(
 			it->setNormalsAttributeDetail(normals);
 			it->setColorsAttributeDetail(colors);
 			it->setTexCoordsAttributeDetail(texcoords);
-			it->setRotationPtr(&this->rotation);
-			it->setTranslationPtr(&this->location);
+			it->setMaterialBuffer(materialBuffer);
+			it->setFaceVBO(faces.vbo);
+			if (texture)
+				it->addTexture("t_diffuse", texture);
 		}
+	}
+	for (auto &&m : materials)
+	{
+		if (positions.data)
+		{
+			auto it = m.getShaders();
+			it->setPositionsAttributeDetail(positions);
+			it->setNormalsAttributeDetail(normals);
+			it->setColorsAttributeDetail(colors);
+			it->setTexCoordsAttributeDetail(texcoords);
+			it->setMaterialBuffer(materialBuffer);
+			it->setFaceVBO(faces.vbo);
+		}
+		m.setCustomShaders(this->shaders);
 	}
     if (needsExport)
     {
@@ -176,7 +259,23 @@ Entity::~Entity(){
 	//All attribs (except faces) share the same malloc, so delete once
 	free(positions.data);
 	free(faces.data);
-	freeMaterial();
+	materialBuffer.reset();
+	materials.clear();
+	texture.reset();
+}
+glm::mat4 Entity::getModelMat() const
+{
+	//Apply world transforms (in reverse order that we wish for them to be applied)
+	glm::mat4 modelMat = glm::translate(glm::mat4(1), this->location);
+
+	//Check we actually have a rotation (providing no axis == error)
+	if ((this->rotation.x != 0 || this->rotation.y != 0 || this->rotation.z != 0) && this->rotation.w != 0)
+		modelMat = glm::rotate(modelMat, glm::radians(this->rotation.w), glm::vec3(this->rotation));
+
+	//Only bother scaling if we were asked to
+	if (this->scaleFactor != 1.0f)
+		modelMat = glm::scale(modelMat, glm::vec3(this->scaleFactor));
+	return modelMat;
 }
 /*
 Calls the necessary code to render a single instance of the entity
@@ -184,21 +283,16 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(unsigned int shaderIndex){
-    if (shaderIndex<shaders.size())
-        shaders[shaderIndex]->useProgram();
-    //Bind the faces to be rendered
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+	glm::mat4 m = getModelMat();
+	this->materials[0].use(m, shaderIndex, true);
 
-    if (!cullFace)
-      GL_CALL(glDisable(GL_CULL_FACE));
-    //Translate the model according to it's location
-    if (this->material)
-        this->material->useMaterial();
+	if (!cullFace)
+		GL_CALL(glDisable(GL_CULL_FACE));
     GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
     if (!cullFace)
         GL_CALL(glEnable(GL_CULL_FACE));
-    if (shaderIndex<shaders.size())
-        shaders[shaderIndex]->clearProgram();
+
+	this->materials[0].clear();
 }
 /*
 Calls the necessary code to render count instances of the entity
@@ -208,21 +302,16 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, unsigned int shaderIndex){
-	if (shaderIndex<shaders.size())
-		shaders[shaderIndex]->useProgram();
-    //Bind the faces to be rendered
-    GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+	glm::mat4 m = getModelMat();
+	this->materials[0].use(m, shaderIndex, true);
 
     if (!cullFace)
         GL_CALL(glEnable(GL_CULL_FACE));
-    //Set the color and material
-    if (this->material)
-        this->material->useMaterial();
     GL_CALL(glDrawElementsInstanced(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0, count));
     if (!cullFace)
-        GL_CALL(glDisable(GL_CULL_FACE));
-    if (shaderIndex<shaders.size())
-        shaders[shaderIndex]->clearProgram();
+		GL_CALL(glDisable(GL_CULL_FACE));
+
+	this->materials[0].clear();
 }
 /*
 Creates a vertex buffer object of the specified size
@@ -291,12 +380,12 @@ void Entity::loadModelFromFile()
 {
 	FILE* file;
 	//Redirect pre-exported models, and cancel if not .obj
-	if (endsWith(modelPath, OBJ_TYPE))
+	if (su::endsWith(modelPath, OBJ_TYPE, false))
 	{
 		std::string exportPath(modelPath);
 		std::string objPath(OBJ_TYPE);
 		exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
-		if (endsWith(modelPath, EXPORT_TYPE))
+		if (su::endsWith(modelPath, EXPORT_TYPE, false))
 		{
 			importModel(modelPath);
 			return;
@@ -313,7 +402,7 @@ void Entity::loadModelFromFile()
 		fprintf(stderr, "Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);
 		return;
 	}
-	printf("\r Loading Model: %s", modelPath);
+	printf("\rLoading Model: %s", su::getFilenameFromPath(modelPath).c_str());
 
 	//Open file
 	file = fopen(modelPath, "r");
@@ -337,7 +426,7 @@ void Entity::loadModelFromFile()
 	bool face_hasNormals = false;
 	bool face_hasTexcoords = false;
 
-	printf("\rLoading Model: %s [Counting Elements]", modelPath);
+	printf("\rLoading Model: %s [Counting Elements]          ", su::getFilenameFromPath(modelPath).c_str());
 	//MTL details
 	char mtllib_tag[7] = "mtllib";
 	char usemtl_tag[7] = "usemtl";
@@ -515,7 +604,7 @@ exit_loop:;
 	unsigned int bufferLen = lnLenMax + 2;
 	char *buffer = new char[bufferLen];
 
-	printf("\rLoading Model: %s [Loading Elements] ", modelPath);
+	printf("\rLoading Model: %s [Loading Elements]           ", modelPath);
 	modelMin = glm::vec3(FLT_MAX);
 	modelMax = glm::vec3(-FLT_MAX);
 	//Read file by line, again.
@@ -813,7 +902,7 @@ exit_loop:;
 exit_loop2:;
 	//Cleanup buffer
 	delete[] buffer;
-	printf("\rLoading Model: %s [Calculating Pairs]", modelPath);
+	printf("\rLoading Model: %s [Calculating Pairs]         ", su::getFilenameFromPath(modelPath).c_str());
 	auto vn_pairs = new google::dense_hash_map<VN_PAIR, unsigned int, std::hash<VN_PAIR>, eqVN_PAIR>();
 	vn_pairs->set_empty_key({ UINT_MAX, UINT_MAX, UINT_MAX });
 	vn_pairs->resize(faces.count*faces.components);
@@ -860,11 +949,11 @@ exit_loop2:;
 		bufferSize += vn_count*texcoords.components*texcoords.componentSize;
 	}
 	//Calculate scale factor
-	float scaleFactor = 1.0;
+	//float scaleFactor = 1.0;
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
-		scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-	printf("\rLoading Model: %s [Assigning Elements]", modelPath);
+		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+	printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
 	{
@@ -877,7 +966,7 @@ exit_loop2:;
 		{
 			//Set all n components of vertices and attributes to that id
 			for (unsigned int k = 0; k < positions.components; k++)
-				((float*)positions.data)[(vn_assigned*positions.components) + k] = t_vertices[(i_vert*positions.components) + k] * scaleFactor;
+				((float*)positions.data)[(vn_assigned*positions.components) + k] = t_vertices[(i_vert*positions.components) + k];// *scaleFactor;//We now scale with model matrix
 			if (face_hasNormals)
 			{//Normalise normals
 				t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * normals.components)], t_normals[(t_norm_pos[i] * normals.components) + 1], t_normals[(t_norm_pos[i] * normals.components) + 2]));
@@ -908,7 +997,7 @@ exit_loop2:;
 	free(t_norm_pos);
 	free(t_tex_pos);
 	//Load VBOs
-	printf("\rLoading Model: %s [Generating VBOs!]              ", modelPath);
+	printf("\rLoading Model: %s [Generating VBOs!]              ", su::getFilenameFromPath(modelPath).c_str());
 	generateVertexBufferObjects();
 	//Can the host copies be freed after a bind?
 	//No, we want to keep faces around as a minimum for easier vertex order switching
@@ -921,7 +1010,7 @@ exit_loop2:;
 	//    free(textures);
 	//free(faces);
 	fclose(file);
-	printf("\rLoading Model: %s [Complete!]                 \n", modelPath);
+	printf("\rLoading Model: %s [Complete!]                 \n", su::getFilenameFromPath(modelPath).c_str());
 	if (mtllib&&usemtl)
 	{
 		loadMaterialFromFile(modelPath, mtllib, usemtl);
@@ -938,9 +1027,8 @@ Loads a single material from a .mtl file
 */
 void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName){
 	// Figure out the actual filepath, obj path dir but with matrial filename on the end.
-	std::string objectPath = objPath;
-	unsigned int found = (unsigned int)objectPath.find_last_of('/');
-	std::string materialPath = objectPath.substr(0, found).append("/").append(materialFilename);
+	std::string modelFolder = su::getFolderFromPath(objPath);
+	std::string materialPath = modelFolder.append("/").append(materialFilename);
 
 	//Open file
 	FILE* file = fopen(materialPath.c_str(), "r");
@@ -959,66 +1047,111 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 	const char* AMBIENT_IDENTIFIER = "Ka";
 	const char* DIFFUSE_IDENTIFIER = "Kd";
 	const char* SPECULAR_IDENTIFIER = "Ks";
+	const char* TEX_AMBIENT_IDENTIFIER = "map_Ka";
+	const char* TEX_DIFFUSE_IDENTIFIER = "map_Kd";
+	const char* TEX_SPECULAR_IDENTIFIER = "map_Ks";
 	const char* SPECULAR_EXPONENT_IDENTIFIER = "Ns";
-	const char* DISSOLVE_IDENTIFEIR = "d"; //alpha
+	const char* DISSOLVE_IDENTIFIER = "d"; //alpha
 	const char* ILLUMINATION_MODE_IDENTIFIER = "illum";
-
-	this->material = new Material();
 
 	// iter file
 	while (!feof(file)) {
 		if (fscanf(file, "%s", buffer) == 1){
 			if (strcmp(buffer, MATERIAL_NAME_IDENTIFIER) == 0){
 				if (fscanf(file, "%s", &temp) == 1){
-					//this->material->materialName = temp; // @todo
+					this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size()));
+					materials[materials.size()-1].setName(temp);
+					assert(materials.size() < MAX_OBJ_MATERIALS);
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
 			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
-				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->ambient = glm::vec4(r, g, b, 1.0);
+				if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+					materials[materials.size() - 1].setAmbient(glm::vec3(r, g, b));
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
 			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
-				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->diffuse = glm::vec4(r, g, b, 1.0);
+				if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+					materials[materials.size() - 1].setDiffuse(glm::vec3(r, g, b));
 
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
-			else if (strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
+			else if (materials.size() && strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
 				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					this->material->specular = glm::vec4(r, g, b, 1.0);
+					materials[materials.size() - 1].setSpecular(glm::vec3(r, g, b));
 
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
-			else if (strcmp(buffer, SPECULAR_EXPONENT_IDENTIFIER) == 0){
+			else if (materials.size() && strcmp(buffer, SPECULAR_EXPONENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f", &r) == 1){
-					this->material->shininess = r;
+					materials[materials.size() - 1].setShininess(r);
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
-			else if (strcmp(buffer, DISSOLVE_IDENTIFEIR) == 0) {
+			else if (materials.size() && strcmp(buffer, DISSOLVE_IDENTIFIER) == 0) {
 				if (fscanf(file, "%f", &r) == 1){
-					this->material->dissolve = r;
+					materials[materials.size() - 1].setOpacity(r);
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
-			else if (strcmp(buffer, ILLUMINATION_MODE_IDENTIFIER) == 0) {
+			else if (materials.size() && strcmp(buffer, TEX_AMBIENT_IDENTIFIER) == 0) {
+				if (fscanf(file, "%s", &temp) == 1){
+					auto tex = Texture2D::load(temp, modelFolder);
+					if (tex)
+					{
+						Material::TextureFrame frame = Material::TextureFrame();
+						frame.texture = tex;
+						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Ambient);
+					}
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (materials.size() && strcmp(buffer, TEX_DIFFUSE_IDENTIFIER) == 0) {
+				if (fscanf(file, "%s", &temp) == 1){
+					auto tex = Texture2D::load(temp, modelFolder);
+					if (tex)
+					{
+						Material::TextureFrame frame = Material::TextureFrame();
+						frame.texture = tex;
+						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Diffuse);
+					}
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (materials.size() && strcmp(buffer, TEX_SPECULAR_IDENTIFIER) == 0) {
+				if (fscanf(file, "%s", &temp) == 1){
+					auto tex = Texture2D::load(temp, modelFolder);
+					if (tex)
+					{
+						Material::TextureFrame frame = Material::TextureFrame();
+						frame.texture = tex;
+						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Specular);
+					}
+				}
+				else {
+					printf("Bad material file...");
+				}
+			}
+			else if (materials.size() && strcmp(buffer, ILLUMINATION_MODE_IDENTIFIER) == 0) {
 				if (fscanf(file, "%d", &i) == 1){
 					//@todo  ignore this for now.
 
@@ -1028,25 +1161,48 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 					printf("Bad material file...");
 				}
 			}
+			//else
+			//	printf("Unhandled input in material file: %s\n", buffer);
 
 		}
 	}
 	fclose(file);
-	printf("Material file loaded: '%s'!\n", materialPath.c_str());
+	if (materials.size() > 1)
+		fprintf(stderr, "Entity '%s' contains multiple materials, only first from file will be used. Alternatively use Model to load the .obj file.\n", modelPath);
+	for (auto &m : materials)
+		m.bake();
+	printf("\rLoading Material: %s [Complete!]\n", su::getFilenameFromPath(materialPath).c_str());
 }
-/*
-Set the color of the model
-If the model has an associated material this value will be ignored
-*/
-void Entity::setColor(glm::vec3 color){
-    this->color = glm::vec4(color,1.0f);
-	for (auto &&it: shaders)
+void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular, const float &shininess, const float &opacity){
+	size_t matSize = materials.size() == 0 ? 1 : materials.size();
+	materials.clear();
+	//Override material
+	for (unsigned int i = 0; i < matSize; ++i)
 	{
-		if (it)
+		this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), {"", ambient, diffuse, specular, shininess, opacity}));
+		if (positions.data)
 		{
-			it->setColor(this->color);
+			auto it = materials[i].getShaders();
+			it->setPositionsAttributeDetail(positions);
+			it->setNormalsAttributeDetail(normals);
+			it->setColorsAttributeDetail(colors);
+			it->setTexCoordsAttributeDetail(texcoords);
+			it->setMaterialBuffer(materialBuffer);
+			it->setFaceVBO(faces.vbo);
 		}
+		materials[i].setCustomShaders(this->shaders);
+		if (viewMatPtr)
+			materials[i].setViewMatPtr(viewMatPtr);
+		if (projectionMatPtr)
+			materials[i].setProjectionMatPtr(projectionMatPtr);
+		if (lightBufferBindPt != UINT_MAX)
+			materials[i].setLightsBuffer(lightBufferBindPt);
+		materials[i].bake();
 	}
+}
+void Entity::setMaterial(const Stock::Materials::Material &mat)
+{
+	setMaterial(mat.ambient, mat.diffuse, mat.specular, mat.shininess, mat.opacity);
 }
 /*
 Set the location of the model in world space
@@ -1076,22 +1232,6 @@ Returns the rotation of the entity
 glm::vec4 Entity::getRotation() const
 {
 	return this->rotation;
-}
-/*
-Public alias to freeMaterial() for backwards compatibility purposes
-@see freeMaterial()
-*/
-void Entity::clearMaterial(){
-	freeMaterial();
-}
-/*
-Frees the storage for the model's material
-*/
-void Entity::freeMaterial(){
-	if (this->material){
-		delete this->material;
-		this->material = 0;
-	}
 }
 /*
 Exports the current model to a faster loading binary format which represents a direct copy of the buffers required by the model
@@ -1125,7 +1265,7 @@ void Entity::exportModel() const
 		return;
 	std::string exportPath(modelPath);
 	std::string objPath(OBJ_TYPE);
-	if (!endsWith(modelPath, EXPORT_TYPE))
+	if (!su::endsWith(modelPath, EXPORT_TYPE, false))
 	{
 		exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
 	}
@@ -1170,7 +1310,7 @@ void Entity::exportModel() const
 	}
 	if (normals.count && (NORMALS_SIZE == 3))
 	{
-		fwrite(positions.data, positions.componentSize, positions.count*positions.components, file);
+		fwrite(normals.data, positions.componentSize, positions.count*positions.components, file);
 	}
 	if (colors.count && (colors.components == 3 || colors.components == 4))
 	{
@@ -1191,19 +1331,6 @@ void Entity::exportModel() const
 	printf("Exported model %s\n", exportPath.c_str());
 }
 /*
-Util method used to check whether the candidate string ends with the suffix
-@param candidate The string we will search for the suffix
-@param suffix The substring to check whether
-*/
-bool Entity::endsWith(const char *candidate, const char *suffix)
-{
-	std::string t_candidate(candidate);
-	std::string t_suffix(suffix);
-	std::transform(t_candidate.begin(), t_candidate.end(), t_candidate.begin(), ::tolower);
-	std::transform(t_suffix.begin(), t_suffix.end(), t_suffix.begin(), ::tolower);
-	return (t_suffix == t_candidate.substr(t_candidate.length() - t_suffix.length(), t_suffix.length()));
-}
-/*
 Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
 @param file Path to the desired output file
 */
@@ -1212,11 +1339,11 @@ void Entity::importModel(const char *path)
 	//Generate import path
 	std::string importPath(path);
 	std::string objPath(OBJ_TYPE);
-	if (endsWith(path, OBJ_TYPE))
+	if (su::endsWith(path, OBJ_TYPE, false))
 	{
 		importPath = importPath.substr(0, importPath.length() - objPath.length()).append(EXPORT_TYPE);
 	}
-	else if (!endsWith(path, EXPORT_TYPE))
+	else if (!su::endsWith(path, EXPORT_TYPE, false))
 	{
 		fprintf(stderr, "Model File: %s, is not a support filetype (e.g. %s, %s)\n", path, OBJ_TYPE, EXPORT_TYPE);
 		return;
@@ -1349,17 +1476,17 @@ void Entity::importModel(const char *path)
 	}
 	fclose(file);
 	//Check model scale
-	if (SCALE > 0 && mask.SCALE <= 0)
-	{
-		fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE);
-	}
-	//Scale the model
-	else if (SCALE > 0 && mask.SCALE != SCALE)
-	{
-		float scaleFactor = SCALE / mask.SCALE;
-		for (unsigned int i = 0; i < positions.count*positions.components; i++)
-			((float*)positions.data)[i] *= scaleFactor;
-	}
+	//if (SCALE > 0 && mask.SCALE <= 0)
+	//{
+	//	fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE);
+	//}
+	////Scale the model
+	//else if (SCALE > 0 && mask.SCALE != SCALE)
+	//{
+	//	float scaleFactor = SCALE / mask.SCALE;
+	//	for (unsigned int i = 0; i < positions.count*positions.components; i++)
+	//		((float*)positions.data)[i] *= scaleFactor;
+	//}
 	//Calc dims
 	modelMin = glm::vec3(FLT_MAX);
 	modelMax = glm::vec3(-FLT_MAX);
@@ -1371,6 +1498,8 @@ void Entity::importModel(const char *path)
 		modelMin = glm::min(modelMin, position);
 	}
 	modelDims = modelMax - modelMin;
+	if (SCALE>0)
+		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
 	//Allocate VBOs
 	generateVertexBufferObjects();
 	printf("Model import was successful: %s\n", importPath.c_str());
@@ -1413,11 +1542,15 @@ void Entity::generateVertexBufferObjects()
 /*
 Returns a shared pointer to this entities shaders
 */
-std::shared_ptr<Shaders> Entity::getShaders(unsigned int shaderIndex) const
+std::unique_ptr<ShadersVec> Entity::getShaders(unsigned int shaderIndex) const
 {
-	if (shaderIndex < shaders.size())
-		return shaders[shaderIndex];
-    return std::shared_ptr<Shaders>(0);
+	std::unique_ptr<ShadersVec> s = std::make_unique<ShadersVec>();
+	//Add local copy
+	if (shaderIndex<shaders.size())
+		s->add(shaders[shaderIndex]);
+	for (auto &m:materials)
+		s->add(m.getShaders(shaderIndex));
+	return s;
 }
 /*
 Reloads the entities texture and shaders
@@ -1427,6 +1560,8 @@ void Entity::reload()
 	for (auto &&it:shaders)
 		if (it)
 			it->reload();
+	for (auto &&it : materials)
+			it.reload();
 }
 /*
 Sets the pointer to the view matrix used by this entitiy (in the shader)
@@ -1434,9 +1569,12 @@ Sets the pointer to the view matrix used by this entitiy (in the shader)
 */
 void Entity::setViewMatPtr(glm::mat4 const *viewMat)
 {
+	viewMatPtr = viewMat;
 	for (auto &&it : shaders)
 		if (it)
-            it->setViewMatPtr(viewMat);
+			it->setViewMatPtr(viewMat);
+	for (auto &m : materials)
+		m.setViewMatPtr(viewMat);
 }
 /*
 Sets the pointer to the projection matrix used by this entitiy (in the shader)
@@ -1444,9 +1582,21 @@ Sets the pointer to the projection matrix used by this entitiy (in the shader)
 */
 void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
+	projectionMatPtr = projectionMat;
 	for (auto &&it : shaders)
 		if (it)
 			it->setProjectionMatPtr(projectionMat);
+	for (auto &m : materials)
+		m.setProjectionMatPtr(projectionMat);
+}
+void Entity::setLightsBuffer(GLuint bufferBindingPoint)
+{
+	lightBufferBindPt = bufferBindingPoint;
+	for (auto &&it : shaders)
+		if (it)
+			it->setLightsBuffer(bufferBindingPoint);
+	for (auto &m : materials)
+		m.setLightsBuffer(bufferBindingPoint);
 }
 /*
 Switches the vertex order of the model

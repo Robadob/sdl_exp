@@ -6,6 +6,9 @@
 
 #include "Viewport.h"
 #include "../Camera.h"
+#include <memory>
+
+class LightsBuffer;
 
 /**
  * Represents things which hold shaders (and can be rendered)
@@ -45,7 +48,9 @@ public:
 	{
 		setProjectionMatPtr(visualisation->getFrustrumPtr());
 	}
-
+	virtual void setLightsBuffer(GLuint bufferBindingPoint) = 0;
+	virtual void setLightsBuffer(std::shared_ptr<LightsBuffer> buffer);
+	
 };
 
 #endif //__Renderable_h__

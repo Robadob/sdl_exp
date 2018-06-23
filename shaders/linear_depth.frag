@@ -1,13 +1,13 @@
 #version 430
 //This shader outputs a normalised (0-1) linear depth to a single component color attachment
 //We use a color attachment as imageLoad() & imageStore() do not support depth/stencil texture formats
-//It supports perspective and orthographic projections, for efficincy you would make it exclusive to the one required
-in vec3 vertex;
-
+//It supports perspective and orthographic projections, for efficiency you would make it exclusive to the one required
+//glEnable(GL_BLEND) BREAKS THIS SHADER
 out float fragColor;
 
 uniform mat4 _projectionMat;
 
+uniform vec3 _color;
 void main()
 {
     int isOrtho = int(_projectionMat[3][3]);//This coord is 1 for ortho, 0 for proj

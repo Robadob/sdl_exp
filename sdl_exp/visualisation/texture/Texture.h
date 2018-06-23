@@ -59,6 +59,16 @@ public:
 	static const unsigned long long WRAP_CLAMP_TO_BORDER;
 	static const unsigned long long WRAP_MIRRORED_REPEAT;
 	static const unsigned long long WRAP_MIRROR_CLAMP_TO_EDGE;
+	static const unsigned long long WRAP_REPEAT_U;
+	static const unsigned long long WRAP_CLAMP_TO_EDGE_U;
+	static const unsigned long long WRAP_CLAMP_TO_BORDER_U;
+	static const unsigned long long WRAP_MIRRORED_REPEAT_U;
+	static const unsigned long long WRAP_MIRROR_CLAMP_TO_EDGE_U;
+	static const unsigned long long WRAP_REPEAT_V;
+	static const unsigned long long WRAP_CLAMP_TO_EDGE_V;
+	static const unsigned long long WRAP_CLAMP_TO_BORDER_V;
+	static const unsigned long long WRAP_MIRRORED_REPEAT_V;
+	static const unsigned long long WRAP_MIRROR_CLAMP_TO_EDGE_V;
 	//Toggle's the use of mip maps (4 levels are used with mipmaps, this is not currently changeable)
 	static const unsigned long long DISABLE_MIPMAP;
 	/**
@@ -68,7 +78,7 @@ public:
 	/**
 	 * @return The unique name given to the texture by OpenGL (allocated by glGenTextures())
 	 */
-	GLenum getName() const { return glName; }
+	virtual GLenum getName() const { return glName; }
 	/**
 	 * @return The texture unit we have assigned to this texture
 	 * @note Texture's of different type's may share this texture unit, using the appropriate sampler in shaders will select the correct texture
@@ -104,7 +114,8 @@ public:
 	/**
 	 * Returns the GLenum of the selected texture wrap option
 	 */
-	GLenum wrapOption() const;
+	GLenum wrapOptionU() const;
+	GLenum wrapOptionV() const;
 	/**
 	 * Returns whether mipmapping is enabled according to the selected options
 	 */

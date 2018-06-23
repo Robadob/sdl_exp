@@ -4,11 +4,12 @@
 #include <glm/gtc/matrix_transform.inl>
 #include <glm/gtc/type_ptr.hpp>
 //Create content struct
-TwoPassScene::SceneContent::SceneContent()
-    : deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::TEXTURE_SHADOW }))
-    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+TwoPassScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights)
+	: lights(lights)
+	, deerModel(new Entity(Stock::Models::DEER, 25.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
+    , sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::FLAT_SHADOW }))
     , planeModel(new Entity(Stock::Models::PLANE, 100.0f, { Stock::Shaders::LINEAR_DEPTH, Stock::Shaders::PHONG_SHADOW }))
-    , lightModel(new Entity(Stock::Models::ICOSPHERE, 1.0f, { Stock::Shaders::FLAT }))
+	, bob(new Model("..\\models\\bob\\bob.md5mesh", 35.0f, true, { Stock::Shaders::BONE_LINEAR_DEPTH, Stock::Shaders::BONE_SHADOW }))
     , blur(new GaussianBlur(5,1.75f))
     , pointlightPos(75, 100, 0)//100 units up, radius of 75
     , pointlightTarget(0)
@@ -16,14 +17,16 @@ TwoPassScene::SceneContent::SceneContent()
 	, shadowIn()
     , shadowOut(Texture2D::make(shadowDims, { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
-    planeModel->setColor(glm::vec3(1));//White
+	planeModel->setMaterial(Stock::Materials::RED_PLASTIC);
+	sphereModel->setMaterial(Stock::Materials::COPPER);
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
+	bob->setLocation(glm::vec3(-20,0,10));
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)
-	, content(std::make_shared<SceneContent>())
+	, content(std::make_shared<SceneContent>(Lights()))
     , sPass(std::make_shared<ShadowPass>(content))
     , cPass(std::make_shared<CompositePass>(content))
 	, tick(0.0f)
@@ -34,7 +37,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     registerEntity(content->deerModel);
     registerEntity(content->sphereModel);
     registerEntity(content->planeModel);
-    registerEntity(content->lightModel);
+	registerEntity(content->bob);
 	////Register render passes in correct order
 	addPass(0, sPass);
 	addPass(1, cPass);
@@ -43,28 +46,49 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
     this->visualisation.getHUD()->add(shadowMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
 	//Enable defaults
 	this->visualisation.setWindowTitle("MultiPass Render Sample");
-    content->lightModel->setColor(glm::vec3(1));
 
-    content->deerModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos),3);
-    content->sphereModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
-    content->planeModel->getShaders(1)->addDynamicUniform("_lightSource", glm::value_ptr(this->content->pointlightPos), 3);
+	SpotLight p = Lights()->addSpotLight();
+	p.Position(this->content->pointlightPos);
+	p.Ambient(glm::vec3(0.1f));
+	p.Diffuse(glm::vec3(0.9f));
+	p.Specular(glm::vec3(1, 1, 1));
+	p.ConstantAttenuation(1.0f);
+	p.Direction(this->content->pointlightTarget - this->content->pointlightPos);
+	p.CutOff(15.0f);
+	p.Exponent(70.0f);
 
     //Spotlight camera at pointlightPos looking in pointlightTarget, with up vector looking up y axis
     //These must be set *AFTER* the parent entities have been registered (need to fiddle with shaders to better handle this use case)
-    content->deerModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-    content->sphereModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-    content->planeModel->getShaders(0)->setViewMatPtr(&this->content->pointlightV);
-    content->deerModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
-    content->sphereModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
-    content->planeModel->getShaders(1)->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	auto deer0 = content->deerModel->getShaders(0);
+	auto sphere0 = content->sphereModel->getShaders(0);
+	auto plane0 = content->planeModel->getShaders(0);
+	auto bob0 = content->bob->getShaders(0);
+	auto deer1 = content->deerModel->getShaders(1);
+	auto sphere1 = content->sphereModel->getShaders(1);
+	auto plane1 = content->planeModel->getShaders(1);
+	auto bob1 = content->bob->getShaders(1);
+
+	deer0->setViewMatPtr(&this->content->pointlightV);
+	sphere0->setViewMatPtr(&this->content->pointlightV);
+	plane0->setViewMatPtr(&this->content->pointlightV);
+	bob0->setViewMatPtr(&this->content->pointlightV);
+	//
+	deer1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	sphere1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	plane1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
+	bob1->addDynamicUniform("spotlightViewMat", &this->content->pointlightV);
     //Define the entire space the light touches
     this->content->pointlightP = glm::ortho(-71.0, 71.0, -71.0, 71.0, 82.0, 180.0);
-    content->deerModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-    content->sphereModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-    content->planeModel->getShaders(0)->setProjectionMatPtr(&this->content->pointlightP);
-    content->deerModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat",&this->content->pointlightP);
-    content->sphereModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
-    content->planeModel->getShaders(1)->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	//Specify where we are rendering from to gen linear depth map
+	deer0->setProjectionMatPtr(&this->content->pointlightP);
+	sphere0->setProjectionMatPtr(&this->content->pointlightP);
+	plane0->setProjectionMatPtr(&this->content->pointlightP);
+	bob0->setProjectionMatPtr(&this->content->pointlightP);
+	//
+	deer1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	sphere1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	plane1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
+	bob1->addDynamicUniform("spotlightProjectionMat", &this->content->pointlightP);
 }
 /*
 Called once per frame when Scene animation calls should be
@@ -79,14 +103,19 @@ void TwoPassScene::update(unsigned int frameTime)
 	this->tick = (float)fmod(this->tick, 360*8);
 	this->tick2 = (float)fmod(this->tick2, 360*8);
     //Move spotlight
-    const float SPOTLIGHT_RAD = 75.0f;
+    const float SPOTLIGHT_RAD = 70.0f;
     this->content->pointlightPos = glm::vec3(SPOTLIGHT_RAD * sin(this->tick), 100, SPOTLIGHT_RAD * cos(this->tick));
     this->content->pointlightV = glm::lookAt(
         content->pointlightPos,
         content->pointlightTarget,
         glm::vec3(0, 1, 0)
         );
-    this->content->lightModel->setLocation(this->content->pointlightPos);
+
+	if (!this->bobPause)
+		this->content->bob->update((SDL_GetTicks() / 1000.0f) - this->bobAnimOffset);
+	//Attach light source to moving light
+	Lights()->getSpotLight(0).Position(this->content->pointlightPos);
+	Lights()->getSpotLight(0).Direction(this->content->pointlightTarget - this->content->pointlightPos);
 	//this->content->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick2*-100));
 	//this->content->deerModel->setLocation(glm::vec3(20 * sin(this->tick), 0, 20 * cos(this->tick)));
 }
@@ -97,6 +126,10 @@ bool TwoPassScene::keypress(SDL_Keycode keycode, int x, int y)
 	{
 	case SDLK_p:
 		this->polarity = ++this->polarity>1 ? -1 : this->polarity;
+		break;
+	case SDLK_o:
+		this->bobPause = !this->bobPause;
+		this->bobAnimOffset = (SDL_GetTicks() / 1000.0f) - this->bobAnimOffset;
 		break;
 	default:
 		//Permit the keycode to be processed if we haven't handled personally
@@ -124,6 +157,7 @@ TwoPassScene::ShadowPass::ShadowPass(std::shared_ptr<SceneContent> content)
 	content->deerModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 	content->sphereModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 	content->planeModel->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
+	content->bob->getShaders(1)->addTexture("_shadowMap", content->shadowOut);
 }
 TwoPassScene::CompositePass::CompositePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
@@ -136,7 +170,8 @@ void TwoPassScene::ShadowPass::render()
 {
     content->deerModel->render(0);
     content->sphereModel->render(0);
-    content->planeModel->render(0);
+	content->planeModel->render(0);
+	content->bob->render(0);
 }
 //Uses the shadow map to render the normal scene
 void TwoPassScene::CompositePass::render()
@@ -148,7 +183,8 @@ void TwoPassScene::CompositePass::render()
 	//Render models using shadow map
     content->deerModel->render(1);
     content->sphereModel->render(1);
-    content->planeModel->render(1);
+	content->planeModel->render(1);
+	content->bob->render(1);
 	//Render something at the lights location
-    content->lightModel->render();
+	content->lights->render();
 }

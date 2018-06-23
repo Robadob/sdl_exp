@@ -4,6 +4,7 @@
 #include "visualisation/Entity.h"
 #include "visualisation/Sprite2D.h"
 #include "visualisation/shader/GaussianBlur.h"
+#include "visualisation/model/Model.h"
 
 /**
  * Provides an example of how multi pass rendering can be used within sdl_exp
@@ -18,12 +19,13 @@ class TwoPassScene : public MultiPassScene
 	 */
 	struct SceneContent
 	{
-		SceneContent();
+		SceneContent(std::shared_ptr<LightsBuffer> lights);
+		std::shared_ptr<LightsBuffer> lights;
 		//Models used
         std::shared_ptr<Entity> deerModel;
         std::shared_ptr<Entity> sphereModel;
         std::shared_ptr<Entity> planeModel;
-        std::shared_ptr<Entity> lightModel;
+		std::shared_ptr<Model> bob;
 		//Blur provider
         std::shared_ptr<GaussianBlur> blur;
 		//Texture we will blur into
@@ -75,6 +77,8 @@ private:
 	float tick;
 	float tick2;
 	int polarity;
+	bool bobPause = false;
+	float bobAnimOffset = 0.0f;
 };
 
 #endif //__TwoPassScene_h__

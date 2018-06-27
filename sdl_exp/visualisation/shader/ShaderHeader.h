@@ -16,14 +16,15 @@
     struct MaterialProperties
     {
 #ifdef __cplusplus
-        MaterialProperties()
-            : ambient(0)
-            , opacity(1.0f)
-            , diffuse(0)
-            , shininess(0)
-            , specular(0)
-            , shininessStrength(1.0f)
-            , emissive(0)
+		MaterialProperties()
+			: ambient(0)
+			, opacity(1.0f)
+			, diffuse(0)
+			, shininess(0)
+			, specular(0)
+			, shininessStrength(1.0f)
+			//, emissive(0)
+			, reflectivity(0.0f)
             , refractionIndex(1.0f)
             , transparent(0)
 			, bitmask(0)
@@ -32,10 +33,13 @@
 		vec3 ambient;           //Ambient color
 		float opacity;
 		vec3 diffuse;           //Diffuse color
-		float shininess;
+		float shininess;		//aka specular exponent
 		vec3 specular;          //Specular color
-        float shininessStrength;//Unused, unclear how this differs from shininess
-		vec3 emissive;          //Unused, Emissive color (light emitted)
+        float shininessStrength;//This is multiplied by specular color, defaults to 1.0 (aka specular factor)
+		//vec3 emissive;        //Unused, Emissive color (light emitted) (disabled to keep struct size down temporary
+		float reflectivity;     //Reflection factor
+		uint padding1;
+		uint padding2;
         float refractionIndex;	//Unused
 		vec3 transparent;       //Unused, Transparent color, multiplied with translucent light to construct final color
         uint bitmask;           //bitmask to calculate which textures are available

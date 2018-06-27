@@ -5,6 +5,7 @@
 #include "../shader/Shaders.h"
 #include "../shader/ShaderHeader.h"
 #include "../shader/buffer/UniformBuffer.h"
+#include "../texture/TextureCubeMap.h"
 
 namespace Stock
 {
@@ -169,19 +170,23 @@ public:
 	/*
 	 * Currently unused
 	 */
-    void setEmissive(const glm::vec3 emissive) { this->properties.emissive = emissive; updatePropertiesUniform(); }
+    //void setEmissive(const glm::vec3 emissive) { this->properties.emissive = emissive; updatePropertiesUniform(); }
 	/**
 	 * Currently unused
 	 */
-    void setTransparent(const glm::vec3 transparent) { this->properties.transparent = transparent; updatePropertiesUniform(); }
+	void setTransparent(const glm::vec3 transparent) { this->properties.transparent = transparent; updatePropertiesUniform(); }
+	void setReflectivity(const float reflectivity) { this->properties.reflectivity = reflectivity; updatePropertiesUniform(); }
     void setOpacity(const float opacity) { this->properties.opacity = opacity; updatePropertiesUniform(); }
+	/**
+	 * Specular exponent
+	 */
     void setShininess(const float shininess) { this->properties.shininess = shininess; updatePropertiesUniform(); }
 	/**
-	 * This is currently unused, unclear how it differs from shininess
+	 * Specular factor: This is multiplied by specular color/texture
 	 */
     void setShininessStrength(const float shininessStrength) { this->properties.shininessStrength = shininessStrength; updatePropertiesUniform(); }
 	/**
-	 * Currently unused
+	 * Controls the refraction element of reflection
 	 */
     void setRefractionIndex(const float refractionIndex) { this->properties.refractionIndex = refractionIndex; updatePropertiesUniform(); }
     
@@ -189,6 +194,11 @@ public:
 	void setTwoSided(const bool twoSided) { this->faceCull = !twoSided; }
     void setShadingMode(const ShadingMode shaderMode) { this->shaderMode = shaderMode; }
 	void addTexture(TextureFrame, TextureType type = Diffuse);
+	/**
+	 * Sets the environment map used for reflection
+	 * Static maps are likely to be the skybox texture
+	 */
+	void setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap);
 	void setCustomShaders(const std::vector<std::shared_ptr<Shaders>> &shaders);
     /**
      * @see glBlendFunc()
@@ -200,8 +210,9 @@ public:
     glm::vec3 getDiffuse() const { return properties.diffuse; }
     glm::vec3 getSpecular() const { return properties.specular; }
     glm::vec3 getAmbient() const { return properties.ambient; }
-    glm::vec3 getEmissive() const { return properties.emissive; }
-    glm::vec3 getTransparent() const { return properties.transparent; }
+    //glm::vec3 getEmissive() const { return properties.emissive; }
+	glm::vec3 getTransparent() const { return properties.transparent; }
+	float getReflectivity() const { return properties.reflectivity; }
     float getOpacity() const { return properties.opacity; }
     float getShininess() const { return properties.shininess; }
     float getShininessStrength() const { return properties.shininessStrength; }

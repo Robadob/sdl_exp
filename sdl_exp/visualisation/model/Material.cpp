@@ -70,7 +70,8 @@ bool  Material::operator==(Material& other) const
         this->properties.diffuse == other.getDiffuse() &&
         this->properties.specular == other.getSpecular() &&
         this->properties.ambient == other.getAmbient() &&
-        this->properties.emissive == other.getEmissive() &&
+		//this->properties.emissive == other.getEmissive() &&
+		this->properties.reflectivity == other.getReflectivity() &&
         this->properties.transparent == other.getTransparent() &&
         this->properties.opacity == other.getOpacity() &&
         this->properties.shininess == other.getShininess() &&
@@ -89,6 +90,12 @@ bool  Material::operator==(Material& other) const
  */
 void Material::addTexture(TextureFrame texFrame, TextureType type)
 {
+#ifdef _DEBUG
+	if (type==Reflection)
+	{
+		assert(std::dynamic_pointer_cast<const TextureCubeMap>(texFrame.texture));
+	}
+#endif
 	textures[type].push_back(texFrame);
 	this->properties.bitmask |= (1 << type);
 	updatePropertiesUniform();
@@ -105,6 +112,16 @@ void Material::addTexture(TextureFrame texFrame, TextureType type)
 	{
 		fprintf(stderr, "Warning: Material '%s' contains multiple textures of type %s\n Texture stacks are currently unsupported.\n", name.c_str(), TEX_NAME[type]);
 	}
+}
+void Material::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
+{
+	//Purge existing reflection map
+	textures[Reflection].clear();
+	//Create a texture frame
+	TextureFrame tf;
+	tf.texture = cubeMap;
+	//Add it like a regular texture
+	addTexture(tf, Reflection);
 }
 //HasMatrices overrides
 void Material::setViewMatPtr(const glm::mat4 *viewMat)

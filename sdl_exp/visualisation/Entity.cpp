@@ -1598,6 +1598,12 @@ void Entity::setLightsBuffer(GLuint bufferBindingPoint)
 	for (auto &m : materials)
 		m.setLightsBuffer(bufferBindingPoint);
 }
+void Entity::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
+{
+
+	for (auto &m : materials)
+		m.setEnvironmentMap(cubeMap);
+}
 /*
 Switches the vertex order of the model
 @note Exporting a model after calling this WILL reverse it in the export

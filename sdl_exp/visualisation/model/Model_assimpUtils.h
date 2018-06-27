@@ -156,12 +156,31 @@ namespace au
 		}
 		mat->setAmbient(*reinterpret_cast<glm::vec3*>(&ambientColor));
 
-		//Get emissive colour
+		//Get transparent colour
 		aiColor3D transparentColor;
 		if (AI_SUCCESS != aiMat->Get(AI_MATKEY_COLOR_TRANSPARENT, transparentColor)) {
 			transparentColor = aiColor3D(0, 0, 0);
 		}
+		else
+			fprintf(stderr, "Warning, material '%s' contains unhandled transparent colour!\n", mat->getName().c_str());
 		mat->setTransparent(*reinterpret_cast<glm::vec3*>(&transparentColor));
+
+		//Get emissive colour
+		aiColor3D emissiveColor;
+		if (AI_SUCCESS != aiMat->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor)) {
+			emissiveColor = aiColor3D(0, 0, 0);
+		}
+		else
+			fprintf(stderr, "Warning, material '%s' contains unhandled emissive colour!\n", mat->getName().c_str());
+		//mat->setEmissive(*reinterpret_cast<glm::vec3*>(&emissiveColor));
+
+		//Get reflection colour
+		aiColor3D reflectiveColor;
+		if (AI_SUCCESS != aiMat->Get(AI_MATKEY_COLOR_REFLECTIVE, reflectiveColor)) {
+			reflectiveColor = aiColor3D(0, 0, 0);
+		}
+		else
+			fprintf(stderr, "Warning, material '%s' contains unhandled reflective colour!\n", mat->getName().c_str());
 
 		//Get wireframe property
 		int isWireframe;
@@ -220,12 +239,12 @@ namespace au
 			refraction = 1.0f;
 		}
 		mat->setRefractionIndex(refraction);
-		////Get reflection property
-		//float reflection;
-		//if (AI_SUCCESS != aiMat->Get(AI_MATKEY_REFLECTIVITY, reflection)) {
-		//	reflection = 1.0f;
-		//}
-		//mat->setRef(reflection);
+		//Get reflectivity property
+		float reflectivity;
+		if (AI_SUCCESS != aiMat->Get(AI_MATKEY_REFLECTIVITY, reflectivity)) {
+			reflectivity = 0.0f;
+		}
+		mat->setReflectivity(reflectivity);
     }
 
 	inline Material::TextureFrame getTextureProps(const aiTextureType &texType, const aiMaterial *aiMat, unsigned int index = 0, const char *modelFolder = nullptr)

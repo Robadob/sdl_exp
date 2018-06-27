@@ -19,8 +19,11 @@ struct MaterialProperties
     vec3 diffuse;           //Diffuse color
     float shininess;
     vec3 specular;          //Specular color
-    float shininessStrength;
-    vec3 emissive;          //Emissive color (light emitted)
+    float shininessStrength;//Multiplied by Specular color
+		//vec3 emissive;        //Unused, Emissive color (light emitted) (disabled to keep struct size down until implemented)
+		float reflectivity;     //Reflection factor
+		uint padding1;
+		uint padding2;
     float refractionIndex;
     vec3 transparent;       //Transparent color, multiplied with translucent light to construct final color
     uint bitmask;
@@ -59,6 +62,7 @@ uniform _lights
 uniform sampler2D t_ambient;
 uniform sampler2D t_diffuse;
 uniform sampler2D t_specular;
+uniform samplerCube t_reflection;
 
 in vec3 eyeVertex;
 in vec3 eyeNormal;
@@ -72,6 +76,9 @@ void main()
   vec3 ambient = material[_materialID].has(B_AMBIENT) ? texture(t_ambient, texCoords).rgb : material[_materialID].ambient;
   vec4 diffuse = material[_materialID].has(B_DIFFUSE) ? texture(t_diffuse, texCoords) : vec4(material[_materialID].diffuse, 1.0f);
   vec3 specular = material[_materialID].has(B_SPECULAR) ? texture(t_specular, texCoords).rgb : material[_materialID].specular;
+  
+  //Scale specular according to shininessStrength
+  specular*=material[_materialID].shininessStrength;
   
   //No lights, so render full bright
   if(lightsCount>0)
@@ -122,12 +129,12 @@ void main()
       }
       
       //Process Specular
-      if (material[_materialID].shininess == 0 || material[_materialID].shininessStrength == 0)
+      if (material[_materialID].shininess == 0)
         continue;//Skip if no shiny
       {
         vec3 reflectDir = reflect(-surfaceToLight, eyeNormal);
         float specAngle = max(dot(reflectDir, normalize(-eyeVertex)), 0.0);
-        float spec = clamp(pow(specAngle, material[_materialID].shininess/4.0), 0.0f, 1.0f); 
+        float spec = clamp(pow(specAngle, material[_materialID].shininess), 0.0f, 1.0f); 
         lightSpecular += light[i].specular * spec * attenuation;
       }
     } 

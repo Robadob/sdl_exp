@@ -59,6 +59,8 @@ uniform _lights
   LightProperties light[MAX_LIGHTS];
 };
 
+uniform mat4 _viewMat;
+
 uniform sampler2D t_ambient;
 uniform sampler2D t_diffuse;
 uniform sampler2D t_specular;
@@ -142,7 +144,23 @@ void main()
     //Export lights
     ambient *= lightAmbient;
     diffuse *= vec4(lightDiffuse, 1.0f);
-    specular *= lightSpecular;   
+    specular *= lightSpecular;
+    
+    //Apply reflection if present
+    if(material[_materialID].has(B_REFLECTION) && material[_materialID].reflectivity>0.0f)
+    {
+      if(material[_materialID].reflectivity<=1.0f)
+      {//Safety bounds check
+        //Calculate eye reflection vs surface
+        vec3 reflectDir = reflect(eyeVertex, eyeNormal);
+        //Convert from eye space to world space
+        reflectDir = vec3(inverse(_viewMat) * vec4(reflectDir, 0.0));
+        vec3 reflection = texture(t_reflection, reflectDir).rgb;
+        ambient = mix(ambient, ambient*reflection, material[_materialID].reflectivity);
+        diffuse = mix(diffuse, diffuse*vec4(reflection,1), material[_materialID].reflectivity);
+        specular = mix(specular, specular*reflection, material[_materialID].reflectivity);
+      }
+    }
   }
 
   vec3 color = clamp(ambient + diffuse.rgb + specular,0,1);

@@ -11,5 +11,8 @@ public:
 	void render(unsigned int shaderIndex = 0) override;
 	void setViewMatPtr(const Camera *camera) override;
     void setYOffset(float yOffset);
+
+	std::shared_ptr<const TextureCubeMap> getTexture();
+	void setTexture(std::shared_ptr<const TextureCubeMap> tex);
 };
 #endif //ifndef __Skybox_h__

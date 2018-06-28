@@ -10,6 +10,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, tick(0.0f)
 	, polarity(-1)
 	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED_FLAT))
+	, mirrorModel(new Entity(Stock::Models::SPHERE, 2.0f, Stock::Shaders::PHONG))
 	, INSTANCE_COUNT(100)
 #ifdef __CUDACC__
 	, cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
@@ -23,6 +24,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	registerEntity(colorModel);
 	registerEntity(instancedSphere);
 	registerEntity(bob);
+	registerEntity(mirrorModel);
 	this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
 	this->setRenderAxis(true);
@@ -59,6 +61,13 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	_p.Diffuse(glm::vec3(0.5f));
 	_p.Specular(glm::vec3(0.02f));
 	_p.ConstantAttenuation(0.5f);
+
+	color = glm::vec3(1);
+	this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
+	this->mirrorModel->setEnvironmentMap(this->SkyBox()->getTexture());
+	Material &m = this->mirrorModel->getMaterial();
+	m.setReflectivity(1.0f);
+	this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -91,6 +100,8 @@ void EntityScene::render()
 
 	bob->render();
 	bob->renderSkeleton();
+
+	this->mirrorModel->render();
 }
 /*
 Called when the user requests a reload

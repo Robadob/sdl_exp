@@ -1204,6 +1204,11 @@ void Entity::setMaterial(const Stock::Materials::Material &mat)
 {
 	setMaterial(mat.ambient, mat.diffuse, mat.specular, mat.shininess, mat.opacity);
 }
+Material &Entity::getMaterial()
+{
+	assert(materials.size() == 1);
+	return this->materials[0];
+}
 /*
 Set the location of the model in world space
 */

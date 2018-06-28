@@ -46,3 +46,20 @@ void Skybox::setYOffset(float yOffset)
 {
     setLocation(glm::vec3(0, yOffset, 0));
 }
+
+std::shared_ptr<const TextureCubeMap> Skybox::getTexture()
+{
+	auto rtn = std::dynamic_pointer_cast<const TextureCubeMap>(Entity::texture);
+	if (rtn)
+		return rtn;
+
+	assert(false);
+}
+
+void Skybox::setTexture(std::shared_ptr<const TextureCubeMap> tex)
+{
+	Entity::texture = tex;
+	Material::TextureFrame frame = Material::TextureFrame();
+	frame.texture = tex;
+	materials[0].addTexture(frame, Material::Diffuse);
+}

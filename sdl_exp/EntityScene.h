@@ -30,6 +30,7 @@ private:
 	const unsigned int INSTANCE_COUNT;
     std::shared_ptr<Entity> deerModel;
 	std::shared_ptr<Entity> colorModel;
+	std::shared_ptr<Entity> mirrorModel;
 	std::shared_ptr<Model> bob;
     float tick;
 	int polarity;

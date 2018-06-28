@@ -112,6 +112,8 @@ public:
 	 */
 	void setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular = glm::vec3(0.1f), const float &shininess = 10.0f, const float &opacity = 1.0f);
 	void setMaterial(const Stock::Materials::Material &mat);
+	Material &getMaterial();
+	
 	/**
 	 * Sets a static cube map to be used for providing reflections
 	 * Probably the skybox texture

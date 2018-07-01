@@ -9,9 +9,9 @@
 
 #include "Text.h"
 
-#define FOVY 60.0f
-#define NEAR_CLIP 0.005f
-#define FAR_CLIP 500.0f
+const float Visualisation::FOVY = 60.0f;
+const float Visualisation::NEAR_CLIP = 0.005f;
+const float Visualisation::FAR_CLIP = 500.0f;
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
 #define SHIFT_MULTIPLIER 5.0f

@@ -26,7 +26,9 @@ class Text;
 class Visualisation : public Viewport
 {
 public:
-
+	static const float FOVY;
+	static const float NEAR_CLIP;
+	static const float FAR_CLIP;
 	/**
 	 * Creates a new window providing OpenGL functionality
 	 * @param windowTitle The title of the window

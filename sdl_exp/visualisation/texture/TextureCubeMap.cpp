@@ -17,24 +17,35 @@ const TextureCubeMap::CubeMapParts TextureCubeMap::FACES[] = {
     CubeMapParts(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, "back")
 };
 std::unordered_map<std::string, std::weak_ptr<const TextureCubeMap>> TextureCubeMap::cache;
+const char *TextureCubeMap::RAW_TEXTURE_FLAG = "TextureCubeMap";
 /**
  * Constructors
  */
 TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE_COUNT], const std::string reference, const unsigned long long options)
 	:Texture(GL_TEXTURE_CUBE_MAP, genTextureUnit(), getFormat(images[0]), reference, options)
-	, faceDimensions(images[0]->w, images[0]->h)
+	, dimensions(images[0]->w)
     , immutable(true)
 {
+	assert(images[0]->w==images[0]->h);//Wouldn't be a cube if dimensions weren't square
 	GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
-    allocateTextureImmutable(faceDimensions);
+	allocateTextureImmutable(glm::uvec2(dimensions));
 	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
 	{
 		assert(images[i]);
-		assert(images[i]->w == faceDimensions.x);//All must share dimensions and pixel format
-		assert(images[i]->h == faceDimensions.y);
+		assert(images[i]->w == dimensions);//All must share dimensions and pixel format
+		assert(images[i]->h == dimensions);
 		assert(getFormat(images[i]) == format);
-        setTexture(images[i]->pixels, faceDimensions,glm::ivec2(0), FACES[i].target);
+		setTexture(images[i]->pixels, glm::uvec2(dimensions), glm::ivec2(0), FACES[i].target);
 	}
+	applyOptions();
+}
+TextureCubeMap::TextureCubeMap(const unsigned int &dimensions, const Texture::Format &format, const unsigned long long &options)
+	:Texture(GL_TEXTURE_CUBE_MAP, genTextureUnit(), format, RAW_TEXTURE_FLAG, options)
+	, dimensions(dimensions)
+	, immutable(false)
+{
+	GL_CALL(glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS));
+	resize(dimensions);
 	applyOptions();
 }
 /**
@@ -43,18 +54,24 @@ TextureCubeMap::TextureCubeMap(std::shared_ptr<SDL_Surface> images[CUBE_MAP_FACE
 TextureCubeMap::TextureCubeMap(const TextureCubeMap& b)
 	: Texture(b.type, genTextureUnit(), b.format, std::string(b.reference).append("!"), b.options)
     , immutable(false)
+	, dimensions(b.dimensions)
 {
     //Allocate each face
-    for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
-    {
-        allocateTextureMutable(faceDimensions, nullptr, FACES[i].target);
-    }
+	resize(dimensions);
     //Copy all faces simultaneously
     GL_CALL(glCopyImageSubData(
         b.glName, b.type, 0, 0, 0, 0,
         glName, type, 0, 0, 0, 0,
-        b.faceDimensions.x, b.faceDimensions.y, 6));
+		b.dimensions, b.dimensions, 6));
     applyOptions();
+}
+void TextureCubeMap::resize(const unsigned int &dimensions)
+{
+	this->dimensions = dimensions;
+	for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
+	{
+		allocateTextureMutable(glm::uvec2(dimensions), nullptr, FACES[i].target);
+	}
 }
 /**
 * Cache handling
@@ -111,6 +128,11 @@ std::shared_ptr<const TextureCubeMap> TextureCubeMap::load(const std::string &fi
 		cache.emplace(filePath, rtn);
 	}
 	return rtn;
+}
+
+std::shared_ptr<TextureCubeMap> TextureCubeMap::make(const unsigned int &dimensions, const Texture::Format &format, const unsigned long long &options)
+{
+	return std::shared_ptr<TextureCubeMap>(new TextureCubeMap(dimensions, format, options));
 }
 bool TextureCubeMap::isCached(const std::string &filePath)
 {

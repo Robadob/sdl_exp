@@ -175,6 +175,11 @@ public:
 	 * Currently unused
 	 */
 	void setTransparent(const glm::vec3 transparent) { this->properties.transparent = transparent; updatePropertiesUniform(); }
+	/**
+	 * Reflection factor
+	 * Metals usually in the 0.7-1.0 range
+	 * Other materuals on the 0.02-0.16 range
+	 */
 	void setReflectivity(const float reflectivity) { this->properties.reflectivity = reflectivity; updatePropertiesUniform(); }
     void setOpacity(const float opacity) { this->properties.opacity = opacity; updatePropertiesUniform(); }
 	/**

@@ -193,7 +193,7 @@ public:
 	 * @note Texture unit bindings are not shader specific, they persist between shader calls
 	 * @note Different texture type can be bound to the same unit, the sampler type used in shader selects the correct texture
 	 */
-	bool addTexture(const char *textureNameInShader, GLenum type, GLint textureName, GLuint textureUnit);
+	bool addTexture(const char *textureNameInShader, GLenum type, GLuint textureName, GLuint textureUnit);
 	/**
 	 * Attaches the specified buffer to the shader if bufferNameInShader can be found
 	 * If a uniform with the same uniformName as textureNameInShader is already bound, it will be replaced
@@ -454,7 +454,7 @@ protected:
 	 * @param shaderSourceFiles An initialiser list ({a,b,c}) of paths to shader sources
 	 * @return The shader version detected, -1 on compilation failure
 	 */
-	int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<const std::string> *shaderSourceFiles);
+	int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles);
 	/**
 	 * Loads the text from the provided filepath
 	 * @return A pointer to the loaded shader source
@@ -466,12 +466,12 @@ protected:
 	 * @param shaderSources The shader code to detect the version from
 	 * @return The detected shader version, 0 if one was not found
 	 */
-	static unsigned int findShaderVersion(std::vector<const char*> shaderSources);
+	static unsigned int findShaderVersion(std::vector<char*> shaderSources);
 	/**
 	 * Copies the init list to a std::vector of std:strings on the heap
 	 * @note You should delete the ptr returned by this yourself
 	 */
-	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
+	static std::vector<std::string> *buildFileVector(std::initializer_list <const char *>);
 	/**
 	 * Checks whether the specified shader program linked succesfully.
 	 * Linking errors are printed to stderr and compileSuccessflag is set to false on failure.

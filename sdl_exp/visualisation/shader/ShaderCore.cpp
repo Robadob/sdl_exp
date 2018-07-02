@@ -68,7 +68,7 @@ void ShaderCore::reload()
 				//Compilation failed, cleanup temp program
 				GL_CALL(glDeleteProgram(t_programId));
 				deleteShaders();
-				fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+				fprintf(stderr, "Press any key to recompile.\n");
 				getchar();
 				continue;
 			}
@@ -78,7 +78,7 @@ void ShaderCore::reload()
 			//Compilation failed, cleanup temp program
 			GL_CALL(glDeleteProgram(t_programId));
 			deleteShaders();
-			fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+			fprintf(stderr, "Press any key to recompile.\n");
 			getchar();
 			continue;
 		}
@@ -553,7 +553,7 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
 	lostBuffers.push_back({ bufferNameInShader, bufferType, bufferBindingPoint });
 	return false;
 }
-bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint textureName, GLuint textureUnit)
+bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLuint textureName, GLuint textureUnit)
 {
 	//Purge any existing buffer which matches
 	for (auto a = textures.begin(); a != textures.end();)
@@ -685,7 +685,7 @@ std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, cons
 	return  std::pair<int, GLenum>(-1, 0);
 }
 //Util
-int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<const std::string> *shaderSourceFiles)
+int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles)
 {
 	if (shaderSourceFiles->size() == 0) return false;
 	// Load shader files
@@ -735,7 +735,7 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
 	}
 	this->shaderTag = new char[shaderName.length() + 1];
 	strcpy(this->shaderTag, shaderName.c_str());
-	return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
+	return static_cast<int>(findShaderVersion(shaderSources));
 }
 #include <filesystem>
 #ifdef _MSC_VER
@@ -835,7 +835,7 @@ bool ShaderCore::checkProgramLinkError(const GLuint programId) const{
 	}
 	return true;
 }
-unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSources)
+unsigned int ShaderCore::findShaderVersion(std::vector<char*> shaderSources)
 {
 	static std::regex versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase);
 	std::cmatch match;
@@ -844,9 +844,9 @@ unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSource
 			return stoul(match[1]);
 	return 0;
 }
-std::vector<const std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
+std::vector<std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
 {
-	std::vector<const std::string> *rtn = new std::vector<const std::string>();
+	std::vector<std::string> *rtn = new std::vector<std::string>();
 
 	for (auto i : sources)
 	{

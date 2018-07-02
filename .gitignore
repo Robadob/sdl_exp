@@ -8,6 +8,7 @@
 *.obj.sdl_export
 *.VC.db
 *.bak
+.vs/
 
 # Build results
 

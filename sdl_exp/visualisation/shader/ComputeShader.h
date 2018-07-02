@@ -94,7 +94,7 @@ private:
 	*/
 	bool _compileShaders(const GLuint t_shaderProgram) override;
 	glm::uvec3 lastLaunchConfig; 	
-	std::vector<const std::string> *shaderFilePaths;
+	std::vector<std::string> *shaderFilePaths;
 };
 
 #endif //ifndef __ComputeShader_h__

@@ -33,7 +33,9 @@ public:
 	 * @param windowWidth The width of the contained graphics panel
 	 * @param windowHeight The height of the contained graphics panel
 	 */
-	Visualisation(char *windowTitle, int windowWidth, int windowHeight);
+	Visualisation(const char *windowTitle, int windowWidth, int windowHeight);
+	Visualisation(Visualisation&) = delete;
+	Visualisation(Visualisation&&) = delete;
 	/**
 	 * Default destructor, destruction happens in close() to ensure objects are killed before the GL context
 	 * @see close()

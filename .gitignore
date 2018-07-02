@@ -9,6 +9,7 @@
 *.VC.db
 *.bak
 .vs/
+enc_temp_folder/
 
 # Build results
 

@@ -117,5 +117,5 @@ All dependent libraries are included within the repo, licenses are available on 
 * [SDL_image](https://www.libsdl.org/projects/SDL_image/) 2.0.1 *(texture loading)*
 * [GLM](http://glm.g-truc.net/) 0.9.7.3 *(consistent C++/GLSL vector maths functionality)*
 * [GLEW](http://glew.sourceforge.net/) 1.13.0 *(GL extension loader)*
-* [FreeType](http://www.freetype.org/) 2.6.3 *(for font loading)*
+* [FreeType](http://www.freetype.org/) 2.9.1 *(for font loading)*
 * [assimp](https://github.com/assimp/assimp) 4.1.0 *(for loading advanced models)*

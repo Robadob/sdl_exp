@@ -844,7 +844,7 @@ unsigned int ShaderCore::findShaderVersion(std::vector<char*> shaderSources)
 			return stoul(match[1]);
 	return 0;
 }
-std::vector<std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
+std::vector<std::string> *ShaderCore::buildFileVector(std::initializer_list <std::string> sources)
 {
 	std::vector<std::string> *rtn = new std::vector<std::string>();
 

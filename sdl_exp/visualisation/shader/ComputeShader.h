@@ -27,7 +27,7 @@ public:
 	 * @param defaultLaunchConfig Default launch config (useful if you will be using the same config each launch)
 	 * @note The file containing main() should be the final item (this is just an assumption)
 	 */
-	ComputeShader(std::initializer_list<const char *> paths, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
+	ComputeShader(std::initializer_list<std::string> paths, glm::uvec3 defaultLaunchConfig = glm::uvec3(0));
 	/**
 	 * Copy constructor
 	 */

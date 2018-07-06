@@ -4,7 +4,7 @@ MultiPassScene::MultiPassScene(Visualisation &visualisation)
 	: Scene(visualisation)
 	, lighting(std::make_shared<LightsBuffer>(visualisation.getCamera()->getViewMatPtr()))
 {
-	lighting->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+	lighting->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
 }
 void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
 {

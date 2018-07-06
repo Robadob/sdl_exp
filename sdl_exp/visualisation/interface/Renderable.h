@@ -46,7 +46,7 @@ public:
 	 */
 	virtual void setProjectionMatPtr(const Viewport *visualisation) final
 	{
-		setProjectionMatPtr(visualisation->getFrustrumPtr());
+		setProjectionMatPtr(visualisation->getProjectionMatPtr());
 	}
 	virtual void setLightsBuffer(GLuint bufferBindingPoint) = 0;
 	virtual void setLightsBuffer(std::shared_ptr<LightsBuffer> buffer);

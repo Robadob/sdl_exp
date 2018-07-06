@@ -100,6 +100,7 @@
     <ClCompile Include="visualisation\model\Model.cpp" />
     <ClCompile Include="visualisation\model\ModelNode.cpp" />
     <ClCompile Include="visualisation\multipass\BackBuffer.cpp" />
+    <ClCompile Include="visualisation\multipass\CubeMapFrameBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\FrameBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\MultiPassScene.cpp" />
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="visualisation\model\ModelNode.h" />
     <ClInclude Include="visualisation\model\Model_assimpUtils.h" />
     <ClInclude Include="visualisation\multipass\BackBuffer.h" />
+    <ClInclude Include="visualisation\multipass\CubeMapFrameBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBuffer.h" />
     <ClInclude Include="visualisation\multipass\FrameBufferAttachment.h" />
     <ClInclude Include="visualisation\multipass\MultiPassScene.h" />

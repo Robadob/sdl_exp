@@ -116,7 +116,7 @@ public:
 	 * This pointer can be used to continuously track the visualisations projection matrix
 	 * @return A pointer to the projection matrix
 	 */
-	const glm::mat4 *getFrustrumPtr() const override;
+	const glm::mat4 *getProjectionMatPtr() const override;
 	/**
 	 * Returns the visusalisation's HUD, to be used to add overlays
 	 * @return The visualisation's scene
@@ -130,6 +130,8 @@ public:
 	 * @return The current window/viewport height
 	 */
 	const int& getWindowHeight() const { return windowHeight; }
+	void setProjectionMat(const glm::mat4 &proj) { this->t_frustum = this->frustum; this->frustum = proj; }
+	void resetProjectionMat() { this->frustum = this->t_frustum; }
 private:
 	/**
 	 * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
@@ -182,7 +184,7 @@ private:
 	HUD hud;
     Camera camera;
 	std::shared_ptr<Scene> scene;
-    glm::mat4 frustum;
+    glm::mat4 frustum, t_frustum;
 
 	bool isInitialised;
 	std::atomic<bool> continueRender;

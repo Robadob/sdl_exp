@@ -419,7 +419,8 @@ void Visualisation::resizeWindow(){
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
     // Get the view frustum using GLM. Alternatively glm::perspective could be used.
 	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
-    // Notify other elements
+	this->t_frustum = this->frustum;
+	// Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
     if (this->scene)
       this->scene->_resize(this->windowWidth, this->windowHeight);
@@ -455,7 +456,7 @@ const Camera *Visualisation::getCamera() const{
 std::weak_ptr<Scene> Visualisation::getScene() const{
     return this->scene;
 }
-const glm::mat4 *Visualisation::getFrustrumPtr() const{
+const glm::mat4 *Visualisation::getProjectionMatPtr() const{
     return &this->frustum;
 }
 HUD* Visualisation::getHUD(){

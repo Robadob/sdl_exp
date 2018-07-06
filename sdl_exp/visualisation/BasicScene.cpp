@@ -11,7 +11,7 @@ BasicScene::BasicScene(Visualisation& vis)
 {
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
-	this->skybox->setProjectionMatPtr(this->visualisation.getFrustrumPtr());
+	this->skybox->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
 	this->skybox->setYOffset(-1.0f);
 }
 void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)

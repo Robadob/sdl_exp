@@ -188,6 +188,9 @@
     <ClCompile Include="visualisation\shader\lights\SpotLightModel.cpp">
       <Filter>Source Files\Visualisation\Shader\Lights</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\multipass\CubeMapFrameBuffer.cpp">
+      <Filter>Source Files\Visualisation\MultiPass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -365,6 +368,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\shader\lights\SpotLightModel.h">
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\multipass\CubeMapFrameBuffer.h">
+      <Filter>Header Files\Visualisation\MultiPass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

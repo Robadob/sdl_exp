@@ -63,7 +63,7 @@ public:
 	 */
 	void setStabilise(bool stabilise);
 	/**
-	 * Returns the projection matrix
+	 * Returns the view matrix
 	 * For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
 	 * @return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
 	 */
@@ -124,6 +124,16 @@ public:
 	 * @return A pointer to the modelview matrix
 	 */
     const glm::mat4 *Camera::getSkyboxViewMatPtr() const;
+	/**
+	 * This method temporarily overrides viewMat (and not skyboxViewMat)
+	 * It's required to prevent a bunch of individual shader overrides to render environment maps
+	 * @note move(), strafe(), turn(), ascend(), roll(), resetViewMap() all reset the viewMat to it's correct value
+	 */
+	void setViewMat(const glm::mat4 &view) const { this->viewMat; };
+	/**
+	 * Updates the viewMat and skyboxViewMat according to the stored look, right & up values
+	 */
+	inline void resetViewMat() { updateViews(); };
 private:
 	/**
 	 * Updates the view and skyboxView matrices

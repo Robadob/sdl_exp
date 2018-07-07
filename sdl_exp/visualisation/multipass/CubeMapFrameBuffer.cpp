@@ -1,21 +1,23 @@
 #include "CubeMapFrameBuffer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "../Visualisation.h"
+
 const glm::vec3 CubeMapFrameBuffer::VIEW_DIRECTION[6] = {
-	glm::vec3(+1.0f, 0.0f, 0.0f),
-	glm::vec3(-1.0f, 0.0f, 0.0f),
-	glm::vec3(0.0f, +1.0f, 0.0f),
-	glm::vec3(0.0f, -1.0f, 0.0f),
-	glm::vec3(0.0f, 0.0f, +1.0f),
-	glm::vec3(0.0f, 0.0f, -1.0f)
+	glm::vec3(+1.0f, 0.0f, 0.0f), //left
+	glm::vec3(-1.0f, 0.0f, 0.0f), //right
+	glm::vec3(0.0f, +1.0f, 0.0f), //up
+	glm::vec3(0.0f, -1.0f, 0.0f), //down
+	glm::vec3(0.0f, 0.0f, +1.0f), //front
+	glm::vec3(0.0f, 0.0f, -1.0f)  //back
 };
+//Negate some of these values to reflect the rendered image
 const glm::vec3 CubeMapFrameBuffer::VIEW_UP[6] = {
-	glm::vec3(0.0f, 1.0f, 0.0f),
-	glm::vec3(0.0f, 1.0f, 0.0f),
-	glm::vec3(0.0f, 0.0f, 1.0f),
-	glm::vec3(0.0f, 0.0f, -1.0f),
-	glm::vec3(0.0f, 1.0f, 0.0f),
-	glm::vec3(0.0f, 1.0f, 0.0f)
+	-glm::vec3(0.0f, 1.0f, 0.0f),  //left
+	-glm::vec3(0.0f, 1.0f, 0.0f),  //right
+	glm::vec3(0.0f, 0.0f, 1.0f),  //up
+	glm::vec3(0.0f, 0.0f, -1.0f), //down
+	-glm::vec3(0.0f, 1.0f, 0.0f),  //front
+	-glm::vec3(0.0f, 1.0f, 0.0f)   //back
 };
 CubeMapFrameBuffer::CubeMapFrameBuffer(unsigned int widthHeight, bool doClear, glm::vec3 clearColor)
 	: clearColor(clearColor, 1.0f)
@@ -126,11 +128,15 @@ bool CubeMapFrameBuffer::use(Face f)
 	return true;
 }
 
-glm::mat4 CubeMapFrameBuffer::getViewMat(Face f, glm::vec3 location) const
+glm::mat4 CubeMapFrameBuffer::getViewMat(Face f, glm::vec3 location)
 {
-	return glm::lookAt(location, VIEW_DIRECTION[f], VIEW_UP[f]);
+	return glm::lookAt(location, location+VIEW_DIRECTION[f], VIEW_UP[f]);
 }
-glm::mat4 CubeMapFrameBuffer::getProjecitonMat() const
+glm::mat4 CubeMapFrameBuffer::getSkyBoxViewMat(Face f)
+{
+	return glm::lookAt(glm::vec3(0), VIEW_DIRECTION[f], VIEW_UP[f]);
+}
+glm::mat4 CubeMapFrameBuffer::getProjecitonMat()
 {
 	return glm::perspective(glm::radians(90.0f), 1.0f, Visualisation::NEAR_CLIP, Visualisation::FAR_CLIP);
 }

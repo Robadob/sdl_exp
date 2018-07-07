@@ -40,8 +40,9 @@ public:
 	* Cube map frame buffer has 6 seperate framebuffers, so it's not really intended to be used like a regular framebuffer
 	*/
 	bool use(Face f);
-	glm::mat4 getViewMat(Face f, glm::vec3 location) const;
-	glm::mat4 getProjecitonMat() const;
+	static glm::mat4 getViewMat(Face f, glm::vec3 location);
+	static glm::mat4 getSkyBoxViewMat(Face f);
+	static glm::mat4 getProjecitonMat();
 	/**
 	* @param widthHeight The new viewport width and height (must be equal)
 	* Resizes the internal images according to the specifed dimensions
@@ -49,6 +50,9 @@ public:
 	void resize(unsigned int widthHeight);
 	void setDoClearDepth(const bool &d) { doClearDepth = d; }
 	void setDoClearColor(const bool &c) { doClearColor = c; }
+	std::shared_ptr<const TextureCubeMap> getTexture() const { return colorTex; }
+
+	void updateMipMap() { colorTex->updateMipMap(); }
 };
 
 #endif //__CubeMapFrameBuffer_h__

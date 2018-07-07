@@ -141,7 +141,10 @@ public:
 	glm::vec3 getMin() const { return modelMin; }
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
+	bool visible() const { return mVisible; }
+	void visible(const bool &v) { mVisible = v; }
 protected:
+	bool mVisible = true;
 	glm::mat4 const * viewMatPtr;
 	glm::mat4 const * projectionMatPtr;
 	GLuint lightBufferBindPt;

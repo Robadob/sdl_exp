@@ -256,7 +256,10 @@ public:
 	void setAnimation(const std::string &name, float transitionDuration = DEFAULT_KEYFRAME_TRANSITION_DURATION);
 
 	void disableAnimationTravel(bool disable);
+	bool visible() const { return mVisible; }
+	void visible(const bool &v) { mVisible = v; }
 private:
+	bool mVisible = true;
 	Draw skeletonPen;
 	bool skeletonIsValid;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)

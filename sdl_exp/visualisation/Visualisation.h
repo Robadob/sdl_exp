@@ -97,8 +97,9 @@ public:
 	/**
 	 * Returns a const pointer to the visualisation's Camera
 	 * @return The camera
+	 * @note Made non-const, to allow view matrix to be overriden, could just pipe that through visualisation
 	 */
-	const Camera *getCamera() const;
+	Camera *getCamera();
 	/**
 	 * Sets the Scene object to be rendered within the viewport
 	 * @return The previously bound Scene
@@ -130,8 +131,8 @@ public:
 	 * @return The current window/viewport height
 	 */
 	const int& getWindowHeight() const { return windowHeight; }
-	void setProjectionMat(const glm::mat4 &proj) { this->t_frustum = this->frustum; this->frustum = proj; }
-	void resetProjectionMat() { this->frustum = this->t_frustum; }
+	void setProjectionMat(const glm::mat4 &proj) { this->frustum = proj; }
+	void resetProjectionMat();
 private:
 	/**
 	 * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
@@ -184,7 +185,7 @@ private:
 	HUD hud;
     Camera camera;
 	std::shared_ptr<Scene> scene;
-    glm::mat4 frustum, t_frustum;
+    glm::mat4 frustum;
 
 	bool isInitialised;
 	std::atomic<bool> continueRender;

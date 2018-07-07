@@ -7,6 +7,7 @@
 #include "visualisation/model/Model.h"
 
 #include "visualisation/texture/TextureBuffer.h"
+#include "visualisation/multipass/CubeMapFrameBuffer.h"
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
@@ -36,6 +37,8 @@ private:
 	int polarity;
 	bool bobPause = false;
 	float bobAnimOffset = 0.0f;
+
+	CubeMapFrameBuffer dynamicCubeMap;
 };
 
 #endif

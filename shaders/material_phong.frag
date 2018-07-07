@@ -166,7 +166,7 @@ void main()
   vec3 color = clamp(ambient + diffuse.rgb + specular,0,1);
 
   fragColor = vec4(color, min(diffuse.a, material[_materialID].opacity));//What to do with opac?
-  
+
   //Discard full alpha fragments (removes requirement of back to front render/glblend)
   if(fragColor.a<=0.0f)
     discard;

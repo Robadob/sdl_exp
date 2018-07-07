@@ -127,13 +127,19 @@ public:
 	/**
 	 * This method temporarily overrides viewMat (and not skyboxViewMat)
 	 * It's required to prevent a bunch of individual shader overrides to render environment maps
-	 * @note move(), strafe(), turn(), ascend(), roll(), resetViewMap() all reset the viewMat to it's correct value
+	 * @note move(), strafe(), turn(), ascend(), roll(), resetViewMats() all reset the viewMat to it's correct value
 	 */
-	void setViewMat(const glm::mat4 &view) const { this->viewMat; };
+	void setViewMat(const glm::mat4 &view) { this->viewMat = view; }
+	/**
+	 * This method temporarily overrides skyboxViewMat (and not viewMat)
+	 * It's required to prevent a bunch of individual shader overrides to render environment maps
+	 * @note move(), strafe(), turn(), ascend(), roll(), resetViewMats() all reset the viewMat to it's correct value
+	 */
+	void setSkyBoxViewMat(const glm::mat4 &view) { this->skyboxViewMat = view; }
 	/**
 	 * Updates the viewMat and skyboxViewMat according to the stored look, right & up values
 	 */
-	inline void resetViewMat() { updateViews(); };
+	inline void resetViewMats() { updateViews(); };
 private:
 	/**
 	 * Updates the view and skyboxView matrices

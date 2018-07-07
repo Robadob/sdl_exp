@@ -283,6 +283,8 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(unsigned int shaderIndex){
+	if (!mVisible)
+		return;
 	glm::mat4 m = getModelMat();
 	this->materials[0].use(m, shaderIndex, true);
 
@@ -302,6 +304,8 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, unsigned int shaderIndex){
+	if (!mVisible)
+		return;
 	glm::mat4 m = getModelMat();
 	this->materials[0].use(m, shaderIndex, true);
 

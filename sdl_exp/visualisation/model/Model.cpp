@@ -643,6 +643,8 @@ void Model::update(float time)
 }
 void Model::render(unsigned int shaderIndex) const
 {
+	if (!mVisible)
+		return;
 #if _DEBUG
     static bool aborted = false;
     if (!this->root)
@@ -668,6 +670,8 @@ void Model::render(unsigned int shaderIndex) const
 }
 void Model::renderSkeleton()
 {
+	if (!mVisible)
+		return;
 #if _DEBUG
 	if (!this->root)
 	{

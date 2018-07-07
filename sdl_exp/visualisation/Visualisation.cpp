@@ -419,11 +419,14 @@ void Visualisation::resizeWindow(){
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
     // Get the view frustum using GLM. Alternatively glm::perspective could be used.
 	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
-	this->t_frustum = this->frustum;
 	// Notify other elements
     this->hud.resizeWindow(this->windowWidth, this->windowHeight);
     if (this->scene)
       this->scene->_resize(this->windowWidth, this->windowHeight);
+}
+void Visualisation::resetProjectionMat()
+{
+	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
 }
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.
@@ -450,7 +453,7 @@ void Visualisation::updateFPS(){
         this->frameCount = 0;
     }
 }
-const Camera *Visualisation::getCamera() const{
+Camera *Visualisation::getCamera(){
     return &this->camera;
 }
 std::weak_ptr<Scene> Visualisation::getScene() const{

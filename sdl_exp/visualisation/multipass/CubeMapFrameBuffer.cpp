@@ -112,7 +112,7 @@ bool CubeMapFrameBuffer::use(Face f)
 		return false;
 	}
 #else
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
+	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name[f]));
 #endif //_DEBUG
 	GLbitfield clearConfig = 0;
 	if (doClearColor)

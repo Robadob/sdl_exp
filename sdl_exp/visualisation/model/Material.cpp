@@ -117,11 +117,14 @@ void Material::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
 {
 	//Purge existing reflection map
 	textures[Reflection].clear();
-	//Create a texture frame
-	TextureFrame tf;
-	tf.texture = cubeMap;
-	//Add it like a regular texture
-	addTexture(tf, Reflection);
+	if (cubeMap)
+	{
+		//Create a texture frame
+		TextureFrame tf;
+		tf.texture = cubeMap;
+		//Add it like a regular texture
+		addTexture(tf, Reflection);
+	}
 }
 //HasMatrices overrides
 void Material::setViewMatPtr(const glm::mat4 *viewMat)

@@ -23,16 +23,10 @@ public:
 	 */
 	MultiPassScene(Visualisation &vis);
     /**
-     * Called once per frame when Scene animation calls should be executed
+     * Called once per frame when Scene animation calls should be executed (before render passes begin)
      * @param frameTime The number of miliseconds since update was last called
      */
     virtual void update(unsigned int frameTime){};
-	/**
-	 * Adds a renderPass to the render loop
-	 * @param index The position which it should be rendered at (low->high)
-	 * @param rp A shared pointer to the RenderPass
-	 */
-    std::shared_ptr<RenderPass> addPass(int index, std::shared_ptr<RenderPass> rp);
     /**
      * Called when the user requests a reload
      * @note You should call functions such as shaders->reload() here
@@ -46,13 +40,36 @@ public:
 	 * @return Returning true permits the visualisation to also handle the keypress
 	 */
 	virtual bool keypress(SDL_Keycode keycode, int x, int y) = 0;
-	std::shared_ptr<LightsBuffer> Lights(){ return lighting; }
+	std::shared_ptr<LightsBuffer> Lights() const { return lighting; }
 protected:
+	/**
+	 * Adds a renderPass to the render loop
+	 * @param index The position which it should be rendered at (low->high)
+	 * @param rp A shared pointer to the RenderPass
+	 * @note A multimap is used internally, multiple pases may share the same index, the order of execution of passes of equal index is undefined
+	 */
+	void addPass(const int &index, std::shared_ptr<RenderPass> rp);
+	/**
+	 * Removes all passes which share the given pointer
+	 */
+	void removePass(std::shared_ptr<RenderPass> rp);
 	/**
 	 * Registers an entity, so the scene can manage it's modelview and projection matrices and reloads
 	 * @param ent The entity to be registered
 	 */
 	virtual void registerEntity(std::shared_ptr<Renderable> ent) final;
+	/**
+	 * Configures a dynamic environment map to be used
+	 * @param ent The entity to render the dynamic environment map about (and bind it to)
+	 * @param passIndex The render pass index where the environment map should be updated
+	 * @param renderpass The renderpass to be used to draw to the environment map
+	 * @param dynamicEnvMapWidthHeight Must be greater than 0, denotes the dimenions of the dynamic environment map required
+	 */
+	void enableEnvironmentMap(std::shared_ptr<RenderableAdv> ent, const int &passIndex, std::shared_ptr<RenderPass> renderpass, const unsigned int &dynamicEnvMapWidthHeight);
+	/**
+	 * Disables any dynamic environment map setup for renderable
+	 */
+	void disableEnvironmentMap(std::shared_ptr<RenderableAdv> ent);
 private:
 	/**
 	 * Called once per frame when Scene render calls should be executed
@@ -87,7 +104,7 @@ private:
 	/**
 	* Holds registered render passes so they can be triggered during render
 	*/
-	std::map<int, std::shared_ptr<RenderPass>> rpMap;
+	std::multimap<int, std::shared_ptr<RenderPass>> rpMap;
 	/**
 	* Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	*/

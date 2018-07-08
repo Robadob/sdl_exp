@@ -67,7 +67,7 @@ protected:
 	 */
 	void setRenderAxis(bool state);
     
-	std::shared_ptr<LightsBuffer> Lights(){ return lighting; }
+	std::shared_ptr<LightsBuffer> Lights() const { return lighting; }
 	std::unique_ptr<Skybox> &SkyBox(){ return skybox; }
 private:
 	bool renderAxisState, renderSkyboxState;

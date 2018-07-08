@@ -49,6 +49,7 @@ void BasicScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, con
 }
 void BasicScene::disableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv)
 {
+	entAdv->setEnvironmentMap(nullptr);
 	for (auto a = dynamicEnvMaps.begin(); a != dynamicEnvMaps.end(); ++a)
 	{
 		if (std::get<1>(*a) == entAdv)

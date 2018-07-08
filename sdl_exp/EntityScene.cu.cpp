@@ -68,8 +68,6 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	Material &m = this->mirrorModel->getMaterial();
 	m.setReflectivity(1.0f);
 	enableEnvironmentMap(this->mirrorModel, 2048);
-	//this->mirrorModel->setEnvironmentMap(this->SkyBox()->getTexture());
-	//this->mirrorModel->setEnvironmentMap(this->dynamicCubeMap.getTexture());
 	this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
 }
 /*
@@ -91,37 +89,6 @@ void EntityScene::update(unsigned int frameTime)
 	//Emulate full bright, attach the one light source to the camera
 	auto p = Lights()->getPointLight(1);
 	p.Position(visualisation.getCamera()->getEye());
-
-	//Manually trigger rendering of environment map
-	//(This must occur after update, and before render(), well specifically before the mirror model is rendered)
-	//if (this->mirrorModel->visible())
-	//{
-	//	//Set source model to not visible
-	//	this->mirrorModel->visible(false);
-	//	//Override projection matrix
-	//	this->visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
-	//	//For each face of cube map framebuffer
-	//	for (unsigned int i = 0; i < 6;++i)
-	//	{
-	//		CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
-	//		//Use cube map face
-	//		dynamicCubeMap.use(f);
-	//		//Overrides view matrix
-	//		this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, this->mirrorModel->getLocation()));
-	//		this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
-	//		//Render scene
-	//		this->SkyBox()->render();
-	//		render();
-	//		//Update mipmap
-	//		dynamicCubeMap.updateMipMap();
-	//	}
-	//	//Reset framebuffer (implicitly handled at next render pass)
-	//	//Reset matricies
-	//	this->visualisation.resetProjectionMat();
-	//	this->visualisation.getCamera()->resetViewMats();
-	//	//Reset source model to visible
-	//	this->mirrorModel->visible(true);
-	//}
 }
 /*
 Called once per frame when Scene render calls should be executed

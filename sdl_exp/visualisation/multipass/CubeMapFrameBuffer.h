@@ -32,11 +32,6 @@ public:
 	CubeMapFrameBuffer(unsigned int widthHeight = 2048, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
 	~CubeMapFrameBuffer();
 	/**
-	* Binds the framebuffer
-	* @return True if the framebuffer is 'complete' and was bound
-	*/
-
-	/**
 	* Cube map frame buffer has 6 seperate framebuffers, so it's not really intended to be used like a regular framebuffer
 	*/
 	bool use(Face f);

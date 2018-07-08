@@ -184,7 +184,7 @@ struct ModelData
 	std::unordered_map<std::string, std::weak_ptr<Mesh>> meshDirectory;
 	std::unordered_map<std::string, std::weak_ptr<ModelNode>> nodeDirectory;
 };
-class Model : public Renderable
+class Model : public RenderableAdv
 {
 public:
 	/**
@@ -203,11 +203,11 @@ public:
 	void reload() override;
 	//Rendering methods
 	void update(float time);
-	void render(unsigned int shaderIndex = UINT_MAX) const;
+	void render(const unsigned int &shaderIndex = UINT_MAX) override;
 	void renderSkeleton();
     void setLocation(glm::vec3 location){ this->location = location; }
     void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
-    glm::vec3 getLocation() const{ return location; }
+    glm::vec3 getLocation() const override{ return location; }
     glm::vec4 getRotation() const{ return rotation; }
 	BoundingBox3D getBoundingBox() const { return boundingBox; }
 	std::unique_ptr<ShadersVec> getShaders(unsigned int shaderIndex = 0) const;
@@ -256,10 +256,9 @@ public:
 	void setAnimation(const std::string &name, float transitionDuration = DEFAULT_KEYFRAME_TRANSITION_DURATION);
 
 	void disableAnimationTravel(bool disable);
-	bool visible() const { return mVisible; }
-	void visible(const bool &v) { mVisible = v; }
+
+	void setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap) override;
 private:
-	bool mVisible = true;
 	Draw skeletonPen;
 	bool skeletonIsValid;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)

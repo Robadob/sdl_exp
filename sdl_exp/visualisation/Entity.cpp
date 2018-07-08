@@ -282,7 +282,7 @@ Calls the necessary code to render a single instance of the entity
 @param vertLocation The shader attribute location to pass vertices
 @param normalLocation The shader attribute location to pass normals
 */
-void Entity::render(unsigned int shaderIndex){
+void Entity::render(const unsigned int &shaderIndex){
 	if (!mVisible)
 		return;
 	glm::mat4 m = getModelMat();
@@ -303,7 +303,7 @@ The index of the instance being rendered can be identified within the vertex sha
 @param vertLocation The shader attribute location to pass vertices
 @param normalLocation The shader attribute location to pass normals
 */
-void Entity::renderInstances(int count, unsigned int shaderIndex){
+void Entity::renderInstances(const unsigned int &count, const unsigned int &shaderIndex){
 	if (!mVisible)
 		return;
 	glm::mat4 m = getModelMat();
@@ -1609,7 +1609,6 @@ void Entity::setLightsBuffer(GLuint bufferBindingPoint)
 }
 void Entity::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
 {
-
 	for (auto &m : materials)
 		m.setEnvironmentMap(cubeMap);
 }

@@ -565,7 +565,7 @@ bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint 
 		else
 		{
 			//Check for collision of texture unit
-			assert(a->first!=textureUnit);
+			assert(!(a->first==textureUnit&&type==a->second.type));
 			++a;
 		}
 	}

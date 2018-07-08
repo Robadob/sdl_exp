@@ -1,6 +1,7 @@
 #ifndef __Scene_h__
 #define __Scene_h__
 #include <SDL/SDL.h>
+#include "Renderable.h"
 
 class Visualisation;
 

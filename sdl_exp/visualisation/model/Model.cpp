@@ -103,6 +103,8 @@ void Model::reload()
 				m->setLightsBuffer(lightsBufferBindPt);
 		}
 	}
+	//Need to update external textures?
+	//e.g. environment map
 }
 VFCcount countVertices(const struct aiScene* scene, const struct aiNode* nd)
 {
@@ -641,7 +643,7 @@ void Model::update(float time)
 #endif
 	updateBoneTransforms(time);
 }
-void Model::render(unsigned int shaderIndex) const
+void Model::render(const unsigned int &shaderIndex)
 {
 	if (!mVisible)
 		return;
@@ -945,7 +947,13 @@ bool Model::getMeshVisible(const std::string &meshName)
 	}
 	return false;
 }
-
+void Model::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
+{
+	for (unsigned int i = 0; i < data->materialsSize; ++i)
+	{
+		data->materials[i]->setEnvironmentMap(cubeMap);
+	}
+}
 void Model::computeInverseRootTransform()
 {
 	std::unordered_map<glm::quat, unsigned int> quatCount;

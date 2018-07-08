@@ -50,8 +50,11 @@ public:
 protected:
 	/**
 	 * Registers an entity, so the scene can manage it's modelview and projection matrices and reloads
+	 * @param ent The entity to be registered
+	 * @param dynamicEnvMapWidthHeight If non 0, denotes the dimenions of the dynamic environment map required
+	 * @note Method will attempt to only bind environment maps to entities containing materials with valid reflectivity properties
 	 */
-	virtual void registerEntity(std::shared_ptr<Renderable> ent) final;
+	virtual void registerEntity(std::shared_ptr<Renderable> ent, const unsigned int &dynamicEnvMapWidthHeight = 0) final;
 private:
 	/**
 	 * Called once per frame when Scene render calls should be executed

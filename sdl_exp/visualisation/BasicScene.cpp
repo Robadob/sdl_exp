@@ -9,12 +9,12 @@ BasicScene::BasicScene(Visualisation& vis)
 	, skybox(std::make_unique<Skybox>())
 	, lighting(std::make_shared<LightsBuffer>(vis.getCamera()->getViewMatPtr()))
 {
-	registerEntity(axis);
+	BasicScene::registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
 	this->skybox->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
 	this->skybox->setYOffset(-1.0f);
 }
-void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
+void BasicScene::registerEntity(std::shared_ptr<Renderable> ent, const unsigned int &dynamicEnvMapWidthHeight)
 {
 	if (ent)
 	{
@@ -24,6 +24,35 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 		ent->setViewMatPtr(this->visualisation.getCamera());
 		ent->setProjectionMatPtr(&this->visualisation);
 		ent->setLightsBuffer(this->lighting);
+		//Do environment map stuff
+		std::shared_ptr<RenderableAdv> entAdv = std::dynamic_pointer_cast<RenderableAdv>(ent);
+		if (entAdv)
+		{
+			//If entity hasn't reflective properties
+			bool hasReflective = true;//TODO
+			if (!hasReflective)
+			{
+				if (dynamicEnvMapWidthHeight)
+				{
+					fprintf(stderr, "Entity requested Dynamic EnvMap yet no reflective material properties were detected!\n");
+				}
+				else
+					return;
+			}
+			//Setup dynamicEnvMap
+			if (dynamicEnvMapWidthHeight)
+			{
+				//Create the cube map
+				std::unique_ptr<CubeMapFrameBuffer> dynamicCubeMap = std::make_unique<CubeMapFrameBuffer>(dynamicEnvMapWidthHeight, true);
+				//Bind it to entity
+				entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
+				//Set it up for rendering somewhere
+				dynamicEnvMaps.push_back(std::make_tuple(std::move(dynamicCubeMap), entAdv));
+			}
+			//Use skybox
+			else
+				entAdv->setEnvironmentMap(this->SkyBox()->getTexture());
+		}
 	}
 	else
 		fprintf(stderr, "Can't register a null entity!\n");
@@ -32,6 +61,43 @@ void BasicScene::_render()
 {
 	//Update lighting buffer
 	lighting->update();
+	//Render to any dynamic environment maps
+	for (auto &a : dynamicEnvMaps)
+	{
+		auto &cubeMap = std::get<0>(a);
+		auto &ent = std::get<1>(a);
+		if (ent->visible())
+		{
+			//Set source model to not visible
+			ent->visible(false);
+			//Override projection matrix
+			this->visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
+			//For each face of cube map framebuffer
+			for (unsigned int i = 0; i < 6; ++i)
+			{
+				CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
+				//Use cube map face
+				cubeMap->use(f);
+				//Overrides view matrix
+				this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, ent->getLocation()));
+				this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
+				//Render scene	
+				if (this->renderSkyboxState)
+					this->skybox->render();
+				if (this->renderAxisState)
+					this->axis->render();
+				render();
+			}
+			//Update mipmap (I hate this step needing to be manual
+			cubeMap->updateMipMap();
+			//Reset framebuffer (implicitly handled at next render pass)
+			//Reset matricies
+			this->visualisation.resetProjectionMat();
+			this->visualisation.getCamera()->resetViewMats();
+			//Reset source model to visible
+			ent->visible(true);
+		}
+	}
 	//Bind back buffer
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	GL_CALL(glClearColor(0, 0, 0, 1));

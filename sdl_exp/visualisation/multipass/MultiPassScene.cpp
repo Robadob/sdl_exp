@@ -6,9 +6,9 @@ MultiPassScene::MultiPassScene(Visualisation &visualisation)
 {
 	lighting->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
 }
-void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
+void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent, const unsigned int &dynamicEnvMapWidthHeight)
 {
-    if (ent.get())
+    if (ent)
     {
         //Store value for later
         entities.push_back(ent);

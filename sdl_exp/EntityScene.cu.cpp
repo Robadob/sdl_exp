@@ -11,7 +11,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, tick(0.0f)
 	, polarity(-1)
 	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED_FLAT))
-	, mirrorModel(new Entity(Stock::Models::SPHERE, 2.0f, Stock::Shaders::PHONG))
+	, mirrorModel(new Entity(Stock::Models::SPHERE, 10.0f, Stock::Shaders::PHONG))
 	, INSTANCE_COUNT(100)
 #ifdef __CUDACC__
 	, cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
@@ -26,7 +26,6 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	registerEntity(colorModel);
 	registerEntity(instancedSphere);
 	registerEntity(bob);
-	registerEntity(mirrorModel);
 	this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
 	this->setRenderAxis(true);
@@ -66,10 +65,11 @@ EntityScene::EntityScene(Visualisation &visualisation)
 
 	color = glm::vec3(1);
 	this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
-	//this->mirrorModel->setEnvironmentMap(this->SkyBox()->getTexture());
-	this->mirrorModel->setEnvironmentMap(this->dynamicCubeMap.getTexture());
 	Material &m = this->mirrorModel->getMaterial();
 	m.setReflectivity(1.0f);
+	registerEntity(mirrorModel, 2048);
+	//this->mirrorModel->setEnvironmentMap(this->SkyBox()->getTexture());
+	//this->mirrorModel->setEnvironmentMap(this->dynamicCubeMap.getTexture());
 	this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
 }
 /*
@@ -94,34 +94,34 @@ void EntityScene::update(unsigned int frameTime)
 
 	//Manually trigger rendering of environment map
 	//(This must occur after update, and before render(), well specifically before the mirror model is rendered)
-	if (this->mirrorModel->visible())
-	{
-		//Set source model to not visible
-		this->mirrorModel->visible(false);
-		//Override projection matrix
-		this->visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
-		//For each face of cube map framebuffer
-		for (unsigned int i = 0; i < 6;++i)
-		{
-			CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
-			//Use cube map face
-			dynamicCubeMap.use(f);
-			//Overrides view matrix
-			this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, this->mirrorModel->getLocation()));
-			this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
-			//Render scene
-			this->SkyBox()->render();
-			render();
-			//Update mipmap
-			dynamicCubeMap.updateMipMap();
-		}
-		//Reset framebuffer (implicitly handled at next render pass)
-		//Reset matricies
-		this->visualisation.resetProjectionMat();
-		this->visualisation.getCamera()->resetViewMats();
-		//Reset source model to visible
-		this->mirrorModel->visible(true);
-	}
+	//if (this->mirrorModel->visible())
+	//{
+	//	//Set source model to not visible
+	//	this->mirrorModel->visible(false);
+	//	//Override projection matrix
+	//	this->visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
+	//	//For each face of cube map framebuffer
+	//	for (unsigned int i = 0; i < 6;++i)
+	//	{
+	//		CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
+	//		//Use cube map face
+	//		dynamicCubeMap.use(f);
+	//		//Overrides view matrix
+	//		this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, this->mirrorModel->getLocation()));
+	//		this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
+	//		//Render scene
+	//		this->SkyBox()->render();
+	//		render();
+	//		//Update mipmap
+	//		dynamicCubeMap.updateMipMap();
+	//	}
+	//	//Reset framebuffer (implicitly handled at next render pass)
+	//	//Reset matricies
+	//	this->visualisation.resetProjectionMat();
+	//	this->visualisation.getCamera()->resetViewMats();
+	//	//Reset source model to visible
+	//	this->mirrorModel->visible(true);
+	//}
 }
 /*
 Called once per frame when Scene render calls should be executed

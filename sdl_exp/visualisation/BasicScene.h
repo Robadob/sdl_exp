@@ -5,6 +5,7 @@
 #include "Axis.h"
 #include "Visualisation.h"
 #include "shader/lights/LightsBuffer.h"
+#include "multipass/CubeMapFrameBuffer.h"
 /**
  * This class provides a baseclass for Scenes which only require single pass rendering
  * Natively includes a Skybox and Axis
@@ -18,8 +19,10 @@ protected:
 	/**
 	 * Registers an entity, so the scene can setup it's modelview and projection matrices and trigger reloads
 	 * @param ent The entity to be registered
+	 * @param dynamicEnvMapWidthHeight If non 0, denotes the dimenions of the dynamic environment map required
+	 * @note Method will attempt to only bind environment maps to entities containing materials with valid reflectivity properties
 	 */
-	void registerEntity(std::shared_ptr<Renderable> ent);
+	void registerEntity(std::shared_ptr<Renderable> ent, const unsigned int &dynamicEnvMapWidthHeight = 0);
 	/**
 	 * Override this method and do your rendering calls here
 	 */
@@ -88,6 +91,10 @@ private:
 	 * Holds registered entities so the BasicScene can automatically reload them
 	 */
 	std::vector<std::shared_ptr<Renderable>> entities;
+	/**
+	 * Holds pairs of the dynamic env map texture and it's associated entity
+	 */
+	std::vector<std::tuple<std::unique_ptr<CubeMapFrameBuffer>, std::shared_ptr<RenderableAdv>>> dynamicEnvMaps;
 	/**
 	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	 */

@@ -7,6 +7,7 @@
 #include "Viewport.h"
 #include "../Camera.h"
 #include <memory>
+#include "../texture/TextureCubeMap.h"
 
 class LightsBuffer;
 
@@ -51,6 +52,23 @@ public:
 	virtual void setLightsBuffer(GLuint bufferBindingPoint) = 0;
 	virtual void setLightsBuffer(std::shared_ptr<LightsBuffer> buffer);
 	
+};
+class RenderableAdv : public Renderable
+{
+public:
+	/**
+	* Sets a cube map texture to be used for providing reflections
+	* If static, likely the skybox texture
+	* @param cubeMap The cube map texture to be used to provide reflections
+	*/
+	virtual void setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap) = 0;
+
+	bool visible() const { return mVisible; }
+	void visible(const bool &v) { mVisible = v; }
+	virtual glm::vec3 getLocation() const = 0;
+	virtual void render(const unsigned int &shaderIndex) = 0;
+protected:
+	bool mVisible = true;
 };
 
 #endif //__Renderable_h__

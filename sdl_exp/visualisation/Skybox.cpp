@@ -23,7 +23,7 @@ Skybox::Skybox(const char *texturePath, float yOffset)
 /*
 Renders the skybox
 */
-void Skybox::render(unsigned int shaderIndex)
+void Skybox::render(const unsigned int &shaderIndex)
 {
     // Enable/Disable features
     GL_CALL(glDisable(GL_DEPTH_TEST));
@@ -54,6 +54,7 @@ std::shared_ptr<const TextureCubeMap> Skybox::getTexture()
 		return rtn;
 
 	assert(false);
+	return nullptr;
 }
 
 void Skybox::setTexture(std::shared_ptr<const TextureCubeMap> tex)

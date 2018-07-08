@@ -36,7 +36,7 @@ namespace Stock
 /*
 A renderable model loaded from a .obj file
 */
-class Entity : public Renderable
+class Entity : public RenderableAdv
 {
     friend class Shaders;
 public:    
@@ -104,9 +104,9 @@ public:
 		Stock::Materials::Material const material,
 		float modelScale = 1.0f
 		);
-    virtual ~Entity();
-	virtual void render(unsigned int shaderIndex = 0);
-	void renderInstances(int count, unsigned int shaderIndex = 0);
+	virtual ~Entity();
+	void render(const unsigned int &shaderIndex = 0) override;
+	void renderInstances(const unsigned int &count, const unsigned int &shaderIndex = 0);
 	/**
 	 * Overrides the material in use, this will lose any textures from the exiting material
 	 */
@@ -115,13 +115,13 @@ public:
 	Material &getMaterial();
 	
 	/**
-	 * Sets a static cube map to be used for providing reflections
+	 * Sets a cube map to be used for providing reflections
 	 * Probably the skybox texture
 	 */
-	void setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap);
+	void setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap) override;
     void setLocation(glm::vec3 location);
     void setRotation(glm::vec4 rotation);
-    glm::vec3 getLocation() const;
+    glm::vec3 getLocation() const override;
     glm::vec4 getRotation() const;
     void exportModel() const;
 	void reload() override;
@@ -141,10 +141,7 @@ public:
 	glm::vec3 getMin() const { return modelMin; }
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
-	bool visible() const { return mVisible; }
-	void visible(const bool &v) { mVisible = v; }
 protected:
-	bool mVisible = true;
 	glm::mat4 const * viewMatPtr;
 	glm::mat4 const * projectionMatPtr;
 	GLuint lightBufferBindPt;

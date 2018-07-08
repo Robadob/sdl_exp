@@ -37,8 +37,6 @@ private:
 	int polarity;
 	bool bobPause = false;
 	float bobAnimOffset = 0.0f;
-
-	CubeMapFrameBuffer dynamicCubeMap;
 };
 
 #endif

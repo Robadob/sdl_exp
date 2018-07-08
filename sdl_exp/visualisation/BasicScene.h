@@ -19,10 +19,16 @@ protected:
 	/**
 	 * Registers an entity, so the scene can setup it's modelview and projection matrices and trigger reloads
 	 * @param ent The entity to be registered
-	 * @param dynamicEnvMapWidthHeight If non 0, denotes the dimenions of the dynamic environment map required
-	 * @note Method will attempt to only bind environment maps to entities containing materials with valid reflectivity properties
 	 */
-	void registerEntity(std::shared_ptr<Renderable> ent, const unsigned int &dynamicEnvMapWidthHeight = 0);
+	void registerEntity(std::shared_ptr<Renderable> ent);
+	/**
+	 * Configures an environment map to be used
+	 * @param dynamicEnvMapWidthHeight If non 0, denotes the dimenions of the dynamic environment map required
+	 * @note Passing the default arg of 0 will use the Skybox texture
+	 * @note Haven't bothered to disable skybox tex as static env map when skybox is disabled
+	 */
+	void enableEnvironmentMap(std::shared_ptr<RenderableAdv> ent, const unsigned int &dynamicEnvMapWidthHeight = 0);
+	void disableEnvironmentMap(std::shared_ptr<RenderableAdv> ent);
 	/**
 	 * Override this method and do your rendering calls here
 	 */

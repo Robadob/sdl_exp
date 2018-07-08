@@ -1,5 +1,6 @@
 #include "BasicScene.h"
 #include "shader/lights/LightsBuffer.h"
+#include "model/Model.h"
 
 BasicScene::BasicScene(Visualisation& vis)
 	: Scene(vis)
@@ -9,12 +10,12 @@ BasicScene::BasicScene(Visualisation& vis)
 	, skybox(std::make_unique<Skybox>())
 	, lighting(std::make_shared<LightsBuffer>(vis.getCamera()->getViewMatPtr()))
 {
-	BasicScene::registerEntity(axis);
+	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
 	this->skybox->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
 	this->skybox->setYOffset(-1.0f);
 }
-void BasicScene::registerEntity(std::shared_ptr<Renderable> ent, const unsigned int &dynamicEnvMapWidthHeight)
+void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 {
 	if (ent)
 	{
@@ -24,38 +25,38 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent, const unsigned 
 		ent->setViewMatPtr(this->visualisation.getCamera());
 		ent->setProjectionMatPtr(&this->visualisation);
 		ent->setLightsBuffer(this->lighting);
-		//Do environment map stuff
-		std::shared_ptr<RenderableAdv> entAdv = std::dynamic_pointer_cast<RenderableAdv>(ent);
-		if (entAdv)
-		{
-			//If entity hasn't reflective properties
-			bool hasReflective = true;//TODO
-			if (!hasReflective)
-			{
-				if (dynamicEnvMapWidthHeight)
-				{
-					fprintf(stderr, "Entity requested Dynamic EnvMap yet no reflective material properties were detected!\n");
-				}
-				else
-					return;
-			}
-			//Setup dynamicEnvMap
-			if (dynamicEnvMapWidthHeight)
-			{
-				//Create the cube map
-				std::unique_ptr<CubeMapFrameBuffer> dynamicCubeMap = std::make_unique<CubeMapFrameBuffer>(dynamicEnvMapWidthHeight, true);
-				//Bind it to entity
-				entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
-				//Set it up for rendering somewhere
-				dynamicEnvMaps.push_back(std::make_tuple(std::move(dynamicCubeMap), entAdv));
-			}
-			//Use skybox
-			else
-				entAdv->setEnvironmentMap(this->SkyBox()->getTexture());
-		}
 	}
 	else
 		fprintf(stderr, "Can't register a null entity!\n");
+}
+void BasicScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, const unsigned int &dynamicEnvMapWidthHeight)
+{
+	//Don't allow duplicate envMaps
+	disableEnvironmentMap(entAdv);
+	//Setup dynamicEnvMap
+	if (dynamicEnvMapWidthHeight)
+	{
+		//Create the cube map
+		std::unique_ptr<CubeMapFrameBuffer> dynamicCubeMap = std::make_unique<CubeMapFrameBuffer>(dynamicEnvMapWidthHeight, true);
+		//Bind it to entity
+		entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
+		//Set it up for rendering somewhere
+		dynamicEnvMaps.push_back(std::make_tuple(std::move(dynamicCubeMap), entAdv));
+	}
+	//Use skybox
+	else
+		entAdv->setEnvironmentMap(this->SkyBox()->getTexture());
+}
+void BasicScene::disableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv)
+{
+	for (auto a = dynamicEnvMaps.begin(); a != dynamicEnvMaps.end(); ++a)
+	{
+		if (std::get<1>(*a) == entAdv)
+		{
+			dynamicEnvMaps.erase(a);
+			return;
+		}
+	}
 }
 void BasicScene::_render()
 {

@@ -20,12 +20,12 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, texBuf(TextureBuffer<float>::make(100, 3))
 #endif
 	, bob(std::make_shared<Model>("..\\models\\bob\\bob.md5mesh", 10.0f))
-	, dynamicCubeMap(2048, true, glm::vec3(1,0,0))
 {
 	registerEntity(deerModel);
 	registerEntity(colorModel);
 	registerEntity(instancedSphere);
 	registerEntity(bob);
+	registerEntity(mirrorModel);
 	this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
 	this->setRenderAxis(true);
@@ -67,7 +67,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
 	Material &m = this->mirrorModel->getMaterial();
 	m.setReflectivity(1.0f);
-	registerEntity(mirrorModel, 2048);
+	enableEnvironmentMap(this->mirrorModel, 2048);
 	//this->mirrorModel->setEnvironmentMap(this->SkyBox()->getTexture());
 	//this->mirrorModel->setEnvironmentMap(this->dynamicCubeMap.getTexture());
 	this->mirrorModel->setLocation(glm::vec3(0, 25, 0));

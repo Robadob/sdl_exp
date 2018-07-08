@@ -11,6 +11,8 @@ RenderPass::RenderPass(std::shared_ptr<FBuffer> fb)
 void RenderPass::executeRender()
 {
 	//Skip render if Framebuffer is incomplete
+	if (!fb)
+		return;
 	if (!fb->use())
 		return;
 	render();

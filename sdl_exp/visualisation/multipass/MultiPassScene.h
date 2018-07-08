@@ -9,6 +9,7 @@
 #include "../Visualisation.h"
 #include "RenderPass.h"
 #include "../shader/lights/LightsBuffer.h"
+#include "CubeMapPass.h"
 
 /**
  * This Scene implementation allows each render to occur over multiple passes
@@ -105,6 +106,10 @@ private:
 	* Holds registered render passes so they can be triggered during render
 	*/
 	std::multimap<int, std::shared_ptr<RenderPass>> rpMap;
+	/**
+	 * Holds pairs of the dynamic env map renderpass and it's associated entity
+	 */
+	std::vector<std::tuple<std::shared_ptr<CubeMapPass>, std::shared_ptr<RenderableAdv>>> dynamicEnvMaps;
 	/**
 	* Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	*/

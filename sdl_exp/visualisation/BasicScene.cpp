@@ -90,7 +90,7 @@ void BasicScene::_render()
 					this->axis->render();
 				render();
 			}
-			//Update mipmap (I hate this step needing to be manual
+			//Update mipmap (I hate this step needing to be manually called)
 			cubeMap->updateMipMap();
 			//Reset framebuffer (implicitly handled at next render pass)
 			//Reset matricies

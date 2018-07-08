@@ -22,28 +22,33 @@ void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
 }
 void MultiPassScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, const int &passIndex, std::shared_ptr<RenderPass> renderpass, const unsigned int &dynamicEnvMapWidthHeight)
 {
-	//assert(dynamicEnvMapWidthHeight > 0);
-	////Don't allow duplicate envMaps
-	//disableEnvironmentMap(entAdv);
-	////Create a custom renderpass for the cubemap
-	////Create the cube map
-	//std::unique_ptr<CubeMapFrameBuffer> dynamicCubeMap = std::make_unique<CubeMapFrameBuffer>(dynamicEnvMapWidthHeight, true);
-	////Bind it to entity
-	//entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
-	////Set it up for rendering somewhere
-	//dynamicEnvMaps.push_back(std::make_tuple(std::move(dynamicCubeMap), entAdv));
+	assert(dynamicEnvMapWidthHeight > 0);
+	//Don't allow duplicate envMaps
+	disableEnvironmentMap(entAdv);
+	//Create a custom renderpass for the cubemap
+	//Create the cube map
+	std::shared_ptr<CubeMapFrameBuffer> dynamicCubeMap = std::make_shared<CubeMapFrameBuffer>(dynamicEnvMapWidthHeight, true);
+	//Bind it to entity
+	entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
+	//Create the render pass
+	std::shared_ptr<CubeMapPass> cubeMapPass = std::make_shared<CubeMapPass>(dynamicCubeMap, renderpass, entAdv, visualisation);
+	//Set the render pass (so the dynamic pass is updated somewhere
+	addPass(passIndex, cubeMapPass);
+	//Log it, so we can delete it later
+	dynamicEnvMaps.push_back(std::make_tuple(cubeMapPass, entAdv));
 }
 void MultiPassScene::disableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv)
 {
-	//entAdv->setEnvironmentMap(nullptr);
-	//for (auto a = dynamicEnvMaps.begin(); a != dynamicEnvMaps.end(); ++a)
-	//{
-	//	if (std::get<1>(*a) == entAdv)
-	//	{
-	//		dynamicEnvMaps.erase(a);
-	//		return;
-	//	}
-	//}
+	entAdv->setEnvironmentMap(nullptr);
+	for (auto a = dynamicEnvMaps.begin(); a != dynamicEnvMaps.end(); ++a)
+	{
+		if (std::get<1>(*a) == entAdv)
+		{
+			removePass(std::get<0>(*a));
+			dynamicEnvMaps.erase(a);
+			return;
+		}
+	}
 }
 void MultiPassScene::_reload()
 {

@@ -32,17 +32,18 @@ public:
      * If the FrameBuffer is incomplete (invalid), the render will be skipped and the previous framebuffer bound
 	 * @note This method is called by the scene in order of RenderPass priority
 	 */
-	virtual void executeRender();
+	void executeRender();
     /**
      * Triggered when the viewport resizes, such that attatched textures can be auto resized
      */
 	virtual void resize(int width, int height);
+	/**
+	 * Called by executeRender() after framebuffer has been bound
+	 * Executes the user defined render code
+	 */
+	virtual void render() = 0;
 private:
 	const std::shared_ptr<FBuffer> fb;
 protected:
-    /**
-     * Called by executeRender() after framebuffer has been bound
-     */
-    virtual void render() = 0;
 };
 #endif //__RenderPass_h__

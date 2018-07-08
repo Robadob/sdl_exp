@@ -3,7 +3,7 @@
 #include "FrameBuffer.h"
 #include "../texture/TextureCubeMap.h"
 
-class CubeMapFrameBuffer
+class CubeMapFrameBuffer : public FBuffer
 {
 	GLuint name[6];
 	GLuint renderBuf;
@@ -32,9 +32,25 @@ public:
 	CubeMapFrameBuffer(unsigned int widthHeight = 2048, bool doClear = true, glm::vec3 clearColor = glm::vec3(0));
 	~CubeMapFrameBuffer();
 	/**
+	 * The call to render actually does the bind, always return true to continue normally
+	 * @see bool use(Face)
+	 */
+	bool use() override { return true; }
+	/**
+	 * Do nothing, not designed to be resized
+	 * Width must equal height anyway
+	 */
+	void resize(int, int) override {}
+	/**
+	* Not in use
+	* @see GLuint getFrameBufferName(Face)
+	*/
+	GLuint getFrameBufferName() const override{ return 0; }
+	/**
 	* Cube map frame buffer has 6 seperate framebuffers, so it's not really intended to be used like a regular framebuffer
 	*/
 	bool use(Face f);
+	GLuint getFrameBufferName(Face f) const { return name[f]; }
 	static glm::mat4 getViewMat(Face f, glm::vec3 location);
 	static glm::mat4 getSkyBoxViewMat(Face f);
 	static glm::mat4 getProjecitonMat();

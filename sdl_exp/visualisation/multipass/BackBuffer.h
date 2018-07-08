@@ -18,7 +18,7 @@ public:
 	 * @return The name of the contained GL_FRAMEBUFFER
 	 * @note This it the value created by glGenFramebuffer() and used with glBindBuffer()
 	 */
-	GLuint getFrameBufferName() override final{ return name; };
+	GLuint getFrameBufferName() const override final{ return name; };
 	/**
 	 * @param width The new viewport width
 	 * @param height The new viewport height

@@ -54,7 +54,7 @@ public:
 	/**
 	 * @return The name of the contained GL_FRAMEBUFFER
 	 */
-	GLuint getFrameBufferName() override { return name; };
+	GLuint getFrameBufferName() const override{ return name; };
 	/**
 	 * @param attachPt The attachment point required, these are 0-indexed in the order color attachments were bound
 	 * @return The name of the texture bound to the specified attachment point

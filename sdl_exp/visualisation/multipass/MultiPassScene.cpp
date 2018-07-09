@@ -31,7 +31,7 @@ void MultiPassScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv,
 	//Bind it to entity
 	entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
 	//Create the render pass
-	std::shared_ptr<CubeMapPass> cubeMapPass = std::make_shared<CubeMapPass>(dynamicCubeMap, renderpass, entAdv, visualisation);
+	std::shared_ptr<CubeMapPass> cubeMapPass = std::make_shared<CubeMapPass>(dynamicCubeMap, renderpass, entAdv, visualisation, lighting);
 	//Set the render pass (so the dynamic pass is updated somewhere
 	addPass(passIndex, cubeMapPass);
 	//Log it, so we can delete it later

@@ -1,16 +1,19 @@
 #include "CubeMapPass.h"
+#include "../shader/lights/LightsBuffer.h"
 
 CubeMapPass::CubeMapPass(
 	std::shared_ptr<CubeMapFrameBuffer> fb,
 	std::shared_ptr<RenderPass> childPass,
 	std::shared_ptr<RenderableAdv> ent,
-	Visualisation &visualisation
+	Visualisation &visualisation,
+	std::shared_ptr<LightsBuffer> lighting
 	)
 	: RenderPass(fb)
 	, cubeMap(fb)
 	, childPass(childPass)
 	, ent(ent)
 	, visualisation(visualisation)
+	, lighting(lighting)
 {
 	
 }
@@ -32,6 +35,8 @@ void CubeMapPass::render()
 			//Overrides view matrix
 			this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, ent->getLocation()));
 			this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
+			//Update lights
+			lighting->update();
 			//Render scene
 			childPass->render();
 		}
@@ -41,6 +46,8 @@ void CubeMapPass::render()
 		//Reset matricies
 		visualisation.resetProjectionMat();
 		visualisation.getCamera()->resetViewMats();
+		//Update lights
+		lighting->update();
 		//Reset source model to visible
 		ent->visible(true);
 	}

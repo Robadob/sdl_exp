@@ -12,7 +12,8 @@ public:
 		std::shared_ptr<CubeMapFrameBuffer> fb, 
 		std::shared_ptr<RenderPass> childPass, 
 		std::shared_ptr<RenderableAdv> ent, 
-		Visualisation &visualisation
+		Visualisation &visualisation,
+		std::shared_ptr<LightsBuffer> lighting
 		);
 protected:
 	void render() override;
@@ -21,6 +22,7 @@ private:
 	std::shared_ptr<RenderPass> childPass;
 	std::shared_ptr<RenderableAdv> ent;
 	Visualisation &visualisation;
+	std::shared_ptr<LightsBuffer> lighting;
 };
 
 #endif //__CubeMapPass_h__

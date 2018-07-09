@@ -72,6 +72,7 @@ public:
 	 * Asks the buffer to update the GPU copy if necessary
 	 * Computes eye transform of position/spotDirection
 	 * Could go further and negate spotDirection, 
+	 * @note This essentially needs to be called everytime the view matrix has changed
 	 */
 	void update();
 	/**

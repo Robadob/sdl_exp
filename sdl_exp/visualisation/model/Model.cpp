@@ -93,7 +93,15 @@ void Model::reload()
 		}
 		//Can't refresh viewMat, projMat here, breaks custom shaders which have alts
 		//Would have to bind those alts as dynamicMat4 instead
-		//Not necessary anyway
+		//Only update default shader for each material
+		for (unsigned int i = 0; i < data->materialsSize; ++i)
+		{
+			auto &&m = data->materials[i]->getShaders();
+			m->setProjectionMatPtr(projMatPtr);
+			m->setViewMatPtr(viewMatPtr);
+			if (lightsBufferBindPt >= 0)
+				m->setLightsBuffer(lightsBufferBindPt);
+		}
 	}
 }
 VFCcount countVertices(const struct aiScene* scene, const struct aiNode* nd)

@@ -349,6 +349,7 @@ private:
 	const glm::mat4 *viewMatPtr;
 	const glm::mat4 *projMatPtr;
 	GLuint lightsBufferBindPt;
+	std::shared_ptr<const TextureCubeMap> environmentMap;
 public:
 	glm::mat4 getModelMat() const;
 	/**

@@ -949,6 +949,7 @@ bool Model::getMeshVisible(const std::string &meshName)
 }
 void Model::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
 {
+	environmentMap = cubeMap;
 	for (unsigned int i = 0; i < data->materialsSize; ++i)
 	{
 		data->materials[i]->setEnvironmentMap(cubeMap);

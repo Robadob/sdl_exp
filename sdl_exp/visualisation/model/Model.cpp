@@ -101,6 +101,8 @@ void Model::reload()
 			m->setViewMatPtr(viewMatPtr);
 			if (lightsBufferBindPt >= 0)
 				m->setLightsBuffer(lightsBufferBindPt);
+			if (environmentMap)
+				data->materials[i]->setEnvironmentMap(environmentMap);
 		}
 	}
 	//Need to update external textures?

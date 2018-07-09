@@ -61,8 +61,6 @@ void BasicScene::disableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv)
 }
 void BasicScene::_render()
 {
-	//Update lighting buffer
-	lighting->update();
 	//Render to any dynamic environment maps
 	for (auto &a : dynamicEnvMaps)
 	{
@@ -83,6 +81,8 @@ void BasicScene::_render()
 				//Overrides view matrix
 				this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, ent->getLocation()));
 				this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
+				//Update lighting buffer
+				lighting->update();
 				//Render scene	
 				if (this->renderSkyboxState)
 					this->skybox->render();
@@ -96,6 +96,8 @@ void BasicScene::_render()
 			//Reset matricies
 			this->visualisation.resetProjectionMat();
 			this->visualisation.getCamera()->resetViewMats();
+			//Update lighting buffer
+			lighting->update();
 			//Reset source model to visible
 			ent->visible(true);
 		}

@@ -20,7 +20,7 @@ void MultiPassScene::registerEntity(std::shared_ptr<Renderable> ent)
     else
         fprintf(stderr, "Can't register a null entity!\n");
 }
-void MultiPassScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, const int &passIndex, std::shared_ptr<RenderPass> renderpass, const unsigned int &dynamicEnvMapWidthHeight)
+void MultiPassScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, const int &passIndex, std::shared_ptr<RenderPass> renderpass, const unsigned int &dynamicEnvMapWidthHeight, const glm::vec3 &originOffset)
 {
 	assert(dynamicEnvMapWidthHeight > 0);
 	//Don't allow duplicate envMaps
@@ -31,7 +31,7 @@ void MultiPassScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv,
 	//Bind it to entity
 	entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
 	//Create the render pass
-	std::shared_ptr<CubeMapPass> cubeMapPass = std::make_shared<CubeMapPass>(dynamicCubeMap, renderpass, entAdv, visualisation, lighting);
+	std::shared_ptr<CubeMapPass> cubeMapPass = std::make_shared<CubeMapPass>(dynamicCubeMap, renderpass, entAdv, visualisation, lighting, originOffset);
 	//Set the render pass (so the dynamic pass is updated somewhere
 	addPass(passIndex, cubeMapPass);
 	//Log it, so we can delete it later

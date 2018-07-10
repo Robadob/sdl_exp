@@ -29,7 +29,7 @@ void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 	else
 		fprintf(stderr, "Can't register a null entity!\n");
 }
-void BasicScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, const unsigned int &dynamicEnvMapWidthHeight)
+void BasicScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, const unsigned int &dynamicEnvMapWidthHeight, const glm::vec3 &originOffset)
 {
 	//Don't allow duplicate envMaps
 	disableEnvironmentMap(entAdv);
@@ -41,7 +41,7 @@ void BasicScene::enableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv, con
 		//Bind it to entity
 		entAdv->setEnvironmentMap(dynamicCubeMap->getTexture());
 		//Set it up for rendering somewhere
-		dynamicEnvMaps.push_back(std::make_tuple(std::move(dynamicCubeMap), entAdv));
+		dynamicEnvMaps.push_back(std::make_tuple(std::move(dynamicCubeMap), entAdv, originOffset));
 	}
 	//Use skybox
 	else
@@ -64,10 +64,11 @@ void BasicScene::_render()
 	//Render to any dynamic environment maps
 	for (auto &a : dynamicEnvMaps)
 	{
-		auto &cubeMap = std::get<0>(a);
 		auto &ent = std::get<1>(a);
 		if (ent->visible())
 		{
+			auto &cubeMap = std::get<0>(a);
+			auto &&location = ent->getLocation() + std::get<2>(a);//location + offset
 			//Set source model to not visible
 			ent->visible(false);
 			//Override projection matrix
@@ -79,7 +80,7 @@ void BasicScene::_render()
 				//Use cube map face
 				cubeMap->use(f);
 				//Overrides view matrix
-				this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, ent->getLocation()));
+				this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, location));
 				this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
 				//Update lighting buffer
 				lighting->update();

@@ -66,7 +66,7 @@ protected:
 	 * @param renderpass The renderpass to be used to draw to the environment map
 	 * @param dynamicEnvMapWidthHeight Must be greater than 0, denotes the dimenions of the dynamic environment map required
 	 */
-	void enableEnvironmentMap(std::shared_ptr<RenderableAdv> ent, const int &passIndex, std::shared_ptr<RenderPass> renderpass, const unsigned int &dynamicEnvMapWidthHeight);
+	void enableEnvironmentMap(std::shared_ptr<RenderableAdv> ent, const int &passIndex, std::shared_ptr<RenderPass> renderpass, const unsigned int &dynamicEnvMapWidthHeight, const glm::vec3 &originOffset = glm::vec3(0));
 	/**
 	 * Disables any dynamic environment map setup for renderable
 	 */
@@ -99,20 +99,20 @@ private:
 	 */
 	inline virtual void _update(unsigned int frameTime) override final { update(frameTime); };
 	/**
-	* Holds registered entities so the Scene can automatically reload them
-	*/
+	 * Holds registered entities so the Scene can automatically reload them
+	 */
 	std::vector<std::shared_ptr<Renderable>> entities;
 	/**
-	* Holds registered render passes so they can be triggered during render
-	*/
+	 * Holds registered render passes so they can be triggered during render
+	 */
 	std::multimap<int, std::shared_ptr<RenderPass>> rpMap;
 	/**
 	 * Holds pairs of the dynamic env map renderpass and it's associated entity
 	 */
 	std::vector<std::tuple<std::shared_ptr<CubeMapPass>, std::shared_ptr<RenderableAdv>>> dynamicEnvMaps;
 	/**
-	* Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
-	*/
+	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
+	 */
 	std::shared_ptr<LightsBuffer> lighting;
 };
 

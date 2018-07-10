@@ -6,7 +6,8 @@ CubeMapPass::CubeMapPass(
 	std::shared_ptr<RenderPass> childPass,
 	std::shared_ptr<RenderableAdv> ent,
 	Visualisation &visualisation,
-	std::shared_ptr<LightsBuffer> lighting
+	std::shared_ptr<LightsBuffer> lighting,
+	const glm::vec3 &originOffset
 	)
 	: RenderPass(fb)
 	, cubeMap(fb)
@@ -14,6 +15,7 @@ CubeMapPass::CubeMapPass(
 	, ent(ent)
 	, visualisation(visualisation)
 	, lighting(lighting)
+	, originOffset(originOffset)
 {
 	
 }
@@ -27,13 +29,14 @@ void CubeMapPass::render()
 		//Override projection matrix
 		visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
 		//For each face of cube map framebuffer
+		glm::vec3 location = ent->getLocation() + originOffset;
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
 			//Use cube map face
 			cubeMap->use(f);
 			//Overrides view matrix
-			this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, ent->getLocation()));
+			this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, location));
 			this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
 			//Update lights
 			lighting->update();

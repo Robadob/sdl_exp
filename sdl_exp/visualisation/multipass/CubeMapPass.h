@@ -9,11 +9,12 @@ class CubeMapPass : public RenderPass
 {
 public:
 	CubeMapPass(
-		std::shared_ptr<CubeMapFrameBuffer> fb, 
-		std::shared_ptr<RenderPass> childPass, 
-		std::shared_ptr<RenderableAdv> ent, 
+		std::shared_ptr<CubeMapFrameBuffer> fb,
+		std::shared_ptr<RenderPass> childPass,
+		std::shared_ptr<RenderableAdv> ent,
 		Visualisation &visualisation,
-		std::shared_ptr<LightsBuffer> lighting
+		std::shared_ptr<LightsBuffer> lighting,
+		const glm::vec3 &originOffset = glm::vec3(0)
 		);
 protected:
 	void render() override;
@@ -23,6 +24,7 @@ private:
 	std::shared_ptr<RenderableAdv> ent;
 	Visualisation &visualisation;
 	std::shared_ptr<LightsBuffer> lighting;
+	glm::vec3 originOffset;
 };
 
 #endif //__CubeMapPass_h__

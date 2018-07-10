@@ -27,7 +27,7 @@ protected:
 	 * @note Passing the default arg of 0 will use the Skybox texture
 	 * @note Haven't bothered to disable skybox tex as static env map when skybox is disabled
 	 */
-	void enableEnvironmentMap(std::shared_ptr<RenderableAdv> ent, const unsigned int &dynamicEnvMapWidthHeight = 0);
+	void enableEnvironmentMap(std::shared_ptr<RenderableAdv> ent, const unsigned int &dynamicEnvMapWidthHeight = 0, const glm::vec3 &originOffset = glm::vec3(0));
 	void disableEnvironmentMap(std::shared_ptr<RenderableAdv> ent);
 	/**
 	 * Override this method and do your rendering calls here
@@ -100,7 +100,7 @@ private:
 	/**
 	 * Holds pairs of the dynamic env map texture and it's associated entity
 	 */
-	std::vector<std::tuple<std::unique_ptr<CubeMapFrameBuffer>, std::shared_ptr<RenderableAdv>>> dynamicEnvMaps;
+	std::vector<std::tuple<std::unique_ptr<CubeMapFrameBuffer>, std::shared_ptr<RenderableAdv>, glm::vec3>> dynamicEnvMaps;
 	/**
 	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	 */

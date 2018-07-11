@@ -12,6 +12,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, polarity(-1)
 	, instancedSphere(new Entity(Stock::Models::ICOSPHERE, 1.0f, Stock::Shaders::INSTANCED_FLAT))
 	, mirrorModel(new Entity(Stock::Models::SPHERE, 10.0f, Stock::Shaders::PHONG))
+	, refractModel(new Entity(Stock::Models::TEAPOT, 10.0f, Stock::Shaders::PHONG))
 	, INSTANCE_COUNT(100)
 #ifdef __CUDACC__
 	, cuTexBuf(mallocGLInteropTextureBuffer<float>(100, 3))
@@ -26,6 +27,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	registerEntity(instancedSphere);
 	registerEntity(bob);
 	registerEntity(mirrorModel);
+	registerEntity(refractModel);
 	this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
 	this->setRenderAxis(true);
@@ -63,12 +65,25 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	_p.Specular(glm::vec3(0.02f));
 	_p.ConstantAttenuation(0.5f);
 
-	color = glm::vec3(1);
-	this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
-	Material &m = this->mirrorModel->getMaterial();
-	m.setReflectivity(1.0f);
-	enableEnvironmentMap(this->mirrorModel, 2048);
-	this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
+	
+	{//Configure reflection test
+		color = glm::vec3(1);
+		this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
+		Material &m = this->mirrorModel->getMaterial();
+		m.setReflectivity(1.0f);
+		enableEnvironmentMap(this->mirrorModel, 2048);
+		this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
+	}
+	{//Configure refraction test.
+		color = glm::vec3(1);
+		this->refractModel->setMaterial(color / 4.0f, color/1.5f, glm::vec3(1.0f));
+		Material &m = this->refractModel->getMaterial();
+		m.setRefractionIndex(Stock::RefractionIndex::GLASS);
+		m.setOpacity(0.0f);
+		//m.setTransparent(glm::vec3(1, 0, 0));//Turns it into a red filter
+		enableEnvironmentMap(this->refractModel, 2048);
+		this->refractModel->setLocation(glm::vec3(0, 0, 25));
+	}
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -102,7 +117,8 @@ void EntityScene::render()
 	bob->render();
 	bob->renderSkeleton();
 
-	this->mirrorModel->render();
+	mirrorModel->render();
+	refractModel->render();
 }
 /*
 Called when the user requests a reload

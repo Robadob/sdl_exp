@@ -1,5 +1,6 @@
 #ifndef __Material_h__
 #define __Material_h__
+
 #include "../Texture/Texture.h"
 #include "../interface/Renderable.h"
 #include "../shader/Shaders.h"
@@ -54,6 +55,16 @@ namespace Stock
 		const Material RED_RUBBER{ "red rubber", glm::vec3(0.05f, 0.0f, 0.0f), glm::vec3(0.5f, 0.4f, 0.4f), glm::vec3(0.7f, 0.04f, 0.04f), 10.0f, 1.0f };
 		const Material WHITE_RUBBER{ "white rubber", glm::vec3(0.05f), glm::vec3(0.5f), glm::vec3(0.7f), 10.0f, 1.0f };
 		const Material YELLOW_RUBBER{ "yellow rubber", glm::vec3(0.05f, 0.05f, 0.0f), glm::vec3(0.5f, 0.5f, 0.4f), glm::vec3(0.7f, 0.7f, 0.04f), 10.0f, 1.0f };
+	}
+	namespace RefractionIndex
+	{//https://en.wikipedia.org/wiki/List_of_refractive_indices
+		const float AIR		= 1.0f;
+		const float WATER	= 1.33f;
+		const float ICE		= 1.31f;
+		const float GLASS	= 1.52f;
+		const float DIAMOND = 2.417f;
+		const float SAPPHIRE = 1.77f;
+		const float CUBIC_ZIRCONIA = 2.165f;
 	}
 }
 
@@ -172,15 +183,19 @@ public:
 	 */
     //void setEmissive(const glm::vec3 emissive) { this->properties.emissive = emissive; updatePropertiesUniform(); }
 	/**
-	 * Currently unused
+	 * Multiplied by transparent light values
 	 */
 	void setTransparent(const glm::vec3 transparent) { this->properties.transparent = transparent; updatePropertiesUniform(); }
 	/**
 	 * Reflection factor
 	 * Metals usually in the 0.7-1.0 range
-	 * Other materuals on the 0.02-0.16 range
+	 * Other materials on the 0.02-0.16 range
 	 */
 	void setReflectivity(const float reflectivity) { this->properties.reflectivity = reflectivity; updatePropertiesUniform(); }
+	/**
+	 * Controls the opacity of material
+	 * If environment map is present, refraction index may be used
+	 */
     void setOpacity(const float opacity) { this->properties.opacity = opacity; updatePropertiesUniform(); }
 	/**
 	 * Specular exponent
@@ -192,6 +207,7 @@ public:
     void setShininessStrength(const float shininessStrength) { this->properties.shininessStrength = shininessStrength; updatePropertiesUniform(); }
 	/**
 	 * Controls the refraction element of reflection
+	 * @see Stock::RefractionIndex
 	 */
     void setRefractionIndex(const float refractionIndex) { this->properties.refractionIndex = refractionIndex; updatePropertiesUniform(); }
     

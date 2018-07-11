@@ -12,8 +12,8 @@
 #define vec3 glm::vec3
 #define uint glm::uint
 #endif //#ifdef __cplusplus
-    
-    struct MaterialProperties
+
+struct MaterialProperties
     {
 #ifdef __cplusplus
 		MaterialProperties()
@@ -25,8 +25,8 @@
 			, shininessStrength(1.0f)
 			//, emissive(0)
 			, reflectivity(0.0f)
-            , refractionIndex(1.0f)
-            , transparent(0)
+			, refractionIndex(1.0f) //Air
+            , transparent(1.0f)
 			, bitmask(0)
         { }
 #endif //#ifdef __cplusplus

@@ -32,6 +32,7 @@ private:
     std::shared_ptr<Entity> deerModel;
 	std::shared_ptr<Entity> colorModel;
 	std::shared_ptr<Entity> mirrorModel;
+	std::shared_ptr<Entity> refractModel;
 	std::shared_ptr<Model> bob;
     float tick;
 	int polarity;

@@ -162,7 +162,7 @@ void main()
       diffuse = mix(diffuse, diffuse*vec4(reflection,1), material[_materialID].reflectivity);
       specular = mix(specular, specular*reflection, material[_materialID].reflectivity);
     }
-    if(material[_materialID].opacity>0.0f&&material[_materialID].opacity<1.0f)
+    if(material[_materialID].opacity>=0.0f&&material[_materialID].opacity<1.0f)
     {
       //Source[air]/Dest[material]
       float refractionRatio = 1.00 / material[_materialID].refractionIndex;
@@ -172,9 +172,9 @@ void main()
       vec3 refractedLight = texture(t_reflection, refractDir).rgb;
       //Combine refracted light member
       //Seems fine to apply refraction component/proportion atop reflection, probably look bad though having both
-      ambient = mix(ambient, ambient*refractedLight, material[_materialID].opacity);
-      diffuse = mix(diffuse, diffuse*vec4(refractedLight,1), material[_materialID].opacity);
-      specular = mix(specular, specular*refractedLight, material[_materialID].opacity);
+      ambient = mix(vec3(0.0f), ambient, material[_materialID].opacity);
+      diffuse = mix(vec4(material[_materialID].transparent * refractedLight,1), diffuse, material[_materialID].opacity);
+      //specular = mix(vec3(0.0f), specular, material[_materialID].opacity);
       alpha = 1.0f;//Alpha been handled with refraction so skip here??
     }
   }

@@ -145,29 +145,45 @@ void main()
     ambient *= lightAmbient;
     diffuse *= vec4(lightDiffuse, 1.0f);
     specular *= lightSpecular;
-    
-    //Apply reflection if present
-    if(material[_materialID].has(B_REFLECTION) && material[_materialID].reflectivity>0.0f)
+  }   
+  
+  //Apply reflection/refraction if present
+  float alpha = material[_materialID].opacity;
+  if(material[_materialID].has(B_REFLECTION))
+  {
+    if(material[_materialID].reflectivity>0.0f&&material[_materialID].reflectivity<=1.0f)
+    {//Safety bounds check
+      //Calculate eye reflection vs surface
+      vec3 reflectDir = reflect(eyeVertex, eyeNormal);
+      //Convert from eye space to world space
+      reflectDir = vec3(inverse(_viewMat) * vec4(reflectDir, 0.0));
+      vec3 reflection = texture(t_reflection, reflectDir).rgb;
+      ambient = mix(ambient, ambient*reflection, material[_materialID].reflectivity);
+      diffuse = mix(diffuse, diffuse*vec4(reflection,1), material[_materialID].reflectivity);
+      specular = mix(specular, specular*reflection, material[_materialID].reflectivity);
+    }
+    if(material[_materialID].opacity>0.0f&&material[_materialID].opacity<1.0f)
     {
-      if(material[_materialID].reflectivity<=1.0f)
-      {//Safety bounds check
-        //Calculate eye reflection vs surface
-        vec3 reflectDir = reflect(eyeVertex, eyeNormal);
-        //Convert from eye space to world space
-        reflectDir = vec3(inverse(_viewMat) * vec4(reflectDir, 0.0));
-        vec3 reflection = texture(t_reflection, reflectDir).rgb;
-        ambient = mix(ambient, ambient*reflection, material[_materialID].reflectivity);
-        diffuse = mix(diffuse, diffuse*vec4(reflection,1), material[_materialID].reflectivity);
-        specular = mix(specular, specular*reflection, material[_materialID].reflectivity);
-      }
+      //Source[air]/Dest[material]
+      float refractionRatio = 1.00 / material[_materialID].refractionIndex;
+      vec3 refractDir = refract(eyeVertex, eyeNormal, refractionRatio);
+      //Convert from eye space to world space
+      refractDir = vec3(inverse(_viewMat) * vec4(refractDir, 0.0));
+      vec3 refractedLight = texture(t_reflection, refractDir).rgb;
+      //Combine refracted light member
+      //Seems fine to apply refraction component/proportion atop reflection, probably look bad though having both
+      ambient = mix(ambient, ambient*refractedLight, material[_materialID].opacity);
+      diffuse = mix(diffuse, diffuse*vec4(refractedLight,1), material[_materialID].opacity);
+      specular = mix(specular, specular*refractedLight, material[_materialID].opacity);
+      alpha = 1.0f;//Alpha been handled with refraction so skip here??
     }
   }
 
   vec3 color = clamp(ambient + diffuse.rgb + specular,0,1);
 
-  fragColor = vec4(color, min(diffuse.a, material[_materialID].opacity));//What to do with opac?
+  fragColor = vec4(color, min(diffuse.a, alpha));
 
-  //Discard full alpha fragments (removes requirement of back to front render/glblend)
+  //Discard full alpha fragments (removes requirement of back to front render/glblend if alpha is binary)
   if(fragColor.a<=0.0f)
     discard;
 }

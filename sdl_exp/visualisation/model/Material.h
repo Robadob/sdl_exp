@@ -94,7 +94,7 @@ public:
         CookTorrance,       //Metallic surface shader
         Fresnel             //The effect of light passing between materials
     };
-	static const char * TEX_NAME[13];
+	static const char * TEX_NAME[14];
     enum TextureType
     {
         None = 0,               //Material properties not related to textures?
@@ -108,8 +108,9 @@ public:
         Opacity = 8,            //Opacity
         Displacement = 9,       //Displacement map (none-standard handling required)
         LightMap = 10,          //Ambient occlusion, how bright light is at the specified point
-        Reflection = 11,        //Perfect mirror reflection (slow to calculate)
-        Unknown =12             //Unknown, will be treated as diffuse if diffuse isn't present
+        ReflectionMap = 11,     //Map of colour reflectivity across model
+		EnvironmentMap = 12,    //Perfect mirror reflection (slow to calculate)
+        Unknown = 13            //Unknown, will be treated as diffuse if diffuse isn't present
     };
     /**
      * Holds a Texture and it's relevant blending operations

@@ -40,7 +40,7 @@ namespace au
 		if (t == aiTextureType_LIGHTMAP)
 			return Material::TextureType::LightMap;
 		if (t == aiTextureType_REFLECTION)
-			return Material::TextureType::Reflection;
+			return Material::TextureType::ReflectionMap;
 		if (t == aiTextureType_UNKNOWN)
 			return Material::TextureType::Unknown;
 		if (t == aiTextureType_NONE)

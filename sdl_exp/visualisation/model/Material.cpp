@@ -1,7 +1,7 @@
 #include "Material.h"
 #include "../Texture/Texture2D.h"
 Material *Material::active = nullptr;
-const char * Material::TEX_NAME[13] = { "t_none", "t_ambient", "t_diffuse", "t_specular", "t_emissive", "t_height", "t_normal", "t_shininess", "t_opacity", "t_displacement", "t_light", "t_reflection", "t_unknown" };
+const char * Material::TEX_NAME[14] = { "t_none", "t_ambient", "t_diffuse", "t_specular", "t_emissive", "t_height", "t_normal", "t_shininess", "t_opacity", "t_displacement", "t_light", "t_reflection", "t_environment", "t_unknown" };
 Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const char* name, const bool &shaderRequiresBones)
     : name(name==nullptr?"":name)
     , properties()
@@ -91,7 +91,7 @@ bool  Material::operator==(Material& other) const
 void Material::addTexture(TextureFrame texFrame, TextureType type)
 {
 #ifdef _DEBUG
-	if (type==Reflection)
+	if (type==EnvironmentMap)
 	{
 		assert(std::dynamic_pointer_cast<const TextureCubeMap>(texFrame.texture));
 	}
@@ -115,15 +115,15 @@ void Material::addTexture(TextureFrame texFrame, TextureType type)
 }
 void Material::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
 {
-	//Purge existing reflection map
-	textures[Reflection].clear();
+	//Purge existing environment map
+	textures[EnvironmentMap].clear();
 	if (cubeMap)
 	{
 		//Create a texture frame
 		TextureFrame tf;
 		tf.texture = cubeMap;
 		//Add it like a regular texture
-		addTexture(tf, Reflection);
+		addTexture(tf, EnvironmentMap);
 	}
 }
 //HasMatrices overrides

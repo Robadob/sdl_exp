@@ -11,7 +11,8 @@ const uint B_OPACITY      = 1<<8;
 const uint B_DISPLACEMENT = 1<<9;
 const uint B_LIGHT        = 1<<10;
 const uint B_REFLECTION   = 1<<11;
-const uint B_UNKNOWN      = 1<<12;
+const uint B_ENVIRONMENT  = 1<<12;
+const uint B_UNKNOWN      = 1<<13;
 struct MaterialProperties
 {
     vec3 ambient;           //Ambient color
@@ -64,7 +65,8 @@ uniform mat4 _viewMat;
 uniform sampler2D t_ambient;
 uniform sampler2D t_diffuse;
 uniform sampler2D t_specular;
-uniform samplerCube t_reflection;
+uniform sampler2D t_reflection;
+uniform samplerCube t_environment;
 
 in vec3 eyeVertex;
 in vec3 eyeNormal;
@@ -149,7 +151,7 @@ void main()
   
   //Apply reflection/refraction if present
   float alpha = material[_materialID].opacity;
-  if(material[_materialID].has(B_REFLECTION))
+  if(material[_materialID].has(B_ENVIRONMENT))
   {
     if(material[_materialID].reflectivity>0.0f&&material[_materialID].reflectivity<=1.0f)
     {//Safety bounds check
@@ -157,7 +159,8 @@ void main()
       vec3 reflectDir = reflect(eyeVertex, eyeNormal);
       //Convert from eye space to world space
       reflectDir = vec3(inverse(_viewMat) * vec4(reflectDir, 0.0));
-      vec3 reflection = texture(t_reflection, reflectDir).rgb;
+      vec3 reflection = texture(t_environment, reflectDir).rgb;
+      reflection *= material[_materialID].has(B_REFLECTION) ? texture(t_reflection, texCoords).rgb : vec3(1.0f);
       ambient = mix(ambient, ambient*reflection, material[_materialID].reflectivity);
       diffuse = mix(diffuse, diffuse*vec4(reflection,1), material[_materialID].reflectivity);
       specular = mix(specular, specular*reflection, material[_materialID].reflectivity);
@@ -169,7 +172,7 @@ void main()
       vec3 refractDir = refract(eyeVertex, eyeNormal, refractionRatio);
       //Convert from eye space to world space
       refractDir = vec3(inverse(_viewMat) * vec4(refractDir, 0.0));
-      vec3 refractedLight = texture(t_reflection, refractDir).rgb;
+      vec3 refractedLight = texture(t_environment, refractDir).rgb;
       //Combine refracted light member
       //Seems fine to apply refraction component/proportion atop reflection, probably look bad though having both
       ambient = mix(vec3(0.0f), ambient, material[_materialID].opacity);

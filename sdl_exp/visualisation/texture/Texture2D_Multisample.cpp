@@ -58,3 +58,12 @@ bool Texture2D_Multisample::isBound() const
     GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D_MULTISAMPLE, &whichID));
     return whichID == glName;
 }
+glm::uvec2 Texture2D_Multisample::getDimensions(const GLuint &texName)
+{
+    glm::ivec2 rtn(0);
+    GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texName));
+    GL_CALL(glGetTexLevelParameteriv(GL_TEXTURE_2D_MULTISAMPLE, 0, GL_TEXTURE_WIDTH, &rtn.x));
+    GL_CALL(glGetTexLevelParameteriv(GL_TEXTURE_2D_MULTISAMPLE, 0, GL_TEXTURE_HEIGHT, &rtn.y));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
+    return rtn;
+}

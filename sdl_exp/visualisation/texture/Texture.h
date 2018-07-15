@@ -146,7 +146,7 @@ public:
 	 * Virtual destructor, deallocate the OpenGL texture
 	 * @note Does not deallocate external texture's
 	 */
-	virtual ~Texture();
+    virtual ~Texture();
 protected:
 	/**
 	 * Remove all copy/move/assignment contructors

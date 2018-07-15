@@ -107,7 +107,11 @@ public:
 	 * Provides for RenderTarget's virtual getName(), simply defers call to Texture::getName();
 	 * @return The gl texture name as returned by glGenTextures()
 	 */
-	GLenum getName() const override{ return Texture::getName(); }
+    GLenum getName() const override{ return Texture::getName(); }
+    /**
+     * Returns the dimensions of the named texture
+     */
+    static glm::uvec2 getDimensions(const GLuint &texName);
 protected:
 	/**
 	 * Private constructor

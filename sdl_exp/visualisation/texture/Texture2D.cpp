@@ -215,6 +215,15 @@ bool Texture2D::isBound() const
 	GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D, &whichID));
 	return whichID == glName;
 }
+glm::uvec2 Texture2D::getDimensions(const GLuint &texName)
+{
+    glm::ivec2 rtn(0);
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, texName));
+    GL_CALL(glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &rtn.x));
+    GL_CALL(glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &rtn.y));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+    return rtn;
+}
 //Comment out this include if not making use of GaussianBlur
 #include "../shader/GaussianBlur.h"
 #ifdef __GaussianBlur_h__

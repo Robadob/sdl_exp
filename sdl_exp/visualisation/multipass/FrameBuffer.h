@@ -16,7 +16,6 @@ class RenderBuffer;
  * If a scaling framebuffer is used, it will be resized whenever the viewport dimensions are changed (this includes resizing unmanaged textures/renderbuffers)
  * You can use Shaders::setFragOutAttribute() to bind the attachment point to a named output
  * @todo Improve stencilbuffer (control when writing/clearing/using) //https://en.wikipedia.org/wiki/Stencil_buffer
- * @todo Add support for cubemap framebuffers
  */
 class FrameBuffer : public FBuffer
 {

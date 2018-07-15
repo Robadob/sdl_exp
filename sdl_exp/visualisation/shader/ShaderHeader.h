@@ -10,6 +10,7 @@
 #ifdef __cplusplus
 #include <glm/glm.hpp>
 #define vec3 glm::vec3
+#define vec4 glm::vec4
 #define uint glm::uint
 #endif //#ifdef __cplusplus
 
@@ -17,32 +18,30 @@ struct MaterialProperties
     {
 #ifdef __cplusplus
 		MaterialProperties()
-			: ambient(0)
-			, opacity(1.0f)
-			, diffuse(0)
-			, shininess(0)
-			, specular(0)
-			, shininessStrength(1.0f)
-			//, emissive(0)
-			, reflectivity(0.0f)
-			, refractionIndex(1.0f) //Air
-            , transparent(1.0f)
-			, bitmask(0)
-        { }
+          : color(1) //White
+          , roughness(0)
+          , metallic(0)
+          , refractionIndex(1.0f) //Air
+          , alphaCutOff(0)
+          , emissive(0)
+          , bitmask(0)
+          , diffuse(0)
+          , specular(0)
+          , glossiness(0)
+    {
+    }
 #endif //#ifdef __cplusplus
-		vec3 ambient;           //Ambient color
-		float opacity;
-		vec3 diffuse;           //Diffuse color
-		float shininess;		//aka specular exponent
-		vec3 specular;          //Specular color
-        float shininessStrength;//This is multiplied by specular color, defaults to 1.0 (aka specular factor)
-		//vec3 emissive;        //Unused, Emissive color (light emitted) (disabled to keep struct size down temporary
-		float reflectivity;     //Reflection factor
-		uint padding1;
-		uint padding2;
-        float refractionIndex;	//Unused
-		vec3 transparent;       //Unused, Transparent color, multiplied with translucent light to construct final color
+		vec4 color;             //Base color (aka diffuse, albedo)
+        float roughness;
+        float metallic;
+        float refractionIndex;	//Unused (padding)
+        float alphaCutOff;
+        vec3 emissive;          //Unused, Emissive color (light emitted) (disabled to keep struct size down temporary
         uint bitmask;           //bitmask to calculate which textures are available
+        //Extension: KHR_materials_pbrSpecularGlossiness
+		vec4 diffuse;           //Diffuse reflection color
+		vec3 specular;          //Specular reflection color
+        float glossiness;       //Glossiness factor
     };
 
 	struct LightProperties
@@ -117,6 +116,7 @@ struct MaterialProperties
 #ifdef __cplusplus
 #undef uint
 #undef vec3
+#undef vec4
 #endif //#ifdef __cplusplus
 
 #endif //#ifndef __ShaderHeader_h__

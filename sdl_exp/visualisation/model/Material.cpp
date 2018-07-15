@@ -8,43 +8,34 @@ Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &b
     , buffer(buffer)
     , bufferIndex(bufferIndex)
 	, hasBaked(false)
-	, hasAlpha(false)
 	, isWireframe(false)
 	, faceCull(true)
-	, shaderMode(Phong)
 	, shaderRequiresBones(shaderRequiresBones)
-	//, alphaBlendMode{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }//C++11 required (maybe usable VS2015?)
 {
-	alphaBlendMode[0] = GL_SRC_ALPHA;
-	alphaBlendMode[1] = GL_ONE_MINUS_SRC_ALPHA;
 }
 
-Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones)
-	: Material(buffer, bufferIndex, set.name, shaderRequiresBones)
-{
-	properties.ambient = set.ambient;
-	properties.diffuse = set.diffuse;
-	properties.specular = set.specular;
-	properties.shininess = set.shininess;
-	properties.opacity = set.opacity;
-	bake();
-}
+//Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones)
+//	: Material(buffer, bufferIndex, set.name, shaderRequiresBones)
+//{
+//	properties.ambient = set.ambient;
+//	properties.diffuse = set.diffuse;
+//	properties.specular = set.specular;
+//	properties.shininess = set.shininess;
+//	properties.opacity = set.opacity;
+//	bake();
+//}
 Material::Material(const Material&other)
 	: name(other.name)
 	, properties(other.properties)
 	, buffer(other.buffer)
 	, bufferIndex(other.bufferIndex)
 	, hasBaked(false)
-	, hasAlpha(other.hasAlpha)
 	, isWireframe(other.isWireframe)
 	, faceCull(other.faceCull)
-	, shaderMode(other.shaderMode)
 	, shaderRequiresBones(other.shaderRequiresBones)
 {
 	for (const auto &i : other.shaders)
 		shaders.push_back(std::make_shared<Shaders>(*i));
-	alphaBlendMode[0] = other.alphaBlendMode[0];
-	alphaBlendMode[1] = other.alphaBlendMode[1];
 	if (other.hasBaked)
 		bake();
 }
@@ -67,22 +58,34 @@ void Material::updatePropertiesUniform(bool force)
 bool  Material::operator==(Material& other) const
 {
     if (
+        this->properties.color == other.getColor() &&
+        this->properties.roughness == other.getRoughness() &&
+        this->properties.metallic == other.getMetallic() &&
+        this->properties.refractionIndex == other.getRefractionIndex() &&
+        this->properties.alphaCutOff == other.getAlphaCutOff() &&
+        this->properties.emissive == other.getEmissive() &&
+        this->properties.bitmask == other.properties.bitmask &&
         this->properties.diffuse == other.getDiffuse() &&
         this->properties.specular == other.getSpecular() &&
-        this->properties.ambient == other.getAmbient() &&
-		//this->properties.emissive == other.getEmissive() &&
-		this->properties.reflectivity == other.getReflectivity() &&
-        this->properties.transparent == other.getTransparent() &&
-        this->properties.opacity == other.getOpacity() &&
-        this->properties.shininess == other.getShininess() &&
-        this->properties.shininessStrength == other.getShininessStrength() &&
-        this->properties.refractionIndex == other.getRefractionIndex() &&
+        this->properties.glossiness == other.getGlossiness() &&
         this->isWireframe == other.getWireframe() &&
-        this->faceCull == !other.getTwoSided() &&
-        this->shaderMode == other.getShadingMode() &&
-        this->getAlphaBlendMode() == other.getAlphaBlendMode()
+        this->faceCull == other.faceCull &&
+        this->shaderRequiresBones == other.shaderRequiresBones
         )
+    {
+        //Compare that they have same texture types (despite bit mask agreement)
+        //Also compare texture names match
+        for (auto &&t : this->textures)
+        {
+            if (other.textures.find(t.first) != other.textures.end())
+            {
+                if (t.second[0].texture->getName() == other.textures[t.first][0].texture->getName())
+                    continue;
+            }
+            return false;            
+        }
         return true;
+    }
     return false;
 }
 /**
@@ -91,10 +94,10 @@ bool  Material::operator==(Material& other) const
 void Material::addTexture(TextureFrame texFrame, TextureType type)
 {
 #ifdef _DEBUG
-	if (type==EnvironmentMap)
-	{
-		assert(std::dynamic_pointer_cast<const TextureCubeMap>(texFrame.texture));
-	}
+	//if (type==EnvironmentMap)
+	//{
+	//	assert(std::dynamic_pointer_cast<const TextureCubeMap>(texFrame.texture));
+	//}
 #endif
 	textures[type].push_back(texFrame);
 	this->properties.bitmask |= (1 << type);
@@ -115,16 +118,16 @@ void Material::addTexture(TextureFrame texFrame, TextureType type)
 }
 void Material::setEnvironmentMap(std::shared_ptr<const TextureCubeMap> cubeMap)
 {
-	//Purge existing environment map
-	textures[EnvironmentMap].clear();
-	if (cubeMap)
-	{
-		//Create a texture frame
-		TextureFrame tf;
-		tf.texture = cubeMap;
-		//Add it like a regular texture
-		addTexture(tf, EnvironmentMap);
-	}
+	////Purge existing environment map
+	//textures[EnvironmentMap].clear();
+	//if (cubeMap)
+	//{
+	//	//Create a texture frame
+	//	TextureFrame tf;
+	//	tf.texture = cubeMap;
+	//	//Add it like a regular texture
+	//	addTexture(tf, EnvironmentMap);
+	//}
 }
 //HasMatrices overrides
 void Material::setViewMatPtr(const glm::mat4 *viewMat)
@@ -204,13 +207,12 @@ void Material::use(glm::mat4 &transform, unsigned int index, bool requiresPrepar
 			GL_CALL(glDisable(GL_CULL_FACE));
         }
 		//Treat all materials as having alpha until we can add a suitable check/switch
-		//if (hasAlpha || this->properties.opacity>1.0f)
+		//if (this->properties.color.a<1.0f)
 		//{
 		if ((index<shaders.size() && shaders[index]->supportsGL_BLEND())
 			|| (index >= shaders.size() && defaultShader->supportsGL_BLEND()))
 		{
 			GL_CALL(glEnable(GL_BLEND));
-			GL_CALL(glBlendFunc(alphaBlendMode[0], alphaBlendMode[1]));
 		}
 		else
 		{
@@ -234,16 +236,6 @@ void Material::use(glm::mat4 &transform, unsigned int index, bool requiresPrepar
         GL_CALL(glGetIntegerv(GL_POLYGON_MODE, &polygonMode[0]));
         if ((polygonMode[0] != GL_LINE&&isWireframe) || (polygonMode[0] != GL_FILL&&!isWireframe))
            fprintf(stderr, "Warning: Material::use() detected GL_POLYGON_MODE has been changed.\nUse Material::clearActive() before to prevent this warning.\n");
-        //Blend mode
-        GLint alphaSrc, alphaDst, rgbSrc, rgbDst;
-        GL_CALL(glGetIntegerv(GL_BLEND_SRC_ALPHA, &alphaSrc));
-        GL_CALL(glGetIntegerv(GL_BLEND_DST_ALPHA, &alphaDst));
-        GL_CALL(glGetIntegerv(GL_BLEND_SRC_RGB, &rgbSrc));
-        GL_CALL(glGetIntegerv(GL_BLEND_DST_RGB, &rgbDst));
-        if (alphaSrc != alphaBlendMode[0] || rgbSrc != alphaBlendMode[0] || alphaDst != alphaBlendMode[1] || rgbDst != alphaBlendMode[1])
-        {
-            fprintf(stderr, "Warning: Material::use() detected glBlendFunc() has been called.\nUse Material::clearActive() before to prevent this warning.\n");
-        }
     }
 #endif
 }

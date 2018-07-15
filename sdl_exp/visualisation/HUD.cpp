@@ -101,7 +101,7 @@ void HUD::render()
 	std::list<std::shared_ptr<Item>>::reverse_iterator it = stack.rbegin();
 	while (it != stack.rend())
 	{
-		(*it)->overlay->render(&modelViewMat, &projectionMat, (*it)->fvbo);
+		(*it)->overlay->render(&modelViewMat, &projectionMat);
 		++it;
     }
     GL_CALL(glDisable(GL_BLEND));
@@ -149,7 +149,7 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	, anchorH(anchorH)
 	, zIndex(zIndex)
 	, vbo(0)
-	, data(0)
+	, data(nullptr)
 {
 	//Init vbo's
 	unsigned int bufferSize=0;
@@ -184,12 +184,11 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	texCo.offset = 4*sizeof(glm::vec3);
 	texCo.stride = 0;
 	overlay->getShaders()->setTexCoordsAttributeDetail(texCo);
-	//Setup faces
-	GL_CALL(glGenBuffers(1, &fvbo));
-	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fvbo));
-	const int faces[] = { 0, 1, 2, 3 };
-	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
-	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+}
+HUD::Item::~Item()
+{
+    free(data);
+    GL_CALL(glDeleteBuffers(1, &vbo));
 }
 /*
 Update the overlays quad location, based on new window size, anchors, offsets and overlay dimensions

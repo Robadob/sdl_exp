@@ -35,9 +35,8 @@ public:
      * Renders the overlay using the provided details
      * @param mv The modelview matrix
      * @param proj The projection matrix
-     * @param fbo The buffer object holding the face indices
      */
-	void render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo);
+	void render(const glm::mat4 *mv, const glm::mat4 *proj);
 	unsigned int getWidth() const { return dimensions.x; };
 	unsigned int getHeight() const { return dimensions.y;};
 	std::shared_ptr<Shaders> Overlay::getShaders() const { return shaders; }

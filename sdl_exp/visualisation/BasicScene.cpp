@@ -9,6 +9,7 @@ BasicScene::BasicScene(Visualisation& vis)
 	, axis(std::make_shared<Axis>(25.0f))
 	, skybox(std::make_unique<Skybox>())
 	, lighting(std::make_shared<LightsBuffer>(vis.getCamera()->getViewMatPtr()))
+	, renderFB(new FrameBuffer({ FBAFactory::ManagedHDRColorTextureRGBA(), FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT) }, FBAFactory::ManagedDepthRenderBuffer()))//Not currently supporting MSAA
 {
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
@@ -62,58 +63,61 @@ void BasicScene::disableEnvironmentMap(std::shared_ptr<RenderableAdv> entAdv)
 void BasicScene::_render()
 {
 	//Render to any dynamic environment maps
-	for (auto &a : dynamicEnvMaps)
-	{
-		auto &ent = std::get<1>(a);
-		if (ent->visible())
-		{
-			auto &cubeMap = std::get<0>(a);
-			auto &&location = ent->getLocation() + std::get<2>(a);//location + offset
-			//Set source model to not visible
-			ent->visible(false);
-			//Override projection matrix
-			this->visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
-			//For each face of cube map framebuffer
-			for (unsigned int i = 0; i < 6; ++i)
-			{
-				CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
-				//Use cube map face
-				cubeMap->use(f);
-				//Overrides view matrix
-				this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, location));
-				this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
-				//Update lighting buffer
-				lighting->update();
-				//Render scene	
-				if (this->renderSkyboxState)
-					this->skybox->render();
-				if (this->renderAxisState)
-					this->axis->render();
-				render();
-			}
-			//Update mipmap (I hate this step needing to be manually called)
-			cubeMap->updateMipMap();
-			//Reset framebuffer (implicitly handled at next render pass)
-			//Reset matricies
-			this->visualisation.resetProjectionMat();
-			this->visualisation.getCamera()->resetViewMats();
-			//Update lighting buffer
-			lighting->update();
-			//Reset source model to visible
-			ent->visible(true);
-		}
-	}
-	//Bind back buffer
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-	GL_CALL(glClearColor(0, 0, 0, 1));
-	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+	//for (auto &a : dynamicEnvMaps)
+	//{
+	//	auto &ent = std::get<1>(a);
+	//	if (ent->visible())
+	//	{
+	//		auto &cubeMap = std::get<0>(a);
+	//		auto &&location = ent->getLocation() + std::get<2>(a);//location + offset
+	//		//Set source model to not visible
+	//		ent->visible(false);
+	//		//Override projection matrix
+	//		this->visualisation.setProjectionMat(CubeMapFrameBuffer::getProjecitonMat());
+	//		//For each face of cube map framebuffer
+	//		for (unsigned int i = 0; i < 6; ++i)
+	//		{
+	//			CubeMapFrameBuffer::Face f = CubeMapFrameBuffer::Face(i);
+	//			//Use cube map face
+	//			cubeMap->use(f);
+	//			//Overrides view matrix
+	//			this->visualisation.getCamera()->setViewMat(CubeMapFrameBuffer::getViewMat(f, location));
+	//			this->visualisation.getCamera()->setSkyBoxViewMat(CubeMapFrameBuffer::getSkyBoxViewMat(f));
+	//			//Update lighting buffer
+	//			lighting->update();
+	//			//Render scene	
+	//			if (this->renderSkyboxState)
+	//				this->skybox->render();
+	//			if (this->renderAxisState)
+	//				this->axis->render();
+	//			render();
+	//		}
+	//		//Update mipmap (I hate this step needing to be manually called)
+	//		cubeMap->updateMipMap();
+	//		//Reset framebuffer (implicitly handled at next render pass)
+	//		//Reset matricies
+	//		this->visualisation.resetProjectionMat();
+	//		this->visualisation.getCamera()->resetViewMats();
+	//		//Update lighting buffer
+	//		lighting->update();
+	//		//Reset source model to visible
+	//		ent->visible(true);
+	//	}
+	//}
+    //Bind render buffer
+    renderFB->use();
 	//Reset viewport
 	GL_CALL(glViewport(0, 0, visualisation.getWindowWidth(), visualisation.getWindowHeight()));
 	if (this->renderSkyboxState)
 		this->skybox->render();
 	if (this->renderAxisState)
 		this->axis->render();
-	render();
+    render();
+    //Bind back buffer
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CALL(glClearColor(0, 0, 0, 1));
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    //Perform post processing step
 }
 bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y) 
 {

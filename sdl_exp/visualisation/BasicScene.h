@@ -102,6 +102,13 @@ private:
 	 */
 	std::vector<std::tuple<std::unique_ptr<CubeMapFrameBuffer>, std::shared_ptr<RenderableAdv>, glm::vec3>> dynamicEnvMaps;
 	/**
+	 * We render into these buffers (when using Bloom)
+	 * This allows us to post-process into the backbuffer
+	 * Color attach 0: HDR render
+	 * Color attach 1: Single component brightness
+	 */
+	std::unique_ptr<FrameBuffer> renderFB;
+	/**
 	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	 */
 	std::shared_ptr<LightsBuffer> lighting;

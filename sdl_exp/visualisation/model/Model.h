@@ -78,6 +78,7 @@ struct ModelData
         , faces(nullptr)
 		, transforms(nullptr)
 		, _transforms(nullptr)
+        , computedTransforms(nullptr)
 		, animations()
         , verticesSize(vertices)
 		, normalsSize(normals)

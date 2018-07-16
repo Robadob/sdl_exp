@@ -61,7 +61,7 @@ void Bloom::updateBloomProjMat(const glm::uvec2 dimensions)
     bloomProjMat =
         glm::ortho<float>(
         0.0f, (float)dimensions.x,
-        0.0f, (float)dimensions.x,
+        0.0f, (float)dimensions.y,
         0.0f, 1.0f
         );
 }

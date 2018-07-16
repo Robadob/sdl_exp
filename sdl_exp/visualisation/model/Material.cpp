@@ -115,6 +115,7 @@ void Material::addTexture(TextureFrame texFrame, TextureType type)
 				i->addTexture(TEX_NAME[type], texFrame.texture);
 		}
 	}
+    //This won't currently warn if model has Metallic and MetallicRoughness tex's, inside shader these use same sampler
 	if (textures[type].size() > 1)
 	{
 		fprintf(stderr, "Warning: Material '%s' contains multiple textures of type %s\n Texture stacks are currently unsupported.\n", name.c_str(), TEX_NAME[type]);
@@ -265,7 +266,8 @@ void Material::bake()
 	if (shaderRequiresBones)
 		defaultShader = std::make_shared<Shaders>(Stock::Shaders::BONE);//Temp
 	else
-		defaultShader = std::make_shared<Shaders>(Stock::Shaders::PHONG);//Temp
+        defaultShader = std::make_shared<Shaders>(Stock::Shaders::PBR_TEST);//Temp
+    //defaultShader = std::make_shared<Shaders>(Stock::Shaders::PHONG);//Temp
 	//Setup material buffer
 	defaultShader->setMaterialBuffer(buffer);
 	defaultShader->setMaterialID(bufferIndex);

@@ -6,6 +6,8 @@
 #include "Visualisation.h"
 #include "shader/lights/LightsBuffer.h"
 #include "multipass/CubeMapFrameBuffer.h"
+#include "shader/Bloom.h"
+
 /**
  * This class provides a baseclass for Scenes which only require single pass rendering
  * Natively includes a Skybox and Axis
@@ -84,7 +86,7 @@ private:
 	/**
 	 * Internal resize functionality, calls resize()
 	 */
-	inline virtual void _resize(int width, int height) override final { resize(width, height); };
+    void _resize(int width, int height) override final;
 	/**
 	 * Internal reload functionality, calls reload()
 	 */
@@ -108,6 +110,7 @@ private:
 	 * Color attach 1: Single component brightness
 	 */
 	std::unique_ptr<FrameBuffer> renderFB;
+    std::unique_ptr<Bloom> bloomTool;
 	/**
 	 * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	 */

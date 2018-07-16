@@ -1071,35 +1071,35 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 					printf("Bad material file...");
 				}
 			}
-			else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
-				if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					materials[materials.size() - 1].setAmbient(glm::vec3(r, g, b));
-				}
-				else {
-					printf("Bad material file...");
-				}
-			}
+			//else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0){
+			//	if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+			//		materials[materials.size() - 1].setAmbient(glm::vec3(r, g, b));
+			//	}
+			//	else {
+			//		printf("Bad material file...");
+			//	}
+			//}
 			else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0){
 				if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					materials[materials.size() - 1].setDiffuse(glm::vec3(r, g, b));
+					materials[materials.size() - 1].setColor(glm::vec4(r, g, b, 1.0f));
 
 				}
 				else {
 					printf("Bad material file...");
 				}
 			}
-			else if (materials.size() && strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
-				if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
-					materials[materials.size() - 1].setSpecular(glm::vec3(r, g, b));
+			//else if (materials.size() && strcmp(buffer, SPECULAR_IDENTIFIER) == 0){
+			//	if (fscanf(file, "%f %f %f", &r, &g, &b) == 3){
+			//		materials[materials.size() - 1].setSpecular(glm::vec3(r, g, b));
 
-				}
-				else {
-					printf("Bad material file...");
-				}
-			}
+			//	}
+			//	else {
+			//		printf("Bad material file...");
+			//	}
+			//}
 			else if (materials.size() && strcmp(buffer, SPECULAR_EXPONENT_IDENTIFIER) == 0){
 				if (fscanf(file, "%f", &r) == 1){
-					materials[materials.size() - 1].setShininess(r);
+					//materials[materials.size() - 1].setShininess(r);
 				}
 				else {
 					printf("Bad material file...");
@@ -1115,13 +1115,13 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (materials.size() && strcmp(buffer, TEX_AMBIENT_IDENTIFIER) == 0) {
 				if (fscanf(file, "%s", &temp) == 1){
-					auto tex = Texture2D::load(temp, modelFolder);
-					if (tex)
-					{
-						Material::TextureFrame frame = Material::TextureFrame();
-						frame.texture = tex;
-						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Ambient);
-					}
+					//auto tex = Texture2D::load(temp, modelFolder);
+					//if (tex)
+					//{
+					//	Material::TextureFrame frame = Material::TextureFrame();
+					//	frame.texture = tex;
+					//	materials[materials.size() - 1].addTexture(frame, Material::TextureType::Ambient);
+					//}
 				}
 				else {
 					printf("Bad material file...");
@@ -1134,7 +1134,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 					{
 						Material::TextureFrame frame = Material::TextureFrame();
 						frame.texture = tex;
-						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Diffuse);
+						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Albedo);
 					}
 				}
 				else {
@@ -1143,13 +1143,13 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 			}
 			else if (materials.size() && strcmp(buffer, TEX_SPECULAR_IDENTIFIER) == 0) {
 				if (fscanf(file, "%s", &temp) == 1){
-					auto tex = Texture2D::load(temp, modelFolder);
-					if (tex)
-					{
-						Material::TextureFrame frame = Material::TextureFrame();
-						frame.texture = tex;
-						materials[materials.size() - 1].addTexture(frame, Material::TextureType::Specular);
-					}
+					//auto tex = Texture2D::load(temp, modelFolder);
+					//if (tex)
+					//{
+					//	Material::TextureFrame frame = Material::TextureFrame();
+					//	frame.texture = tex;
+					//	materials[materials.size() - 1].addTexture(frame, Material::TextureType::Specular);
+					//}
 				}
 				else {
 					printf("Bad material file...");
@@ -1177,13 +1177,13 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 		m.bake();
 	printf("\rLoading Material: %s [Complete!]\n", su::getFilenameFromPath(materialPath).c_str());
 }
-void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular, const float &shininess, const float &opacity){
+void Entity::setMaterial(const glm::vec4 &color, const float &roughness, const float &metallic, const glm::vec4 &diffuse, const glm::vec3 &specular, const float &glossiness){
 	size_t matSize = materials.size() == 0 ? 1 : materials.size();
 	materials.clear();
 	//Override material
 	for (unsigned int i = 0; i < matSize; ++i)
 	{
-		this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), {"", ambient, diffuse, specular, shininess, opacity}));
+        this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), { "", color, roughness, metallic, diffuse, specular, glossiness }));
 		if (positions.data)
 		{
 			auto it = materials[i].getShaders();
@@ -1206,7 +1206,7 @@ void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, con
 }
 void Entity::setMaterial(const Stock::Materials::Material &mat)
 {
-	setMaterial(mat.ambient, mat.diffuse, mat.specular, mat.shininess, mat.opacity);
+	setMaterial(mat.color, mat.roughness, mat.metallic, mat.diffuse, mat.specular, mat.glossiness);
 }
 Material &Entity::getMaterial()
 {

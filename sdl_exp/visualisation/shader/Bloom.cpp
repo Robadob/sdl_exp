@@ -7,7 +7,7 @@
 Bloom::Bloom(std::shared_ptr<Texture2D> renderTex, std::shared_ptr<Texture2D> brightnessTex)
     : renderTex(renderTex)
     , brightInTex(brightnessTex)
-    , blurTool(std::make_unique<GaussianBlur>(5, 5))
+    , blurTool(std::make_unique<GaussianBlur>(5, 5.0f))
     , brightOutTex(Texture2D::make(brightnessTex->getDimensions(), Texture::Format(GL_RED, GL_R32F, sizeof(float), GL_UNSIGNED_BYTE)))
     , bloomViewMat()//Default
 {

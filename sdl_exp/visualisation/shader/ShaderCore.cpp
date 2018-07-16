@@ -43,11 +43,11 @@ ShaderCore::~ShaderCore()
 void ShaderCore::reload()
 {
 	GL_CHECK();
-	//Clear shadertag
-	if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
-	this->shaderTag = "";
 	while (true)
 	{//Iterate until shader compilation has been corrected
+	    //Clear shadertag
+        if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
+        this->shaderTag = "";
 		//Create temporary shader program
 		GLuint t_programId = GL_CALL(glCreateProgram());
 		//Pass it to subclass to compile shaders
@@ -68,7 +68,7 @@ void ShaderCore::reload()
 				//Compilation failed, cleanup temp program
 				GL_CALL(glDeleteProgram(t_programId));
 				deleteShaders();
-				fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+				fprintf(stderr, "Press any key to recompile.\n");
 				getchar();
 				continue;
 			}
@@ -78,7 +78,7 @@ void ShaderCore::reload()
 			//Compilation failed, cleanup temp program
 			GL_CALL(glDeleteProgram(t_programId));
 			deleteShaders();
-			fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+			fprintf(stderr, "Press any key to recompile.\n");
 			getchar();
 			continue;
 		}

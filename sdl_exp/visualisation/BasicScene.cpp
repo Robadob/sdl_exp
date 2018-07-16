@@ -9,8 +9,14 @@ BasicScene::BasicScene(Visualisation& vis)
 	, axis(std::make_shared<Axis>(25.0f))
 	, skybox(std::make_unique<Skybox>())
 	, lighting(std::make_shared<LightsBuffer>(vis.getCamera()->getViewMatPtr()))
-	, renderFB(new FrameBuffer({ FBAFactory::ManagedHDRColorTextureRGBA(), FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT) }, FBAFactory::ManagedDepthRenderBuffer()))//Not currently supporting MSAA
+    , renderFB(new FrameBuffer({ FBAFactory::ManagedHDRColorTextureRGBA(), FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT) }, FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled()))//Not currently supporting MSAA
 {
+    {//Init bloom tool
+        std::shared_ptr<Texture2D> r = std::dynamic_pointer_cast<Texture2D>(renderFB->getColorTexture(0));
+        std::shared_ptr<Texture2D> b = std::dynamic_pointer_cast<Texture2D>(renderFB->getColorTexture(1));
+        assert(r&&b);
+        bloomTool = std::make_unique<Bloom>(r,b);
+    }
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
 	this->skybox->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
@@ -115,9 +121,11 @@ void BasicScene::_render()
     render();
     //Bind back buffer
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CALL(glViewport(0, 0, visualisation.getWindowWidth(), visualisation.getWindowHeight()));
     GL_CALL(glClearColor(0, 0, 0, 1));
     GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     //Perform post processing step
+    bloomTool->doBloom();
 }
 bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y) 
 {
@@ -132,6 +140,11 @@ bool BasicScene::_keypress(SDL_Keycode keycode, int x, int y)
 		return true;
 	}
 	return false;
+}
+void BasicScene::_resize(int width, int height) {
+    renderFB->resize(width, height);
+    bloomTool->resize(width, height);
+    resize(width, height);
 }
 void BasicScene::_reload() 
 {

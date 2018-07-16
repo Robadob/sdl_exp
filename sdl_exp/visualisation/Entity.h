@@ -110,7 +110,7 @@ public:
 	/**
 	 * Overrides the material in use, this will lose any textures from the exiting material
 	 */
-	void setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular = glm::vec3(0.1f), const float &shininess = 10.0f, const float &opacity = 1.0f);
+    void setMaterial(const glm::vec4 &color, const float &roughness, const float &metallic, const glm::vec4 &diffuse = glm::vec4(0), const glm::vec3 &specular = glm::vec3(1.0f), const float &glossiness = 0.0f);
 	void setMaterial(const Stock::Materials::Material &mat);
 	Material &getMaterial();
 	

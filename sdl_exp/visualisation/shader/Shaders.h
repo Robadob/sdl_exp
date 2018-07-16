@@ -40,6 +40,7 @@ namespace Stock
 		const ShaderSet BONE{ "bone.vert", "material_phong.frag", nullptr };
 		const ShaderSet BONE_LINEAR_DEPTH{ "bone.vert", "linear_depth.frag", nullptr };
 		const ShaderSet BONE_SHADOW{ "bone_shadow.vert", "material_phong_shadow.frag", nullptr };
+        const ShaderSet PBR_TEST{ "default.vert", "PBR.frag", nullptr };
     }
 }
 /**

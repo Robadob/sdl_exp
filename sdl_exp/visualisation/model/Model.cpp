@@ -557,7 +557,8 @@ void Model::loadModel()
 	printf("\rLoading Model: %s [Performing First Animation]           ", su::getFilenameFromPath(modelPath).c_str());
 	//Fbx needs special handling...
 	//Handle missing inverseRootTransform
-	updateBoneTransforms(0);
+    if (data->animations.size())
+	    updateBoneTransforms(0);
 	if (su::endsWith(modelPath, ".fbx", false))
 		computeInverseRootTransform();
 

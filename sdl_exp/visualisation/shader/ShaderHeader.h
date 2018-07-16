@@ -21,7 +21,7 @@ struct MaterialProperties
           : color(1) //White
           , roughness(0)
           , metallic(0)
-          , refractionIndex(1.0f) //Air
+          , refractionIndex(0.04f) //Air=1.0f//Currently being used as F0
           , alphaCutOff(0)
           , emissive(0)
           , bitmask(0)

@@ -21,11 +21,13 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	, texBuf(TextureBuffer<float>::make(100, 3))
 #endif
 	, bob(std::make_shared<Model>("..\\models\\bob\\bob.md5mesh", 10.0f))
+    , pbrTest(std::make_shared<Model>("..\\models\\DamagedHelmet\\DamagedHelmet.gltf", 10.0f))
 {
 	registerEntity(deerModel);
 	registerEntity(colorModel);
 	registerEntity(instancedSphere);
-	registerEntity(bob);
+    registerEntity(bob);
+    registerEntity(pbrTest);
 	registerEntity(mirrorModel);
 	registerEntity(refractModel);
 	this->setSkybox(true);
@@ -50,40 +52,36 @@ EntityScene::EntityScene(Visualisation &visualisation)
 #endif
 	this->instancedSphere->getShaders()->addTexture("_texBuf", texBuf);
 	glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
-	this->instancedSphere->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
+	this->instancedSphere->setMaterial(glm::vec4(color, 1.0f), 0.0f, 1.0f);
 	//Approx sun point light 
 	//Really wants to be abitrary directional light, but putting it really far out with constant attenuation should also work
 	DirectionalLight p = Lights()->addDirectionalLight();
 	p.Direction(glm::normalize(glm::vec3(-1, 0, 1)));
-	p.Ambient(glm::vec3(0.89f, 0.64f, 0.36f));
-	p.Diffuse(glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
-	p.Specular(glm::vec3(1, 1, 1));
+	p.Color(glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
 	p.ConstantAttenuation(1.0f);
 	PointLight _p = Lights()->addPointLight();
-	_p.Ambient(glm::vec3(0.0f));
-	_p.Diffuse(glm::vec3(0.5f));
-	_p.Specular(glm::vec3(0.02f));
+	_p.Color(glm::vec3(0.5f));
 	_p.ConstantAttenuation(0.5f);
 
 	
-	{//Configure reflection test
-		color = glm::vec3(1);
-		this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
-		Material &m = this->mirrorModel->getMaterial();
-		m.setReflectivity(1.0f);
-		enableEnvironmentMap(this->mirrorModel, 2048);
-		this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
-	}
-	{//Configure refraction test.
-		color = glm::vec3(1);
-		this->refractModel->setMaterial(color / 4.0f, color/1.5f, glm::vec3(1.0f));
-		Material &m = this->refractModel->getMaterial();
-		m.setRefractionIndex(Stock::RefractionIndex::GLASS);
-		m.setOpacity(0.0f);
-		//m.setTransparent(glm::vec3(1, 0, 0));//Turns it into a red filter
-		enableEnvironmentMap(this->refractModel, 2048);
-		this->refractModel->setLocation(glm::vec3(0, 0, 25));
-	}
+	//{//Configure reflection test
+	//	color = glm::vec3(1);
+	//	this->mirrorModel->setMaterial(color / 5.0f, color, glm::vec3(1.0f));
+	//	Material &m = this->mirrorModel->getMaterial();
+	//	m.setReflectivity(1.0f);
+	//	enableEnvironmentMap(this->mirrorModel, 2048);
+	//	this->mirrorModel->setLocation(glm::vec3(0, 25, 0));
+	//}
+	//{//Configure refraction test.
+	//	color = glm::vec3(1);
+	//	this->refractModel->setMaterial(color / 4.0f, color/1.5f, glm::vec3(1.0f));
+	//	Material &m = this->refractModel->getMaterial();
+	//	m.setRefractionIndex(Stock::RefractionIndex::GLASS);
+	//	m.setOpacity(0.0f);
+	//	//m.setTransparent(glm::vec3(1, 0, 0));//Turns it into a red filter
+	//	enableEnvironmentMap(this->refractModel, 2048);
+	//	this->refractModel->setLocation(glm::vec3(0, 0, 25));
+	//}
 }
 /*
 Called once per frame when Scene animation calls should be 
@@ -110,15 +108,17 @@ Called once per frame when Scene render calls should be executed
 */
 void EntityScene::render()
 {
-    colorModel->render();
-    deerModel->render();
-	this->instancedSphere->renderInstances(INSTANCE_COUNT);
+ //   colorModel->render();
+ //   deerModel->render();
+	//this->instancedSphere->renderInstances(INSTANCE_COUNT);
 
-	bob->render();
-	bob->renderSkeleton();
+	//bob->render();
+	//bob->renderSkeleton();
 
-	mirrorModel->render();
-	refractModel->render();
+	//mirrorModel->render();
+	//refractModel->render();
+
+    pbrTest->render();
 }
 /*
 Called when the user requests a reload
@@ -126,7 +126,7 @@ Called when the user requests a reload
 void EntityScene::reload()
 {
 	glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
-	this->instancedSphere->setMaterial(color / 5.0f, color, glm::vec3(0), 0.0f);
+    this->instancedSphere->setMaterial(glm::vec4(color, 1.0f), 0.0f, 1.0f);
 }
 
 bool EntityScene::keypress(SDL_Keycode keycode, int x, int y)

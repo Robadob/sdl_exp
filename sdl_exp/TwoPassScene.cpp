@@ -17,8 +17,8 @@ TwoPassScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights)
 	, shadowIn()
     , shadowOut(Texture2D::make(shadowDims, { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
-	planeModel->setMaterial(Stock::Materials::RED_PLASTIC);
-	sphereModel->setMaterial(Stock::Materials::COPPER);
+	//planeModel->setMaterial(Stock::Materials::RED_PLASTIC);
+	//sphereModel->setMaterial(Stock::Materials::COPPER);
     deerModel->exportModel();
     sphereModel->exportModel();
     sphereModel->setLocation(glm::vec3(10, 5, 10));
@@ -49,9 +49,6 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 
 	SpotLight p = Lights()->addSpotLight();
 	p.Position(this->content->pointlightPos);
-	p.Ambient(glm::vec3(0.1f));
-	p.Diffuse(glm::vec3(0.9f));
-	p.Specular(glm::vec3(1, 1, 1));
 	p.ConstantAttenuation(1.0f);
 	p.Direction(this->content->pointlightTarget - this->content->pointlightPos);
 	p.CutOff(15.0f);

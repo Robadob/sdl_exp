@@ -49,6 +49,13 @@ enum class SamplerMinFilter : unsigned int
     SamplerMinFilter_Nearest_Mipmap_Linear = 9986,
     SamplerMinFilter_Linear_Mipmap_Linear = 9987
 };
+enum class SamplerWrap : unsigned int
+{
+    UNSET = 0,
+    Clamp_To_Edge = 33071,
+    Mirrored_Repeat = 33648,
+    Repeat = 10497
+};
 /**
  * Methods are stored here to hide assimp from header files
  * and to provide utilities for converting assimp objects to our local formats
@@ -61,9 +68,9 @@ namespace au
 {
 	inline Material::TextureType toTexType_internal(const aiTextureType &t)
     {
-        if (t == AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE)
+        if (t == aiTextureType_UNKNOWN) //AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE
             return Material::TextureType::MetallicRoughness;
-        if (t == AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE)
+        if (t == aiTextureType_DIFFUSE) //AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE
             return Material::TextureType::Albedo;
         if (t == aiTextureType_NORMALS)
             return Material::TextureType::Normal;
@@ -109,13 +116,13 @@ namespace au
 	}
 	inline GLuint toMapMode(aiTextureMapMode &mapMode)
 	{
-		if (mapMode == aiTextureMapMode_Wrap)
+        if (mapMode == aiTextureMapMode_Wrap || (int)mapMode == (int)SamplerWrap::Repeat)
 			return GL_REPEAT;
-		if (mapMode == aiTextureMapMode_Clamp)
+        if (mapMode == aiTextureMapMode_Clamp || (int)mapMode == (int)SamplerWrap::Clamp_To_Edge || (int)mapMode == (int)SamplerWrap::UNSET)
 			return GL_CLAMP_TO_EDGE;
 		if (mapMode == aiTextureMapMode_Decal)
 			return GL_CLAMP_TO_EDGE;//Want border to be transparent here!
-		if (mapMode == aiTextureMapMode_Mirror)
+        if (mapMode == aiTextureMapMode_Mirror || (int)mapMode == (int)SamplerWrap::Mirrored_Repeat )
 			return GL_MIRRORED_REPEAT;
 		throw std::runtime_error("Unexpected aiTextureMapMode value when parsing aiMaterial.");
 	}

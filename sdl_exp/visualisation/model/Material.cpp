@@ -1,7 +1,7 @@
 #include "Material.h"
 #include "../Texture/Texture2D.h"
 Material *Material::active = nullptr;
-const char * Material::TEX_NAME[14] = { "t_none", "t_ambient", "t_diffuse", "t_specular", "t_emissive", "t_height", "t_normal", "t_shininess", "t_opacity", "t_displacement", "t_light", "t_reflection", "t_environment", "t_unknown" };
+const char * Material::TEX_NAME[12] = { "t_albedo", "t_roughness", "t_metallic", "t_metallic", "t_normal", "t_lightmap", "t_emissive", "t_diffuse", "t_specular", "t_glossiness", "t_specular", "t_glossiness" };
 Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const char* name, const bool &shaderRequiresBones)
     : name(name==nullptr?"":name)
     , properties()

@@ -90,7 +90,7 @@ class Material : protected Renderable
      */
     static Material *active;
 public:
-	static const char *TEX_NAME[14];
+	static const char *TEX_NAME[12];
     enum TextureType
     {
         Albedo = 0,

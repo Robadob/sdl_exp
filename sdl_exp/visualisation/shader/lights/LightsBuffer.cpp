@@ -116,11 +116,11 @@ void LightsBuffer::render()
 	{
 		if (uniformBlock.lights[i].spotCosCutoff<0)
 		{//Pointlight
-			modelPointLight->render(tProperties[i].position, uniformBlock.lights[i].diffuse);
+			modelPointLight->render(tProperties[i].position, uniformBlock.lights[i].color);
 		}
 		else if (uniformBlock.lights[i].spotCosCutoff<=1)
 		{//Spotlight
-			modelSpotLight->render(tProperties[i].position, tProperties[i].spotDirection, tProperties[i].spotCutoff, uniformBlock.lights[i].diffuse);
+            modelSpotLight->render(tProperties[i].position, tProperties[i].spotDirection, tProperties[i].spotCutoff, uniformBlock.lights[i].color);
 		}
 		else
 		{//Directional light

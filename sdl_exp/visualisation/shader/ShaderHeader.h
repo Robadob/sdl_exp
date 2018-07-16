@@ -36,7 +36,7 @@ struct MaterialProperties
         float metallic;
         float refractionIndex;	//Unused (padding)
         float alphaCutOff;
-        vec3 emissive;          //Unused, Emissive color (light emitted) (disabled to keep struct size down temporary
+        vec3 emissive;          //Unused, Emissive color (light emitted)
         uint bitmask;           //bitmask to calculate which textures are available
         //Extension: KHR_materials_pbrSpecularGlossiness
 		vec4 diffuse;           //Diffuse reflection color
@@ -52,32 +52,31 @@ struct MaterialProperties
 		 * White light (with no ambient component)
 		 */
 		LightProperties()
-			: ambient(0)
-			, spotExponent(0)
-			, diffuse(1)
-			, PADDING1(0)
-			, specular(1)
-			, spotCosCutoff(cos(180.0f))
-			, position(0,0,1)
+            : color(1)
+            , PADDING1(0)
+            , position(0)
+            , PADDING2(0)
+            , halfVector(0)
+            , spotCosCutoff(cos(180.0f))
+            , spotDirection(0, 0, -1)
+            , spotExponent(0)
 			, constantAttenuation(1)
-			, halfVector(0)
 			, linearAttenuation(0)
-			, spotDirection(0,0,-1)
 			, quadraticAttenuation(0)
 		{ }
 #endif //#ifdef __cplusplus
-		vec3 ambient;              // Aclarri   
-		float spotExponent;        // Srli   
-		vec3 diffuse;              // Dcli   
-		float PADDING1;            // Crli   (ex spot cutoff, this value is nolonger set internally)
-		vec3 specular;             // Scli   
-		float spotCosCutoff;       // Derived: cos(Crli) // (Valid spotlight range: [1.0,0.0]), negative == pointlight, greater than 1.0 == directional light
-		vec3 position;             // Ppli   
-		float constantAttenuation; // K0   
-		vec3 halfVector;           // Derived: Hi  (This is calculated as the vector half way between vector-light and vector-viewer) 
-		float linearAttenuation;   // K1   
-		vec3 spotDirection;        // Sdli   
-		float quadraticAttenuation;// K2  
+        vec3 color;                //The radiant colour of the light prior to attenuation
+        float PADDING1;
+        vec3 position;             //Position of light, precomputed into eye space 
+        float PADDING2;
+        vec3 halfVector;           // Derived: (This is calculated as the vector half way between vector-light and vector-viewer) 
+        float spotCosCutoff;       // Derived: cos(Crli) (Valid spotlight range: [1.0,0.0]), negative == pointlight, greater than 1.0 == directional light
+        vec3 spotDirection;        // Sdli 
+        float spotExponent;        // Srli   
+        float constantAttenuation; // K0     
+        float linearAttenuation;   // K1   
+        float quadraticAttenuation;// K2
+        //4 bytes padding
 	};
 	
 

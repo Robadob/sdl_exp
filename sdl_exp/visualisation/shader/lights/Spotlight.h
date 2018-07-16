@@ -44,9 +44,6 @@ public:
 	using PointLight::Index;
 	using PointLight::Position;
 	using PointLight::Color;
-	using PointLight::Ambient;
-	using PointLight::Diffuse;
-	using PointLight::Specular;
 	using PointLight::ConstantAttenuation;
 	using PointLight::LinearAttenuation;
 	using PointLight::QuadraticAttenuation;

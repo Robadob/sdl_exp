@@ -10,25 +10,34 @@
 
 namespace Stock
 {
-	//namespace Materials
-	//{
-	//	struct Material
-	//	{
-	//		Material(const char *name, const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular, const float &shininess, const float &opacity = 1.0f)
-	//			: name(name)
-	//			, ambient(ambient)
-	//			, diffuse(diffuse)
-	//			, specular(specular)
-	//			, shininess(shininess)
-	//			, opacity(opacity)
-	//		{}
-	//		const char *name;
-	//		const glm::vec3 ambient;
-	//		const glm::vec3 diffuse;
-	//		const glm::vec3 specular;
-	//		const float shininess;
-	//		const float opacity;
-	//	};
+	namespace Materials
+	{
+		struct Material
+		{
+            Material(const char *name, const glm::vec4 &color, const float &roughness, const float &metallic, const glm::vec4 &diffuse = glm::vec4(0), const glm::vec3 &specular = glm::vec3(1.0f), const float &glossiness = 0.0f)
+				: name(name)
+                , color(color)
+                , roughness(roughness)
+                , metallic(metallic)
+                , refractionIndex(1.05f)//Air
+                , alphaCutOff(0)
+                , emissive(0)
+                , diffuse(diffuse)
+                , specular(specular)
+                , glossiness(glossiness)
+			{}
+			const char *name;
+            const glm::vec4 color;          //Base color (aka diffuse, albedo)
+            const float roughness;
+            const float metallic;
+            const float refractionIndex;	//Unused (padding)
+            const float alphaCutOff;
+            const glm::vec3 emissive;       //Unused, Emissive color (light emitted)
+            //Extension: KHR_materials_pbrSpecularGlossiness
+            const glm::vec4 diffuse;        //Diffuse reflection color
+            const glm::vec3 specular;       //Specular reflection color
+            const float glossiness;         //Glossiness factor
+		};
 	//	const Material WHITE{ "white", glm::vec3(0.1f), glm::vec3(1), glm::vec3(1), 76.8f, 1.0f };
 	//	const Material VANTABLACK{ "null", glm::vec3(0), glm::vec3(0), glm::vec3(0), 0.0f, 1.0f };
 	//	const Material EMERALD{ "emerald", glm::vec3(0.0215f, 0.1745f, 0.0215f), glm::vec3(0.07568f, 0.61424f, 0.07568f), glm::vec3(0.633f, 0.727811f, 0.633f), 76.8f, 1.0f };
@@ -55,7 +64,7 @@ namespace Stock
 	//	const Material RED_RUBBER{ "red rubber", glm::vec3(0.05f, 0.0f, 0.0f), glm::vec3(0.5f, 0.4f, 0.4f), glm::vec3(0.7f, 0.04f, 0.04f), 10.0f, 1.0f };
 	//	const Material WHITE_RUBBER{ "white rubber", glm::vec3(0.05f), glm::vec3(0.5f), glm::vec3(0.7f), 10.0f, 1.0f };
 	//	const Material YELLOW_RUBBER{ "yellow rubber", glm::vec3(0.05f, 0.05f, 0.0f), glm::vec3(0.5f, 0.5f, 0.4f), glm::vec3(0.7f, 0.7f, 0.04f), 10.0f, 1.0f };
-	//}
+	}
 	namespace RefractionIndex
 	{//https://en.wikipedia.org/wiki/List_of_refractive_indices
 		const float AIR		= 1.0f;
@@ -88,7 +97,7 @@ public:
 		Roughness = 1,
         Metallic = 2,
         MetallicRoughness = 3,
-        Normals = 4,
+        Normal = 4,
         LightMap = 5, //Ambient Occlusion
         Emissive = 6,
         //Extension: KHR_materials_pbrSpecularGlossiness
@@ -114,7 +123,7 @@ public:
 	/**
 	* Creates a named material with the default configuration
 	*/
-	//Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones = false);
+	Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones = false);
 	Material(const Material&other);
     /**
      *

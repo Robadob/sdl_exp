@@ -14,16 +14,20 @@ Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &b
 {
 }
 
-//Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones)
-//	: Material(buffer, bufferIndex, set.name, shaderRequiresBones)
-//{
-//	properties.ambient = set.ambient;
-//	properties.diffuse = set.diffuse;
-//	properties.specular = set.specular;
-//	properties.shininess = set.shininess;
-//	properties.opacity = set.opacity;
-//	bake();
-//}
+Material::Material(std::shared_ptr<UniformBuffer> &buffer, const unsigned int &bufferIndex, const Stock::Materials::Material &set, const bool &shaderRequiresBones)
+	: Material(buffer, bufferIndex, set.name, shaderRequiresBones)
+{
+    properties.color = set.color;
+    properties.roughness = set.roughness;
+    properties.metallic = set.metallic;
+    properties.refractionIndex = set.refractionIndex;
+    properties.alphaCutOff = set.alphaCutOff;
+    properties.emissive = set.emissive;
+    properties.diffuse = set.diffuse;
+	properties.specular = set.specular;
+    properties.glossiness = set.glossiness;
+	bake();
+}
 Material::Material(const Material&other)
 	: name(other.name)
 	, properties(other.properties)

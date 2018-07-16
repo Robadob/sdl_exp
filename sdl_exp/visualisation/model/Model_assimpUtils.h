@@ -66,7 +66,7 @@ namespace au
         if (t == AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_BASE_COLOR_TEXTURE)
             return Material::TextureType::Albedo;
         if (t == aiTextureType_NORMALS)
-            return Material::TextureType::Normals;
+            return Material::TextureType::Normal;
         if (t == aiTextureType_LIGHTMAP)
             return Material::TextureType::LightMap;
         if (t == aiTextureType_EMISSIVE)
@@ -245,7 +245,7 @@ namespace au
                         glossinessFactor = 0.0f;
                     }
                     else
-                        glossinessFactor = 1.0 - (glossinessFactor / 1000.0f);//Convert shiny to glossy
+                        glossinessFactor = 1.0f - (glossinessFactor / 1000.0f);//Convert shiny to glossy
                 }
                 mat->setGlossiness(glossinessFactor);
             }

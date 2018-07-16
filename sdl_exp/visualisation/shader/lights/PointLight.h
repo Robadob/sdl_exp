@@ -31,31 +31,11 @@ public:
 	inline void Position(const glm::vec3 &xyz);
 	glm::vec3 Position() const { return tProperties->position; }
 	/**
-	 * Convenience method for setting a single colour light
-	 * @param rgb Full colour of light
-	 * @param ambiFactor Multiplied by rgb prior to setting Ambient colour
-	 * @param diffFactor Multiplied by rgb prior to setting Diffuse colour
-	 * @param specFactor Multiplied by rgb prior to setting Specular colour
-	 */
-	inline void Color(const glm::vec3 &rgb, const float &ambiFactor, const float &diffFactor, const float &specFactor);
-	/**
-	 * The ambient component of the light's colour
-	 * @note Default value (0,0,0) [Black]
-	 */
-	inline void Ambient(const glm::vec3 &rgb);
-	glm::vec3 Ambient() const { return properties->ambient; }
-	/**
-	 * The diffuse component of the light's colour
+	 * The light's colour
 	 * @note Default value (1,1,1) [White]
 	 */
-	inline void Diffuse(const glm::vec3 &rgb);
-	glm::vec3 Diffuse() const { return properties->diffuse; }
-	/**
-	 * The specular component of the light's colour
-	 * @note Default value (1,1,1) [White]
-	 */
-	inline void Specular(const glm::vec3 &rgb);
-	glm::vec3 Specular() const { return properties->specular; }
+    inline void Color(const glm::vec3 &rgb);
+    glm::vec3 Color() const { return properties->color; }
 	/**
 	 * Attenuation is calculated as 1/(k_{c} + k_{l}d + k_{q}d^{2})
 	 */

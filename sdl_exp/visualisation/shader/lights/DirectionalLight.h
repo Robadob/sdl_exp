@@ -25,9 +25,6 @@ public:
 	//Shared properties
 	using PointLight::Index;
 	using PointLight::Color;
-	using PointLight::Ambient;
-	using PointLight::Diffuse;
-	using PointLight::Specular;
 	using PointLight::ConstantAttenuation;
 private:
 	//Directional light needs no position, or fancy attenuation (as it has no position)

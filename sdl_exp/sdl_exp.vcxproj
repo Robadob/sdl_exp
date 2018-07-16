@@ -107,6 +107,7 @@
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp" />
     <ClCompile Include="visualisation\multipass\RenderPass.cpp" />
     <ClCompile Include="visualisation\Overlay.cpp" />
+    <ClCompile Include="visualisation\shader\Bloom.cpp" />
     <ClCompile Include="visualisation\shader\buffer\BufferCore.cpp" />
     <ClCompile Include="visualisation\shader\buffer\ShaderStorageBuffer.cpp" />
     <ClCompile Include="visualisation\shader\buffer\UniformBuffer.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="visualisation\multipass\RenderBuffer.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
+    <ClInclude Include="visualisation\shader\Bloom.h" />
     <ClInclude Include="visualisation\shader\buffer\BufferCore.h" />
     <ClInclude Include="visualisation\shader\buffer\ShaderStorageBuffer.h" />
     <ClInclude Include="visualisation\shader\buffer\UniformBuffer.h" />

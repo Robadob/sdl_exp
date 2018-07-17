@@ -51,71 +51,6 @@ struct PBRmaterial
     vec3 specular;          //Specular reflection color
     float glossiness;       //Glossiness factor
     bool has(uint check) { return (bitmask&check)!=0;}
-    //Utility functions for deciding whether to pull property from texture or material const
-    vec4 Albedo()
-    {
-        return (bitmask&B_ALBEDO)!=0 ? texture(t_albedo, texCoords) : albedo;
-        //return has(B_ALBEDO) ? texture(t_albedo, texCoords) : albedo;
-    }
-    vec4 AlbedoSRGB()
-    {//Gamma corrected from SRGB space (optional)
-        vec4 a = Albedo();
-        return vec4(pow(a.rgb, vec3(2.2f)), a.a);
-    }
-    vec3 Normal()
-    {//Additionally convert normal to eye space if from texture
-        return (bitmask&B_NORMAL)!=0 ? (vec4(texture(t_normal, texCoords).xyz, 0.0f) * _viewMat).xyz : eyeNormal;
-        return has(B_NORMAL) ? (vec4(texture(t_normal, texCoords).xyz, 0.0f) * _viewMat).xyz : eyeNormal;
-    }
-    float Metallic()
-    {
-        //if(has(B_METALLIC)||has(B_METALLICROUGHNESS))
-        if((bitmask&B_METALLIC)!=0||(bitmask&B_METALLICROUGHNESS)!=0)
-          return texture(t_metallic, texCoords).r;
-        return metallic;
-    }
-    float Roughness()
-    {
-        //if(has(B_ROUGHNESS))
-        if((bitmask&B_ROUGHNESS)!=0)
-            return texture(t_roughness, texCoords).r;
-        //if(has(B_METALLICROUGHNESS))
-        if((bitmask&B_METALLICROUGHNESS)!=0)
-            return texture(t_metallic, texCoords).g;
-        return roughness;
-    }
-    float AmbientOcclusion()
-    {
-        return (bitmask&B_LIGHTMAP)!=0 ? texture(t_lightmap, texCoords).r : 0;//AMBIENT OCCLUSION IS MISSING FROM MATERIAL PROPS
-        //return has(B_LIGHTMAP) ? texture(t_lightmap, texCoords).r : 0;//AMBIENT OCCLUSION IS MISSING FROM MATERIAL PROPS
-    }
-    vec4 Diffuse()
-    {
-        //if(has(B_DIFFUSE))
-        if((bitmask&B_DIFFUSE)!=0)
-            return texture(t_diffuse, eyeNormal);
-        return diffuse;
-    }
-    vec3 Specular()
-    {
-        if(has(B_SPECULAR)||has(B_SPECULARGLOSSINESS))
-        if((bitmask&B_SPECULAR)!=0||(bitmask&B_SPECULARGLOSSINESS)!=0)
-            return texture(t_specular, eyeNormal).rgb;
-        return specular;
-    }
-    float Glossiness()
-    {
-        //if(has(B_GLOSSINESS))
-        if((bitmask&B_GLOSSINESS)!=0)
-            return texture(t_glossiness, eyeNormal).r;
-        //if(has(B_SPECULARGLOSSINESS))
-        if((bitmask&B_SPECULARGLOSSINESS)!=0)
-            return texture(t_specular, eyeNormal).a;
-        //if(has(B_SHININESS))
-        if((bitmask&B_SHININESS)!=0)
-            return 1.0f - (texture(t_glossiness, eyeNormal).r/1000.0f);
-        return glossiness;
-    }
 };
 struct LightProperties
 {
@@ -156,6 +91,71 @@ uniform _lights
   //<12 bytes of padding>
   LightProperties light[MAX_LIGHTS];
 };
+//Utility functions for deciding whether to pull property from texture or material const
+vec4 Albedo()
+{
+    //return (bitmask&B_ALBEDO)!=0 ? texture(t_albedo, texCoords) : albedo;
+    return material[_materialID].has(B_ALBEDO) ? texture(t_albedo, texCoords) : material[_materialID].albedo;
+}
+vec4 AlbedoSRGB()
+{//Gamma corrected from SRGB space (optional)
+    vec4 a = Albedo();
+    return vec4(pow(a.rgb, vec3(2.2f)), a.a);
+}
+vec3 Normal()
+{//Additionally convert normal to eye space if from texture
+    //return (bitmask&B_NORMAL)!=0 ? (vec4(texture(t_normal, texCoords).xyz, 0.0f) * _viewMat).xyz : eyeNormal;
+    return material[_materialID].has(B_NORMAL) ? (vec4(texture(t_normal, texCoords).xyz, 0.0f) * _viewMat).xyz : eyeNormal;
+}
+float Metallic()
+{
+    //if((bitmask&B_METALLIC)!=0||(bitmask&B_METALLICROUGHNESS)!=0)
+    if(material[_materialID].has(B_METALLIC)||material[_materialID].has(B_METALLICROUGHNESS))
+      return texture(t_metallic, texCoords).r;
+    return material[_materialID].metallic;
+}
+float Roughness()
+{
+    //if((bitmask&B_ROUGHNESS)!=0)
+    if(material[_materialID].has(B_ROUGHNESS))
+        return texture(t_roughness, texCoords).r;
+    //if((bitmask&B_METALLICROUGHNESS)!=0)
+    if(material[_materialID].has(B_METALLICROUGHNESS))
+        return texture(t_metallic, texCoords).g;
+    return material[_materialID].roughness;
+}
+float AmbientOcclusion()
+{
+    //return (bitmask&B_LIGHTMAP)!=0 ? texture(t_lightmap, texCoords).r : 0;//AMBIENT OCCLUSION IS MISSING FROM MATERIAL PROPS
+    return material[_materialID].has(B_LIGHTMAP) ? texture(t_lightmap, texCoords).r : 0;//AMBIENT OCCLUSION IS MISSING FROM MATERIAL PROPS
+}
+vec4 Diffuse()
+{
+    //if((bitmask&B_DIFFUSE)!=0)
+    if(material[_materialID].has(B_DIFFUSE))
+        return texture(t_diffuse, eyeNormal);
+    return material[_materialID].diffuse;
+}
+vec3 Specular()
+{
+    //if((bitmask&B_SPECULAR)!=0||(bitmask&B_SPECULARGLOSSINESS)!=0)
+    if(material[_materialID].has(B_SPECULAR)||material[_materialID].has(B_SPECULARGLOSSINESS))
+        return texture(t_specular, eyeNormal).rgb;
+    return material[_materialID].specular;
+}
+float Glossiness()
+{
+    //if((bitmask&B_GLOSSINESS)!=0)
+    if(material[_materialID].has(B_GLOSSINESS))
+        return texture(t_glossiness, eyeNormal).r;
+    //if((bitmask&B_SPECULARGLOSSINESS)!=0)
+    if(material[_materialID].has(B_SPECULARGLOSSINESS))
+        return texture(t_specular, eyeNormal).a;
+    //if((bitmask&B_SHININESS)!=0)
+    if(material[_materialID].has(B_SHININESS))
+        return 1.0f - (texture(t_glossiness, eyeNormal).r/1000.0f);
+    return material[_materialID].glossiness;
+}
 //Fragment outputs
 out vec4 fragColor;
 out vec3 fragBright; //Used for Bloom post process
@@ -164,12 +164,12 @@ const float PI = 3.14159;
 void main()
 {
     //Material properties
-    const vec4 albedo = vec4(1);//material[_materialID].Albedo();
-    const float metallic = 0.0f;//material[_materialID].Metallic();
-    const float roughness = 0.0f;//material[_materialID].Roughness();
-    const float ambientOcclusion = 1.0f;//material[_materialID].AmbientOcclusion();
+    const vec4 albedo = Albedo();
+    const float metallic = Metallic();
+    const float roughness = Roughness();
+    const float ambientOcclusion = AmbientOcclusion();
     //Surface normal
-    const vec3 N = normalize(material[_materialID].Normal()); 
+    const vec3 N = normalize(Normal()); 
     //Vector from camera to fragment
     const vec3 V = normalize(eyeVertex);
     //Store of the Riemann sum of lighting outgoing radiances

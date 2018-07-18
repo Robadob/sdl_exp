@@ -20,7 +20,8 @@ BasicScene::BasicScene(Visualisation& vis)
 	registerEntity(axis);
 	this->skybox->setViewMatPtr(this->visualisation.getCamera());
 	this->skybox->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
-	this->skybox->setYOffset(-1.0f);
+    this->skybox->setYOffset(-1.0f);
+    lighting->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
 }
 void BasicScene::registerEntity(std::shared_ptr<Renderable> ent)
 {

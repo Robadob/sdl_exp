@@ -111,7 +111,7 @@ float Metallic()
 {
     //if((bitmask&B_METALLIC)!=0||(bitmask&B_METALLICROUGHNESS)!=0)
     if(material[_materialID].has(B_METALLIC)||material[_materialID].has(B_METALLICROUGHNESS))
-      return texture(t_metallic, texCoords).r;
+      return texture(t_metallic, texCoords).b;
     return material[_materialID].metallic;
 }
 float Roughness()

@@ -4,7 +4,7 @@
 #include "DirectionalLight.h"
 
 LightsBuffer::LightsBuffer(const glm::mat4 *viewMatPtr)
-	: UniformBuffer(MAX_LIGHTS*sizeof(LightProperties))
+	: UniformBuffer((MAX_LIGHTS*sizeof(LightProperties))+sizeof(glm::vec4))
 	, tProperties()
 	, viewMatPtr(viewMatPtr)
 	, projMatPtr(nullptr)

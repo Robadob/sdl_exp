@@ -76,7 +76,7 @@ struct MaterialProperties
         float constantAttenuation; // K0     
         float linearAttenuation;   // K1   
         float quadraticAttenuation;// K2
-        //4 bytes padding
+        float PADDING3;
 	};
 	
 

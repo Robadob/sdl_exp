@@ -34,8 +34,7 @@ uniform samplerCube t_glossiness;//Also handles shininess
 in vec3 eyeVertex;
 in vec3 eyeNormal;
 in vec2 texCoords;
-//Camera matricies
-uniform mat4 _viewMat;
+in mat3 tbnMat;
 //Material and Lighting structures
 struct PBRmaterial
 {
@@ -104,8 +103,8 @@ vec4 AlbedoSRGB()
 }
 vec3 Normal()
 {//Additionally convert normal to eye space if from texture
-    //return (bitmask&B_NORMAL)!=0 ? (vec4(texture(t_normal, texCoords).xyz, 0.0f) * _viewMat).xyz : eyeNormal;
-    return material[_materialID].has(B_NORMAL) ? (vec4(texture(t_normal, texCoords).xyz, 0.0f) * _viewMat).xyz : eyeNormal;
+    //GLtf2.0 spec says normal material should have scale property
+    return normalize(material[_materialID].has(B_NORMAL) ? tbnMat*normalize((2*texture(t_normal, texCoords).xyz)-1) : eyeNormal);
 }
 float Metallic()
 {
@@ -133,7 +132,7 @@ vec4 Diffuse()
 {
     //if((bitmask&B_DIFFUSE)!=0)
     if(material[_materialID].has(B_DIFFUSE))
-        return texture(t_diffuse, eyeNormal);
+        return texture(t_diffuse, eyeNormal);//Alpha *may* be present, if so it should be processed according to alphaMode
     return material[_materialID].diffuse;
 }
 vec3 Specular()
@@ -187,7 +186,7 @@ void main()
       //Attenuation coefficient
       const float attenuation = light[i].attenuation(L);
       //Linear space radiance (gamma correct later)
-      const vec3 radiance = light[i].color * attenuation;
+      const vec3 radiance = vec3(1);//light[i].color;// * attenuation;
       
       /**
        * BRDF (via Cook-Torrance)
@@ -203,7 +202,7 @@ void main()
       //Specular radiance
       const vec3 kS = F;
       //Diffuse radiance (energy conserving, account for metals)
-      const vec3 kD = (vec3(1.0f) - kS) * (1.0f - metallic);
+      const vec3 kD = vec3(0.5f);//(vec3(1.0f) - kS) * (1.0f - metallic);
       
       const vec3 numerator    = NDF * G * F;
       const float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);

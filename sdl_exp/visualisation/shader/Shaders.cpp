@@ -19,6 +19,8 @@ const char *Shaders::VERTEX_ATTRIBUTE_NAME = "_vertex";
 const char *Shaders::NORMAL_ATTRIBUTE_NAME = "_normal";
 const char *Shaders::COLOR_ATTRIBUTE_NAME = "_color";
 const char *Shaders::TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
+const char *Shaders::TANGENT_ATTRIBUTE_NAME = "_tangent";
+const char *Shaders::BITANGENT_ATTRIBUTE_NAME = "_bitangent";
 //const char *Shaders::PREV_MODELVIEW_MATRIX_UNIFORM_NAME = "_prevModelViewMat";
 
 Shaders::Shaders(Stock::Shaders::ShaderSet set)
@@ -47,7 +49,9 @@ Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::ini
     , positions(GL_FLOAT, 3, sizeof(float))
 	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))//Red
 	, colors(GL_FLOAT, 3, sizeof(float))
-	, texcoords(GL_FLOAT, 2, sizeof(float))
+    , texcoords(GL_FLOAT, 2, sizeof(float))
+    , tangents(GL_FLOAT, 3, sizeof(float))
+    , bitangents(GL_FLOAT, 3, sizeof(float))
 	, colorUniformLocation(-1)
     , colorUniformValue(1, 0, 0, 1)
     , vertexShaderFiles(buildFileVector(vertexShaderPath))
@@ -77,7 +81,9 @@ Shaders::Shaders(const Shaders &other)
 	, positions(other.positions)
 	, normals(other.normals)
 	, colors(other.colors)
-	, texcoords(other.texcoords)
+    , texcoords(other.texcoords)
+    , tangents(other.tangents)
+    , bitangents(other.bitangents)
 	, colorUniformLocation(-1)
 	, colorUniformSize(other.colorUniformSize)
 	, colorUniformValue(other.colorUniformValue)
@@ -230,6 +236,8 @@ void Shaders::_setupBindings(){
     bindAttribute(&this->normals.location, NORMAL_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
     bindAttribute(&this->colors.location, COLOR_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
     bindAttribute(&this->texcoords.location, TEXCOORD_ATTRIBUTE_NAME, GL_FLOAT_VEC2, GL_FLOAT_VEC3);
+    bindAttribute(&this->tangents.location, TANGENT_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
+    bindAttribute(&this->bitangents.location, BITANGENT_ATTRIBUTE_NAME, GL_FLOAT_VEC3, GL_FLOAT_VEC4);
 	//Material ID uniform
 	bindUniform(&this->materialIDLocation, MATERIAL_ID_UNIFORM_NAME, GL_UNSIGNED_INT);
 	if (this->materialIDLocation != -1) overrideMaterialID(this->materialIDVal);
@@ -465,6 +473,50 @@ void Shaders::buildVAO()
 		}
     }
 
+    //Set the vertex tangent and bitangent attributes
+    if (this->tangents.location >= 0 && this->tangents.vbo > 0)
+    {//If texture attribute location and vbo are known
+        GL_CALL(glEnableVertexAttribArray(this->tangents.location));
+        if (activeVBO != this->tangents.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->tangents.vbo));
+            activeVBO = this->tangents.vbo;
+        }
+        if (this->tangents.componentType == GL_FLOAT || this->tangents.componentType == GL_HALF_FLOAT)
+        {
+            GL_CALL(glVertexAttribPointer(this->tangents.location, this->tangents.components, this->tangents.componentType, GL_FALSE, this->tangents.stride, static_cast<char *>(nullptr) + this->tangents.offset));
+        }
+        else if (this->tangents.componentType == GL_DOUBLE)
+        {
+            GL_CALL(glVertexAttribLPointer(this->tangents.location, this->tangents.components, this->tangents.componentType, this->tangents.stride, static_cast<char *>(nullptr) + this->tangents.offset));
+        }
+        else
+        {
+            GL_CALL(glVertexAttribIPointer(this->tangents.location, this->tangents.components, this->tangents.componentType, this->tangents.stride, static_cast<char *>(nullptr) + this->tangents.offset));
+        }
+    }
+    if (this->bitangents.location >= 0 && this->bitangents.vbo > 0)
+    {//If texture attribute location and vbo are known
+        GL_CALL(glEnableVertexAttribArray(this->bitangents.location));
+        if (activeVBO != this->bitangents.vbo)
+        {
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, this->bitangents.vbo));
+            activeVBO = this->bitangents.vbo;
+        }
+        if (this->bitangents.componentType == GL_FLOAT || this->bitangents.componentType == GL_HALF_FLOAT)
+        {
+            GL_CALL(glVertexAttribPointer(this->bitangents.location, this->bitangents.components, this->bitangents.componentType, GL_FALSE, this->bitangents.stride, static_cast<char *>(nullptr) + this->bitangents.offset));
+        }
+        else if (this->bitangents.componentType == GL_DOUBLE)
+        {
+            GL_CALL(glVertexAttribLPointer(this->bitangents.location, this->bitangents.components, this->bitangents.componentType, this->bitangents.stride, static_cast<char *>(nullptr) + this->bitangents.offset));
+        }
+        else
+        {
+            GL_CALL(glVertexAttribIPointer(this->bitangents.location, this->bitangents.components, this->bitangents.componentType, this->bitangents.stride, static_cast<char *>(nullptr) + this->bitangents.offset));
+        }
+    }
+
 	//Generics
 	for (GenericVAD const &a : gvads)
 	{
@@ -553,6 +605,15 @@ void Shaders::setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update
 	this->texcoords = vad;
 	if (update)
 		buildVAO();
+}
+void Shaders::setTangentsAndBitangentsAttributeDetail(VertexAttributeDetail tangentsVAD, VertexAttributeDetail bitangentsVAD, bool update)
+{
+    tangentsVAD.location = this->tangents.location;
+    bitangentsVAD.location = this->bitangents.location;
+    this->tangents = tangentsVAD;
+    this->bitangents = bitangentsVAD;
+    if (update)
+        buildVAO();
 }
 bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttributeDetail vad, bool update)
 {

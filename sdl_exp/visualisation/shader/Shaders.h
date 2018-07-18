@@ -68,6 +68,8 @@ public:
 	static const char *NORMAL_ATTRIBUTE_NAME;// = "_normal";
 	static const char *COLOR_ATTRIBUTE_NAME;// = "_color";
 	static const char *TEXCOORD_ATTRIBUTE_NAME;// = "_texCoords";
+    static const char *TANGENT_ATTRIBUTE_NAME;// = "_tangent";
+    static const char *BITANGENT_ATTRIBUTE_NAME;// = "_bitangent";
 	//static const char *PREV_MODELVIEW_MATRIX_UNIFORM_NAME;// = "_prevModelViewMat";
 	/**
 	 * This structure represents the details necessary to correctly bind a uniform matrix (e.g. model view/projection)
@@ -295,7 +297,14 @@ public:
 	 * @param vad The VertexAttributeDetail object containing the attribute data
 	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
 	 */
-	void setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update = true);
+    void setTexCoordsAttributeDetail(VertexAttributeDetail vad, bool update = true);
+    /**
+    * Stores the details necessary for passing vertex texture attributes to the shader
+    * @param tangentsVAD The VertexAttributeDetail object containing the tangents attribute data
+    * @param bitangentsVAD The VertexAttributeDetail object containing the bitangents attribute data
+    * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
+    */
+    void setTangentsAndBitangentsAttributeDetail(VertexAttributeDetail tangentsVAD, VertexAttributeDetail bitangentsVAD, bool update = true);
 	/**
 	 * Binds the named fragment shader output attribute to the specified framebuffer attachment point
 	 * @param attachmentPoint The GL_COLOR_ATTACHMENT index (likely in the range 0-7) 
@@ -519,6 +528,10 @@ private:
 	* Holds information for binding the vertex texture coordinates attribute
 	*/
     VertexAttributeDetail texcoords;
+    /**
+    * Holds information for binding the vertex tangent and bitangents attributes
+    */
+    VertexAttributeDetail tangents, bitangents;
 	/**
 	 * If the default color uniform identifier is found within the shader, it's location is stored here
 	 */

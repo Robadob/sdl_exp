@@ -105,8 +105,8 @@ void BasicScene::_render()
 	//		//Reset matricies
 	//		this->visualisation.resetProjectionMat();
 	//		this->visualisation.getCamera()->resetViewMats();
-	//		//Update lighting buffer
-	//		lighting->update();
+			//Update lighting buffer
+			lighting->update();
 	//		//Reset source model to visible
 	//		ent->visible(true);
 	//	}

@@ -23,7 +23,9 @@ Model::Model(const char *modelPath, float scale, bool setAllMeshesVisible, std::
 	, positions(GL_FLOAT, 3, sizeof(float))
 	, normals(GL_FLOAT, 3, sizeof(float))
 	, colors(GL_FLOAT, 4, sizeof(float))
-	, texcoords(GL_FLOAT, 3, sizeof(float))
+    , texcoords(GL_FLOAT, 3, sizeof(float))
+    , tangents(GL_FLOAT, 3, sizeof(float))
+    , bitangents(GL_FLOAT, 3, sizeof(float))
 	, boneIDs(GL_UNSIGNED_INT, 4, sizeof(unsigned int))
 	, boneWeights(GL_FLOAT, 4, sizeof(float))
 	, boneBuffer(nullptr)
@@ -115,6 +117,7 @@ VFCcount countVertices(const struct aiScene* scene, const struct aiNode* nd)
 		const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
 		vfc.v += mesh->mNumVertices;
 		vfc.b += mesh->mNumBones;
+        vfc.t += mesh->HasTangentsAndBitangents() ? mesh->mNumVertices : 0;
         for (unsigned int t = 0; t < mesh->mNumFaces; ++t) {
             vfc.f += mesh->mFaces[t].mNumIndices;
 #ifdef _DEBUG
@@ -317,6 +320,11 @@ std::shared_ptr<ModelNode> Model::buildHierarchy(const struct aiScene* scene, co
 		//Texture Coordinates (just take the first set)
 		if (data->texcoords)
 			memcpy(data->texcoords + vfc.v, _aiMesh->mTextureCoords[0], _aiMesh->mNumVertices*sizeof(glm::vec3));
+        //Tangents & Bitangents
+        if (data->tangents)
+            memcpy(data->tangents + vfc.v, _aiMesh->mTangents, _aiMesh->mNumVertices*sizeof(glm::vec3));
+        if (data->bitangents)
+            memcpy(data->bitangents + vfc.v, _aiMesh->mBitangents, _aiMesh->mNumVertices*sizeof(glm::vec3));
 		//Map face indexes
 		for (unsigned int t = 0; t < _aiMesh->mNumFaces; ++t) {
 			const struct aiFace* face = &_aiMesh->mFaces[t];
@@ -388,33 +396,40 @@ void Model::loadModel()
 	printf("\rLoading Model: %s [Parsing Assimp Model Data]      ", su::getFilenameFromPath(modelPath).c_str());
     //Calculate total number of vertices, faces, components and bones within hierarchy
     {
-		this->vfc = countVertices(scene, scene->mRootNode);
+        this->vfc = countVertices(scene, scene->mRootNode);
+        assert(this->vfc.t == this->vfc.v || this->vfc.t == 0);
 		//Allocate memory
 		this->data = std::make_shared<ModelData>(
 			vfc.v,
 			scene->mMeshes[0]->HasNormals() ? vfc.v : 0,
 			scene->mMeshes[0]->mColors[0] != nullptr ? vfc.v : 0,
-			scene->mMeshes[0]->HasTextureCoords(0) ? vfc.v : 0,
-			vfc.b,
+            scene->mMeshes[0]->HasTextureCoords(0) ? vfc.v : 0,
+            vfc.t == vfc.v ? vfc.v : 0,
+            vfc.b,
 			scene->mNumMaterials,
 			vfc.f,
 			vfc.c
 		);
     }
 
+    //Store data ptr in VADs
+    positions.data = data->vertices;
+    normals.data = data->normals;
+    colors.data = data->colors;
+    texcoords.data = data->texcoords;
+    tangents.data = data->tangents;
+    bitangents.data = data->bitangents;
+	boneIDs.data = nullptr;//Not stored in right format, swap before create buffer
+	boneWeights.data = nullptr;//Not stored in right format, swap before create buffer
     //Store count in VADs
     positions.count = this->vfc.v;
     normals.count = normals.data ? this->vfc.v : 0;
     colors.count = colors.data ? this->vfc.v : 0;
-	texcoords.count = texcoords.data ? this->vfc.v : 0;
-	boneIDs.count = data->bonesSize ? this->vfc.v : 0;
-	boneWeights.count = data->bonesSize ? this->vfc.v : 0;
-    positions.data = data->vertices;
-    normals.data = data->normals;
-    colors.data = data->colors;
-	texcoords.data = data->texcoords;
-	boneIDs.data = nullptr;//Not store in right format, swap before create buffer
-	boneWeights.data = nullptr;//Not store in right format, swap before create buffer
+    texcoords.count = texcoords.data ? this->vfc.v : 0;
+    tangents.count = tangents.data ? this->vfc.v : 0;
+    bitangents.count = bitangents.data ? this->vfc.v : 0;
+    boneIDs.count = data->bonesSize ? this->vfc.v : 0;
+    boneWeights.count = data->bonesSize ? this->vfc.v : 0;
 
 	printf("\rLoading Model: %s [Parsing Assimp Material Data]      ", su::getFilenameFromPath(modelPath).c_str());
     if (scene->HasTextures()){ fprintf(stderr, "Model '%s' has embedded textures, these are currently unsupported.\n", modelPath.c_str()); }
@@ -471,11 +486,15 @@ void Model::loadModel()
         vboSize += this->vfc.v*sizeof(glm::vec4);
     if (data->texcoords)
         vboSize += this->vfc.v*sizeof(glm::vec3);
+    if (data->tangents)
+        vboSize += this->vfc.v*sizeof(glm::vec3);
+    if (data->bitangents)
+        vboSize += this->vfc.v*sizeof(glm::vec3);
 	if (data->bonesSize)
 	{
 		vboSize += this->vfc.v*sizeof(glm::uvec4);
 		vboSize += this->vfc.v*sizeof(glm::vec4);
-	}
+    }
 
     //Build VBO from data
     GL_CALL(glGenBuffers(1, &vbo));
@@ -502,7 +521,19 @@ void Model::loadModel()
         GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, vboSize, this->vfc.v*sizeof(glm::vec3), data->texcoords));
 		texcoords.offset = (unsigned int)vboSize;
         vboSize += this->vfc.v*sizeof(glm::vec3);
-	}
+    }
+    if (data->tangents)
+    {
+        GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, vboSize, this->vfc.v*sizeof(glm::vec3), data->tangents));
+        tangents.offset = (unsigned int)vboSize;
+        vboSize += this->vfc.v*sizeof(glm::vec3);
+    }
+    if (data->bitangents)
+    {
+        GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, vboSize, this->vfc.v*sizeof(glm::vec3), data->bitangents));
+        bitangents.offset = (unsigned int)vboSize;
+        vboSize += this->vfc.v*sizeof(glm::vec3);
+    }
 	if (data->bonesSize)
 	{
 		assert(VertexBoneData::COUNT == 4);//Required for this shader config
@@ -532,6 +563,10 @@ void Model::loadModel()
         colors.vbo = vbo;
     if (data->texcoords)
         texcoords.vbo = vbo;
+    if (data->tangents)
+        tangents.vbo = vbo;
+    if (data->bitangents)
+        bitangents.vbo = vbo;
 	if (data->bonesSize)
 	{
 		boneIDs.vbo = vbo;
@@ -571,7 +606,8 @@ void Model::loadModel()
 		s->setPositionsAttributeDetail(positions);
 		s->setNormalsAttributeDetail(normals);
 		s->setColorsAttributeDetail(colors);
-		s->setTexCoordsAttributeDetail(texcoords);
+        s->setTexCoordsAttributeDetail(texcoords);
+        s->setTangentsAndBitangentsAttributeDetail(tangents, bitangents);
 		s->setFaceVBO(fbo);
 		//Set bone weights
 		if (data->bonesSize)
@@ -588,7 +624,8 @@ void Model::loadModel()
 		s->setPositionsAttributeDetail(positions);
 		s->setNormalsAttributeDetail(normals);
 		s->setColorsAttributeDetail(colors);
-		s->setTexCoordsAttributeDetail(texcoords);
+        s->setTexCoordsAttributeDetail(texcoords);
+        s->setTangentsAndBitangentsAttributeDetail(tangents, bitangents);
 		s->setFaceVBO(fbo);
 		//Set bone weights
 		if (data->bonesSize)

@@ -14,11 +14,12 @@
 
 struct VFCcount
 {
-	VFCcount(int i = 1) :v(0), f(0), c(i), b(0){}
+	VFCcount(int i = 1) :v(0), f(0), c(i), b(0), t(0){}
 	unsigned int v;//vertices
 	unsigned int f;//faces
 	unsigned int c;//components??
 	unsigned int b;//bones
+    unsigned int t;//tangents/bitangents
 	VFCcount &operator +=(const VFCcount &rhs)
 	{
 		v += rhs.v;
@@ -63,7 +64,8 @@ struct ModelData
 		size_t vertices,
 		size_t normals,
 		size_t colors,
-		size_t texcoords,
+        size_t texcoords,
+        size_t tangentsAndBitangents,
 		size_t bones,
 		size_t materials,
 		size_t faces,
@@ -73,6 +75,8 @@ struct ModelData
         , normals(nullptr)
         , colors(nullptr)
         , texcoords(nullptr)
+        , tangents(nullptr)
+        , bitangents(nullptr)
 		, boneMatrices(nullptr)
         , materials(nullptr)
         , faces(nullptr)
@@ -99,7 +103,12 @@ struct ModelData
 		if (colors)
 			this->colors = static_cast<glm::vec4 *>(malloc(colors * sizeof(glm::vec4)));
 		if (texcoords)
-			this->texcoords = static_cast<glm::vec3 *>(malloc(texcoords * sizeof(glm::vec3)));
+            this->texcoords = static_cast<glm::vec3 *>(malloc(texcoords * sizeof(glm::vec3)));
+        if (tangentsAndBitangents)
+        {
+            this->tangents = static_cast<glm::vec3 *>(malloc(tangentsAndBitangents * sizeof(glm::vec3)));
+            this->bitangents = static_cast<glm::vec3 *>(malloc(tangentsAndBitangents * sizeof(glm::vec3)));
+        }
 
 		if (bones)
 		{
@@ -109,7 +118,6 @@ struct ModelData
 			for (unsigned int i = 0; i < bones; ++i)
 				this->computedTransforms[i] = glm::mat4(1);
 		}
-
 		if (materials)
         {
             this->materials = static_cast<std::shared_ptr<Material> *>(malloc(materials * sizeof(std::shared_ptr<Material>)));
@@ -132,8 +140,10 @@ struct ModelData
 		free(vertices);
 		free(normals);
 		free(colors);
-		free(texcoords);
-		free(boneMatrices);
+        free(texcoords);
+        free(tangents);
+        free(bitangents);
+        free(boneMatrices);
 		free(computedTransforms);
         //Call destructor on materials
         for (unsigned int i = 0; i < materialsSize;++i)
@@ -151,7 +161,9 @@ struct ModelData
 	glm::vec3 *vertices;
 	glm::vec3 *normals;
 	glm::vec4 *colors;
-	glm::vec3 *texcoords;
+    glm::vec3 *texcoords;
+    glm::vec3 *tangents;
+    glm::vec3 *bitangents;
 
 	//Bones
 	glm::mat4 *boneMatrices;//Bone offset matricies
@@ -334,7 +346,12 @@ private:
 	/**
 	* Holds information for binding the bone id's attribute
 	*/
-	Shaders::VertexAttributeDetail boneIDs;
+    Shaders::VertexAttributeDetail boneIDs;
+    /**
+    * Holds information for binding the tangents attribute (used for normal mapping)
+    */
+    Shaders::VertexAttributeDetail tangents;
+    Shaders::VertexAttributeDetail bitangents;
 	/**
 	* Holds information for binding the bone weights attribute
 	*/

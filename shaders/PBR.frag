@@ -186,7 +186,7 @@ void main()
       //Attenuation coefficient
       const float attenuation = light[i].attenuation(L);
       //Linear space radiance (gamma correct later)
-      const vec3 radiance = vec3(1);//light[i].color;// * attenuation;
+      const vec3 radiance = light[i].color * attenuation;
       
       /**
        * BRDF (via Cook-Torrance)
@@ -218,7 +218,7 @@ void main()
     vec3 color = ambient + Lo;    
     //Gamma corrected HDR colour
     color = color / (color + vec3(1.0f));
-    color = pow(color, vec3(1.0f/2.2f));    
+    //color = pow(color, vec3(1.0f/2.2f));    
     //Brightness value for bloom calc
     const float brightness = dot(color, vec3(0.2126f, 0.7152f, 0.0722f));    
     //Outputs

@@ -57,11 +57,14 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	//Really wants to be abitrary directional light, but putting it really far out with constant attenuation should also work
 	DirectionalLight p = Lights()->addDirectionalLight();
 	p.Direction(glm::normalize(glm::vec3(-1, 0, 1)));
-	p.Color(glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
+    p.Color(glm::vec3(0));// glm::vec3(1.0f, 0.75f, 0.39f));//else 1.0f, 1.0f, 0.49f (more yellow, less orange)
 	p.ConstantAttenuation(1.0f);
 	PointLight _p = Lights()->addPointLight();
-	_p.Color(glm::vec3(0.5f));
-	_p.ConstantAttenuation(0.5f);
+	_p.Color(glm::vec3(0.0f));
+    _p.ConstantAttenuation(1.0f);
+    PointLight __p = Lights()->addPointLight();
+    __p.Color(glm::vec3(1.0f));
+    __p.ConstantAttenuation(1.0f);
 
 	
 	//{//Configure reflection test
@@ -100,8 +103,11 @@ void EntityScene::update(unsigned int frameTime)
 		this->bob->update((SDL_GetTicks() / 1000.0f) - this->bobAnimOffset);
 	
 	//Emulate full bright, attach the one light source to the camera
-	auto p = Lights()->getPointLight(1);
-	p.Position(visualisation.getCamera()->getEye());
+	//auto p = Lights()->getPointLight(1);
+	//p.Position(visualisation.getCamera()->getEye());
+
+    Lights()->getPointLight(1).Position(glm::vec3(15 * sin(this->tick), 0, 15 * cos(this->tick)));
+    Lights()->getSpotLight(2).Position(glm::vec3(15 * sin(this->tick + glm::pi<float>()), 0, 15 * cos(this->tick + glm::pi<float>())));
 }
 /*
 Called once per frame when Scene render calls should be executed
@@ -109,7 +115,7 @@ Called once per frame when Scene render calls should be executed
 void EntityScene::render()
 {
  //   colorModel->render();
- //   deerModel->render();
+    //deerModel->render();
 	//this->instancedSphere->renderInstances(INSTANCE_COUNT);
 
 	//bob->render();
@@ -119,6 +125,8 @@ void EntityScene::render()
 	//refractModel->render();
 
     pbrTest->render();
+
+    Lights()->render();
 }
 /*
 Called when the user requests a reload

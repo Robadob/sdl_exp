@@ -149,6 +149,7 @@ void BasicScene::_resize(int width, int height) {
 }
 void BasicScene::_reload() 
 {
+    bloomTool->reload();
 	for (std::vector<std::shared_ptr<Renderable>>::iterator i = entities.begin(); i != entities.end(); i++)
 	{
 		(*i)->reload();

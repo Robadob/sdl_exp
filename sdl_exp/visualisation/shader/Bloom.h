@@ -18,6 +18,7 @@ public:
     Bloom(std::shared_ptr<Texture2D> renderTex, std::shared_ptr<Texture2D> brightnessTex);
     ~Bloom();
     void resize(const unsigned int &width, const unsigned int &height);
+    void reload();
     void doBloom();
 private:
     void blurBrightTex();

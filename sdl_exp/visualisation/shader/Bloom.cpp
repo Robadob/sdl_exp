@@ -36,6 +36,11 @@ void Bloom::resize(const unsigned int &width, const unsigned int &height)
     updateBloomProjMat(glm::uvec2(width, height));
     updateBloomQuad(glm::uvec2(width, height));
 }
+void Bloom::reload()
+{
+    if (bloomQuadShader)
+        bloomQuadShader->reload();
+}
 void Bloom::doBloom()
 {
     blurBrightTex();

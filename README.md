@@ -46,7 +46,9 @@ The `Shaders`, `Entity` and `Model` objects attempt to automatically manage unif
   * `_vertex` - Vertex Position[vec3/vec4]
   * `_normal` - Vertex Normal[vec3/vec4]
   * `_color` - Vertex Color[vec3/vec4]
-  * `_texCoords` - Texture Coordinates[Vec2/Vec3]
+  * `_texCoords` - Texture Coordinates[vec2/vec3]
+  * `_tangent` - Vertex Tangent (used for Normal mapping)[vec3/vec4]
+  * `_bitangent` - Vertex Bitangent (used for Normal mapping)[vec3/vec4]
   * `_boneIDs` - Bone indexes, carries 4 individual bone indexes for the vertex[uvec4]
   * `_boneWeights` - Bone weights, carries 4 individual bone weights[vec4]
 

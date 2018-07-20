@@ -38,10 +38,10 @@ in mat3 tbnMat;
 //Material and Lighting structures
 struct PBRmaterial
 {
-		vec4 albedo;            //Base color (aka diffuse, albedo)
+    vec4 albedo;            //Base color (aka diffuse, albedo)
     float roughness;
     float metallic;
-    float refractionIndex;	//Unused (padding)
+    float refractionIndex;    //Unused (padding)
     float alphaCutOff;
     vec3 emissive;          //Unused, Emissive color (light emitted) (disabled to keep struct size down temporary
     uint bitmask;           //bitmask to calculate which textures are available
@@ -82,13 +82,13 @@ const uint MAX_MATERIALS = 50;
 uniform uint _materialID;
 uniform _materials
 {
-  PBRmaterial material[MAX_MATERIALS];
+    PBRmaterial material[MAX_MATERIALS];
 };
 uniform _lights
 {
-  uint lightsCount;
-  //<12 bytes of padding>
-  LightProperties light[MAX_LIGHTS];
+    uint lightsCount;
+    //<12 bytes of padding>
+    LightProperties light[MAX_LIGHTS];
 };
 //Utility functions for deciding whether to pull property from texture or material const
 vec4 Albedo()
@@ -176,41 +176,59 @@ void main()
     //Iterate light sources
     for(uint i = 0;i<lightsCount;i++)
     {
-      /**
-       * Per light radiance
-      **/
-      //Vector from light to fragment
-      const vec3 L = normalize(light[i].position.xyz - eyeVertex);
-      //Half-way vector
-      const vec3 H = light[i].halfVector;//normalize(V + L);
-      //Attenuation coefficient
-      const float attenuation = light[i].attenuation(L);
-      //Linear space radiance (gamma correct later)
-      const vec3 radiance = light[i].color * attenuation;
+        /**
+        * Per light radiance
+        **/
+        //Vector from light to fragment
+        vec3 L;
+        //Attenuation coefficient
+        float attenuation;
+        //Light type specific values
+        if(light[i].spotCosCutoff>1.0f)
+        {//Light is directional      
+            L = -light[i].spotDirection;
+            attenuation = 1.0f/light[i].constantAttenuation;
+        }
+        else
+        {
+            L = normalize(light[i].position.xyz - eyeVertex);
+            attenuation = light[i].attenuation(L);
+            if(light[i].spotCosCutoff>=0.0f)
+            {//Spotlight
+                  float spotCos = dot(L,-light[i].spotDirection);
+                  //Step works as (spotCos>light[i].spotCosCutoff?0:1)
+                  //Handle spotExponent
+                  attenuation *= step(light[i].spotCosCutoff, spotCos) * pow(spotCos, light[i].spotExponent);
+            }
+        }
+        //Half-way vector
+        const vec3 H = light[i].halfVector;//normalize(V + L);
+        //Linear space radiance (gamma correct later)
+        const vec3 radiance = light[i].color * attenuation;
       
-      /**
-       * BRDF (via Cook-Torrance)
-      **/
-      //Normal Distribution Function (via Trowbridge-Reitz-GGX)
-      const float NDF = DistributionGGX(N, H, roughness);
-      //Geometry Function (via Smith's Schlick-GGX)
-      const float G = GeometrySmith(N, V, L, roughness);
-      //Fresnel Equation (via Fresnel-Schlick Approximation)
-      vec3 F0 = mix(vec3(material[_materialID].refractionIndex), albedo.rgb, metallic);
-      const vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
-      
-      //Specular radiance
-      const vec3 kS = F;
-      //Diffuse radiance (energy conserving, account for metals)
-      const vec3 kD = vec3(0.5f);//(vec3(1.0f) - kS) * (1.0f - metallic);
-      
-      const vec3 numerator    = NDF * G * F;
-      const float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);
-      const vec3 specular     = numerator / max(denominator, 0.001f);  
-      
-      const float NdotL = max(dot(N, L), 0.0);
-      //Add to Riemann sum
-      Lo += (kD * albedo.rgb / PI + specular) * radiance * NdotL;
+          /**
+           * BRDF (via Cook-Torrance)
+          **/
+          //Normal Distribution Function (via Trowbridge-Reitz-GGX)
+          const float NDF = DistributionGGX(N, H, roughness);
+          //Geometry Function (via Smith's Schlick-GGX)
+          const float G = GeometrySmith(N, V, L, roughness);
+          //Fresnel Equation (via Fresnel-Schlick Approximation)
+          vec3 F0 = mix(vec3(material[_materialID].refractionIndex), albedo.rgb, metallic);
+          const vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
+          
+          //Specular radiance
+          const vec3 kS = F;
+          //Diffuse radiance (energy conserving, account for metals)
+          const vec3 kD = vec3(0.5f);//(vec3(1.0f) - kS) * (1.0f - metallic);
+          
+          const vec3 numerator    = NDF * G * F;
+          const float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f);
+          const vec3 specular     = numerator / max(denominator, 0.001f);  
+          
+          const float NdotL = max(dot(N, L), 0.0);
+          //Add to Riemann sum
+          Lo += (kD * albedo.rgb / PI + specular) * radiance * NdotL;
     }
     
     const vec3 ambient = vec3(0.03) * albedo.rgb * ambientOcclusion;
@@ -225,7 +243,7 @@ void main()
     fragColor = vec4(color, albedo.a);    
     fragBright = brightness > 1.0f ? color : vec3(0.0f);
     if(fragColor.a<material[_materialID].alphaCutOff)
-      discard;
+        discard;
 }
 /**
  * Trowbridge-Reitz-GGX:
@@ -238,11 +256,11 @@ float DistributionGGX(vec3 N, vec3 H, float a)
     float a2     = a*a;
     float NdotH  = max(dot(N, H), 0.0);
     float NdotH2 = NdotH*NdotH;
-  
+
     float nom    = a2;
     float denom  = (NdotH2 * (a2 - 1.0) + 1.0);
     denom        = PI * denom * denom;
-  
+
     return nom / denom;
 }
 float GeometrySchlickGGX(float NdotV, float k)

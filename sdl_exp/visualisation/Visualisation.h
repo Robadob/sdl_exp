@@ -6,7 +6,7 @@
 
 #include "interface/Viewport.h"
 #include <memory>
-#include "Camera.h"
+#include "camera/NoClipCamera.h"
 #include "HUD.h"
 #include <thread>
 #include <atomic>
@@ -178,7 +178,7 @@ private:
     SDL_GLContext context;
 
 	HUD hud;
-    Camera camera;
+    NoClipCamera camera;
 	std::shared_ptr<Scene> scene;
     glm::mat4 frustum;
 

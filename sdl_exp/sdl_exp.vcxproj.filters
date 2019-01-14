@@ -66,12 +66,15 @@
     <Filter Include="Header Files\Visualisation\Shader\Lights">
       <UniqueIdentifier>{916a45d1-87cf-4b02-9a49-06ff7937c4da}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Camera">
+      <UniqueIdentifier>{b5ddeab9-18fd-4427-a60e-9c4ced09ef02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Camera">
+      <UniqueIdentifier>{3eb1198c-05f2-4a80-b71d-543597a8fe05}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
-      <Filter>Source Files\Visualisation</Filter>
-    </ClCompile>
-    <ClCompile Include="visualisation\Camera.cpp">
       <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
     <ClCompile Include="visualisation\Entity.cpp">
@@ -188,6 +191,9 @@
     <ClCompile Include="visualisation\shader\lights\SpotLightModel.cpp">
       <Filter>Source Files\Visualisation\Shader\Lights</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\camera\NoClipCamera.cpp">
+      <Filter>Source Files\Visualisation\Camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -205,9 +211,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="visualisation\Axis.h">
-      <Filter>Header Files\Visualisation</Filter>
-    </ClInclude>
-    <ClInclude Include="visualisation\Camera.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\Entity.h">
@@ -365,6 +368,12 @@
     </ClInclude>
     <ClInclude Include="visualisation\shader\lights\SpotLightModel.h">
       <Filter>Header Files\Visualisation\Shader\Lights</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\interface\Camera.h">
+      <Filter>Header Files\Visualisation\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\camera\NoClipCamera.h">
+      <Filter>Header Files\Visualisation\Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,32 +1,30 @@
-#ifndef __Camera_h__
-#define __Camera_h__
+#ifndef __NoClipCamera_h__
+#define __NoClipCamera_h__
 
-#include "util/GLcheck.h"
+#include "../interface/Camera.h"
 
-#include <glm/glm.hpp>
-
-class Camera
+class NoClipCamera : public Camera
 {
 public:
 	/**
 	 * Initialises the camera located at (1,1,1) directed at (0,0,0)
 	 */
-    Camera();
+    NoClipCamera();
 	/**
 	 * Initialises the camera located at eye, directed at (0,0,0)
 	 * @param eye The coordinates the camera is located
 	 */
-    Camera(glm::vec3 eye);
+    NoClipCamera(const glm::vec3 &eye);
 	/**
 	* Initialises the camera located at eye directed at target
 	* @param eye The coordinates the camera is located
 	* @param target The coordinates the camera is directed towards
     */
-	Camera(glm::vec3 eye, glm::vec3 target);
+    NoClipCamera(const glm::vec3 &eye, const glm::vec3 &target);
 	/**
 	 * Default destructor
 	 */
-    ~Camera();
+    ~NoClipCamera();
 
 	/**
 	 * Rotate look and right, yaw radians about up
@@ -34,40 +32,34 @@ public:
 	 * @param yaw The number of radians to rotate the camera's direction about the up vector
 	 * @param pitch The number of radians to rotate the camera's direction about the right vector
 	 */
-	void turn(float yaw, float pitch);
+    void turn(const float &yaw, const float &pitch);
 	/**
 	 * Move eye specified distance along look
 	 * @param distance The number of units to move the camera
 	 */
-	void move(float distance);
+    void move(const float &distance);
 	/**
 	 * Move eye specified distance along right
 	 * @param distance The number of units to move the camera
 	 */
-	void strafe(float distance);
+    void strafe(const float &distance);
 	/**
 	 * Move eye specified distance along pureUp
 	 * @param distance The number of units to move the camera
 	 */
-	void ascend(float distance);
+    void ascend(const float &distance);
 	/**
 	 * Rotate right and up, roll radians about look
 	 * @param roll The number of radians to rotate the camera's direction about the look vector
 	 */
-	void roll(float roll);
+    void roll(const float &roll);
 	/**
 	 * Sets whether the camera should be stabilised
 	 * When the camera is stabilised, the up vector will not rotate about the cameras direction
 	 * When the camera is not stabilsed, moving the mouse in a circular motion may cause the camera to roll
 	 * @param stabilise Whether the camera should be stabilised
 	 */
-	void setStabilise(bool stabilise);
-	/**
-	 * Returns the projection matrix
-	 * For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
-	 * @return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
-	 */
-	glm::mat4 view() const;
+	void setStabilise(const bool &stabilise);
 	/**
 	 * Calls gluLookAt()
 	 * For people using fixed function pipeline
@@ -75,22 +67,11 @@ public:
 	 */
 	void gluLookAt();
 	/**
-	 * Returns the projection matrix from the perspective required for rendering a skybox (direction only)
-	 * For use with shader uniforms or glLoadMatrixf() after calling glMatrixMode(GL_MODELVIEW)
-	 * @return the modelview matrix as calculated by glm::lookAt(glm::vec3, glm::vec3, glm::vec3)
-	 */
-	glm::mat4 skyboxView() const;
-	/**
 	 * Calls gluLookAt() from the perspective required for rendering a skybox (direction only)
 	 * For people using fixed function pipeline, although manually setting the matrix with glLoadMatrixf() also works.
 	 * @see skyboxView()
 	 */
 	void skyboxGluLookAt() const;
-	/**
-	 * Returns the cameras location
-	 * @return The location of the camera in world space
-	 */
-	glm::vec3 getEye() const;
 	/**
 	 * Returns the cameras normalized direction vector
 	 * @return The normalized direction of the camera
@@ -112,32 +93,14 @@ public:
 	 * @return The normalized direction the camera treats as rightwards
 	 */
 	glm::vec3 getRight() const;
-	/**
-	 * Returns a constant pointer to the cameras modelview matrix
-	 * This pointer can be used to continuously track the modelview matrix
-	 * @return A pointer to the modelview matrix
-	 */
-	const glm::mat4 *Camera::getViewMatPtr() const;
-	/**
-	 * Returns a constant pointer to the cameras skybox modelview matrix
-	 * This pointer can be used to continuously track the skybox modelview matrix
-	 * @return A pointer to the modelview matrix
-	 */
-    const glm::mat4 *Camera::getSkyboxViewMatPtr() const;
 private:
 	/**
 	 * Updates the view and skyboxView matrices
 	 * Called whenever any internal camera variables are updated
 	 */
     void updateViews();
-    //View matrix
-    glm::mat4 viewMat;
-    //View matrix without camera position taken into consideration
-    glm::mat4 skyboxViewMat;
     //Up vector used for stabilisation, only rotated when roll is called
     glm::vec3 pureUp;
-    //Eyelocation
-    glm::vec3 eye;
     //3 perpendicular vectors which represent the cameras direction and orientation
     glm::vec3 look;
     glm::vec3 right;
@@ -145,4 +108,4 @@ private:
     bool stabilise;
 };
 
-#endif //ifndef __Camera_h__
+#endif //ifndef __NoClipCamera_h__

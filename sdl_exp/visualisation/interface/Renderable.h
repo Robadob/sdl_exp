@@ -2,11 +2,13 @@
 #define __Renderable_h__
 
 #include "Reloadable.h"
-#include <glm/mat4x4.hpp>
 
 #include "Viewport.h"
-#include "../Camera.h"
+#include "../interface/Camera.h"
+#include "../util/GLcheck.h"
+
 #include <memory>
+#include <glm/glm.hpp>
 
 class LightsBuffer;
 

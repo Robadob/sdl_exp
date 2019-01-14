@@ -90,7 +90,7 @@
     <ClCompile Include="TwoPassScene.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
     <ClCompile Include="visualisation\BasicScene.cpp" />
-    <ClCompile Include="visualisation\Camera.cpp" />
+    <ClCompile Include="visualisation\camera\NoClipCamera.cpp" />
     <ClCompile Include="visualisation\Draw.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
@@ -144,10 +144,11 @@
     <ClInclude Include="TwoPassScene.h" />
     <ClInclude Include="visualisation\Axis.h" />
     <ClInclude Include="visualisation\BasicScene.h" />
-    <ClInclude Include="visualisation\Camera.h" />
+    <ClInclude Include="visualisation\camera\NoClipCamera.h" />
     <ClInclude Include="visualisation\Draw.h" />
     <ClInclude Include="visualisation\Entity.h" />
     <ClInclude Include="visualisation\HUD.h" />
+    <ClInclude Include="visualisation\interface\Camera.h" />
     <ClInclude Include="visualisation\interface\FBuffer.h" />
     <ClInclude Include="visualisation\interface\Reloadable.h" />
     <ClInclude Include="visualisation\interface\Renderable.h" />

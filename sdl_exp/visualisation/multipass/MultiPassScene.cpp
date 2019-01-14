@@ -1,6 +1,6 @@
 #include "MultiPassScene.h"
 
-MultiPassScene::MultiPassScene(Visualisation &visualisation)
+MultiPassScene::MultiPassScene(ViewportExt &visualisation)
 	: Scene(visualisation)
 	, lighting(std::make_shared<LightsBuffer>(visualisation.getCamera()->getViewMatPtr()))
 {

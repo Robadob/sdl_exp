@@ -23,7 +23,7 @@ class Text;
  * @todo Add support for generic camera classes
  * @todo Make a runAsync() variation
  */
-class Visualisation : public Viewport
+class Visualisation : public ViewportExt
 {
 public:
 
@@ -44,7 +44,7 @@ public:
 	 * Also handle user inputs
 	 * @note This only need be called if manually triggering frame updates, run() should otherwise be used
 	 */
-    void Visualisation::render();
+    void render();
 	/**
 	 * Executes the render loop, this is a blocking call
      * @see quit() to externally kill the loop
@@ -96,7 +96,7 @@ public:
 	 * Returns a const pointer to the visualisation's Camera
 	 * @return The camera
 	 */
-	const Camera *getCamera() const;
+    std::shared_ptr<const Camera> getCamera() const;
 	/**
 	 * Sets the Scene object to be rendered within the viewport
 	 * @return The previously bound Scene
@@ -115,19 +115,20 @@ public:
 	 * @return A pointer to the projection matrix
 	 */
     const glm::mat4 *getProjectionMatPtr() const override;
+    glm::mat4 getProjectionMat() const override;
 	/**
 	 * Returns the visusalisation's HUD, to be used to add overlays
-	 * @return The visualisation's scene
+	 * @return The visualisation's HUD
 	 */
-	HUD* getHUD();
+    std::weak_ptr<HUD> getHUD() override;
 	/**
 	 * @return The current window/viewport width
 	 */
-	const int& getWindowWidth() const { return windowWidth; }
+	int getWindowWidth() const { return windowWidth; }
 	/**
 	 * @return The current window/viewport height
 	 */
-	const int& getWindowHeight() const { return windowHeight; }
+	int getWindowHeight() const { return windowHeight; }
 private:
 	/**
 	 * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
@@ -177,10 +178,10 @@ private:
     SDL_Rect windowedBounds;
     SDL_GLContext context;
 
-	HUD hud;
-    NoClipCamera camera;
+    std::shared_ptr<HUD> hud;
+    std::shared_ptr<NoClipCamera> camera;
 	std::shared_ptr<Scene> scene;
-    glm::mat4 frustum;
+    glm::mat4 projMat;
 
 	bool isInitialised;
 	std::atomic<bool> continueRender;

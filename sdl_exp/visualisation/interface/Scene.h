@@ -2,7 +2,7 @@
 #define __Scene_h__
 #include <SDL/SDL.h>
 
-class Visualisation;
+class ViewportExt;
 
 class Scene
 {
@@ -38,8 +38,8 @@ public:
 
 	virtual ~Scene(){};
 protected:
-	Scene(Visualisation &vis) :visualisation(vis){};
-	Visualisation &visualisation;
+	Scene(ViewportExt &vis) :visualisation(vis){};
+	ViewportExt &visualisation;
 };
 
 #endif //__Scene_h__

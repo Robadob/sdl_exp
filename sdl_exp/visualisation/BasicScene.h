@@ -13,7 +13,7 @@
 class BasicScene : public Scene
 {
 public:
-	BasicScene(Visualisation& vis);
+	BasicScene(ViewportExt& vis);
 protected:
 	/**
 	 * Registers an entity, so the scene can setup it's modelview and projection matrices and trigger reloads

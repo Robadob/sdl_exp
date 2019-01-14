@@ -29,8 +29,8 @@
 
 Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
     : t(nullptr)
-    , hud(windowWidth, windowHeight)
-    , camera(glm::vec3(50,50,50))
+    , hud(std::make_shared<HUD>(windowWidth, windowHeight))
+    , camera(std::make_shared<NoClipCamera>(glm::vec3(50, 50, 50)))
     , scene(nullptr)
     , isInitialised(false)
 	, continueRender(false)
@@ -44,11 +44,11 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
 
     fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
     fpsDisplay->setUseAA(false);
-    hud.add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);
+    hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);
     helpText = std::make_shared<Text>("Controls\nW,S: Move Forwards/Backwards\nA,D: Strafe\nQ,E: Roll\nF1:  Toggle Show Controls\nF5:  Reload Resources/Shaders\nF8:  Toggle Show FPS\nF9:  Toggle Show Skybox\nF10: Toggle MSAA\nF11: Toggle Fullscreen\nESC: Quit", 20, glm::vec3(1.0f), Stock::Font::LUCIDIA_CONSOLE);
     helpText->setBackgroundColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
     helpText->setVisible(false);
-    hud.add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
+    hud->add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
 }
 Visualisation::~Visualisation()
 {
@@ -108,6 +108,7 @@ bool Visualisation::init(){
         GL_CALL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
         GL_CALL(glBlendEquation(GL_FUNC_ADD));
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        BackBuffer::setClear(true, glm::vec3(0));//Clear to black
         setMSAA(this->msaaState);
 
         // Setup the projection matrix
@@ -125,7 +126,7 @@ std::shared_ptr<Scene> Visualisation::setScene(std::unique_ptr<Scene> scene)
 }
 void Visualisation::handleMouseMove(int x, int y){
     if (SDL_GetRelativeMouseMode()){
-        this->camera.turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
+        this->camera->turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
     }
 }
 void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
@@ -151,7 +152,7 @@ void Visualisation::handleKeypress(SDL_Keycode keycode, int x, int y){
     case SDLK_F5:
         if (this->scene)
 			this->scene->_reload();
-		this->hud.reload();
+		this->hud->reload();
         break;
     default:
         // Do nothing?
@@ -165,7 +166,7 @@ void Visualisation::close(){
     //Delete objects before we delete the GL context!
     fpsDisplay.reset();
 	helpText.reset();
-    this->hud.clear();
+    this->hud->clear();
     if (this->scene)
     {
         this->scene.reset();
@@ -189,28 +190,28 @@ void Visualisation::render()
     float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
 	turboMultiplier *= frameTime;
     if (state[SDL_SCANCODE_W]) {
-        this->camera.move(DELTA_MOVE*turboMultiplier);
+        this->camera->move(DELTA_MOVE*turboMultiplier);
     }
     if (state[SDL_SCANCODE_A]) {
-        this->camera.strafe(-DELTA_STRAFE*turboMultiplier);
+        this->camera->strafe(-DELTA_STRAFE*turboMultiplier);
     }
     if (state[SDL_SCANCODE_S]) {
-        this->camera.move(-DELTA_MOVE*turboMultiplier);
+        this->camera->move(-DELTA_MOVE*turboMultiplier);
     }
     if (state[SDL_SCANCODE_D]) {
-        this->camera.strafe(DELTA_STRAFE*turboMultiplier);
+        this->camera->strafe(DELTA_STRAFE*turboMultiplier);
     }
     if (state[SDL_SCANCODE_Q]) {
-        this->camera.roll(-DELTA_ROLL);
+        this->camera->roll(-DELTA_ROLL);
     }
     if (state[SDL_SCANCODE_E]) {
-        this->camera.roll(DELTA_ROLL);
+        this->camera->roll(DELTA_ROLL);
     }
     if (state[SDL_SCANCODE_SPACE]) {
-        this->camera.ascend(DELTA_ASCEND*turboMultiplier);
+        this->camera->ascend(DELTA_ASCEND*turboMultiplier);
     }
     if (state[SDL_SCANCODE_LCTRL]) {
-        this->camera.ascend(-DELTA_ASCEND*turboMultiplier);
+        this->camera->ascend(-DELTA_ASCEND*turboMultiplier);
     }
 
     // handle each event on the queue
@@ -219,6 +220,10 @@ void Visualisation::render()
         case SDL_QUIT:
             this->quit();
             break;
+		//case SDL_WINDOWEVENT:
+		//	if (e.window.event == SDL_WINDOWEVENT_RESIZED || e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		//		resizeWindow();
+		//	break;
         case SDL_KEYDOWN:
         {
             int x = 0;
@@ -241,13 +246,11 @@ void Visualisation::render()
     // update
 	this->scene->_update(frameTime);
     // render
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-	GL_CALL(glClearColor(0, 0, 0, 1));
-	GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    BackBuffer::useStatic();
     this->scene->_render();
-	GL_CALL(glViewport(0,0,windowWidth, windowHeight));
+    GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-	this->hud.render();
+	this->hud->render();
 
     GL_CHECK();
 
@@ -418,11 +421,12 @@ void Visualisation::resizeWindow(){
     // Use the sdl drawable size
     SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
     // Get the view frustum using GLM. Alternatively glm::perspective could be used.
-	this->frustum = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
+    this->projMat = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
     // Notify other elements
-    this->hud.resizeWindow(this->windowWidth, this->windowHeight);
+    this->hud->resizeWindow(this->windowWidth, this->windowHeight);
     if (this->scene)
       this->scene->_resize(this->windowWidth, this->windowHeight);
+    resizeBackBuffer(glm::uvec2(this->windowWidth, this->windowHeight));
 }
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.
@@ -449,15 +453,19 @@ void Visualisation::updateFPS(){
         this->frameCount = 0;
     }
 }
-const Camera *Visualisation::getCamera() const{
-    return &this->camera;
+std::shared_ptr<const Camera> Visualisation::getCamera() const
+{
+    return this->camera;
 }
 std::weak_ptr<Scene> Visualisation::getScene() const{
     return this->scene;
 }
 const glm::mat4 *Visualisation::getProjectionMatPtr() const{
-    return &this->frustum;
+    return &this->projMat;
 }
-HUD* Visualisation::getHUD(){
-	return &hud;
+glm::mat4 Visualisation::getProjectionMat() const{
+    return this->projMat;
+}
+std::weak_ptr<HUD> Visualisation::getHUD(){
+	return hud;
 }

@@ -17,6 +17,6 @@ void RenderPass::executeRender()
 }
 void RenderPass::resize(int width, int height)
 {
-	if (fb)
+	if (!std::dynamic_pointer_cast<BackBuffer>(fb))
 		fb->resize(width, height);
 }

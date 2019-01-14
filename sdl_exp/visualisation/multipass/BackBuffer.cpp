@@ -1,17 +1,48 @@
 #include "BackBuffer.h"
-BackBuffer::BackBuffer(bool doClear, glm::vec3 clearColor)
-	: dimensions(800, 600)//Something simple and valid, resize() should really be called directly after construction
-	, doClear(doClear)
+#include <glm/gtx/component_wise.hpp>
+
+std::weak_ptr<FBuffer> BackBuffer::overrideBuffer;
+glm::uvec2 BackBuffer::dimensions = glm::uvec2(1280, 720);
+bool BackBuffer::_doClear = true;
+glm::vec3 BackBuffer::_clearColor = glm::vec3(0);//Black
+const GLuint BackBuffer::NAME = 0;
+
+BackBuffer::BackBuffer(const bool &doClear, const glm::vec3 &clearColor)
+    : doClear(doClear)
 	, clearColor(clearColor)
+    , useStaticClear(compMin(clearColor) < 0 || compMax(clearColor) > 1.0f)
 { }
 void BackBuffer::resize(int width, int height)
 {
-	if (width>0 && height>0)
-		this->dimensions = glm::uvec2(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
+    static bool warn = false;
+    if (!warn)
+    {
+        warn = true;
+        fprintf(stderr, "Users cannot resize the backbuffer, this is managed by the Visualisation.\n");
+    }
 }
 bool BackBuffer::use()
 {
-	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, name));
+    return BackBuffer::_useStatic(doClear, useStaticClear ? _clearColor : clearColor);
+}
+void BackBuffer::resizeViewport(const glm::uvec2 &dims)
+{
+    if (dims.x>0 && dims.y>0)
+        BackBuffer::dimensions = dims;
+}
+bool BackBuffer::useStatic()
+{
+    return _useStatic(_doClear, _clearColor);
+}
+bool BackBuffer::_useStatic(const bool &doClear, const glm::vec3 &clearColor)
+{
+    if (auto o = overrideBuffer.lock())
+    {
+        if (o->use())
+            return true;
+        fprintf(stderr, "BackBuffer override failed, reverting to FrameBuffer 0.\n");
+    }
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, NAME));
 	if (doClear)
 	{
 		GL_CALL(glClearColor(clearColor.x, clearColor.y, clearColor.z, 1));
@@ -20,4 +51,10 @@ bool BackBuffer::use()
 	GL_CALL(glViewport(0, 0, dimensions.x, dimensions.y));
 	//The backbuffer cannot be modified, therefore it must always be complete.
 	return true;
+}
+void BackBuffer::setClear(const bool& doClear, const glm::vec3& clearColor)
+{
+    BackBuffer::_doClear = doClear;
+    if (compMin(clearColor) >= 0 && compMax(clearColor) <= 1.0f)
+        BackBuffer::_clearColor = clearColor;
 }

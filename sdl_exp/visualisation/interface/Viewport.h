@@ -15,6 +15,6 @@ public:
 	It is intended that this value can be tracked by Shaders over the duration of execution
 	@todo Switch to shared_ptr<const glm::mat4> return type
 	*/
-	virtual const glm::mat4 *getFrustrumPtr()const = 0;
+	virtual const glm::mat4 *getProjectionMatPtr()const = 0;
 };
 #endif

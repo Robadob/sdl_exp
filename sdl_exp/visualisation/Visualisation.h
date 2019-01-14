@@ -114,7 +114,7 @@ public:
 	 * This pointer can be used to continuously track the visualisations projection matrix
 	 * @return A pointer to the projection matrix
 	 */
-	const glm::mat4 *getFrustrumPtr() const override;
+    const glm::mat4 *getProjectionMatPtr() const override;
 	/**
 	 * Returns the visusalisation's HUD, to be used to add overlays
 	 * @return The visualisation's scene

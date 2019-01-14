@@ -455,7 +455,7 @@ const Camera *Visualisation::getCamera() const{
 std::weak_ptr<Scene> Visualisation::getScene() const{
     return this->scene;
 }
-const glm::mat4 *Visualisation::getFrustrumPtr() const{
+const glm::mat4 *Visualisation::getProjectionMatPtr() const{
     return &this->frustum;
 }
 HUD* Visualisation::getHUD(){

@@ -47,8 +47,8 @@ void MultiPassScene::_render()
     for (auto&& it : rpMap)//byRef
         it.second->executeRender();
 }
-void MultiPassScene::_resize(const int width, const int height)
+void MultiPassScene::_resize(const glm::uvec2 &dims)
 {
     for (auto&& it : rpMap)//byRef
-        it.second->resize(width, height);
+        it.second->resize(dims);
 }

@@ -1,6 +1,8 @@
 #ifndef __FBuffer_h__
 #define __FBuffer_h__
 #include "../util/GLcheck.h"
+#include <glm/glm.hpp>
+
 /**
  * Frame buffer interface shared by FrameBuffer and BackBuffer classes
  * Named FBuffer because Framebuffer is better suited to the actual class than the interface
@@ -24,7 +26,12 @@ public:
 	 * @param height The new viewport height
 	 * Resizes the internal images according to the specifed dimensions and the internal scaling factor
 	 */
-	virtual void resize(int width, int height) = 0;
+    void resize(const unsigned int &width, const unsigned int &height) { resize({ width, height }); }
+    /**
+     * @param dims The new viewport width and height
+     * Resizes the internal images according to the specifed dimensions and the internal scaling factor
+     */
+    virtual void resize(const glm::uvec2 &dims) = 0;
 	/**
 	* Binds the framebuffer
 	* @return True if the framebuffer is 'complete' and was bound

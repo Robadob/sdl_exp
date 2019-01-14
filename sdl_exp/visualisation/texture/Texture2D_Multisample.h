@@ -18,7 +18,7 @@ public:
 	 * Resizes the texture, retaining the existing number of samples
 	 * @param dimensions New texture dimensions
 	 */
-	void resize(const glm::uvec2 dimensions) override { resize(dimensions, 0); }
+	void resize(const glm::uvec2 &dimensions) override { resize(dimensions, 0); }
 	/**
 	 * Resizes the texture
 	 * @param dimensions New texture dimensions

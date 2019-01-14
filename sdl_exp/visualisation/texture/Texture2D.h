@@ -63,7 +63,7 @@ public:
 	 * @note This will lose existing data stored in the texture
 	 * @note This method is disabled for immutable textures
 	 */
-	void resize(const glm::uvec2 dimensions) override { resize(dimensions, nullptr); }
+	void resize(const glm::uvec2 &dimensions) override { resize(dimensions, nullptr); }
 	/**
 	 * Resizes the texture and updates the stored texture data
 	 * @param dimensions New texture dimensions

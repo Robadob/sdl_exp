@@ -127,7 +127,7 @@ public:
 	* Provides lights buffer to the shader
 	* @param bufferBindingPoint Set the buffer binding point to be used for rendering
 	*/
-	void setLightsBuffer(GLuint bufferBindingPoint) override;
+	void setLightsBuffer(const GLuint &bufferBindingPoint) override;
     void flipVertexOrder();
 	void setCullFace(const bool cullFace);
 	glm::vec3 getMin() const { return modelMin; }

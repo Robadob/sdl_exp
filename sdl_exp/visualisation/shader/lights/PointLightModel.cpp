@@ -94,7 +94,7 @@ void PointLightModel::setProjectionMatPtr(const glm::mat4 *projectionMat)
 {
 	shader->setProjectionMatPtr(projectionMat);
 }
-void PointLightModel::setLightsBuffer(GLuint bufferBindingPoint)
+void PointLightModel::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
 	//Do nothing, lights will be rendered full bright
 }

@@ -74,17 +74,17 @@ public:
 	 * Provides view matrix to the shader
 	 * @param viewMat Set the view matrix to be used for rendering
 	 */
-	void setViewMatPtr(glm::mat4 const *viewMat) override;
+    void setViewMatPtr(const glm::mat4 *viewMat) override;
 	/**
 	 * Provides projection matrix to the shader
 	 * @param projectionMat Set the projection matrix to be used for rendering
 	 */
-	void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setProjectionMatPtr(const glm::mat4 *projectionMat) override;
 	/**
 	 * Provides lights buffer to the shader
 	 * @param bufferBindingPoint Set the buffer binding point to be used for rendering
 	 */
-	void setLightsBuffer(GLuint bufferBindingPoint) override;
+    void setLightsBuffer(const GLuint &bufferBindingPoint) override;
 	/**
 	 * Sets the width to use for the current drawing
 	 * The last value set before end() or save() will be taken

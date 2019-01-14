@@ -17,7 +17,7 @@ public:
 
     void render() override;
     void reload() override;
-    void update(unsigned int frameTime) override;
+    void update(const unsigned int &frameTime) override;
     bool keypress(SDL_Keycode keycode, int x, int y) override;
 private:
 #ifdef __CUDACC__

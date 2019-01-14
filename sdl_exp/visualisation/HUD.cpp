@@ -5,51 +5,34 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "shader/Shaders.h"
 
-/*
-Creates a new HUD, specifying the window dimensions
-@param width Window width
-@param height Window height
-@note This is done within Visualisation, regular users have no reason to instaniate a HUD
-*/
-HUD::HUD(unsigned int width, unsigned int height)
+
+HUD::HUD(const unsigned int &width, const unsigned int &height)
+    : HUD(glm::uvec2(width, height))
+{ }
+
+HUD::HUD(const glm::uvec2 &dims)
 	: modelViewMat()
 	, projectionMat()
-	, width(width)
-	, height(height)
+    , dims(dims)
 {
-	resizeWindow(width, height);
+    resizeWindow(dims);
 }
-/*
-Adds an overlay element to the HUD
-@param overlay The overlay element to be rendered as part of the HUD
-@param anchorV Vertical Anchoring location (North|Center|South), defaults Center
-@param anchordH Horizontal Anchoring location (East|Center|West), defaults Center
-@param x The horizontal offset from the anchored position
-@param y The vertical offset from the anchored position
-@param z-index The priority for which overlay should be on-top.
-@note If two items share the same z-index, the new item will insert as though it has the lower z-index (and be rendered underneath)
-@note Adding the same overlay to HUD a second time, will remove it's first instance.
-*/
-void HUD::add(std::shared_ptr<Overlay> overlay, AnchorV anchorV, AnchorH anchorH, int x, int y, int zIndex)
+void HUD::add(std::shared_ptr<Overlay> overlay, AnchorV anchorV, AnchorH anchorH, const glm::ivec2 &offset, int zIndex)
 {
     remove(overlay);
-	std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
-	for (; it != stack.end(); ++it)
-	{
-		//Find first element with a lower z-index
-		if ((*it)->zIndex < zIndex)
-		{
-			break;
-		}
-	}
-	
-	std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, x, y, this->width, this->height, anchorV, anchorH, zIndex));
+    std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
+    for (; it != stack.end(); ++it)
+    {
+        //Find first element with a lower z-index
+        if ((*it)->zIndex < zIndex)
+        {
+            break;
+        }
+    }
+
+    std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, offset, this->dims, anchorV, anchorH, zIndex));
 	overlay->setHUDItem(*item);
 }
-/*
-Removes the specified overlay from the HUD
-@return The number of overlays removed
-*/
 unsigned int HUD::remove(std::shared_ptr<Overlay> overlay)
 {
 	unsigned int removed = 0;
@@ -66,33 +49,19 @@ unsigned int HUD::remove(std::shared_ptr<Overlay> overlay)
 	}
 	return removed;
 }
-/*
-Removes all overlays from the HUD
-*/
 void HUD::clear()
 {
 	stack.clear();
 }
-/*
-Returns the number of overlays currently on the HUD
-@return The number of overlays
-*/
 unsigned int HUD::getCount()
 {
 	return (unsigned int)stack.size();
 }
-/*
-Calls reload on all held overlay elements
-@note Some overlay subclasses may not implement reload, however their shaders will be reloaded
-*/
 void HUD::reload()
 {
 	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
 		(*it)->overlay->_reload();
 }
-/*
-Renders all HUD elements in reverse z-index order, with GL_DEPTH_TEST disabled
-*/
 void HUD::render()
 {
     GL_CALL(glDisable(GL_DEPTH_TEST));
@@ -107,15 +76,9 @@ void HUD::render()
     GL_CALL(glDisable(GL_BLEND));
     GL_CALL(glEnable(GL_DEPTH_TEST));
 }
-/*
-Repositions all HUD ovlerays according to the new window dimensions and their repsective anchoring/offset args
-@param w New window width
-@param h New window height
-*/
-void HUD::resizeWindow(const unsigned int w, const unsigned int h)
+void HUD::resizeWindow(const glm::uvec2 &dims)
 {
-	this->width = w;
-	this->height = h;
+    this->dims = dims;
 	//Camera at origin looking down y axis, with up vector looking up z axis
 	//Top left is origin, bottom right is (width, -height)
 	//Bottom left is origin
@@ -123,28 +86,19 @@ void HUD::resizeWindow(const unsigned int w, const unsigned int h)
 	//Rendering the z plane 0 to -1
 	projectionMat =
 		glm::ortho<float>(
-			0.0f, (float)this->width,
-			0.0f, (float)this->height,
+            0.0f, (float)this->dims.x,
+            0.0f, (float)this->dims.y,
 			0.0f, 1.0f
 			);
 	for (std::list<std::shared_ptr<Item>>::iterator it = stack.begin(); it != stack.end(); ++it)
-		(*it)->resizeWindow(this->width, this->height);
+        (*it)->resizeWindow(this->dims);
 }
-/*
-Initialises the HUDItem, by calculating the elements position
-@param overlay The overlay element to be rendered as part of the HUD
-@param x The horizontal offset from the anchored position
-@param y The vertical offset from the anchored position
-@param window_w The width of the HUD
-@param windows_h The height of the HUD
-@param anchorV Vertical Anchoring location (North|Center|South), defaults Center
-@param anchordH Horizontal Anchoring location (East|Center|West), defaults Center
-@param z-index The priority for which overlay should be on-top.
-*/
-HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int window_w, unsigned int window_h, AnchorV anchorV, AnchorH anchorH, int zIndex)
+HUD::Item::Item(std::shared_ptr<Overlay> overlay, const int &x, const int &y, const unsigned int &window_w, const unsigned int &window_h, AnchorV anchorV, AnchorH anchorH, const int &zIndex)
+    : Item(overlay, { x, y }, { window_w, window_h }, anchorV, anchorH, zIndex)
+{ }
+HUD::Item::Item(std::shared_ptr<Overlay> overlay, const glm::ivec2 &offset, const glm::uvec2 &windowDims, AnchorV anchorV, AnchorH anchorH, const int &zIndex)
 	: overlay(overlay)
-	, x(x)
-	, y(y)
+    , offset(offset)
 	, anchorV(anchorV)
 	, anchorH(anchorH)
 	, zIndex(zIndex)
@@ -168,7 +122,7 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	GL_CALL(glBufferData(GL_ARRAY_BUFFER, bufferSize, data, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	//Setup vertices
-	resizeWindow(window_w, window_h);
+    resizeWindow(windowDims);
 	//Link Vertex Attributes TO SHADER??!?!??!?
 	Shaders::VertexAttributeDetail pos(GL_FLOAT, 3, sizeof(float));
 	pos.vbo = vbo;
@@ -191,19 +145,13 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, int x, int y, unsigned int win
 	GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
 	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
-/*
-Update the overlays quad location, based on new window size, anchors, offsets and overlay dimensions
-@param w The new window width
-@param h The new window height
-*/
-void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
+void HUD::Item::resizeWindow(const glm::uvec2 &dims)
 {
 	//Track parameters, so when called from overlay we can reuse previous
-	static unsigned int width, height;
-	if (w>0 && h>0)
+	static glm::uvec2 _dims;
+    if (dims.x>0 && dims.y>0)
 	{
-		width = w;
-		height = h;
+        _dims = dims;
 	}
 	const float depth = -0.5f;
 	glm::vec3 *topLeft		= static_cast<glm::vec3*>(data);
@@ -215,19 +163,19 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
 	if (anchorH == AnchorH::West)
 		bottomLeft->x = 0;
 	else if (anchorH == AnchorH::Center)
-		bottomLeft->x = (float)(int)((width / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
+        bottomLeft->x = (float)(int)((_dims.x / 2.0f) - (overlay->getWidth() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorH == AnchorH::East)
-		bottomLeft->x = (float)width - (float)overlay->getWidth();
+        bottomLeft->x = (float)_dims.x - (float)overlay->getWidth();
 	//Anchor vertical
 	if (anchorV == AnchorV::South)
 		bottomLeft->y = 0;
 	else if (anchorV==AnchorV::Center)
-		bottomLeft->y = (float)(int)((height / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
+        bottomLeft->y = (float)(int)((_dims.y / 2.0f) - (overlay->getHeight() / 2.0f));//Cast back to int to prevent tearing
 	else if (anchorV==AnchorV::North)
-		bottomLeft->y = ((float)height - (float)overlay->getHeight());
+        bottomLeft->y = ((float)_dims.y - (float)overlay->getHeight());
 	//Apply offsets
-    bottomLeft->x += x;
-    bottomLeft->y += y;
+    bottomLeft->x += offset.x;
+    bottomLeft->y += offset.y;
 	//Adjust other corners relative to topLeft & overlay size
 	*topLeft     = glm::vec3(*bottomLeft);
 	*bottomRight = glm::vec3(*bottomLeft);
@@ -246,7 +194,7 @@ void HUD::Item::resizeWindow(const unsigned int w, const unsigned int h)
     auto pair = Shaders::findUniform("_viewportDims", overlay->getShaders()->getProgram());
     if (std::get<0>(pair) != -1)
     {
-        glm::ivec2 viewportDims(width, height);
+        glm::ivec2 viewportDims(_dims);
         overlay->getShaders()->addStaticUniform("_viewportDims", glm::value_ptr(viewportDims), 2);
     }
 }

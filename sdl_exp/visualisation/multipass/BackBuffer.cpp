@@ -12,7 +12,7 @@ BackBuffer::BackBuffer(const bool &doClear, const glm::vec3 &clearColor)
 	, clearColor(clearColor)
     , useStaticClear(compMin(clearColor) < 0 || compMax(clearColor) > 1.0f)
 { }
-void BackBuffer::resize(int width, int height)
+void BackBuffer::resize(const glm::uvec2 &dims)
 {
     static bool warn = false;
     if (!warn)

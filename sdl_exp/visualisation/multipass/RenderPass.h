@@ -34,9 +34,10 @@ public:
 	 */
 	virtual void executeRender();
     /**
-     * Triggered when the viewport resizes, such that attatched textures can be auto resized
+     * Triggered when the viewport resizes, such that attached textures can be auto resized
      */
-	virtual void resize(int width, int height);
+    void resize(const unsigned int &width, const unsigned int &height) { resize({width, height}); };
+    virtual void resize(const glm::uvec2 &dims);
 private:
 	const std::shared_ptr<FBuffer> fb;
 protected:

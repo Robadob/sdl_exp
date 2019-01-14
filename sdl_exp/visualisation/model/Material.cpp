@@ -119,7 +119,7 @@ void Material::setProjectionMatPtr(const glm::mat4 *projectionMat)
 	for (const auto &i : this->shaders)
 		i->setProjectionMatPtr(projectionMat);
 }
-void Material::setLightsBuffer(GLuint bufferBindingPoint)
+void Material::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
 	defaultShader->setLightsBuffer(bufferBindingPoint);
 	for (const auto &i : this->shaders)

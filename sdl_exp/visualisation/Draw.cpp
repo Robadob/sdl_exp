@@ -303,7 +303,7 @@ void Draw::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	shaders->setProjectionMatPtr(projectionMat);
 }
-void Draw::setLightsBuffer(GLuint bufferBindingPoint)
+void Draw::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
 	shaders->setLightsBuffer(bufferBindingPoint);
 }

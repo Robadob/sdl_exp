@@ -34,10 +34,9 @@ protected:
 	virtual bool keypress(SDL_Keycode keycode, int x, int y){ return true; };
 	/**
 	 * Called when the window is resized
-	 * @param width The new window width
-	 * @param height The new window height
+	 * @param dims The new window width and height
 	 */
-	virtual void resize(int width, int height){};
+	virtual void resize(const glm::uvec2 &dims){};
 	/**
 	 * Called when a reload event occurs
      */
@@ -46,7 +45,7 @@ protected:
 	 * Called when you should update your scene
 	 * @param frameTime The number of milliseconds since the last time this method was called
 	 */
-	virtual void update(unsigned int frameTime){};
+	virtual void update(const unsigned int &frameTime){};
 	/**
 	 * Toggles whether the skybox should be used or not
 	 * @param state The desired skybox state
@@ -74,7 +73,7 @@ private:
 	/**
 	 * Internal resize functionality, calls resize()
 	 */
-	inline virtual void _resize(int width, int height) override final { resize(width, height); };
+    inline virtual void _resize(const glm::uvec2 &dims) override final { resize(dims); };
 	/**
 	 * Internal reload functionality, calls reload()
 	 */
@@ -82,7 +81,7 @@ private:
 	/**
 	 * Internal update functionality, calls update()
 	 */
-	inline virtual void _update(unsigned int frameTime) override final { update(frameTime); };
+	inline virtual void _update(const unsigned int &frameTime) override final { update(frameTime); };
 	/**
 	 * Holds registered entities so the BasicScene can automatically reload them
 	 */

@@ -41,7 +41,7 @@ public:
 	/**
 	 * Redundant
 	 */
-	void setLightsBuffer(GLuint bufferBindingPoint) override;
+    void setLightsBuffer(const GLuint &bufferBindingPoint) override;
 };
 
 #endif //__PointLightModel_h__

@@ -46,7 +46,7 @@ public:
      */
     const glm::vec3 *getEyePtr() const { return &eye; };
 protected:
-    Camera(const glm::vec3 eye) : eye(eye), viewMat(0), skyboxViewMat(1) {};
+    Camera(const glm::vec3 eye) : viewMat(0), skyboxViewMat(1), eye(eye) {};
     //View matrix
     glm::mat4 viewMat;
     //View matrix without camera position taken into consideration

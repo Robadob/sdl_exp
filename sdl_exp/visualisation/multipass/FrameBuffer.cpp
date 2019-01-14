@@ -208,15 +208,12 @@ bool FrameBuffer::isValid() const
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, prevFBO));
 	return st == GL_FRAMEBUFFER_COMPLETE;
 }
-void FrameBuffer::resize(int width, int height)
+void FrameBuffer::resize(const glm::uvec2 &dims)
 {
 	if (scale > 0)
 	{
-		if (width>0 && height>0)
-		{
-            dimensions = glm::ivec2(ceil(width*scale), ceil(height*scale));
-            makeAttachments();
-		}
+        dimensions = glm::uvec2(ceil(glm::vec2(dims)*scale));
+        makeAttachments();
 	}
 }
 bool FrameBuffer::use() 

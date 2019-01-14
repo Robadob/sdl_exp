@@ -36,19 +36,18 @@ Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW
 	, continueRender(false)
     , msaaState(true)
     , windowTitle(windowTitle)
-    , windowWidth(windowWidth)
-    , windowHeight(windowHeight)
+    , windowDims(windowWidth, windowHeight)
 	, fpsDisplay(nullptr)
 {
     this->isInitialised = this->init();
 
     fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
     fpsDisplay->setUseAA(false);
-    hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, 0, 0, INT_MAX);
+    hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::West, glm::ivec2(0), INT_MAX);
     helpText = std::make_shared<Text>("Controls\nW,S: Move Forwards/Backwards\nA,D: Strafe\nQ,E: Roll\nF1:  Toggle Show Controls\nF5:  Reload Resources/Shaders\nF8:  Toggle Show FPS\nF9:  Toggle Show Skybox\nF10: Toggle MSAA\nF11: Toggle Fullscreen\nESC: Quit", 20, glm::vec3(1.0f), Stock::Font::LUCIDIA_CONSOLE);
     helpText->setBackgroundColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
     helpText->setVisible(false);
-    hud->add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, 0, 0, INT_MAX);
+    hud->add(helpText, HUD::AnchorV::Center, HUD::AnchorH::Center, glm::ivec2(0), INT_MAX);
 }
 Visualisation::~Visualisation()
 {
@@ -77,8 +76,8 @@ bool Visualisation::init(){
         this->windowTitle,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        this->windowWidth,
-        this->windowHeight,
+        this->windowDims.x,
+        this->windowDims.y,
         SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL //| SDL_WINDOW_BORDERLESS
         );
 
@@ -248,7 +247,7 @@ void Visualisation::render()
     // render
     BackBuffer::useStatic();
     this->scene->_render();
-    GL_CALL(glViewport(0, 0, windowWidth, windowHeight));
+    GL_CALL(glViewport(0, 0, windowDims.x, windowDims.y));
 	GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 	this->hud->render();
 
@@ -419,14 +418,18 @@ void Visualisation::toggleMouseMode(){
 }
 void Visualisation::resizeWindow(){
     // Use the sdl drawable size
-    SDL_GL_GetDrawableSize(this->window, &this->windowWidth, &this->windowHeight);
+    {
+        glm::ivec2 tDims;
+        SDL_GL_GetDrawableSize(this->window, &tDims.x, &tDims.y);
+        this->windowDims = tDims;
+    }
     // Get the view frustum using GLM. Alternatively glm::perspective could be used.
-    this->projMat = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowWidth, (float)this->windowHeight, NEAR_CLIP, FAR_CLIP);
+    this->projMat = glm::perspectiveFov<float>(glm::radians(FOVY), (float)this->windowDims.x, (float)this->windowDims.y, NEAR_CLIP, FAR_CLIP);
     // Notify other elements
-    this->hud->resizeWindow(this->windowWidth, this->windowHeight);
+    this->hud->resizeWindow(this->windowDims);
     if (this->scene)
-      this->scene->_resize(this->windowWidth, this->windowHeight);
-    resizeBackBuffer(glm::uvec2(this->windowWidth, this->windowHeight));
+        this->scene->_resize(this->windowDims);
+    resizeBackBuffer(this->windowDims);
 }
 bool Visualisation::isFullscreen() const{
     // Use window borders as a toggle to detect fullscreen.

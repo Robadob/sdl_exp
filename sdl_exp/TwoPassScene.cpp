@@ -95,7 +95,7 @@ TwoPassScene::TwoPassScene(Visualisation &visualisation)
 Called once per frame when Scene animation calls should be
 @param Milliseconds since last time this method was called
 */
-void TwoPassScene::update(unsigned int frameTime)
+void TwoPassScene::update(const unsigned int &frameTime)
 {
     //Increment ticks
 	this->tick += this->polarity*((frameTime * 60) / 1000.0f)*0.005f;

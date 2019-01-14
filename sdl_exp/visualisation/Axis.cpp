@@ -38,7 +38,7 @@ void Axis::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
 	pen.setProjectionMatPtr(projectionMat);
 }
-void Axis::setLightsBuffer(GLuint bufferBindingPoint)
+void Axis::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
 	pen.setLightsBuffer(bufferBindingPoint);
 }

@@ -25,7 +25,7 @@ public:
 	 * Resizes the renderbuffer
 	 * @param dimensions The new size of the renderbuffer
 	 */
-	void resize(const glm::uvec2 dimensions) override;
+	void resize(const glm::uvec2 &dimensions) override;
 	/**
 	 * Returns the OpenGL name as allocated by glGenRenderbuffers()
 	 */

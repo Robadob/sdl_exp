@@ -66,7 +66,7 @@ public:
 	TwoPassScene(Visualisation &visualisation);
 	void reload() override;
 	bool keypress(SDL_Keycode keycode, int x, int y) override;
-	void update(unsigned int frameTime) override;
+	void update(const unsigned int &frameTime) override;
 private:
 	std::shared_ptr<SceneContent> content;
 

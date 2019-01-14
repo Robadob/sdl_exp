@@ -24,13 +24,13 @@ public:
 	 * @param viewMat Ptr to modelview matrix
 	 * @note This is normally found within the Camera object
 	 */
-    virtual void setViewMatPtr(glm::mat4 const *viewMat) = 0;
+    virtual void setViewMatPtr(const glm::mat4 *viewMat) = 0;
 	/**
 	 * Binds the provided projection matrix to the internal shader
 	 * @param projectionMat Ptr to model view matrix
 	 * @note This is normally found within the Viewport object
 	 */
-	virtual void setProjectionMatPtr(glm::mat4 const *projectionMat) = 0;
+	virtual void setProjectionMatPtr(const glm::mat4 *projectionMat) = 0;
 	/**
 	 * Binds the provided view matrix to the internal shader
 	 * @param camera Ptr to view matrix
@@ -50,8 +50,8 @@ public:
 	{
         setProjectionMatPtr(visualisation->getProjectionMatPtr());
 	}
-	virtual void setLightsBuffer(GLuint bufferBindingPoint) = 0;
-	virtual void setLightsBuffer(std::shared_ptr<LightsBuffer> buffer);
+	virtual void setLightsBuffer(const GLuint &bufferBindingPoint) = 0;
+	virtual void setLightsBuffer(std::shared_ptr<const LightsBuffer> buffer);
 	
 };
 

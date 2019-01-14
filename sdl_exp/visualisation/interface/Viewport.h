@@ -13,8 +13,9 @@ public:
     /**
      * @return The current viewport dimensions
      */
-    virtual int getWindowWidth() const = 0;
-    virtual int getWindowHeight() const = 0;
+    virtual unsigned int getWindowWidth() const = 0;
+    virtual unsigned int getWindowHeight() const = 0;
+    virtual glm::uvec2 getWindowDims() const = 0;
 	/*
 	 * Returns the pointer to the view frustum of the viewport
 	 * It is intended that this value can be tracked by Shaders over the duration of execution

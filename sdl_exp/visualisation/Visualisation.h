@@ -18,9 +18,7 @@ class Text;
 
 /**
  * This class provides an OpenGL window
- * @todo Can we instead return weak pointers to camera/hud?
- * @todo Add a key handler interface
- * @todo Add support for generic camera classes
+ * @todo Add a keypress handler interface
  * @todo Make a runAsync() variation
  */
 class Visualisation : public ViewportExt
@@ -124,11 +122,15 @@ public:
 	/**
 	 * @return The current window/viewport width
 	 */
-	int getWindowWidth() const { return windowWidth; }
+	unsigned int getWindowWidth() const override { return windowDims.x; }
 	/**
 	 * @return The current window/viewport height
 	 */
-	int getWindowHeight() const { return windowHeight; }
+    unsigned int getWindowHeight() const override { return windowDims.y; }
+    /**
+    * @return The current window/viewport dimensions
+    */
+    glm::uvec2 getWindowDims() const override { return windowDims; }
 private:
 	/**
 	 * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
@@ -170,7 +172,7 @@ private:
 	 */
 	void _run();
 	/**
-	 * Kills thread t, only to be called from host threead.
+	 * Kills thread t, only to be called from host thread.
 	 */
 	void killThread();
 	std::thread *t;
@@ -189,8 +191,7 @@ private:
     bool msaaState;
 
     const char* windowTitle;
-    int windowWidth;
-    int windowHeight;
+    glm::uvec2 windowDims;
 
     //FPS tracking stuff
     unsigned int previousTime = 0;

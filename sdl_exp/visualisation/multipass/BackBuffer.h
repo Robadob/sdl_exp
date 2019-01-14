@@ -52,7 +52,7 @@ public:
      * Disabled by BackBuffer
      * Visualisations manage this value
      */
-    void resize(int width, int height) override final;
+    void resize(const glm::uvec2 &dims) override final;
     /**
      * The native BackBuffer has the GLName 0
      */

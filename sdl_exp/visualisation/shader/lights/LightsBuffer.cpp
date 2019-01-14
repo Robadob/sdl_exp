@@ -133,7 +133,7 @@ void LightsBuffer::render()
 //Comment out this include if not making use of Shaders/ShaderCore
 #include "../../interface/Renderable.h"
 #ifdef __Renderable_h__
-void Renderable::setLightsBuffer(std::shared_ptr<LightsBuffer> buffer)
+void Renderable::setLightsBuffer(std::shared_ptr<const LightsBuffer> buffer)
 {//Treat it similar to texture binding points
 	setLightsBuffer(buffer->getBufferBindPoint());
 }

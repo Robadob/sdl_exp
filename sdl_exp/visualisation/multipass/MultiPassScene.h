@@ -26,7 +26,7 @@ public:
      * Called once per frame when Scene animation calls should be executed
      * @param frameTime The number of miliseconds since update was last called
      */
-    virtual void update(unsigned int frameTime){};
+    virtual void update(const unsigned int &frameTime){};
 	/**
 	 * Adds a renderPass to the render loop
 	 * @param index The position which it should be rendered at (low->high)
@@ -70,7 +70,7 @@ private:
 	/**
 	 * Resizes the textures attatched the Framebuffers within RenderPass's
 	 */
-	virtual void _resize(int width, int height) override final;
+	virtual void _resize(const glm::uvec2 &dims) override final;
 	/**
 	 * Reloads all registered entities, then calls reload on the subclassed scene
 	 */
@@ -78,7 +78,7 @@ private:
 	/**
 	 * Internal update functionality, calls update()
 	 */
-	inline virtual void _update(unsigned int frameTime) override final { update(frameTime); };
+	inline virtual void _update(const unsigned int &frameTime) override final { update(frameTime); };
 	/**
 	* Holds registered entities so the Scene can automatically reload them
 	*/

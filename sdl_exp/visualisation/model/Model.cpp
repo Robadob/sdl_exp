@@ -710,7 +710,7 @@ void Model::setProjectionMatPtr(const glm::mat4 *projectionMat)
 		skeletonPen.setProjectionMatPtr(projectionMat);
 	}
 }
-void Model::setLightsBuffer(GLuint bufferBindingPoint)
+void Model::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
 	lightsBufferBindPt = bufferBindingPoint;
 	if (data)

@@ -1589,7 +1589,7 @@ void Entity::setProjectionMatPtr(glm::mat4 const *projectionMat)
 	for (auto &m : materials)
 		m.setProjectionMatPtr(projectionMat);
 }
-void Entity::setLightsBuffer(GLuint bufferBindingPoint)
+void Entity::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
 	lightBufferBindPt = bufferBindingPoint;
 	for (auto &&it : shaders)

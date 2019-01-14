@@ -64,7 +64,7 @@ EntityScene::EntityScene(Visualisation &visualisation)
 Called once per frame when Scene animation calls should be 
 @param Milliseconds since last time this method was called
 */
-void EntityScene::update(unsigned int frameTime)
+void EntityScene::update(const unsigned int &frameTime)
 {
     this->tick += this->polarity*((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);

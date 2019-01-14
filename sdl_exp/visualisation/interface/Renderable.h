@@ -37,7 +37,7 @@ public:
 	 * @note This is normally found within the Camera object
 	 * @note This method is overriden by Skybox as it required modelview sans translation
 	 */
-	virtual void setViewMatPtr(const Camera *camera)
+	virtual void setViewMatPtr(std::shared_ptr<const Camera> camera)
 	{
 		setViewMatPtr(camera->getViewMatPtr());
 	}

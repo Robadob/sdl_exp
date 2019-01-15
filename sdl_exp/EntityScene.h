@@ -7,6 +7,9 @@
 #include "visualisation/model/Model.h"
 
 #include "visualisation/texture/TextureBuffer.h"
+#include "visualisation/model/SceneGraphJoint.h"
+
+class TowerCrane;
 /*
 Example scene to demonstrate how to use SDL_EXP
 */
@@ -29,8 +32,11 @@ private:
     std::shared_ptr<Entity> instancedSphere;
 	const unsigned int INSTANCE_COUNT;
     std::shared_ptr<Entity> deerModel;
-	std::shared_ptr<Entity> colorModel;
-	std::shared_ptr<Model> bob;
+    std::shared_ptr<Entity> colorModel;
+    std::shared_ptr<Model> bob;
+	std::shared_ptr<Entity> teapotModel, teapotModel2;
+	std::shared_ptr<SceneGraphJoint> teapotJoint, teapotJoint2;
+	std::shared_ptr<TowerCrane> crane;
     float tick;
 	int polarity;
 	bool bobPause = false;

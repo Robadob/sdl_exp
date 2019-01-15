@@ -1,7 +1,7 @@
 #include "TwoPassScene.h"
 #include "visualisation/multipass/FrameBuffer.h"
 #include "visualisation/multipass/BackBuffer.h"
-#include <glm/gtc/matrix_transform.inl>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 //Create content struct
 TwoPassScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights)

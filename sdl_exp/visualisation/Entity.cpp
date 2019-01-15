@@ -237,6 +237,7 @@ Entity::Entity(
 			it->setNormalsAttributeDetail(normals);
 			it->setColorsAttributeDetail(colors);
 			it->setTexCoordsAttributeDetail(texcoords);
+			it->setModelMatPtr(&modelMat);
 			it->setMaterialBuffer(materialBuffer);
 			it->setFaceVBO(faces.vbo);
 		}
@@ -262,20 +263,6 @@ Entity::~Entity(){
 	materialBuffer.reset();
 	materials.clear();
 	texture.reset();
-}
-glm::mat4 Entity::getModelMat() const
-{
-	//Apply world transforms (in reverse order that we wish for them to be applied)
-	glm::mat4 modelMat = glm::translate(glm::mat4(1), this->location);
-
-	//Check we actually have a rotation (providing no axis == error)
-	if ((this->rotation.x != 0 || this->rotation.y != 0 || this->rotation.z != 0) && this->rotation.w != 0)
-		modelMat = glm::rotate(modelMat, glm::radians(this->rotation.w), glm::vec3(this->rotation));
-
-	//Only bother scaling if we were asked to
-	if (this->scaleFactor != 1.0f)
-		modelMat = glm::scale(modelMat, glm::vec3(this->scaleFactor));
-	return modelMat;
 }
 /*
 Calls the necessary code to render a single instance of the entity
@@ -312,6 +299,29 @@ void Entity::renderInstances(int count, unsigned int shaderIndex){
 		GL_CALL(glDisable(GL_CULL_FACE));
 
 	this->materials[0].clear();
+}
+/**
+ * Scene graph render method
+ */
+void Entity::render(const glm::mat4 &transform)
+{
+    printf("todo: Entity::render(const glm::mat4 &transform)\n");
+
+    //Translate the model according to it's location
+    unsigned int shaderIndex = 0;
+    glm::mat4 m = transform * getSceneMat() * getModelMat();
+    this->materials[0].use(m, shaderIndex, true);
+	
+	//Bind the faces to be rendered
+	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
+
+	if (!cullFace)
+		GL_CALL(glDisable(GL_CULL_FACE));
+	GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
+	if (!cullFace)
+        GL_CALL(glEnable(GL_CULL_FACE));
+
+    this->materials[0].clear();
 }
 /*
 Creates a vertex buffer object of the specified size
@@ -1632,3 +1642,68 @@ void Entity::setCullFace(const bool cullFace)
 {
 	this->cullFace = cullFace;
 }
+void printMat(glm::mat4 m)
+{
+	m = transpose(m);
+	printf(
+		"----------\n\
+		%.3f, %.3f, %.3f, %.3f\n\
+		%.3f, %.3f, %.3f, %.3f\n\
+		%.3f, %.3f, %.3f, %.3f\n\
+		%.3f, %.3f, %.3f, %.3f\n",
+		m[0][0], m[0][1], m[0][2], m[0][3],
+		m[1][0], m[1][1], m[1][2], m[1][3],
+		m[2][0], m[2][1], m[2][2], m[2][3],
+		m[3][0], m[3][1], m[3][2], m[3][3]);
+}
+
+void Entity::setSceneLocation(const glm::vec3 &loc)
+{
+	glm::mat4 mm = getSceneMat();
+	mm[3] = glm::vec4(loc, 1);	
+	setSceneMat(mm);
+}
+void Entity::translateScene(const glm::vec3 &offset)
+{
+	glm::mat4 mm = getSceneMat();
+	mm[3] += glm::vec4(offset, 0);
+	setSceneMat(mm);
+}
+void Entity::rotateScene(const float &angleRadians, const glm::vec3 &axis)
+{
+	//Get current model mat
+	glm::mat4 mm = getSceneMat();
+	//Get current translation
+	glm::vec4 location = mm[3];
+	//Purge translation
+	mm[3] = glm::vec4(0, 0, 0, 1);
+	//Apply rotation
+	mm *= glm::rotate(angleRadians, axis);
+	//Reapply translation
+	mm[3] = location;
+	//Set model mat
+	setSceneMat(mm);
+}
+void Entity::scaleScene(const glm::vec3 &scale)
+{
+    //Get current model mat
+    glm::mat4 mm = getSceneMat();
+    //Apply scale
+    mm *= glm::scale(scale);
+    //Set model mat
+    setSceneMat(mm);
+}
+//void Entity::resetSceneScale(const glm::vec3 &scale)
+//{
+//    //Get current model mat
+//    glm::mat4 mm = getSceneMat();
+//    glm::vec3 sceneScale = glm::vec3(
+//        length(glm::vec3(mm[0][0], mm[1][0], mm[2][0])),
+//        length(glm::vec3(mm[0][1], mm[1][1], mm[2][1])),
+//        length(glm::vec3(mm[0][2], mm[1][2], mm[2][2]))
+//        );
+//    //Apply scale
+//    mm *= glm::scale(1.0f / sceneScale);
+//    //Set model mat
+//    setSceneMat(mm);
+//}

@@ -9,6 +9,8 @@ class Skybox : public Entity
 public:
     Skybox(const char *texturePath = TextureCubeMap::SKYBOX_PATH, float yOffset = 0.0f);
 	void render(unsigned int shaderIndex = 0) override;
+	void renderInstances(int count, unsigned int shaderIndex = 0) override;
+	void render(const glm::mat4 &transform) override;
 	void setViewMatPtr(std::shared_ptr<const Camera> camera) override;
     void setYOffset(float yOffset);
 };

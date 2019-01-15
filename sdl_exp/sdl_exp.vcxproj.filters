@@ -72,6 +72,12 @@
     <Filter Include="Source Files\Visualisation\Camera">
       <UniqueIdentifier>{3eb1198c-05f2-4a80-b71d-543597a8fe05}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\Model\SceneGraph">
+      <UniqueIdentifier>{37878b66-076c-4d27-89a7-84ac8024c30e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\Model\SceneGraph">
+      <UniqueIdentifier>{2585471f-d4d5-4178-8988-1b0865ff595c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -164,6 +170,9 @@
     <ClCompile Include="visualisation\multipass\RenderBuffer.cpp">
       <Filter>Source Files\Visualisation\MultiPass</Filter>
     </ClCompile>
+    <ClCompile Include="visualisation\TowerCrane.cpp">
+      <Filter>Source Files\Visualisation</Filter>
+    </ClCompile>
     <ClCompile Include="visualisation\model\Mesh.cpp">
       <Filter>Source Files\Visualisation\Model</Filter>
     </ClCompile>
@@ -193,6 +202,15 @@
     </ClCompile>
     <ClCompile Include="visualisation\camera\NoClipCamera.cpp">
       <Filter>Source Files\Visualisation\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\SlideJoint.cpp">
+      <Filter>Source Files\Visualisation\Model\SceneGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\SceneGraphItem.cpp">
+      <Filter>Source Files\Visualisation\Model\SceneGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\model\SceneGraphJoint.cpp">
+      <Filter>Source Files\Visualisation\Model\SceneGraph</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -318,6 +336,9 @@
     <ClInclude Include="visualisation\interface\RenderTarget.h">
       <Filter>Header Files\Visualisation\Interface</Filter>
     </ClInclude>
+    <ClInclude Include="visualisation\TowerCrane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="visualisation\model\Mesh.h">
       <Filter>Header Files\Visualisation\Model</Filter>
     </ClInclude>
@@ -374,6 +395,18 @@
     </ClInclude>
     <ClInclude Include="visualisation\camera\NoClipCamera.h">
       <Filter>Header Files\Visualisation\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\TransformationMatrix.h">
+      <Filter>Header Files\Visualisation\Model\SceneGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\SceneGraphItem.h">
+      <Filter>Header Files\Visualisation\Model\SceneGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\SceneGraphJoint.h">
+      <Filter>Header Files\Visualisation\Model\SceneGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\model\SlideJoint.h">
+      <Filter>Header Files\Visualisation\Model\SceneGraph</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

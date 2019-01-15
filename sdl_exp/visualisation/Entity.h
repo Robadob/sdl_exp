@@ -11,6 +11,8 @@
 #include "interface/Renderable.h"
 #include "model/Material.h"
 #include "shader/ShadersVec.h"
+#include "model/SceneGraphItem.h"
+#include "model/TransformationMatrix.h"
 
 namespace Stock
 {
@@ -35,7 +37,7 @@ namespace Stock
 /*
 A renderable model loaded from a .obj file
 */
-class Entity : public Renderable
+class Entity : public Renderable, public SceneGraphItem
 {
     friend class Shaders;
 public:    
@@ -105,7 +107,8 @@ public:
 		);
     virtual ~Entity();
 	virtual void render(unsigned int shaderIndex = 0);
-	void renderInstances(int count, unsigned int shaderIndex = 0);
+	virtual void renderInstances(int count, unsigned int shaderIndex = 0);
+	virtual void render(const glm::mat4 &transform) override;
 	/**
 	 * Overrides the material in use, this will lose any textures from the exiting material
 	 */
@@ -133,7 +136,22 @@ public:
 	glm::vec3 getMin() const { return modelMin; }
 	glm::vec3 getMax() const { return modelMax; }
 	glm::vec3 getDimensions() const { return modelDims; }
+    //Model Space/Mat Transforms
+	void setModelLocation(const glm::vec3 &loc){ modelMat.translateA(loc); };
+	void translateModel(const glm::vec3 &offset){ modelMat.translateR(offset); };
+	void rotateModel(const float &angleRads, const glm::vec3 &axis) { modelMat.rotateE(angleRads, axis); };
+	void setModelMat(const glm::mat4 &modelMat) { this->modelMat = modelMat; };
+    glm::vec3 getModelLocation() const { return getSceneMat()[3]; };
+    glm::mat4 getModelMat() const { return modelMat; }
+    //Scene Space/Mat Transforms, these affect children of the entity
+    void setSceneLocation(const glm::vec3 &loc);
+    void translateScene(const glm::vec3 &offset);
+	void rotateScene(const float &angleRadians, const glm::vec3 &axis);
+    void scaleScene(const glm::vec3 &scale);
+    glm::vec3 getSceneLocation() const { return getSceneMat()[3]; };
+	using SceneGraphItem::setSceneMat;
 protected:
+    glm::matT modelMat;
 	glm::mat4 const * viewMatPtr;
 	glm::mat4 const * projectionMatPtr;
 	GLuint lightBufferBindPt;
@@ -159,7 +177,6 @@ protected:
     void loadMaterialFromFile(const char *objPath, const char *materialFilename, const char *materialName);
     void generateVertexBufferObjects();
 private:
-	glm::mat4 getModelMat() const;
 	glm::vec3 modelMin, modelMax, modelDims;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{
@@ -198,3 +215,19 @@ private:
     const static unsigned char FILE_TYPE_VERSION = 1;
 };
 #endif //ifndef __Entity_h__
+
+//Old GetModelMat implemenetation
+//glm::mat4 Entity::getModelMat() const
+//{
+//	//Apply world transforms (in reverse order that we wish for them to be applied)
+//	glm::mat4 modelMat = glm::translate(glm::mat4(1), this->location);
+//
+//	//Check we actually have a rotation (providing no axis == error)
+//	if ((this->rotation.x != 0 || this->rotation.y != 0 || this->rotation.z != 0) && this->rotation.w != 0)
+//		modelMat = glm::rotate(modelMat, glm::radians(this->rotation.w), glm::vec3(this->rotation));
+//
+//	//Only bother scaling if we were asked to
+//	if (this->scaleFactor != 1.0f)
+//		modelMat = glm::scale(modelMat, glm::vec3(this->scaleFactor));
+//	return modelMat;
+//}

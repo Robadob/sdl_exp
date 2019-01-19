@@ -95,7 +95,7 @@ void EntityScene::update(const unsigned int &frameTime)
     this->tick = (float)fmod(this->tick,360);
     //this->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
     //this->deerModel->setSceneLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
-    const float CIRCLE_RAD = 10.0f;
+    const float CIRCLE_RAD = 50.0f;
     const float MS_PER_CIRCLE = (float)(2 * M_PI) / 10000;
     const float MS_PER_SPIN_DIV_2PI = (float)(2 * M_PI) / 5000;
     this->deerModel->rotateScene(-(float)this->polarity*frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 1.0, 0.0));

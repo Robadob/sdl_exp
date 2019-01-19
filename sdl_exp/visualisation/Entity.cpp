@@ -1511,6 +1511,7 @@ void Entity::importModel(const char *path)
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
 		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    this->modelMat.uniformScaleAE(this->scaleFactor);
 	//Allocate VBOs
 	generateVertexBufferObjects();
 	printf("Model import was successful: %s\n", importPath.c_str());

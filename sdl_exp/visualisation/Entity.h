@@ -114,10 +114,6 @@ public:
 	 */
 	void setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular = glm::vec3(0.1f), const float &shininess = 10.0f, const float &opacity = 1.0f);
 	void setMaterial(const Stock::Materials::Material &mat);
-    void setLocation(glm::vec3 location);
-    void setRotation(glm::vec4 rotation);
-    glm::vec3 getLocation() const;
-    glm::vec4 getRotation() const;
     void exportModel() const;
 	void reload() override;
 	/**

@@ -1216,35 +1216,6 @@ void Entity::setMaterial(const Stock::Materials::Material &mat)
 	setMaterial(mat.ambient, mat.diffuse, mat.specular, mat.shininess, mat.opacity);
 }
 /*
-Set the location of the model in world space
-*/
-void Entity::setLocation(glm::vec3 location){
-	this->location = location;
-}
-/*
-Set the rotation of the model in world space
-@param rotation glm::vec4(axis.x, axis.y, axis.z, degrees)
-*/
-void Entity::setRotation(glm::vec4 rotation){
-	this->rotation = rotation;
-}
-/*
-Returns the location of the entity
-@return a vec3 containing the x, y, z coords the model should be translated to
-*/
-glm::vec3 Entity::getLocation() const
-{
-	return this->location;
-}
-/*
-Returns the rotation of the entity
-@return a vec4 containing the x, y, z coords of the axis the model should be rotated w degrees around
-*/
-glm::vec4 Entity::getRotation() const
-{
-	return this->rotation;
-}
-/*
 Exports the current model to a faster loading binary format which represents a direct copy of the buffers required by the model
 Models are stored by appending .sdl_export to their existing filename
 Models are stored in the following format;

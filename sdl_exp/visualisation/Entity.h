@@ -140,7 +140,7 @@ public:
 	void setModelLocation(const glm::vec3 &loc){ modelMat.translateA(loc); };
 	void translateModel(const glm::vec3 &offset){ modelMat.translateR(offset); };
 	void rotateModel(const float &angleRads, const glm::vec3 &axis) { modelMat.rotateE(angleRads, axis); };
-	void setModelMat(const glm::mat4 &modelMat) { this->modelMat = modelMat; };
+    void setModelMat(const glm::mat4 &modelMat) { this->modelMat = modelMat * this->initScaleMat; };
     glm::vec3 getModelLocation() const { return getSceneMat()[3]; };
     glm::mat4 getModelMat() const { return modelMat; }
     //Scene Space/Mat Transforms, these affect children of the entity
@@ -178,6 +178,7 @@ protected:
     void generateVertexBufferObjects();
 private:
 	glm::vec3 modelMin, modelMax, modelDims;
+    glm::mat4 initScaleMat;
 	static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss)
 	{
 		std::vector<std::shared_ptr<Shaders>> rtn;

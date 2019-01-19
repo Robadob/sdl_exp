@@ -137,6 +137,7 @@ Entity::Entity(
 	, viewMatPtr(nullptr)
 	, projectionMatPtr(nullptr)
 	, lightBufferBindPt(UINT_MAX)
+    , initScaleMat(1)
 {
 	GL_CHECK();
 	loadModelFromFile();
@@ -305,8 +306,6 @@ void Entity::renderInstances(int count, unsigned int shaderIndex){
  */
 void Entity::render(const glm::mat4 &transform)
 {
-    printf("todo: Entity::render(const glm::mat4 &transform)\n");
-
     //Translate the model according to it's location
     unsigned int shaderIndex = 0;
     glm::mat4 m = transform * getSceneMat() * getModelMat();
@@ -963,7 +962,8 @@ exit_loop2:;
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
 		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-    this->modelMat.uniformScaleAE(this->scaleFactor);
+    this->initScaleMat = glm::scale(glm::vec3(this->scaleFactor));
+    this->modelMat = initScaleMat;
 	printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
@@ -1510,8 +1510,9 @@ void Entity::importModel(const char *path)
 	}
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
-		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-    this->modelMat.uniformScaleAE(this->scaleFactor);
+        this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    this->initScaleMat = glm::scale(glm::vec3(this->scaleFactor));
+    this->modelMat = initScaleMat;
 	//Allocate VBOs
 	generateVertexBufferObjects();
 	printf("Model import was successful: %s\n", importPath.c_str());

@@ -65,11 +65,11 @@ void TowerCrane::setupCraneSceneGraph()
 {
 	//Crane Base
 	{
-		glm::mat4 mm = glm::mat4(1);
+        glm::mat4 mm = glm::mat4(1);
 		//Scale to size
 		mm *= glm::scale(glm::vec3(BASE_WIDTH, BASE_HEIGHT, BASE_WIDTH));
 		//Translate so bottom centre is at origin
-		mm *= glm::translate(glm::vec3(0, 0.5, 0));
+        mm *= glm::translate(glm::vec3(0, 0.5, 0));
 		//Setup
 		craneBase->setModelMat(mm);
 		//Add to Scene Graph (at root)

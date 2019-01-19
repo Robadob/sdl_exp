@@ -963,6 +963,7 @@ exit_loop2:;
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
 		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    this->modelMat.uniformScaleAE(this->scaleFactor);
 	printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)

@@ -189,6 +189,12 @@ private:
 	 * Marks whether the subscene graph requires recomputing transform matrices
 	 */
 	bool expired;
+    /**
+     * This holds model matrix transforms which should be applied to scene children
+     * modelMat transforms are NOT applied to children.
+     * sceneModelMat = sceneMat * modelMat should be passed as modelMat to shaders
+     * There is currently no mechanism for caching sceneModelMat value
+     */
 	glm::mat4 sceneMat;
 protected:
 	/**

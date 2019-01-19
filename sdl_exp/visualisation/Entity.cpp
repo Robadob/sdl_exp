@@ -270,7 +270,7 @@ Calls the necessary code to render a single instance of the entity
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::render(unsigned int shaderIndex){
-	glm::mat4 m = getModelMat();
+	glm::mat4 m = getSceneMat() * getModelMat();
 	this->materials[0].use(m, shaderIndex, true);
 
 	if (!cullFace)
@@ -289,7 +289,7 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, unsigned int shaderIndex){
-	glm::mat4 m = getModelMat();
+    glm::mat4 m = getSceneMat() * getModelMat();
 	this->materials[0].use(m, shaderIndex, true);
 
     if (!cullFace)

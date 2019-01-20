@@ -1,4 +1,5 @@
 #include "Axis.h"
+const char *Axis::DRAWING_NAME = "axis";
 /*
 Constructs a new axis object
 @param length The length of each drawn axis
@@ -6,7 +7,7 @@ Constructs a new axis object
 Axis::Axis(float length)
 	: pen(6)
 {
-	pen.begin(Draw::Lines,"axis");
+    pen.begin(Draw::Lines, DRAWING_NAME);
 	{
 		//x
 		pen.color(1, 0, 0);
@@ -24,7 +25,7 @@ Axis::Axis(float length)
 	pen.save();
 }
 void Axis::render(){
-	pen.render("axis");
+    pen.render(DRAWING_NAME);
 }
 void Axis::reload()
 {

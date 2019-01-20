@@ -32,8 +32,11 @@ public:
 	* @param bufferBindingPoint Set the buffer binding point to be used for rendering
 	*/
     void setLightsBuffer(const GLuint &bufferBindingPoint) override;
+
+    std::shared_ptr<PortableDraw> makePortable() { return pen.makePortable(DRAWING_NAME); }
 private:
     Draw pen;
+    static const char *DRAWING_NAME;
 };
 
 #endif //ifndef __Axis_h__

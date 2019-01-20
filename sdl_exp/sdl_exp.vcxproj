@@ -54,7 +54,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263d.lib;assimp-vc120-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263d.lib;assimp-vc120-mtd.lib;openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
     </Link>
     <CudaCompile>
@@ -77,7 +77,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>"$(SolutionDir)lib\$(Platform)"</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263.lib;assimp-vc120-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2_image.lib;opengl32.lib;glew32.lib;glu32.lib;freetype263.lib;assimp-vc120-mt.lib;openvr_api.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
@@ -93,6 +93,7 @@
     <ClCompile Include="visualisation\camera\NoClipCamera.cpp" />
     <ClCompile Include="visualisation\Draw.cpp" />
     <ClCompile Include="visualisation\Entity.cpp" />
+    <ClCompile Include="visualisation\Entity2.cpp" />
     <ClCompile Include="visualisation\HUD.cpp" />
     <ClCompile Include="visualisation\model\SceneGraphJoint.cpp" />
     <ClCompile Include="visualisation\model\SceneGraphItem.cpp" />
@@ -114,6 +115,12 @@
     <ClCompile Include="visualisation\shader\ComputeShader.cpp" />
     <ClCompile Include="visualisation\shader\GaussianBlur.cpp" />
     <ClCompile Include="visualisation\shader\lights\LightsBuffer.cpp" />
+    <ClCompile Include="visualisation\vr\Device.cpp" />
+    <ClCompile Include="visualisation\vr\HMDCamera.cpp" />
+    <ClCompile Include="visualisation\vr\SceneVR.cpp" />
+    <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp" />
+    <ClCompile Include="visualisation\vr\VisualisationVR.cpp" />
+    <ClCompile Include="visualisation\vr\VRExampleScene.cpp" />
     <None Include="visualisation\shader\lights\DirectionalLight.imp" />
     <None Include="visualisation\shader\lights\PointLight.imp">
       <FileType>CppCode</FileType>
@@ -151,6 +158,7 @@
     <ClInclude Include="visualisation\camera\NoClipCamera.h" />
     <ClInclude Include="visualisation\Draw.h" />
     <ClInclude Include="visualisation\Entity.h" />
+    <ClInclude Include="visualisation\Entity2.h" />
     <ClInclude Include="visualisation\HUD.h" />
     <ClInclude Include="visualisation\interface\Camera.h" />
     <ClInclude Include="visualisation\interface\FBuffer.h" />
@@ -205,6 +213,13 @@
     <ClInclude Include="visualisation\util\GLcheck.h" />
     <ClInclude Include="visualisation\util\StringUtils.h" />
     <ClInclude Include="visualisation\Visualisation.h" />
+    <ClInclude Include="visualisation\vr\Device.h" />
+    <ClInclude Include="visualisation\vr\HMDCamera.h" />
+    <ClInclude Include="visualisation\vr\SceneVR.h" />
+    <ClInclude Include="visualisation\vr\TrackedDevicesVR.h" />
+    <ClInclude Include="visualisation\vr\utilVR.h" />
+    <ClInclude Include="visualisation\vr\VisualisationVR.h" />
+    <ClInclude Include="visualisation\vr\VRExampleScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

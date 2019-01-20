@@ -78,6 +78,12 @@
     <Filter Include="Source Files\Visualisation\Model\SceneGraph">
       <UniqueIdentifier>{2585471f-d4d5-4178-8988-1b0865ff595c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Visualisation\VR">
+      <UniqueIdentifier>{a8cfc7a1-4a07-4654-a608-69c0e284c414}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualisation\VR">
+      <UniqueIdentifier>{baed8516-6cb4-4724-86da-13cfbed6292e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -211,6 +217,27 @@
     </ClCompile>
     <ClCompile Include="visualisation\model\SceneGraphJoint.cpp">
       <Filter>Source Files\Visualisation\Model\SceneGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\Device.cpp">
+      <Filter>Source Files\Visualisation\VR</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\HMDCamera.cpp">
+      <Filter>Source Files\Visualisation\VR</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\SceneVR.cpp">
+      <Filter>Source Files\Visualisation\VR</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\TrackedDevicesVR.cpp">
+      <Filter>Source Files\Visualisation\VR</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\VisualisationVR.cpp">
+      <Filter>Source Files\Visualisation\VR</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\vr\VRExampleScene.cpp">
+      <Filter>Source Files\Visualisation\VR</Filter>
+    </ClCompile>
+    <ClCompile Include="visualisation\Entity2.cpp">
+      <Filter>Source Files\Visualisation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -409,6 +436,30 @@
       <Filter>Header Files\Visualisation\Model\SceneGraph</Filter>
     </ClInclude>
     <ClInclude Include="visualisation\PortableDraw.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\TrackedDevicesVR.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\utilVR.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\VisualisationVR.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\VRExampleScene.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\Device.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\HMDCamera.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\vr\SceneVR.h">
+      <Filter>Header Files\Visualisation\VR</Filter>
+    </ClInclude>
+    <ClInclude Include="visualisation\Entity2.h">
       <Filter>Header Files\Visualisation</Filter>
     </ClInclude>
   </ItemGroup>

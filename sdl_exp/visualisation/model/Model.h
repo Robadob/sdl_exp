@@ -11,6 +11,7 @@
 #include <assimp/config.h>
 #include "../shader/ShadersVec.h"
 #include "../Draw.h"
+#include "SceneGraphItem.h"
 
 struct VFCcount
 {
@@ -184,7 +185,7 @@ struct ModelData
 	std::unordered_map<std::string, std::weak_ptr<Mesh>> meshDirectory;
 	std::unordered_map<std::string, std::weak_ptr<ModelNode>> nodeDirectory;
 };
-class Model : public Renderable
+class Model : public Renderable, public SceneGraphItem
 {
 public:
 	/**
@@ -202,13 +203,9 @@ public:
 	*/
 	void reload() override;
 	//Rendering methods
-	void update(float time);
-	void render(unsigned int shaderIndex = UINT_MAX) const;
+	void update(const float &time);
+    void render(const unsigned int &shaderIndex = UINT_MAX, const glm::mat4 &transform = glm::mat4(1));
 	void renderSkeleton();
-    void setLocation(glm::vec3 location){ this->location = location; }
-    void setRotation(glm::vec4 rotation){ this->rotation = rotation; }
-    glm::vec3 getLocation() const{ return location; }
-    glm::vec4 getRotation() const{ return rotation; }
 	BoundingBox3D getBoundingBox() const { return boundingBox; }
 	std::unique_ptr<ShadersVec> getShaders(unsigned int shaderIndex = 0) const;
 	std::shared_ptr<Material> getMaterial(unsigned int materialIndex = 0) const;
@@ -254,8 +251,14 @@ public:
 	void nextAnimation(float transitionDuration = DEFAULT_KEYFRAME_TRANSITION_DURATION);
 	void setAnimation(unsigned int index, float transitionDuration = DEFAULT_KEYFRAME_TRANSITION_DURATION);
 	void setAnimation(const std::string &name, float transitionDuration = DEFAULT_KEYFRAME_TRANSITION_DURATION);
-
-	void disableAnimationTravel(bool disable);
+    void disableAnimationTravel(bool disable);
+    //Scene Space/Mat Transforms, these affect children of the entity
+    using SceneGraphItem::setSceneMat;
+    using SceneGraphItem::setLocalMat;
+    using SceneGraphItem::getLocation;
+    using SceneGraphItem::translateScene;
+    using SceneGraphItem::setSceneTranslation;
+    using SceneGraphItem::setSceneRotation;
 private:
 	Draw skeletonPen;
 	bool skeletonIsValid;
@@ -308,8 +311,6 @@ private:
 	//VBOs
 	GLuint vbo;
 	GLuint fbo;
-	glm::vec3 location = glm::vec3(0);
-	glm::vec4 rotation = glm::vec4(0);
 	float scaleFactor = 1.0f;
 
 	/**
@@ -348,7 +349,6 @@ private:
 	const glm::mat4 *projMatPtr;
 	GLuint lightsBufferBindPt;
 public:
-	glm::mat4 getModelMat() const;
 	/**
 	* Sets the pointer from which the View matrix should be loaded from
 	* @param viewMat A pointer to the viewMatrix to be tracked

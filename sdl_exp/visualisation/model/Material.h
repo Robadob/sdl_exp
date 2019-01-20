@@ -152,8 +152,9 @@ public:
      * @param transform The model matrix to be used
      * @param index The shader index to use, leave as default if default shader is to be used
      * @param requiresPrepare Set to true when the material's shader has not be prepared at the start of the rendercall. (This should be done if a material may be used multiple times alongside others whilst rendering a model)
+     * @note At this time, not possible to call without overriding transform (this isn't required for regular render of entity, inefficient!)
      */
-	void use(glm::mat4 &transform, unsigned int index = UINT_MAX, bool requiresPrepare = true);
+	void use(const glm::mat4 &transform, unsigned int index = UINT_MAX, bool requiresPrepare = true);
 	/**
 	 * Clears the indexed shader
 	 * @param index The index of the chosen shader, out of bound uses default for the material

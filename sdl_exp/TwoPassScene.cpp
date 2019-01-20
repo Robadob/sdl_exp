@@ -21,8 +21,8 @@ TwoPassScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights)
 	sphereModel->setMaterial(Stock::Materials::COPPER);
     deerModel->exportModel();
     sphereModel->exportModel();
-    sphereModel->setLocation(glm::vec3(10, 5, 10));
-	bob->setLocation(glm::vec3(-20,0,10));
+    sphereModel->setSceneTranslation(glm::vec3(10, 5, 10));
+    bob->setSceneTranslation(glm::vec3(-20, 0, 10));
 }
 TwoPassScene::TwoPassScene(Visualisation &visualisation)
 	: MultiPassScene(visualisation)

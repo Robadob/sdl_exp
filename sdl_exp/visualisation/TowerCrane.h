@@ -11,7 +11,7 @@ class TowerCrane : public SceneGraphItem, public Renderable
 {
 public:
     static std::shared_ptr<TowerCrane> make(glm::vec3 location = glm::vec3(0), float scale = 1.0f);
-    void render(const glm::mat4 &transform) override { }//Do nothing, root is not renderable
+    void render(const unsigned int &shaderIndex, const glm::mat4 &transform) override { }//Do nothing, root is not renderable
     void setViewMatPtr(glm::mat4 const *viewMat) override;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
     void update(unsigned int frameTime);

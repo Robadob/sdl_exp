@@ -128,8 +128,6 @@ Entity::Entity(
 	, SCALE(modelScale)
 	, modelPath(modelPath)
 	, materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
-	, location(0.0f)
-	, rotation(0.0f, 0.0f, 1.0f, 0.0f)
 	, shaders()
 	, texture(nullptr)
 	, cullFace(true)
@@ -137,7 +135,6 @@ Entity::Entity(
 	, viewMatPtr(nullptr)
 	, projectionMatPtr(nullptr)
 	, lightBufferBindPt(UINT_MAX)
-    , initScaleMat(1)
 {
 	GL_CHECK();
 	loadModelFromFile();
@@ -148,7 +145,8 @@ Entity::Entity(
 		//Override material
 		for (unsigned int i = 0; i < matSize; ++i)
 		{
-			this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), material));
+            this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), material));
+            materials[i].bake();
 			if (positions.data)
 			{
 				auto it = materials[i].getShaders();
@@ -159,7 +157,6 @@ Entity::Entity(
 				it->setMaterialBuffer(materialBuffer);
 				it->setFaceVBO(faces.vbo);
 			}
-			materials[i].bake();
 		}
 	}
 	if (needsExport)
@@ -190,8 +187,6 @@ Entity::Entity(
 	, SCALE(modelScale)
 	, modelPath(modelPath)
 	, materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
-    , location(0.0f)
-    , rotation(0.0f, 0.0f, 1.0f, 0.0f)
     , shaders(shaders)
     , texture(texture)
     , cullFace(true)
@@ -230,7 +225,9 @@ Entity::Entity(
 		}
 	}
 	for (auto &&m : materials)
-	{
+    {
+        m.setCustomShaders(this->shaders);
+        m.bake();
 		if (positions.data)
 		{
 			auto it = m.getShaders();
@@ -238,11 +235,10 @@ Entity::Entity(
 			it->setNormalsAttributeDetail(normals);
 			it->setColorsAttributeDetail(colors);
 			it->setTexCoordsAttributeDetail(texcoords);
-			it->setModelMatPtr(&modelMat);
+			it->setModelMatPtr(getModelMatPtr());
 			it->setMaterialBuffer(materialBuffer);
 			it->setFaceVBO(faces.vbo);
 		}
-		m.setCustomShaders(this->shaders);
 	}
     if (needsExport)
     {
@@ -266,23 +262,6 @@ Entity::~Entity(){
 	texture.reset();
 }
 /*
-Calls the necessary code to render a single instance of the entity
-@param vertLocation The shader attribute location to pass vertices
-@param normalLocation The shader attribute location to pass normals
-*/
-void Entity::render(unsigned int shaderIndex){
-	glm::mat4 m = getSceneMat() * getModelMat();
-	this->materials[0].use(m, shaderIndex, true);
-
-	if (!cullFace)
-		GL_CALL(glDisable(GL_CULL_FACE));
-    GL_CALL(glDrawElements(GL_TRIANGLES, faces.count * faces.components, GL_UNSIGNED_INT, 0));
-    if (!cullFace)
-        GL_CALL(glEnable(GL_CULL_FACE));
-
-	this->materials[0].clear();
-}
-/*
 Calls the necessary code to render count instances of the entity
 The index of the instance being rendered can be identified within the vertex shader with the variable gl_InstanceID
 @param count The number of instances of the entity to render
@@ -290,8 +269,7 @@ The index of the instance being rendered can be identified within the vertex sha
 @param normalLocation The shader attribute location to pass normals
 */
 void Entity::renderInstances(int count, unsigned int shaderIndex){
-    glm::mat4 m = getSceneMat() * getModelMat();
-	this->materials[0].use(m, shaderIndex, true);
+	this->materials[0].use(getModelMatRef(), shaderIndex, true);
 
     if (!cullFace)
         GL_CALL(glEnable(GL_CULL_FACE));
@@ -304,15 +282,11 @@ void Entity::renderInstances(int count, unsigned int shaderIndex){
 /**
  * Scene graph render method
  */
-void Entity::render(const glm::mat4 &transform)
+void Entity::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
     //Translate the model according to it's location
-    unsigned int shaderIndex = 0;
-    glm::mat4 m = transform * getSceneMat() * getModelMat();
+    glm::mat4 m = transform * getModelMatRef();
     this->materials[0].use(m, shaderIndex, true);
-	
-	//Bind the faces to be rendered
-	GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
 
 	if (!cullFace)
 		GL_CALL(glDisable(GL_CULL_FACE));
@@ -961,9 +935,8 @@ exit_loop2:;
 	//float scaleFactor = 1.0;
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
-		this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-    this->initScaleMat = glm::scale(glm::vec3(this->scaleFactor));
-    this->modelMat = initScaleMat;
+        this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    setInternalMat(glm::scale(glm::vec3(this->scaleFactor)));
 	printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
@@ -1190,7 +1163,9 @@ void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, con
 	//Override material
 	for (unsigned int i = 0; i < matSize; ++i)
 	{
-		this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), {"", ambient, diffuse, specular, shininess, opacity}));
+        this->materials.push_back(Material(materialBuffer, (unsigned int)materials.size(), { "", ambient, diffuse, specular, shininess, opacity }));
+        materials[i].setCustomShaders(this->shaders);
+        materials[i].bake();
 		if (positions.data)
 		{
 			auto it = materials[i].getShaders();
@@ -1201,14 +1176,12 @@ void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, con
 			it->setMaterialBuffer(materialBuffer);
 			it->setFaceVBO(faces.vbo);
 		}
-		materials[i].setCustomShaders(this->shaders);
 		if (viewMatPtr)
 			materials[i].setViewMatPtr(viewMatPtr);
 		if (projectionMatPtr)
 			materials[i].setProjectionMatPtr(projectionMatPtr);
 		if (lightBufferBindPt != UINT_MAX)
 			materials[i].setLightsBuffer(lightBufferBindPt);
-		materials[i].bake();
 	}
 }
 void Entity::setMaterial(const Stock::Materials::Material &mat)
@@ -1482,8 +1455,7 @@ void Entity::importModel(const char *path)
 	modelDims = modelMax - modelMin;
 	if (SCALE>0)
         this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
-    this->initScaleMat = glm::scale(glm::vec3(this->scaleFactor));
-    this->modelMat = initScaleMat;
+    setInternalMat(glm::scale(glm::vec3(this->scaleFactor)));
 	//Allocate VBOs
 	generateVertexBufferObjects();
 	printf("Model import was successful: %s\n", importPath.c_str());
@@ -1616,68 +1588,3 @@ void Entity::setCullFace(const bool cullFace)
 {
 	this->cullFace = cullFace;
 }
-void printMat(glm::mat4 m)
-{
-	m = transpose(m);
-	printf(
-		"----------\n\
-		%.3f, %.3f, %.3f, %.3f\n\
-		%.3f, %.3f, %.3f, %.3f\n\
-		%.3f, %.3f, %.3f, %.3f\n\
-		%.3f, %.3f, %.3f, %.3f\n",
-		m[0][0], m[0][1], m[0][2], m[0][3],
-		m[1][0], m[1][1], m[1][2], m[1][3],
-		m[2][0], m[2][1], m[2][2], m[2][3],
-		m[3][0], m[3][1], m[3][2], m[3][3]);
-}
-
-void Entity::setSceneLocation(const glm::vec3 &loc)
-{
-	glm::mat4 mm = getSceneMat();
-	mm[3] = glm::vec4(loc, 1);	
-	setSceneMat(mm);
-}
-void Entity::translateScene(const glm::vec3 &offset)
-{
-	glm::mat4 mm = getSceneMat();
-	mm[3] += glm::vec4(offset, 0);
-	setSceneMat(mm);
-}
-void Entity::rotateScene(const float &angleRadians, const glm::vec3 &axis)
-{
-	//Get current model mat
-	glm::mat4 mm = getSceneMat();
-	//Get current translation
-	glm::vec4 location = mm[3];
-	//Purge translation
-	mm[3] = glm::vec4(0, 0, 0, 1);
-	//Apply rotation
-	mm *= glm::rotate(angleRadians, axis);
-	//Reapply translation
-	mm[3] = location;
-	//Set model mat
-	setSceneMat(mm);
-}
-void Entity::scaleScene(const glm::vec3 &scale)
-{
-    //Get current model mat
-    glm::mat4 mm = getSceneMat();
-    //Apply scale
-    mm *= glm::scale(scale);
-    //Set model mat
-    setSceneMat(mm);
-}
-//void Entity::resetSceneScale(const glm::vec3 &scale)
-//{
-//    //Get current model mat
-//    glm::mat4 mm = getSceneMat();
-//    glm::vec3 sceneScale = glm::vec3(
-//        length(glm::vec3(mm[0][0], mm[1][0], mm[2][0])),
-//        length(glm::vec3(mm[0][1], mm[1][1], mm[2][1])),
-//        length(glm::vec3(mm[0][2], mm[1][2], mm[2][2]))
-//        );
-//    //Apply scale
-//    mm *= glm::scale(1.0f / sceneScale);
-//    //Set model mat
-//    setSceneMat(mm);
-//}

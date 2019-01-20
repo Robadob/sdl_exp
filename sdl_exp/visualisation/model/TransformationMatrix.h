@@ -140,6 +140,7 @@ public:
     {
         //Get current translation
         glm::vec4 location = (*this)[3];
+        (*this)[3] = glm::vec4(0, 0, 0, 1);//Needed?
         //Apply rotation
         (*this) *= glm::rotate(angleRads, axis);
         //Reapply translation

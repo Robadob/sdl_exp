@@ -455,6 +455,7 @@ void Model::loadModel()
 	{
 		const float maxDim = compMax(boundingBox.size());
 		this->scaleFactor = 1.0f / (maxDim / loadScale);
+        setInternalMat(glm::scale(glm::vec3(this->scaleFactor)));
 	}
 
 	printf("\rLoading Model: %s [Parsing Assimp Filling Buffers]       ", su::getFilenameFromPath(modelPath).c_str());
@@ -631,7 +632,7 @@ unsigned int Model::loadExternalAnimations(const std::string &directory, const s
 	return count;
 }
 //Rendering
-void Model::update(float time)
+void Model::update(const float &time)
 {
 #if _DEBUG
 	if (!this->root)
@@ -641,7 +642,7 @@ void Model::update(float time)
 #endif
 	updateBoneTransforms(time);
 }
-void Model::render(unsigned int shaderIndex) const
+void Model::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
 #if _DEBUG
     static bool aborted = false;
@@ -660,7 +661,7 @@ void Model::render(unsigned int shaderIndex) const
     Material::clearActive();
 
     //Trigger recursive render
-	root->render(getModelMat(), shaderIndex);
+    root->render(transform*getModelMat(), shaderIndex);
 
 	//Clear shaders (only need to do this once, due to shared vao)
 	for (unsigned int i = 0; i < data->materialsSize && i < 1; ++i)
@@ -982,19 +983,4 @@ void Model::computeInverseRootTransform()
 	}
 	if (best != glm::quat())
 		data->inverseRootTransform = glm::toMat4(best);
-}
-
-glm::mat4 Model::getModelMat() const
-{
-	//Apply world transforms (in reverse order that we wish for them to be applied)
-	glm::mat4 modelMat = glm::translate(glm::mat4(1), this->location + this->mAnimationLocationOffset);
-
-	//Check we actually have a rotation (providing no axis == error)
-	if ((this->rotation.x != 0 || this->rotation.y != 0 || this->rotation.z != 0) && this->rotation.w != 0)
-		modelMat = glm::rotate(modelMat, glm::radians(this->rotation.w), glm::vec3(this->rotation));
-
-	//Only bother scaling if we were asked to
-	if (this->scaleFactor != 1.0f)
-		modelMat = glm::scale(modelMat, glm::vec3(this->scaleFactor));
-	return modelMat;
 }

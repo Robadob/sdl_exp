@@ -46,7 +46,7 @@ protected:
      * Do nothing
      * This type is not renderable
      */
-    void render(const glm::mat4 &transform) override { }
+    void render(const unsigned int &shaderIndex, const glm::mat4 &transform) override { }
 public:
     /////////////////////////////////////////////////////////////////////////
     //                 ~Scene Graph Attachment Management~                 //

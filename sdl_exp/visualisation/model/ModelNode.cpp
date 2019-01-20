@@ -4,7 +4,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "../util/StringUtils.h"
-#include <glm/gtx/matrix_decompose.inl>
+#include <glm/gtx/matrix_decompose.hpp>
 
 void ModelNode::render(glm::mat4 transform, const unsigned int &shaderIndex)
 {

@@ -104,18 +104,18 @@ void SceneGraphItem::propagateUpdate(const glm::mat4 &sceneTransform)
     //Nolonger expired!
     expired = false;
 }
-void SceneGraphItem::renderSceneGraph(const glm::mat4 &rootTransform, const glm::mat4 &computedSceneTransform)
+void SceneGraphItem::renderSceneGraph(const unsigned int &shaderIndex, const glm::mat4 &rootTransform, const glm::mat4 &computedSceneTransform)
 {
     //If expired, compute each child's tranform mat from scene transform (and model mat)
     if (expired)
         propagateUpdate(computedSceneTransform);
     //Render this
-    render(rootTransform * computedSceneTransform);
+    render(shaderIndex, rootTransform * computedSceneTransform);
     //Render Children
     for (auto &it : children)
     {
         //Recursively render childs scene graph
-        it.child->renderSceneGraph(rootTransform, it.computedTransformMat);
+        it.child->renderSceneGraph(shaderIndex, rootTransform, it.computedTransformMat);
     }
 }
 ///////////////////////////////////////

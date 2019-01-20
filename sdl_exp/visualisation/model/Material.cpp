@@ -151,7 +151,7 @@ void Material::prepare(unsigned int index)
 	else
 		defaultShader->prepare();
 }
-void Material::use(glm::mat4 &transform, unsigned int index, bool requiresPrepare)
+void Material::use(const glm::mat4 &transform, unsigned int index, bool requiresPrepare)
 {
 	if (index<shaders.size())
 	{
@@ -246,17 +246,20 @@ void Material::bake()
 	//Update material properties buffer
 	updatePropertiesUniform(true);
 	//Create default shader
-	if (shaderRequiresBones)
-		defaultShader = std::make_shared<Shaders>(Stock::Shaders::BONE);//Temp
-	else
-		defaultShader = std::make_shared<Shaders>(Stock::Shaders::PHONG);//Temp
-	//Setup material buffer
-	defaultShader->setMaterialBuffer(buffer);
-	defaultShader->setMaterialID(bufferIndex);
-	//Setup default shader, e.g. textures
-	for (auto &typeVec:textures)
-		if (typeVec.second.size())
-			defaultShader->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
+    if (!defaultShader)
+    {
+        if (shaderRequiresBones)
+            defaultShader = std::make_shared<Shaders>(Stock::Shaders::BONE);//Temp
+        else
+            defaultShader = std::make_shared<Shaders>(Stock::Shaders::PHONG);//Temp
+        //Setup material buffer
+        defaultShader->setMaterialBuffer(buffer);
+        defaultShader->setMaterialID(bufferIndex);
+        //Setup default shader, e.g. textures
+        for (auto &typeVec : textures)
+            if (typeVec.second.size())
+                defaultShader->addTexture(TEX_NAME[typeVec.first], typeVec.second[0].texture);
+    }
 	//Setup material in all custom shaders
 	for (const auto &i : this->shaders)
 	{

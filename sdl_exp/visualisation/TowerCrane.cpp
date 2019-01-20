@@ -71,7 +71,7 @@ void TowerCrane::setupCraneSceneGraph()
         //Translate so bottom centre is at origin
         mm *= glm::translate(glm::vec3(0, 0.5, 0));
         //Setup
-        craneBase->setModelMat(mm);
+        craneBase->setLocalMat(mm);
         //Add to Scene Graph (at root)
         attach(craneBase, "crane_base");
         craneBase->setMaterial(glm::vec3(0.1f), glm::vec3(1));
@@ -84,7 +84,7 @@ void TowerCrane::setupCraneSceneGraph()
         //Translate so bottom centre is at origin
         mm *= glm::translate(glm::vec3(0, 0.5, 0));
         //Setup
-        craneTower->setModelMat(mm);
+        craneTower->setLocalMat(mm);
         //Add to Scene Graph (at top centre of base)
         craneBase->attach(craneTower, "crane_tower", glm::vec3(0, BASE_HEIGHT, 0));//This is in world space!
         craneTower->setMaterial(glm::vec3(0.095, 0.1, 0.025), glm::vec3(0.95, 1, 0.25));
@@ -97,7 +97,7 @@ void TowerCrane::setupCraneSceneGraph()
         //Translate so bottom 25% along is origin
         mm *= glm::translate(glm::vec3(0.25, 0.5, 0));
         //Setup
-        craneJib->setModelMat(mm);
+        craneJib->setLocalMat(mm);
         //Add Rotational Joint to scene graph
         craneTower->attach(spinJoint, "crane_spin_tower", glm::vec3(0, TOWER_HEIGHT, 0));
         //Atach Jib to rotational joint
@@ -112,7 +112,7 @@ void TowerCrane::setupCraneSceneGraph()
         //Translate so top -x is at origin
         mm *= glm::translate(glm::vec3(0.5, -0.5, 0));
         //Setup
-        craneCounterWeight->setModelMat(mm);
+        craneCounterWeight->setLocalMat(mm);
         //Add to scene graph
         craneJib->attach(craneCounterWeight, "crane_counter_weight", glm::vec3(-0.25*JIB_LENGTH, 0, 0));
         craneCounterWeight->setMaterial(glm::vec3(0.07, 0.07, 0.07), glm::vec3(0.7, 0.7, 0.7));
@@ -125,7 +125,7 @@ void TowerCrane::setupCraneSceneGraph()
         //Translate so top x is at origin
         mm *= glm::translate(glm::vec3(0.5, -0.5, 0));
         //Setup
-        craneTrolley->setModelMat(mm);
+        craneTrolley->setLocalMat(mm);
         //Slider joint
         {
             //Set Limits

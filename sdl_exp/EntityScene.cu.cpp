@@ -29,16 +29,18 @@ EntityScene::EntityScene(Visualisation &visualisation)
 	registerEntity(deerModel);
 	registerEntity(colorModel);
 	registerEntity(instancedSphere);
-	registerEntity(bob);
-	registerEntity(teapotModel);
-    teapotModel->setMaterial(glm::vec3(0, 0.1f, 0), glm::vec3(0, 1, 0));
+    registerEntity(bob);
     registerEntity(crane);
+    registerEntity(teapotModel);
     registerEntity(teapotModel2);
+    bob->setSceneTranslation(glm::vec3(0, 0, 25.0f));
+    teapotModel->setMaterial(glm::vec3(0, 0.1f, 0), glm::vec3(0, 1, 0));
+    teapotModel2->setMaterial(glm::vec3(0.1f, 0, 0), glm::vec3(1, 0, 0));
 	this->setSkybox(true);
 	this->visualisation.setWindowTitle("Entity Render Sample");
 	this->setRenderAxis(true);
 	srand((unsigned int)time(0));
-	this->colorModel->setRotation(glm::vec4(1.0, 0.0, 0.0, -90));
+	this->colorModel->setSceneRotation(-glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 	this->colorModel->setCullFace(false);
 
 	if(this->deerModel)
@@ -93,13 +95,13 @@ void EntityScene::update(const unsigned int &frameTime)
 #endif
     this->tick += this->polarity*((frameTime*60)/1000.0f)*0.01f;
     this->tick = (float)fmod(this->tick,360);
-    //this->deerModel->setRotation(glm::vec4(0.0, 1.0, 0.0, this->tick*-100));
+    //this->deerModel->rotateScene(glm::radians(this->tick*-100),glm::vec3(0.0, 1.0, 0.0));
     //this->deerModel->setSceneLocation(glm::vec3(50 * sin(this->tick), 0, 50 * cos(this->tick)));
     const float CIRCLE_RAD = 50.0f;
     const float MS_PER_CIRCLE = (float)(2 * M_PI) / 10000;
     const float MS_PER_SPIN_DIV_2PI = (float)(2 * M_PI) / 5000;
-    this->deerModel->rotateScene(-(float)this->polarity*frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 1.0, 0.0));
-    this->deerModel->setSceneLocation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
+    this->deerModel->setSceneRotation(-(float)this->polarity*frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 1.0, 0.0));
+    this->deerModel->setSceneTranslation(glm::vec3(CIRCLE_RAD * sin(this->tick), 0, CIRCLE_RAD * cos(this->tick)));
 	this->teapotJoint->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(1.0, 0.0, 0.0));
     this->teapotJoint2->rotate(frameTime*MS_PER_SPIN_DIV_2PI, glm::vec3(0.0, 0.0, 1.0));
     if (this->crane)

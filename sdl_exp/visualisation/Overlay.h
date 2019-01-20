@@ -53,23 +53,23 @@ protected:
      * Updates the overlays width and triggers HUD::Item.resizeWindow() if available.
      * @param w The new overlay width
      */
-	void setWidth(unsigned int w);
+	void setWidth(const unsigned int &w);
     /**
      * Updates the overlays height and triggers HUD::Item.resizeWindow() if available.
      * @param h The new overlay height
      */
-	void setHeight(unsigned int h);
+	void setHeight(const unsigned int &h);
     /**
      * Updates the overlays dimensions and triggers HUD::Item.resizeWindow() if available.
      * @param w The new overlay width
      * @param h The new overlay height
      */
-	void setDimensions(unsigned int w, unsigned int h);
+	void setDimensions(const unsigned int &w, const unsigned int &h);
 	/**
 	* Updates the overlays dimensions and triggers HUD::Item.resizeWindow() if available.
 	* @param dims The new overlay dimensions
 	*/
-	void setDimensions(glm::uvec2 dims);
+	void setDimensions(const glm::uvec2 &dims);
 	/**
 	 * Pointer to the owning HUD item
 	 */

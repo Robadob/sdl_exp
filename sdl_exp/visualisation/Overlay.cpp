@@ -2,19 +2,19 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "shader/Shaders.h"
 
-void Overlay::setWidth(unsigned int w)
+void Overlay::setWidth(const unsigned int &w)
 {
 	setDimensions({ w, dimensions.y });
 }
-void Overlay::setHeight(unsigned int h)
+void Overlay::setHeight(const unsigned int &h)
 {
 	setDimensions({ dimensions.x, h });
 }
-void Overlay::setDimensions(unsigned int w, unsigned int h)
+void Overlay::setDimensions(const unsigned int &w, const unsigned int &h)
 {
 	setDimensions({ w, h });
 }
-void Overlay::setDimensions(glm::uvec2 dims)
+void Overlay::setDimensions(const glm::uvec2 &dims)
 {
 	if (dimensions == dims)
 		return;

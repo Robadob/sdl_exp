@@ -11,7 +11,7 @@ class PortableDraw;
  * Class for automatically managing VAO's and VBO's for drawing points, lines and polylines at runtime
  * If draw routines include a string when opened, they be recalled which is more performant than recreating them from scratch if drawing static structures
  */
-class Draw : Renderable
+class Draw : public Renderable
 {
     friend class PortableDraw;
 public:

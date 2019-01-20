@@ -33,6 +33,10 @@ public:
 	Sprite2D(std::shared_ptr<const Texture2D> tex, std::shared_ptr<Shaders> shader = nullptr, glm::uvec2 dimensions = glm::uvec2(0));
     virtual ~Sprite2D(){};
     void reload() override{};
+
+    using Overlay::setWidth;
+    using Overlay::setHeight;
+    using Overlay::setDimensions;
 private:
     std::shared_ptr<const Texture2D> tex;
 };

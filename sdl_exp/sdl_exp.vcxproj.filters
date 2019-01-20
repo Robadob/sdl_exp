@@ -408,6 +408,9 @@
     <ClInclude Include="visualisation\model\SlideJoint.h">
       <Filter>Header Files\Visualisation\Model\SceneGraph</Filter>
     </ClInclude>
+    <ClInclude Include="visualisation\PortableDraw.h">
+      <Filter>Header Files\Visualisation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="EntityScene.cu">

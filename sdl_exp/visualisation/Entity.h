@@ -107,7 +107,7 @@ public:
 		);
     virtual ~Entity();
 	virtual void renderInstances(int count, unsigned int shaderIndex = 0);
-    virtual void render(const unsigned int &shaderIndex = UINT_MAX, const glm::mat4 &transform = glm::mat4(1)) override;
+    void render(const unsigned int &shaderIndex = UINT_MAX, const glm::mat4 &transform = glm::mat4(1)) override;
 	/**
 	 * Overrides the material in use, this will lose any textures from the exiting material
 	 */

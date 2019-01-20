@@ -42,8 +42,6 @@ Shaders::Shaders(std::initializer_list <const char *> vertexShaderPath, std::ini
     , modelviewprojectionMatLoc(-1)
     , modelviewMatLoc(-1)
     , normalMatLoc(-1)
-    , rotationPtr(nullptr)
-    , translationPtr(nullptr)
     , positions(GL_FLOAT, 3, sizeof(float))
 	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))//Red
 	, colors(GL_FLOAT, 3, sizeof(float))
@@ -72,8 +70,6 @@ Shaders::Shaders(const Shaders &other)
 	, modelviewprojectionMatLoc(-1)
 	, modelviewMatLoc(-1)
 	, normalMatLoc(-1)
-	, rotationPtr(other.rotationPtr)
-	, translationPtr(other.translationPtr)
 	, positions(other.positions)
 	, normals(other.normals)
 	, colors(other.colors)
@@ -332,16 +328,16 @@ void Shaders::_useProgramModelMatrices(const glm::mat4 *force)
         {
             m = *this->modelMat.matrixPtr;
         }
-        if (this->rotationPtr)
-        {
-            //Check we actually have a rotation (providing no axis == error)
-            if ((this->rotationPtr->x != 0 || this->rotationPtr->y != 0 || this->rotationPtr->z != 0) && this->rotationPtr->w != 0)
-                m = glm::rotate(m, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
-        }
-        if (this->translationPtr)
-        {
-            m = glm::translate(m, *this->translationPtr);
-        }
+        //if (this->rotationPtr)
+        //{
+        //    //Check we actually have a rotation (providing no axis == error)
+        //    if ((this->rotationPtr->x != 0 || this->rotationPtr->y != 0 || this->rotationPtr->z != 0) && this->rotationPtr->w != 0)
+        //        m = glm::rotate(m, glm::radians(this->rotationPtr->w), glm::vec3(*this->rotationPtr));
+        //}
+        //if (this->translationPtr)
+        //{
+        //    m = glm::translate(m, *this->translationPtr);
+        //}
     }
 
     //Set Model matrix

@@ -5,12 +5,15 @@
 #include "interface/Renderable.h"
 #include "shader/Shaders.h"
 
+class PortableDraw;
+
 /**
  * Class for automatically managing VAO's and VBO's for drawing points, lines and polylines at runtime
  * If draw routines include a string when opened, they be recalled which is more performant than recreating them from scratch if drawing static structures
  */
 class Draw : Renderable
 {
+    friend class PortableDraw;
 public:
 	enum Type
 	{
@@ -28,6 +31,7 @@ private:
 		unsigned int count;	//Number of vertices
 		unsigned int offset;//Offset into the vbo (in vertices)
 		float mWidth;		//Pen width
+        unsigned int portableCount = 0;//Number of PortableDraw referring to this state
 	};
 public:
 	/**
@@ -38,10 +42,6 @@ public:
 	 * @note If bufferLength is exceeded, the buffer will resize according to STORAGE_MUTLIPLIER
 	 */
 	Draw(const unsigned int &bufferLength = 0, const glm::vec4 &initialColor = glm::vec4(1), const float &initialWidth = 1.0f);
-	/**
-	 * Deletes VBOs
-	 */
-	~Draw();
 	/**
 	 * Begins a draw state
 	 * @param type Type of drawing to create
@@ -66,6 +66,10 @@ public:
 	 * @param name The name of the draw state to render
 	 */
 	void render(const std::string &name);
+    /**
+     *
+     */
+    std::shared_ptr<PortableDraw> makePortable(const std::string &name);
 	/**
 	 * Reloads the shader
 	 */
@@ -163,10 +167,6 @@ private:
 	 */
 	void render(const State &state) const;
 	/**
-	 * Holds all created draw states
-	 */
-	std::unordered_map<std::string, State> stateDirectory;
-	/**
 	 * Holds a list of pairs stating where gaps can be found in the current vbo
 	 * @note Pair structure is {offset, count}
 	 */
@@ -186,18 +186,32 @@ private:
 	Type tType;
 	std::vector<glm::vec3> tVertices;
 	std::vector<glm::vec4> tColors;
-	/**
-	 * Data required for rendering
-	 */
-	std::shared_ptr<Shaders> shaders;
-	Shaders::VertexAttributeDetail vertices, colors;
-	/**
-	 * Data required for managing storage
-	 */
-	unsigned int vboLen, vboOffset;
-	const static unsigned int DEFAULT_INITIAL_VBO_LENGTH;
-	const static float STORAGE_MUTLIPLIER;
-	unsigned int requiredLength;
+
+    /**
+    * Data required for managing storage
+    */
+    unsigned int vboLen, vboOffset;
+    const static unsigned int DEFAULT_INITIAL_VBO_LENGTH;
+    const static float STORAGE_MUTLIPLIER;
+    unsigned int requiredLength;
+    /**
+     * Holds draw data in a struct so that it can be shared to PortableDraw to prevent deletion of data
+     */
+    struct DrawData
+    {
+        DrawData(const unsigned int &vboLength);
+        ~DrawData();
+        /**
+        * Data required for rendering/cleanup
+        */
+        std::shared_ptr<Shaders> shaders;
+        Shaders::VertexAttributeDetail vertices, colors;
+        /**
+         * Holds all created draw states
+         */
+        std::unordered_map<std::string, State> stateDirectory;
+    };
+    std::shared_ptr<DrawData> data;
 	/**
 	 * @return The GLenum which matches Type t
 	 */
@@ -211,4 +225,8 @@ private:
 	 */
 	static void clearWidth(const Type &t);
 };
+
+//Otherwise include might be missing, blocking casts from PortableDraw to SGItem
+#include "PortableDraw.h"
+
 #endif //__Draw_h__

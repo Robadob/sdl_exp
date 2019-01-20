@@ -1,47 +1,51 @@
 #include "Draw.h"
 #include "util/StringUtils.h"
+#include "PortableDraw.h"
 
 const unsigned int Draw::DEFAULT_INITIAL_VBO_LENGTH = 1024;
 const float Draw::STORAGE_MUTLIPLIER = 2.0f;
+Draw::DrawData::DrawData(const unsigned int &vboLength)
+: shaders(std::make_shared<Shaders>(Stock::Shaders::COLOR_NOSHADE))
+, vertices(GL_FLOAT, 3, sizeof(float))
+, colors(GL_FLOAT, 4, sizeof(float))
+{
+    vertices.count = vboLength;
+    vertices.data = nullptr;
+
+    colors.count = vboLength;
+    colors.data = nullptr;
+
+    //Vertices vbo
+    GL_CALL(glGenBuffers(1, &vertices.vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices.vbo));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, vboLength * sizeof(glm::vec3), nullptr, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    //Colors vbo
+    GL_CALL(glGenBuffers(1, &colors.vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, colors.vbo));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, vboLength * sizeof(glm::vec4), nullptr, GL_STATIC_DRAW));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    shaders->setPositionsAttributeDetail(vertices, false);
+    shaders->setColorsAttributeDetail(colors);
+}
+
+Draw::DrawData::~DrawData()
+{
+    GL_CALL(glDeleteBuffers(1, &vertices.vbo));
+    GL_CALL(glDeleteBuffers(1, &colors.vbo));
+}
 Draw::Draw(const unsigned int &bufferLength, const glm::vec4 &initialColor, const float &initialWidth)
 	: tName()
 	, tColor(initialColor)
 	, tWidth(initialWidth)
 	, tType()
-	, shaders(std::make_shared<Shaders>(Stock::Shaders::COLOR_NOSHADE))
-	, vertices(GL_FLOAT, 3, sizeof(float))
-	, colors(GL_FLOAT, 4, sizeof(float))
-	, vboLen(bufferLength == 0 ? DEFAULT_INITIAL_VBO_LENGTH : bufferLength)
+    , vboLen(bufferLength == 0 ? DEFAULT_INITIAL_VBO_LENGTH : bufferLength)
 	, vboOffset(0)
 	, requiredLength(0)
+	, data(std::make_shared<DrawData>(vboLen))
 {
 	assert(STORAGE_MUTLIPLIER > 1.0f);
-	//Vertices vbo
-	unsigned int vboSize = DEFAULT_INITIAL_VBO_LENGTH * sizeof(glm::vec3);
-	GL_CALL(glGenBuffers(1, &vertices.vbo));
-	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices.vbo));
-	GL_CALL(glBufferData(GL_ARRAY_BUFFER, vboSize, nullptr, GL_STATIC_DRAW));
-	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
-	//Colors vbo
-	unsigned int cvboSize = DEFAULT_INITIAL_VBO_LENGTH * sizeof(glm::vec4);
-	GL_CALL(glGenBuffers(1, &colors.vbo));
-	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, colors.vbo));
-	GL_CALL(glBufferData(GL_ARRAY_BUFFER, cvboSize, nullptr, GL_STATIC_DRAW));
-	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
-	vertices.count = DEFAULT_INITIAL_VBO_LENGTH;
-	vertices.data = nullptr;
-
-	colors.count = DEFAULT_INITIAL_VBO_LENGTH;
-	colors.data = nullptr;
-
-	shaders->setPositionsAttributeDetail(vertices, false);
-	shaders->setColorsAttributeDetail(colors);
-}
-Draw::~Draw()
-{
-	GL_CALL(glDeleteBuffers(1, &vertices.vbo));
-	GL_CALL(glDeleteBuffers(1, &colors.vbo));
 }
 void Draw::begin(Type type, const std::string &name)
 {
@@ -76,8 +80,8 @@ void Draw::save(bool replaceExisting)
 	//Save draw state
 	State tState = _save(false);
 	//Store draw state in map
-	auto f = stateDirectory.find(tName);
-	if (f != stateDirectory.end())
+    auto f = data->stateDirectory.find(tName);
+    if (f != data->stateDirectory.end())
 	{
 		if (!replaceExisting)
 		{
@@ -87,11 +91,11 @@ void Draw::save(bool replaceExisting)
 		{
 			vboGaps.push_back({ f->second.offset, f->second.count });
 			requiredLength -= f->second.count;
-			stateDirectory.erase(tName);
+            data->stateDirectory.erase(tName);
 		}
 	}
 	requiredLength += tState.count;
-	stateDirectory.insert({ tName, std::move(tState) });
+    data->stateDirectory.insert({ tName, std::move(tState) });
 }
 Draw::State Draw::_save(bool isTemporary)
 {
@@ -150,9 +154,9 @@ Draw::State Draw::_save(bool isTemporary)
 	rtn.mType = tType;
 	rtn.mWidth = tWidth;
 	//Fill VBO
-	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices.vbo));
+	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, data->vertices.vbo));
 	GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, bufferPos*sizeof(glm::vec3), rtn.count*sizeof(glm::vec3), tVertices.data()));
-	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, colors.vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, data->colors.vbo));
 	GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, bufferPos*sizeof(glm::vec4), rtn.count*sizeof(glm::vec4), tColors.data()));
 	GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	//Clear temporary structures
@@ -162,21 +166,25 @@ Draw::State Draw::_save(bool isTemporary)
 	//Return
 	return rtn;
 }
+std::shared_ptr<PortableDraw> Draw::makePortable(const std::string &name)
+{
+    return std::shared_ptr<PortableDraw>(new PortableDraw(name, data));
+}
 void Draw::render(const std::string &name)
 {
-	auto f = stateDirectory.find(name);
-	if (f == stateDirectory.end())
+	const auto &&f = data->stateDirectory.find(name);
+    if (f == data->stateDirectory.end())
 	{
-		throw std::runtime_error(su::format("Draw state '%s' was not found for rendering().\n", name.c_str()));
+		throw std::runtime_error(su::format("Draw state '%s' was not found for render().\n", name.c_str()));
 	}
 	render(f->second);
 }
 void Draw::render(const State &state) const
 {
 	setWidth(state.mType, state.mWidth);
-	shaders->useProgram();
+    data->shaders->useProgram();
 	GL_CALL(glDrawArrays(toGL(state.mType), state.offset, state.count));
-	shaders->clearProgram();
+    data->shaders->clearProgram();
 	clearWidth(state.mType);
 }
 GLenum Draw::toGL(const Type &t)
@@ -231,7 +239,7 @@ void Draw::clearWidth(const Type &t)
 }
 void Draw::resize(unsigned int newLength)
 {
-	assert(newLength > requiredLength);
+    assert(newLength > requiredLength);
 	/**
 	* Allocate new vbos of double size
 	*/
@@ -264,7 +272,7 @@ void Draw::resize(unsigned int newLength)
 	/**
 	* Defragment from old into new
 	*/
-	for (auto &a : stateDirectory)
+	for (auto &a : data->stateDirectory)
 	{
 		//Copy back to vbo
 		GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
@@ -281,29 +289,29 @@ void Draw::resize(unsigned int newLength)
 	free(_colors);
 	vboGaps.clear();
 	/**
-	* Delete and replace old vbos
-	*/
-	GL_CALL(glDeleteBuffers(1, &vertices.vbo));
-	GL_CALL(glDeleteBuffers(1, &colors.vbo));
-	vertices.vbo = _vbo;
-	colors.vbo = _cvbo;
-	shaders->setPositionsAttributeDetail(vertices, false);
-	shaders->setColorsAttributeDetail(colors);
+	 * Delete and replace old vbos
+	 */
+    GL_CALL(glDeleteBuffers(1, &data->vertices.vbo));
+    GL_CALL(glDeleteBuffers(1, &data->colors.vbo));
+    data->vertices.vbo = _vbo;
+    data->colors.vbo = _cvbo;
+    data->shaders->setPositionsAttributeDetail(data->vertices, false);
+    data->shaders->setColorsAttributeDetail(data->colors);
 	vboLen = newLength;
 }
 void Draw::reload()
 {
-	shaders->reload();
+    data->shaders->reload();
 }
 void Draw::setViewMatPtr(glm::mat4 const *viewMat)
 {
-	shaders->setViewMatPtr(viewMat);
+    data->shaders->setViewMatPtr(viewMat);
 }
 void Draw::setProjectionMatPtr(glm::mat4 const *projectionMat)
 {
-	shaders->setProjectionMatPtr(projectionMat);
+    data->shaders->setProjectionMatPtr(projectionMat);
 }
 void Draw::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
-	shaders->setLightsBuffer(bufferBindingPoint);
+    data->shaders->setLightsBuffer(bufferBindingPoint);
 }

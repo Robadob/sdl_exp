@@ -1,7 +1,6 @@
 #include "EntityScene.h"
 #include <ctime>
 #include "visualisation/TowerCrane.h"
-
 /*
 Constructor, modify this to change what happens
 */

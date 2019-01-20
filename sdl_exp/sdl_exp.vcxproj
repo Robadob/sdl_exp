@@ -177,6 +177,7 @@
     <ClInclude Include="visualisation\multipass\RenderBuffer.h" />
     <ClInclude Include="visualisation\multipass\RenderPass.h" />
     <ClInclude Include="visualisation\Overlay.h" />
+    <ClInclude Include="visualisation\PortableDraw.h" />
     <ClInclude Include="visualisation\shader\buffer\BufferCore.h" />
     <ClInclude Include="visualisation\shader\buffer\ShaderStorageBuffer.h" />
     <ClInclude Include="visualisation\shader\buffer\UniformBuffer.h" />

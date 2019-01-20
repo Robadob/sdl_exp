@@ -57,10 +57,10 @@ protected:
 	 */
 	void setRenderAxis(bool state);
     
-	std::shared_ptr<LightsBuffer> Lights(){ return lighting; }
+    std::shared_ptr<LightsBuffer> Lights(){ return lighting; }
 private:
-	bool renderAxisState, renderSkyboxState;
-	std::shared_ptr<Axis> axis;
+    bool renderAxisState, renderSkyboxState;
+    std::shared_ptr<Axis> axis;
 	std::unique_ptr<Skybox> skybox;
 	/**
 	 * Internal render functionality, calls render()

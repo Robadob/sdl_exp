@@ -2,7 +2,7 @@
 #include <csignal>
 
 SceneGraphItem::SceneGraphItem()
-    :expired(false)
+    : expired(false)
 { }
 //SceneGraphItem::SceneGraphItem(const SceneGraphItem& b)
 //    : parents(b.parents)

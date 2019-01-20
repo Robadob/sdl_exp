@@ -258,20 +258,6 @@ public:
      */
     void overrideMaterialID(unsigned int materialIndex);
 	/**
-     * Sets the pointer which will apply a rotation to the ModelView matrix, rotating items rendered by this shader
-     * @param rotationPtr A pointer to the rotation will be tracked
-     * @note Setting this pointer to nullptr will disable rotation
-     * @note rotationPtr.xyz is the axis to rotate about
-     * @note rotationPtr.w is the rotation angle in degrees
-     */
-	inline void setRotationPtr(glm::vec4 const *rotationPtr){ this->rotationPtr = rotationPtr; }
-	/**
-	 * Sets the pointer which will apply a translation to the ModelView matrix, rotating items rendered by this shader
-	 * @param translationPtr A pointer to the projectionMatrix to be tracked
-	 * @note Setting this pointer to nullptr will disable translation
-	 */
-	inline void setTranslationPtr(glm::vec3 const *translationPtr){ this->translationPtr = translationPtr; }
-	/**
 	 * Stores the details necessary for passing vertex position attributes to the shader via the modern method
 	 * @param vad The VertexAttributeDetail object containing the attribute data
 	 * @param update If true, the VAO will be rebuilt (not passing false when updating shared vbo id's will cause GL error's)
@@ -442,7 +428,7 @@ private:
 	void _useProgram() override;
     /**
      * Updates all matrix uniforms that contain the modelMat
-     * @param force If passed this value overrides the stored modelMat.matrixPtr and translation/rotations
+     * @param force If passed this value overrides the stored modelMat.matrixPtr
      * @note Called by ShaderCore::_prepare()
      */
     void _useProgramModelMatrices(const glm::mat4 *force = nullptr);
@@ -494,14 +480,6 @@ private:
 	 */
 	//glm::mat4 prevModelview;
 	//int prevModelviewUniformLocation;
-	/**
-	 * When !nullptr, points to a vector containing a rotation applied to the modelview matrix before binding
-	 */
-	const glm::vec4 *rotationPtr;
-	/**
-	* When !nullptr, points to a vector containing a translation applied to the modelview matrix before binding
-	*/
-	const glm::vec3 *translationPtr;
 	/**
 	 * Holds information for binding the vertex positions attribute
 	 */

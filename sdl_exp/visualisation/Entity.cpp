@@ -119,22 +119,22 @@ Entity::Entity(
 	Stock::Materials::Material const material,
 	float modelScale
 	)
-	: positions(GL_FLOAT, 3, sizeof(float))
+	: viewMatPtr(nullptr)
+	, projectionMatPtr(nullptr)
+	, lightBufferBindPt(UINT_MAX)
+	, shaders()
+	, texture(nullptr)
+	, SCALE(modelScale)
+	, scaleFactor(1.0f)
+	, modelPath(modelPath)
+	, vn_count(0)
+	, positions(GL_FLOAT, 3, sizeof(float))
 	, normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
 	, colors(GL_FLOAT, 3, sizeof(float))
 	, texcoords(GL_FLOAT, 2, sizeof(float))
 	, faces(GL_UNSIGNED_INT, FACES_SIZE, sizeof(unsigned int))
-	, vn_count(0)
-	, SCALE(modelScale)
-	, modelPath(modelPath)
 	, materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
-	, shaders()
-	, texture(nullptr)
 	, cullFace(true)
-	, scaleFactor(1.0f)
-	, viewMatPtr(nullptr)
-	, projectionMatPtr(nullptr)
-	, lightBufferBindPt(UINT_MAX)
 {
 	GL_CHECK();
 	loadModelFromFile();

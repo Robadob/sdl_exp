@@ -120,10 +120,21 @@ public:
     * @return The visualisation's scene
     */
     std::weak_ptr<HUD> getHUD() override;
+	/**
+	 * @return The current companion window viewport width
+	 * @see HMDCamera getCamera() cast to HMDCamera for HMD viewport.
+	 */
+    unsigned int getWindowWidth() const override { return companionWindowDims.x; }
     /**
-    * @return The current viewport dimensions
-    */
-	glm::uvec2 getWindowDims() const override { return companionWindowDims; }
+     * @return The current companion window viewport height
+	 * @see HMDCamera getCamera() cast to HMDCamera for HMD viewport.
+     */
+    unsigned int getWindowHeight() const override { return companionWindowDims.y; }
+    /**
+     * @return The current companion window viewport dimensions
+	 * @see HMDCamera getCamera() cast to HMDCamera for HMD viewport.
+     */
+    glm::uvec2 getWindowDims() const override { return companionWindowDims; }
     
     ViewportExt &toViewportExt() { return reinterpret_cast<ViewportExt &>(*this); }
 private:

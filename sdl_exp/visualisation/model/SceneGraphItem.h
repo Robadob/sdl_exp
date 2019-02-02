@@ -96,6 +96,7 @@ public:
      * @note It is not intended for attachment offset methods are extended by generic model loader types, as model
      *       formats are unlikely to provide such data. Instead it is expected that one may extend such a class to
      *       produce a specific class for the intended object which manually configures such offsets
+     * @note This plan might be flawed if a model requires a dynamic attachment point
      */
     virtual glm::vec3 getAttachmentOffset(unsigned int index) const { return glm::vec3(0); }
     /**
@@ -106,12 +107,13 @@ public:
     ///////////////////////////////////////
     // Scene Graph Attachment Management //
     ///////////////////////////////////////
-    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0, unsigned int childAttachOffsetIndex = 0);
+    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, const glm::mat4 &attachmentTransform);
     bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, glm::vec3 parentAttachOffset, glm::vec3 childAttachOffset = glm::vec3(0));
+    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0, unsigned int childAttachOffsetIndex = 0);
     //SceneGraphJoint versions
     //Implemented in SceneGraphJoint.cpp
-    bool attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0);
     bool attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, glm::vec3 parentAttachOffset);
+    bool attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0);
 
     /**
      * Detatches the first child which shares the reference
@@ -183,9 +185,10 @@ private:
     {
         std::string reference;
         std::shared_ptr<SceneGraphItem> child;
-        glm::vec3 parentOffset;
-        glm::vec3 childOffset;
-        glm::vec3 inverseScale;//Used to ignore parents scale transform
+        //glm::vec3 parentOffset;
+        //glm::vec3 childOffset;
+        //glm::vec3 inverseScale;//Used to ignore parents scale transform
+        glm::mat4 attachmentTransform;
         glm::mat4 computedTransformMat;
         static glm::vec3 getScale(const glm::mat4 &m)
         {
@@ -195,9 +198,13 @@ private:
                 length(glm::vec3(m[0][2], m[1][2], m[2][2]))
                 );
         }
+        static glm::mat4 getMat(const glm::vec3 &parentOffset, const glm::vec3 &childOffset, const glm::vec3 &inverseScale)
+        {
+            return glm::scale(inverseScale) * glm::translate(parentOffset - childOffset);
+        }
         void setComputedTransformMat(const glm::mat4 &sceneParentTransform)
         {
-            computedTransformMat = sceneParentTransform *glm::scale(inverseScale) * glm::translate(parentOffset - childOffset);
+            computedTransformMat = sceneParentTransform * attachmentTransform;
         }
     };
     std::list<AttachmentDetail> children;

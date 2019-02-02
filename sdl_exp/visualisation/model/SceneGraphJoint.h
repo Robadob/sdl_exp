@@ -52,8 +52,8 @@ public:
     //                 ~Scene Graph Attachment Management~                 //
     // Joints have no attachment points, so we treat it slightly different //
     /////////////////////////////////////////////////////////////////////////
-    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int childAttachOffsetIndex = 0);
     bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, glm::vec3 childAttachOffset);
+    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int childAttachOffsetIndex = 0);
 
     //std::shared_ptr<SceneGraphJoint> clone();
     /////////////////////////

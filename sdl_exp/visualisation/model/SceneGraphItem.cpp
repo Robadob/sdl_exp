@@ -121,26 +121,13 @@ void SceneGraphItem::renderSceneGraph(const unsigned int &shaderIndex, const glm
 ///////////////////////////////////////
 // Scene Graph Attachment Management //
 ///////////////////////////////////////
+
 bool SceneGraphItem::attach(
     const std::shared_ptr<SceneGraphItem> &child, 
     const std::string &reference, 
-    unsigned int parentAttachOffsetIndex, 
-    unsigned int childAttachOffsetIndex
+    const glm::mat4 &attachmentTransform
 ) {
-    return attach(
-        child,
-        reference,
-        this->getAttachmentOffset(parentAttachOffsetIndex),
-        child->getAttachmentOffset(childAttachOffsetIndex)
-        );
-}
-bool SceneGraphItem::attach(
-    const std::shared_ptr<SceneGraphItem> &child,
-    const std::string &reference, 
-    glm::vec3 parentAttachOffset, 
-    glm::vec3 childAttachOffset
-) {
-//Recursive checks are expensive, we trust release mode to do things properly
+    //Recursive checks are expensive, we trust release mode to do things properly
 #ifdef _DEBUG
     //Recurse scene graph to ensure we won't be creating a cycle
     {
@@ -165,16 +152,53 @@ bool SceneGraphItem::attach(
         }
         catch (std::exception&)
         {
-            fprintf(stderr, "%s:%d Exception occured when attaching child to scene graph.\nattachments cannot be made to an object inside it's constructor, before it has been placed into a shared pointer.", __FILE__, __LINE__); 
+            fprintf(stderr, "%s:%d Exception occured when attaching child to scene graph.\nattachments cannot be made to an object inside it's constructor, before it has been placed into a shared pointer.", __FILE__, __LINE__);
             throw;
         }
         //Add to me as child
-        children.insert(children.begin(), { reference, child, parentAttachOffset, childAttachOffset, 1.0f / AttachmentDetail::getScale(this->sceneMat), glm::mat4(1) });
+        //original
+        //children.insert(children.begin(), { reference, child, parentAttachOffset, childAttachOffset, 1.0f / AttachmentDetail::getScale(this->sceneMat), glm::mat4(1) });
+        //original in new format
+        //children.insert(children.begin(), { reference, child, AttachmentDetail::getMat(parentAttachOffset, childAttachOffset, 1.0f / AttachmentDetail::getScale(this->sceneMat)), glm::mat4(1) });
+        //new format with scale removed (i'm not convinced it should be required with split of scene/model/local matrices).
+        children.insert(children.begin(), { reference, child, attachmentTransform, glm::mat4(1) });
         //Mark this node as expired so it gets recursively updated at next render
         expired = true;
     }
 
     return true;
+}
+bool SceneGraphItem::attach(
+    const std::shared_ptr<SceneGraphItem> &child,
+    const std::string &reference, 
+    glm::vec3 parentAttachOffset, 
+    glm::vec3 childAttachOffset
+) {
+    //original in new format
+    //return attach(
+    //    child,
+    //    reference,
+    //    AttachmentDetail::getMat(parentAttachOffset, childAttachOffset, 1.0f / AttachmentDetail::getScale(this->sceneMat))
+    //    );
+    //new format with scale removed (i'm not convinced it should be required with split of scene/model/local matrices).
+    return attach(
+        child,
+        reference,
+        AttachmentDetail::getMat(parentAttachOffset, childAttachOffset, glm::vec3(1.0f))
+        );
+}
+bool SceneGraphItem::attach(
+    const std::shared_ptr<SceneGraphItem> &child,
+    const std::string &reference,
+    unsigned int parentAttachOffsetIndex,
+    unsigned int childAttachOffsetIndex
+) {
+    return attach(
+        child,
+        reference,
+        this->getAttachmentOffset(parentAttachOffsetIndex),
+        child->getAttachmentOffset(childAttachOffsetIndex)
+        );
 }
 bool SceneGraphItem::detach(const std::string &reference)
 {

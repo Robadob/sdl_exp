@@ -35,6 +35,7 @@ Entity2::Entity2(
     , faces(fSize==sizeof(unsigned short)?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
     , texture(texture)
     , materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties)))
+    , shaders(std::make_shared<Shaders>(Stock::Shaders::FLAT))
 {
     assert(vertices);
     assert(faces);
@@ -1061,7 +1062,11 @@ void Entity2::setProjectionMatPtr(glm::mat4 const* projectionMat)
 	//Pass to all shaders
     shaders->setProjectionMatPtr(projectionMat);
 }
-
+void Entity2::setLightsBuffer(const GLuint &bufferBindingPoint)
+{
+    //Pass to all shaders
+    shaders->setLightsBuffer(bufferBindingPoint);
+}
 /*
 Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
 */
@@ -1114,20 +1119,12 @@ void Entity2::generateVertexBufferObjects()
 }
 void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
-	if (shaderIndex != 0)
-		fprintf(stderr, "Entity2 does not currently support multi shader.\n");
     static int colorUniformLoc = -1;
     if (colorUniformLoc == -1)
         colorUniformLoc=ShaderCore::findUniform("_color", shaders->getProgram()).first;
    // GL_CALL(glDisable(GL_CULL_FACE));
-    //if (shaderIndex<shaders.size())
-    //    shaders[shaderIndex]->useProgram();
-    if (shaders)
-	{
-		shaders->useProgram();
-        glm::mat4 m = transform * getModelMat();
-		shaders->overrideModelMat(&m);
-	}
+    glm::mat4 m = transform * getModelMatRef();
+    this->materials[0].use(m, shaderIndex, true);
     //Bind the faces to be rendered
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faces.vbo));
     //printf("%d\n", renderGroup[renderGroup.size() - 1].faceIndexStart+renderGroup[renderGroup.size() - 1].faceIndexCount);
@@ -1160,6 +1157,6 @@ void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform
    // GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     //Fixed fn
     GL_CALL(glEnable(GL_CULL_FACE));
-    if (shaders)
-        shaders->clearProgram();
+
+    this->materials[0].clear();
 }

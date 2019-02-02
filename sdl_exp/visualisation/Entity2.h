@@ -71,6 +71,7 @@ public:
 	void reload() override;
 	void setViewMatPtr(glm::mat4 const *viewMat) override;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
+    void setLightsBuffer(const GLuint &bufferBindingPoint) override;
     void render(const unsigned int &shaderIndex = 0, const glm::mat4 &transform = glm::mat4(1)) override;
     //Scene Space/Mat Transforms, these affect children of the entity
     using SceneGraphItem::setSceneMat;

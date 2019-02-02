@@ -194,7 +194,7 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
         }
         //Transfer render model from OpenVR format to our internal Entity forma
         renderEntities[modelName] = vr::createEntity(*pModel, *pTexture);
-        renderEntities[modelName]->setProjectionMatPtr(camera->getProjMatPtr());
+        renderEntities[modelName]->setProjectionMatPtr(camera->getProjectionMatPtr());
         renderEntities[modelName]->setViewMatPtr(camera->getViewMatPtr());
         vr::VRRenderModels()->FreeRenderModel(pModel);
         vr::VRRenderModels()->FreeTexture(pTexture);
@@ -203,7 +203,8 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
 }
 void TrackedDevicesVR::render()
 {
-	if (HMD->IsInputFocusCapturedByAnotherProcess())
+    //if (HMD->IsInputFocusCapturedByAnotherProcess())//This is unavailable with SteamVR api update, assuming below is replacement
+    if (!HMD->IsInputAvailable())
 		return;
 
 	for (vr::TrackedDeviceIndex_t unDevice = 0; unDevice < vr::k_unMaxTrackedDeviceCount; unDevice++)

@@ -50,12 +50,14 @@ namespace vr
             (float*)tcData, 2,
             vrModel.unVertexCount,
             (void*)vrModel.rIndexData, sizeof(uint16_t), 3, vrModel.unTriangleCount,
-            std::make_shared<Texture2D>(
-            (const char *)nullptr,
-            (void*)vrDiffuseTexture.rubTextureMapData,
-            vrDiffuseTexture.unWidth * vrDiffuseTexture.unHeight * 4 * sizeof(unsigned char),
-            vrDiffuseTexture.unWidth, vrDiffuseTexture.unHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
+            Texture2D::make(glm::uvec2(vrDiffuseTexture.unWidth, vrDiffuseTexture.unHeight), {GL_RGBA, GL_RGBA, sizeof(unsigned char), GL_UNSIGNED_BYTE}, (void*)vrDiffuseTexture.rubTextureMapData)
             );
+        //std::make_shared<Texture2D>(
+        //(const char *)nullptr,
+        //    (void*)vrDiffuseTexture.rubTextureMapData,
+        //    vrDiffuseTexture.unWidth * vrDiffuseTexture.unHeight * 4 * sizeof(unsigned char),
+        //    vrDiffuseTexture.unWidth, vrDiffuseTexture.unHeight, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE)
+        //    );
         free(newData);
         return rtn;
     }

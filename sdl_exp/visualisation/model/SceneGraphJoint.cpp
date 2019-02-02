@@ -53,13 +53,13 @@ bool SceneGraphJoint::attach(const std::shared_ptr<SceneGraphItem> &child, const
     return SceneGraphItem::attach(child, reference, glm::vec3(0), childAttachOffset);
 }
 //SceneGraphItem special versions for SceneGraphJoint
-bool SceneGraphItem::attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, unsigned int parentAttachOffsetIndex)
-{
-    return attach(child, reference, this->getAttachmentOffset(parentAttachOffsetIndex), glm::vec3(0));
-}
 bool SceneGraphItem::attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, glm::vec3 parentAttachOffset)
 {
     return attach(child, reference, parentAttachOffset, glm::vec3(0));
+}
+bool SceneGraphItem::attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, unsigned int parentAttachOffsetIndex)
+{
+    return attach(child, reference, this->getAttachmentOffset(parentAttachOffsetIndex), glm::vec3(0));
 }
 
 

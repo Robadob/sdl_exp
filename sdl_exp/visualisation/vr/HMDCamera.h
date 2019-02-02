@@ -25,9 +25,17 @@ public:
     const glm::mat4 *getWorldMatPtr() const { return &worldMat; }
     void setWorldMat(glm::mat4 a){ worldMat = a; }//Temp
     inline glm::mat4 applyWorldMat(const glm::mat4 &a) const { return worldMat * a; }
+    /**
+     * @return The current HMD viewport width
+     */
+    unsigned int getWindowWidth() const override { return renderTargetDims.x; }
+    /**
+     * @return The current HMD viewport height
+     */
+    unsigned int getWindowHeight() const override { return renderTargetDims.y; }
 	/**
-	* @return The current viewport dimensions
-	*/
+	 * @return The current viewport dimensions
+	 */
     glm::uvec2 getWindowDims() const override { return renderTargetDims; }
 private:
 	Eye activeEye;

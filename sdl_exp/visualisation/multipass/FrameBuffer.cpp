@@ -399,6 +399,6 @@ void FrameBuffer::disableFiltering(GLuint attachPt)
 	auto && it = colors.find(attachPt);
 	if (it != colors.end() && it->second.conf.Type() == FBA::TextureRT)
 	{
-		std::dynamic_pointer_cast<Texture>(depth.renderTarget)->setOptions(Texture::FILTER_MIN_NEAREST | Texture::FILTER_MAG_NEAREST);
+		std::dynamic_pointer_cast<Texture>(it->second.renderTarget)->setOptions(Texture::FILTER_MIN_NEAREST | Texture::FILTER_MAG_NEAREST);
 	}
 }

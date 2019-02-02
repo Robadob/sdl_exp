@@ -3,7 +3,7 @@
 Device::Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
     : vr_HMD(vr_HMD)
     , id(id)
-    , renderSceneGraph(true)
+    //, renderSceneGraph(true)
     , model(model)//Presume id 0 == HMD
     , type(vr_HMD->GetTrackedDeviceClass(id))
 {

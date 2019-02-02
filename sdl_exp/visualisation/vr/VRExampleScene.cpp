@@ -31,7 +31,7 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
         pen->vertex(glm::vec3(0));
         pen->vertex(glm::vec3(0, 0, -lanceLength));
         pen->save();
-        lance = pen->makePortable("lane_line");
+        lance = pen->makePortable("lance_line");
     }
     {
         pen->begin(Draw::Points, "lance_pointer");
@@ -148,7 +148,7 @@ bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, v
                         //glm::vec3 sphereOffset = glm::vec3(sphere[i]->getModelMat()*glm::vec4(0, 0, 0, 1)) - controller->getLocation();
                         heldSphereMat4 = glm::inverse(controller->getModelMat());
                         //sphere[i]->setLocation(glm::vec3(0));
-                        controller->attach(sphere[i], "held_item", &heldSphereMat4);
+                        controller->attach(sphere[i], "held_item", heldSphereMat4);
                         //Refresh colour
                         glm::vec3 color = glm::vec3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
                         this->sphere[i]->setMaterial(color / 10.0f, color);

@@ -16,7 +16,6 @@ Texture2D_Multisample::Texture2D_Multisample(const glm::uvec2 &dimensions, const
     , dimensions(dimensions)
     , samples(samples)
 {
-
     allocateMultisampleTextureMutable(dimensions, samples);
     applyOptions();
 }
@@ -28,8 +27,9 @@ void Texture2D_Multisample::resize(const glm::uvec2 &dimensions, unsigned int sa
 }
 void Texture2D_Multisample::allocateMultisampleTextureMutable(const glm::uvec2 &dimensions, unsigned int samples)
 {
-
+    GL_CALL(glBindTexture(type, glName));
     GL_CALL(glTexImage2DMultisample(type, samples, format.internalFormat, dimensions.x, dimensions.y, true));
+    GL_CALL(glBindTexture(type, 0));
 }
 /**
 * Required methods for handling texture units

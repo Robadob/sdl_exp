@@ -195,6 +195,7 @@ Texture::Texture(GLenum type, GLuint textureUnit, const Format &format, const st
 {
 	assert(textureUnit != 0);//We reserve texture unit 0 for texture commands, because if we bind a texture to change settings we would knock the desired one out of the unit
     //Bind to texture unit (cant use bind() as includes debug call virtual fn)
+
     GL_CALL(glActiveTexture(GL_TEXTURE0 + this->textureUnit));
     GL_CALL(glBindTexture(this->type, this->glName));
     //Always return to Tex0 for doing normal texture work
@@ -255,26 +256,31 @@ void Texture::unsetOptions(unsigned long long removeOptions)
 void Texture::applyOptions()
 {
 	GL_CALL(glBindTexture(type, glName));
-	if (enableAnistropicOption())
-	{//Anistropic filtering (improves texture sampling at steep angle, especially visible with tiling patterns)
-		GLfloat fLargest;
-		GL_CALL(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest));
-		GL_CALL(glTexParameterf(type, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest));
-	}
 
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_MAG_FILTER, filterMagOption()));
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_MIN_FILTER, filterMinOption()));
+    //Skip unsupported options for multisample
+    if (type != GL_TEXTURE_2D_MULTISAMPLE)
+    {
+        if (enableAnistropicOption())
+        {//Anistropic filtering (improves texture sampling at steep angle, especially visible with tiling patterns)
+            GLfloat fLargest;
+            GL_CALL(glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest));
+            GL_CALL(glTexParameterf(type, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest));
+        }
 
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_S, wrapOptionU()));
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_T, wrapOptionV()));
-	GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_R, wrapOptionU()));//Unused
+        GL_CALL(glTexParameteri(type, GL_TEXTURE_MAG_FILTER, filterMagOption()));
+        GL_CALL(glTexParameteri(type, GL_TEXTURE_MIN_FILTER, filterMinOption()));
+
+        GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_S, wrapOptionU()));
+        GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_T, wrapOptionV()));
+        GL_CALL(glTexParameteri(type, GL_TEXTURE_WRAP_R, wrapOptionU()));//Unused
+    }
 
 	if (enableMipMapOption())
 	{
 		GL_CALL(glTexParameteri(type, GL_TEXTURE_MAX_LEVEL, 1000));//Enable mip mapsdefault
 		GL_CALL(glGenerateMipmap(type));
 	}
-	else
+    else
 	{
 		GL_CALL(glTexParameteri(type, GL_TEXTURE_MAX_LEVEL, 0));//Disable mipmaps
 	}
@@ -409,7 +415,7 @@ void Texture::allocateTextureMutable(const glm::uvec2 &dimensions, const void *d
 {
     target = target == 0 ? type : target;
     GL_CALL(glBindTexture(type, glName));
-    //Set custom algin, for safety
+    //Set custom align, for safety
     GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     GL_CALL(glTexImage2D(target, 0, format.internalFormat, dimensions.x, dimensions.y, 0, format.format, format.type, data));
     //Disable custom align
@@ -420,7 +426,7 @@ void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::iv
 {
 	target = target == 0 ? type : target;
 	GL_CALL(glBindTexture(type, glName));
-	//Set custom algin, for safety
+	//Set custom align, for safety
 	GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
 	if (data)
 	{

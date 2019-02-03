@@ -15,7 +15,6 @@ Entity2::Entity2(const char *modelPath)
     , faces(GL_UNSIGNED_INT, 3, sizeof(unsigned int))//Components may be increased at runtime
     , shaders(std::make_shared<Shaders>(Stock::Shaders::FLAT))
 {
-    shaders->setColor(glm::vec3(1));
 	loadModel();
 }
 
@@ -33,9 +32,9 @@ Entity2::Entity2(
     , colors(GL_FLOAT, cComponents, sizeof(float))
     , texcoords(GL_FLOAT, tcComponents, sizeof(float))//Components may be increased at runtime
     , faces(fSize==sizeof(unsigned short)?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT, fComponents, (unsigned int)fSize)//Components may be increased at runtime
-    , texture(texture)
     , materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties)))
     , shaders(std::make_shared<Shaders>(Stock::Shaders::FLAT))
+    , texture(texture)
 {
     assert(vertices);
     assert(faces);
@@ -1049,23 +1048,31 @@ void Entity2::reload()
 
 	//Reload shaders from file
     shaders->reload();
+    for (auto &&m : materials)
+        m.reload();
 }
 
 void Entity2::setViewMatPtr(glm::mat4 const* viewMat)
 {
 	//Pass to all shaders
     shaders->setViewMatPtr(viewMat);
+    for (auto &&m : materials)
+        m.setViewMatPtr(viewMat);
 }
 
 void Entity2::setProjectionMatPtr(glm::mat4 const* projectionMat)
 {
 	//Pass to all shaders
     shaders->setProjectionMatPtr(projectionMat);
+    for (auto &&m : materials)
+        m.setProjectionMatPtr(projectionMat);
 }
 void Entity2::setLightsBuffer(const GLuint &bufferBindingPoint)
 {
     //Pass to all shaders
     shaders->setLightsBuffer(bufferBindingPoint);
+    for (auto &&m : materials)
+        m.setLightsBuffer(bufferBindingPoint);
 }
 /*
 Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
@@ -1119,9 +1126,6 @@ void Entity2::generateVertexBufferObjects()
 }
 void Entity2::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
-    static int colorUniformLoc = -1;
-    if (colorUniformLoc == -1)
-        colorUniformLoc=ShaderCore::findUniform("_color", shaders->getProgram()).first;
    // GL_CALL(glDisable(GL_CULL_FACE));
     glm::mat4 m = transform * getModelMatRef();
     this->materials[0].use(m, shaderIndex, true);

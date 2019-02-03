@@ -64,12 +64,22 @@ void TrackedDevicesVR::update(SceneVR *scene)
 			}
 			case vr::VREvent_TrackedDeviceActivated:
 			{
-				addDevice(event.trackedDeviceIndex);
+                addDevice(event.trackedDeviceIndex);
+                //Notify scene that controller was reconnected (so scene graph can be reset)
+                if (auto d = std::dynamic_pointer_cast<Controller>(trackedDevices[event.trackedDeviceIndex]))
+                {
+                    scene->controllerEventVR(d, static_cast<vr::EVRButtonId>(event.data.controller.button), static_cast<vr::EVREventType>(event.eventType));
+                }
 				printf("VR device %u attached. Setting up render model.\n", event.trackedDeviceIndex);
 				break;
 			}
 			case vr::VREvent_TrackedDeviceDeactivated:
-			{
+            {
+                //Notify scene that controller will be disconnected (so scene graph can be reset)
+                if (auto d = std::dynamic_pointer_cast<Controller>(trackedDevices[event.trackedDeviceIndex]))
+                {
+                    scene->controllerEventVR(d, static_cast<vr::EVRButtonId>(event.data.controller.button), static_cast<vr::EVREventType>(event.eventType));
+                }
 				removeDevice(event.trackedDeviceIndex);
 				printf("VR device %u detatched. Disabling render model.\n", event.trackedDeviceIndex);
 				break;
@@ -134,15 +144,24 @@ bool TrackedDevicesVR::addDevice(unsigned int deviceIndex)
     }
 	switch (HMD->GetTrackedDeviceClass(deviceIndex))
 	{
-	case vr::TrackedDeviceClass_Controller:
+    case vr::TrackedDeviceClass_Controller:
+        printf("Device %u attached as Controller.\n", deviceIndex);
 		trackedDevices[deviceIndex] = std::make_shared<Controller>(HMD, deviceIndex, renderModel);
         break;
     case vr::TrackedDeviceClass_HMD:
+        printf("Device %u attached as HMD.\n", deviceIndex);
         trackedDevices[deviceIndex] = std::make_shared<Headset>(HMD, deviceIndex, renderModel);
         break;
-	case vr::TrackedDeviceClass_GenericTracker:
-	case vr::TrackedDeviceClass_TrackingReference:
-	default:
+    case vr::TrackedDeviceClass_GenericTracker:
+        printf("Device %u attached as Device (Generic Tracker).\n", deviceIndex);
+        trackedDevices[deviceIndex] = std::make_shared<Device>(HMD, deviceIndex, renderModel);
+        break;
+    case vr::TrackedDeviceClass_TrackingReference:
+        printf("Device %u attached as Device (Tracking Reference[lighthouse?]).\n", deviceIndex);
+        trackedDevices[deviceIndex] = std::make_shared<Device>(HMD, deviceIndex, renderModel);
+        break;
+    default:
+        printf("Device %u attached as Device (Unknown).\n", deviceIndex);
 		trackedDevices[deviceIndex] = std::make_shared<Device>(HMD, deviceIndex, renderModel);
 		break;
 
@@ -196,6 +215,7 @@ std::shared_ptr<Entity2> TrackedDevicesVR::findLoadRenderModel(std::string &mode
         renderEntities[modelName] = vr::createEntity(*pModel, *pTexture);
         renderEntities[modelName]->setProjectionMatPtr(camera->getProjectionMatPtr());
         renderEntities[modelName]->setViewMatPtr(camera->getViewMatPtr());
+        //renderEntities[modelName]->setLightsBuffer(scene->getLights());
         vr::VRRenderModels()->FreeRenderModel(pModel);
         vr::VRRenderModels()->FreeTexture(pTexture);
     }
@@ -220,35 +240,35 @@ void TrackedDevicesVR::render()
 						if (Controller::Hand::Left == t->getHand())
 						{
 							if (renderLeftController)
-								trackedDevices[unDevice]->render();
+                                trackedDevices[unDevice]->renderSceneGraph();
 						}
 						else if (Controller::Hand::Right == t->getHand())
 						{
 							if (renderRightController)
-								trackedDevices[unDevice]->render();
+                                trackedDevices[unDevice]->renderSceneGraph();
 						}
 						else if (Controller::Hand::Invalid == t->getHand())
 						{
 							if (renderInvalidController)
-								trackedDevices[unDevice]->render();
+                                trackedDevices[unDevice]->renderSceneGraph();
 						}
 					}
 				}
 				else if (renderTracker && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_GenericTracker)
 				{
-					trackedDevices[unDevice]->render();
+					trackedDevices[unDevice]->renderSceneGraph();
 				}
 				else if (renderHeadset && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_HMD)
 				{
-					trackedDevices[unDevice]->render();
+                    trackedDevices[unDevice]->renderSceneGraph();
 				}
 				else if (renderLighthouses && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_TrackingReference)
 				{
-					trackedDevices[unDevice]->render();
+                    trackedDevices[unDevice]->renderSceneGraph();
 				}
                 else if (renderUnknown && trackedDevices[unDevice]->getType() == vr::TrackedDeviceClass_Invalid)
 				{
-					trackedDevices[unDevice]->render();
+                    trackedDevices[unDevice]->renderSceneGraph();
 				}
 			}
 		}
@@ -270,7 +290,6 @@ void TrackedDevicesVR::updatePoses()
 				{//Invert HMD for camera (not sure why, but this is how it's done)
                     camera->setHMDPose(inverse(poseMat)); 
 				}
-                
                 trackedDevices[i]->setPose(camera->applyWorldMat(poseMat));
 			}
 		}

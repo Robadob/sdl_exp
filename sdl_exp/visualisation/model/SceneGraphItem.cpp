@@ -3,6 +3,7 @@
 
 SceneGraphItem::SceneGraphItem()
     : expired(false)
+    , sceneGraphVisible(true)
 { }
 //SceneGraphItem::SceneGraphItem(const SceneGraphItem& b)
 //    : parents(b.parents)
@@ -23,6 +24,7 @@ SceneGraphItem::SceneGraphItem(SceneGraphItem&& b)
     , children(children)
     , expired(b.expired)
     , sceneMat(b.sceneMat)
+    , sceneGraphVisible(b.sceneGraphVisible)
 {
     //Steal children from b
     for (auto &it : children)
@@ -106,11 +108,13 @@ void SceneGraphItem::propagateUpdate(const glm::mat4 &sceneTransform)
 }
 void SceneGraphItem::renderSceneGraph(const unsigned int &shaderIndex, const glm::mat4 &rootTransform, const glm::mat4 &computedSceneTransform)
 {
+    //Render this
+    render(shaderIndex, rootTransform * computedSceneTransform);
+    if (!sceneGraphVisible)
+        return;
     //If expired, compute each child's tranform mat from scene transform (and model mat)
     if (expired)
         propagateUpdate(computedSceneTransform);
-    //Render this
-    render(shaderIndex, rootTransform * computedSceneTransform);
     //Render Children
     for (auto &it : children)
     {

@@ -27,6 +27,11 @@ protected:
      * Transfers values and children/parent relationships
      */
     SceneGraphItem(SceneGraphItem&& b);
+    /**
+     * Forwards propogation to each child
+     * @param sceneTransform Transform to be applied before local transform of the attachment
+     */
+    void propagateUpdate(const glm::mat4 &sceneTransform);
 public:
     /**
      * Copy assignment operator
@@ -76,12 +81,6 @@ public:
     {
         renderSceneGraph(UINT_MAX, transform, glm::mat4(1));
     }
-
-    /**
-    * Forwards propogation to each child
-    * @param sceneTransform Transform to be applied before local transform of the attachment
-    */
-    void propagateUpdate(const glm::mat4 &sceneTransform);
     /////////////////////////
     // Attachment Offsets //
     ////////////////////////
@@ -107,9 +106,9 @@ public:
     ///////////////////////////////////////
     // Scene Graph Attachment Management //
     ///////////////////////////////////////
-    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, const glm::mat4 &attachmentTransform);
+    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, const glm::mat4 &attachmentTransform = glm::mat4(1));
     bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, glm::vec3 parentAttachOffset, glm::vec3 childAttachOffset = glm::vec3(0));
-    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int parentAttachOffsetIndex = 0, unsigned int childAttachOffsetIndex = 0);
+    bool attach(const std::shared_ptr<SceneGraphItem> &child, const std::string &reference, unsigned int parentAttachOffsetIndex, unsigned int childAttachOffsetIndex = 0);
     //SceneGraphJoint versions
     //Implemented in SceneGraphJoint.cpp
     bool attach(const std::shared_ptr<SceneGraphJoint> &child, const std::string &reference, glm::vec3 parentAttachOffset);
@@ -148,6 +147,8 @@ public:
      * @return True if parent found, else false
      */
     bool hasParentAttachment(const std::shared_ptr<const SceneGraphItem> &parent) const;
+
+    bool getSceneGraphVisible() const { return sceneGraphVisible; }
 private:
     /**
      * Internally used when adding/removing children to prevent cycles
@@ -236,6 +237,10 @@ private:
      */
     glm::mat4 computedModelMat;
     void recomputeModelMat() { computedModelMat = sceneMat * localMat * internalMat; }
+    /**
+     * Denotes whether scene graph is rendered or hidden
+     */
+    bool sceneGraphVisible;
 protected:
     /**
      * Used by subclasses to updated the model matrix
@@ -249,6 +254,7 @@ protected:
      */
     //Scene Space/Mat Transforms, these affect children of the entity
     glm::vec3 getLocation() const { return sceneMat[3]; };
+    const glm::vec3 *getLocationPtr() const { return (glm::vec3*)&sceneMat[3]; }
     void setSceneTranslation(const glm::vec3 &loc){ sceneMat.translateA(loc); expired = true;  recomputeModelMat(); }
     void translateScene(const glm::vec3 &offset){ sceneMat.translateR(offset); expired = true; recomputeModelMat(); }
     void setSceneRotation(const float &angleRads, const glm::vec3 &axis) { sceneMat.rotateE(angleRads, axis); expired = true; recomputeModelMat(); }
@@ -257,6 +263,10 @@ protected:
     void setLocalTranslation(const glm::vec3 &loc){ localMat.translateA(loc); recomputeModelMat(); }
     void translateLocal(const glm::vec3 &offset){ localMat.translateR(offset); recomputeModelMat();  }
     void setLocalRotation(const float &angleRads, const glm::vec3 &axis) { localMat.rotateE(angleRads, axis); recomputeModelMat(); }
+    /**
+     * Hides or displays scene graph when renderSceneGraph() is called.
+     */
+    void setSceneGraphVisible(const bool &isVisible) { sceneGraphVisible = isVisible; };
 };
 
 #endif //__SceneGraphItem_h__

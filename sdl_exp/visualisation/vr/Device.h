@@ -16,14 +16,14 @@ public:
     void render(const unsigned int &shaderIndex = UINT_MAX, const glm::mat4 &transform = glm::mat4(1)) override;
     //glm::mat4 getModelMat() const { return poseMat; };
     //const glm::mat4 *getModelMatPtr() const { return &poseMat; };
-    glm::vec3 getLocation() const { return location; }
-    const glm::vec3 *getLocationPtr() const { return &location; }
     glm::vec3 getEulerAngles() const
     {
         glm::vec3 rtn; glm::extractEulerAngleXYZ(model->getModelMat(), rtn.x, rtn.y, rtn.z);
         return rtn;
     }
     vr::ETrackedDeviceClass getType() const { return type; }
+    using SceneGraphItem::getLocation;
+    using SceneGraphItem::getLocationPtr;
     //Scene Graph FNs
     //void setSceneGraphVisible(bool t){ renderSceneGraph = t; }
     //void addChild(std::weak_ptr<Renderable> a, const glm::mat4 *b = nullptr, unsigned int shaderIndex = 0);
@@ -42,7 +42,7 @@ private:
 
     std::shared_ptr<Entity2> model;
     const vr::ETrackedDeviceClass type;
-    glm::vec3 location;
+    bool hasInitModel;
 };
 class Controller : public Device
 {

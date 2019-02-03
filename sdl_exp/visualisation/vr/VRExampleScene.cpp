@@ -10,7 +10,6 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
     , pen(std::make_shared<Draw>())
 {
     srand((unsigned int)time(0));
-    const glm::vec3 *hmdLoc = getTrackedDevices()->getHMD()->getLocationPtr();
     for (int i = 0; i < MAX_SPHERES; ++i)
     {
         this->sphere[i] = std::make_shared<Entity>(Stock::Models::SPHERE, (float)SPHERE_RAD * 2, Stock::Shaders::PHONG);
@@ -21,7 +20,6 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
             ((rand() / (float)RAND_MAX) * SPHERE_RAD * 20),
             ((rand() / (float)RAND_MAX) * SPHERE_RAD * 20) - (SPHERE_RAD * 10)
             )));
-        this->sphere[i]->getShaders()->addDynamicUniform("_lightSource", (GLfloat*)hmdLoc, 3);
         registerEntity(this->sphere[i]);
     }
     {
@@ -44,8 +42,8 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
 
     registerEntity(this->pen);
     this->setSkybox(true);
-    this->visualisation.setWindowTitle("VR Example Companion");
     this->setRenderAxis(true);
+    this->visualisation.setWindowTitle("VR Example Companion");
 	auto rc = getTrackedDevices()->getRightController();
 	if (rc)
     {
@@ -54,6 +52,14 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
 	}
     leftCtrller = getTrackedDevices()->getLeftController();
     rightCtrller = getTrackedDevices()->getRightController();
+    //Init Lighting
+    {
+        PointLight _p = Lights()->addPointLight();
+        _p.Ambient(glm::vec3(0.0f));
+        _p.Diffuse(glm::vec3(0.5f));
+        _p.Specular(glm::vec3(0.02f));
+        _p.ConstantAttenuation(0.5f);
+    }
 }
 
 void VRExampleScene::render()
@@ -66,6 +72,12 @@ void VRExampleScene::render()
 }
 void VRExampleScene::update(const unsigned int &frameTime)
 {
+    //Emulate full bright, attach the one light source to the camera
+    {
+        const glm::vec3 *hmdLoc = getTrackedDevices()->getHMD()->getLocationPtr();
+        auto p = Lights()->getPointLight(0);
+        p.Position(*hmdLoc);
+    }
     //getTrackedDevices()->getCamera()->setWorldMat(glm::translate(wMat, glm::vec3(0.001, 0, 0)));
     //getTrackedDevices()->getCamera()->setWorldMat();
     //if (!leftCtrller)
@@ -128,6 +140,26 @@ void VRExampleScene::update(const unsigned int &frameTime)
 }
 bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, vr::EVRButtonId buttonId, vr::EVREventType buttonEvent)
 {
+    //Controller reconnected, rebuild scene graph
+    if (Controller::Right == controller->getHand() && buttonEvent == vr::VREvent_TrackedDeviceActivated)
+    {
+        controller->attach(lance, "lance");
+        controller->attach(pointer, "pointer");
+        rightCtrller = controller;
+    }
+    if (Controller::Left == controller->getHand() && buttonEvent == vr::VREvent_TrackedDeviceActivated)
+    {
+        leftCtrller = controller;
+    }
+    if (Controller::Right == controller->getHand() && buttonEvent == vr::VREvent_TrackedDeviceDeactivated)
+    {
+        controllerEventVR(controller, vr::k_EButton_SteamVR_Trigger, vr::VREvent_ButtonUnpress);//Simulate dropping item
+        rightCtrller.reset();
+    }
+    if (Controller::Left == controller->getHand() && buttonEvent == vr::VREvent_TrackedDeviceDeactivated)
+    {
+        leftCtrller.reset();
+    }
     if (
         Controller::Right  == controller->getHand() &&
         vr::k_EButton_SteamVR_Trigger == buttonId
@@ -140,13 +172,13 @@ bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, v
                 glm::vec3 lancePoint = controller->getModelMat() * glm::vec4(0, 0, -lanceLength, 1.0f);
                 for (int i = 0; i < MAX_SPHERES; ++i)
                 {
-                    glm::vec3 sphereLoc = sphere[i]->getModelMat() * glm::vec4(sphere[i]->getLocation(), 1.0f);
+                    glm::vec3 sphereLoc = sphere[i]->getLocation();
                     if (glm::distance(sphereLoc, lancePoint)<SPHERE_RAD)
                     {//Controller touching sphere
                         heldSphere = i;
                         //Calculate sphere model mat
                         //glm::vec3 sphereOffset = glm::vec3(sphere[i]->getModelMat()*glm::vec4(0, 0, 0, 1)) - controller->getLocation();
-                        heldSphereMat4 = glm::inverse(controller->getModelMat());
+                        heldSphereMat4 = glm::inverse(controller->getSceneMat());
                         //sphere[i]->setLocation(glm::vec3(0));
                         controller->attach(sphere[i], "held_item", heldSphereMat4);
                         //Refresh colour
@@ -160,8 +192,7 @@ bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, v
                     pen->width(5.0f);
                     pen->color(glm::vec4(0, 1, 0, 0.3));
                     pen->vertex(glm::vec3(0, 0, -lanceLength));
-                    pen->save();
-                    pointer = pen->makePortable("lance_pointer");
+                    pen->save(true);
                 }
             }
         }
@@ -171,7 +202,7 @@ bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, v
             if (heldSphere != UINT_MAX)
             {
                 controller->detach("held_item");
-                sphere[heldSphere]->setSceneMat(controller->getModelMat()*heldSphereMat4*sphere[heldSphere]->getModelMat());
+                sphere[heldSphere]->setSceneMat(controller->getSceneMat()*heldSphereMat4*sphere[heldSphere]->getSceneMat());
                 heldSphere = UINT_MAX;
             }
             {//Should just make a convenient way to edit drawing
@@ -179,8 +210,7 @@ bool VRExampleScene::controllerEventVR(std::shared_ptr<Controller> controller, v
                 pen->width(5.0f);
                 pen->color(glm::vec4(1, 0, 0, 0.3));
                 pen->vertex(glm::vec3(0, 0, -lanceLength));
-                pen->save();
-                pointer = pen->makePortable("lance_pointer");
+                pen->save(true);
             }
         }
     }

@@ -3,19 +3,32 @@
 Device::Device(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)
     : vr_HMD(vr_HMD)
     , id(id)
-    //, renderSceneGraph(true)
-    , model(model)//Presume id 0 == HMD
-    , type(vr_HMD->GetTrackedDeviceClass(id))
+    , model(model)
+    , type(vr_HMD->GetTrackedDeviceClass(id))//Presume id 0 == HMD
+    , hasInitModel(false)
 {
 }
 
 void Device::update()
 {
-
 }
 void Device::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
-    model->render(shaderIndex, transform);
+    static bool isRender = false;
+    if (!hasInitModel)
+    {
+        hasInitModel = true;
+        attach(model, "device_root");
+    }
+    if (!isRender)
+    {
+        isRender = true;
+        if (getSceneGraphVisible())
+            renderSceneGraph(shaderIndex, transform);
+        else
+            model->render(shaderIndex, transform * getModelMatRef());
+        isRender = false;
+    }
 }
 //Scene Graph Forwards
 //void Device::addChild(std::weak_ptr<Renderable> a, const glm::mat4 *b, unsigned int shaderIndex)
@@ -49,8 +62,7 @@ void Device::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 
 void Device::setPose(const glm::mat4 &poseMat)
 {
-    model->setSceneMat(poseMat); 
-    location = glm::vec3(poseMat * glm::vec4(0, 0, 0, 1));
+    setSceneMat(poseMat); 
 };
 
 Controller::Controller(vr::IVRSystem *vr_HMD, unsigned int id, std::shared_ptr<Entity2> model)

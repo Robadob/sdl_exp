@@ -58,8 +58,10 @@ void TrackedDevicesVR::update(SceneVR *scene)
 		switch (event.eventType)
 		{
 			case vr::VREvent_TrackedDeviceUpdated:
-			{
-				printf("VR device %u updated.\n", event.trackedDeviceIndex);
+            {
+#ifdef _DEBUG
+                printf("VR device %u updated.\n", event.trackedDeviceIndex);
+#endif
 				break;
 			}
 			case vr::VREvent_TrackedDeviceActivated:
@@ -68,9 +70,13 @@ void TrackedDevicesVR::update(SceneVR *scene)
                 //Notify scene that controller was reconnected (so scene graph can be reset)
                 if (auto d = std::dynamic_pointer_cast<Controller>(trackedDevices[event.trackedDeviceIndex]))
                 {
+                    if (d->getHand() == Controller::Invalid)
+                        printf("Warning: Connected controller hand unknown!\n");
                     scene->controllerEventVR(d, static_cast<vr::EVRButtonId>(event.data.controller.button), static_cast<vr::EVREventType>(event.eventType));
                 }
-				printf("VR device %u attached. Setting up render model.\n", event.trackedDeviceIndex);
+#ifdef _DEBUG
+                printf("VR device %u attached. Setting up render model.\n", event.trackedDeviceIndex);
+#endif
 				break;
 			}
 			case vr::VREvent_TrackedDeviceDeactivated:
@@ -80,8 +86,10 @@ void TrackedDevicesVR::update(SceneVR *scene)
                 {
                     scene->controllerEventVR(d, static_cast<vr::EVRButtonId>(event.data.controller.button), static_cast<vr::EVREventType>(event.eventType));
                 }
-				removeDevice(event.trackedDeviceIndex);
-				printf("VR device %u detatched. Disabling render model.\n", event.trackedDeviceIndex);
+                removeDevice(event.trackedDeviceIndex);
+#ifdef _DEBUG
+                printf("VR device %u detatched. Disabling render model.\n", event.trackedDeviceIndex);
+#endif
 				break;
 			}
             case vr::VREvent_ButtonPress:
@@ -94,8 +102,23 @@ void TrackedDevicesVR::update(SceneVR *scene)
                     if (!scene->controllerEventVR(d, static_cast<vr::EVRButtonId>(event.data.controller.button), static_cast<vr::EVREventType>(event.eventType)))
                         break;//Break if scene denies further handling of event
                 }
+#ifdef _DEBUG
+                else if (event.trackedDeviceIndex == 0 && event.data.controller.button == vr::k_EButton_ProximitySensor)
+                {
+                    if (event.eventType == vr::VREvent_ButtonPress)
+                    {
+                        printf("Headset was worn.\n");
+                    }
+                    else if (event.eventType == vr::VREvent_ButtonUnpress)
+                    {
+                        printf("Headset was removed.\n");
+                    }
+                    else
+                        fprintf(stderr, "Error: Unexpected button event(%d:%d) recieved from HMD.\n", event.data.controller.button, event.eventType);
+                }
                 else
-                    fprintf(stderr, "Error: Button event recieved from device not tracked as controller.\n");
+                    fprintf(stderr, "Error: Button event(%d:%d) recieved from device(%d) not tracked as controller.\n", event.data.controller.button, event.eventType, event.trackedDeviceIndex);
+#endif
                 break;                
             }
 			case vr::VREvent_MouseMove:

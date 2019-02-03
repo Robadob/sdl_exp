@@ -38,9 +38,11 @@ public:
 	virtual void _update(const unsigned int &frameTime) {};
 
 	virtual ~Scene(){};
+    bool requiresStencilBuffer() const { return requiresStencilBuf; }
 protected:
-	Scene(ViewportExt &vis) :visualisation(vis){};
+    Scene(ViewportExt &vis, const bool &requiresStencilBuf) : visualisation(vis), requiresStencilBuf(requiresStencilBuf){};
 	ViewportExt &visualisation;
+    const bool requiresStencilBuf;
 };
 
 #endif //__Scene_h__

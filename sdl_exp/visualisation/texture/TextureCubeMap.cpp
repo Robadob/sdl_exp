@@ -7,6 +7,7 @@
  */
 //The stock skybox path (used as the default cube map texture
 const char *TextureCubeMap::SKYBOX_PATH = "../textures/skybox/";
+const char *TextureCubeMap::SKYBOX2_PATH = "../textures/skybox2/";
 //The file name (without the file type) to face mapping used by cube maps
 const TextureCubeMap::CubeMapParts TextureCubeMap::FACES[] = {
     CubeMapParts(GL_TEXTURE_CUBE_MAP_POSITIVE_X, "left"),

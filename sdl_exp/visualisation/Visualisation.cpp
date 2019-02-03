@@ -120,7 +120,11 @@ bool Visualisation::init(){
 std::shared_ptr<Scene> Visualisation::setScene(std::unique_ptr<Scene> scene)
 {
 	std::shared_ptr<Scene> oldScene = this->scene;
-	this->scene = std::shared_ptr<Scene>(scene.release());
+    this->scene = std::shared_ptr<Scene>(scene.release());
+    if (this->scene->requiresStencilBuffer())
+    {
+        assert(false);//Not yet handled
+    }
     return oldScene;
 }
 void Visualisation::handleMouseMove(int x, int y){

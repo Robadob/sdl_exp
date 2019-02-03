@@ -17,6 +17,8 @@ public:
     void update(const unsigned int &frameTime) override;
     bool controllerEventVR(std::shared_ptr<Controller> controller, vr::EVRButtonId buttonId, vr::EVREventType buttonEvent) override;
 private:
+    std::unique_ptr<Skybox> skyboxA, skyboxB;
+    std::shared_ptr<Entity> portalStencil;
     std::shared_ptr<Entity> sphere[MAX_SPHERES]; 
     std::shared_ptr<Draw> pen;
     std::shared_ptr<PortableDraw> lance, pointer;

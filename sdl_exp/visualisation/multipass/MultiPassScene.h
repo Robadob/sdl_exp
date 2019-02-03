@@ -21,7 +21,7 @@ public:
 	 * Creates a new MultiPassScene
 	 * @param vis The visualisation that is hosting the scene.
 	 */
-	MultiPassScene(ViewportExt &vis);
+    MultiPassScene(ViewportExt &vis, const bool &requiresStencilBuf = false);
     /**
      * Called once per frame when Scene animation calls should be executed
      * @param frameTime The number of miliseconds since update was last called

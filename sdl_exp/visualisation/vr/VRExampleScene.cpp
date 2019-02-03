@@ -4,11 +4,30 @@
 #define lanceLength 0.25
 std::shared_ptr<Controller> leftCtrller, rightCtrller;
 VRExampleScene::VRExampleScene(VisualisationVR &vis)
-    : BasicScene(vis.toViewportExt())
+    : BasicScene(vis.toViewportExt(), true)
     , SceneVR(vis)
-    , heldSphere(UINT_MAX)
+    , skyboxA(std::make_unique<Skybox>(TextureCubeMap::SKYBOX_PATH))
+    , skyboxB(std::make_unique<Skybox>(TextureCubeMap::SKYBOX2_PATH))
+    , portalStencil(std::make_shared<Entity>(Stock::Models::TEAPOT, 1.0f, Stock::Shaders::COLOR_NOSHADE))
     , pen(std::make_shared<Draw>())
+    , heldSphere(UINT_MAX)
 {
+    {//Disable all default ents
+        setSkybox(false);
+        setRenderAxis(false);
+    }
+    {//Setup our skyboxes
+        this->skyboxA->setViewMatPtr(this->visualisation.getCamera());
+        this->skyboxA->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
+        this->skyboxA->setYOffset(-1.0f);
+        this->skyboxB->setViewMatPtr(this->visualisation.getCamera());
+        this->skyboxB->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
+        this->skyboxB->setYOffset(-1.0f);
+    }
+    {//Setup the portal
+        this->portalStencil->setSceneTranslation(glm::vec3(0.0f, 2.0f, -1.0f));
+        registerEntity(this->portalStencil);
+    }
     srand((unsigned int)time(0));
     for (int i = 0; i < MAX_SPHERES; ++i)
     {
@@ -41,8 +60,6 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
     }
 
     registerEntity(this->pen);
-    this->setSkybox(true);
-    this->setRenderAxis(true);
     this->visualisation.setWindowTitle("VR Example Companion");
 	auto rc = getTrackedDevices()->getRightController();
 	if (rc)
@@ -64,11 +81,36 @@ VRExampleScene::VRExampleScene(VisualisationVR &vis)
 
 void VRExampleScene::render()
 {
-    for (int i = 0; i < MAX_SPHERES; ++i)
-    {
-        if (i != heldSphere)
-            this->sphere[i]->render();
+    //Render to stencil
+    GL_CALL(glEnable(GL_STENCIL_TEST));
+    {//Render to Stencil Buffer
+        GL_CALL(glStencilMask(0xFF));
+        GL_CALL(glClear(GL_STENCIL_BUFFER_BIT));
+        GL_CALL(glStencilFunc(GL_ALWAYS, 1, 0xFF));
+        GL_CALL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+        //Don't render to other buffers
+        GL_CALL(glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE));
+        this->portalStencil->render();
+        //Reenable other buffers
+        GL_CALL(glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+
     }
+    {//Render Scene 1, clearing stencil buf where depth whins
+        GL_CALL(glStencilFunc(GL_ALWAYS, 0, 0xFF));
+        this->skyboxA->depthRender(GL_LEQUAL);
+        for (int i = 0; i < MAX_SPHERES; ++i)
+        {
+            if (i != heldSphere)
+                this->sphere[i]->render();
+        }
+        GL_CALL(glStencilMask(0x00));
+    }
+    //GL_CALL(glClear(GL_DEPTH_BUFFER_BIT));
+    {//Render Scene 2 where Stencil and inverted depth test
+        GL_CALL(glStencilFunc(GL_EQUAL, 1, 0xFF));
+        this->skyboxB->depthRender(GL_GEQUAL);
+    }
+    GL_CALL(glDisable(GL_STENCIL_TEST));
 }
 void VRExampleScene::update(const unsigned int &frameTime)
 {

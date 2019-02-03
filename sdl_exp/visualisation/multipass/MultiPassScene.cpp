@@ -1,7 +1,7 @@
 #include "MultiPassScene.h"
 
-MultiPassScene::MultiPassScene(ViewportExt &visualisation)
-	: Scene(visualisation)
+MultiPassScene::MultiPassScene(ViewportExt &visualisation, const bool &requiresStencilBuf)
+    : Scene(visualisation, requiresStencilBuf)
 	, lighting(std::make_shared<LightsBuffer>(visualisation.getCamera()->getViewMatPtr()))
 {
     lighting->setProjectionMatPtr(this->visualisation.getProjectionMatPtr());

@@ -169,6 +169,11 @@ std::shared_ptr<Scene> VisualisationVR::setScene(std::unique_ptr<Scene> scene)
 {
     std::shared_ptr<Scene> oldScene = this->scene;
     this->scene = std::shared_ptr<Scene>(scene.release());
+    if (this->scene->requiresStencilBuffer())
+    {
+        vr_leftRenderFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::ManagedDepthStencilRenderBuffer32(), 4);
+        vr_rightRenderFB = std::make_shared<FrameBuffer>(vr_renderTargetDimensions, FBAFactory::ManagedColorTexture(GL_RGBA8, GL_RGBA), FBAFactory::ManagedDepthStencilRenderBuffer32(), 4);
+    }
     return oldScene;
 }
 void VisualisationVR::setVR(SceneVR *scene)

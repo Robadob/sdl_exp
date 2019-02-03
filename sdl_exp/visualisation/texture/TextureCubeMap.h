@@ -8,7 +8,8 @@
 class TextureCubeMap : public Texture
 {
 public:
-	static const char *SKYBOX_PATH;
+    static const char *SKYBOX_PATH;
+    static const char *SKYBOX2_PATH;
     struct CubeMapParts
     {
         CubeMapParts(GLenum target, const char *name)

@@ -1,8 +1,8 @@
 #include "BasicScene.h"
 #include "shader/lights/LightsBuffer.h"
 
-BasicScene::BasicScene(ViewportExt& vis)
-	: Scene(vis)
+BasicScene::BasicScene(ViewportExt& vis, const bool &requiresStencilBuf)
+    : Scene(vis, requiresStencilBuf)
 	, renderAxisState(true)
 	, renderSkyboxState(true)
 	, axis(std::make_shared<Axis>(25.0f))

@@ -23,20 +23,26 @@ Skybox::Skybox(const char *texturePath, float yOffset)
 /*
 Renders the skybox
 */
+void Skybox::depthRenderInstances(const GLenum &glDepthFc, int count, unsigned int shaderIndex)
+{
+    GL_CALL(glDepthFunc(glDepthFc));
+    Entity::renderInstances(count, shaderIndex);
+    GL_CALL(glDepthFunc(GL_LESS));
+}
 void Skybox::renderInstances(int count, unsigned int shaderIndex)
 {
-	// Enable/Disable features
-	GL_CALL(glDisable(GL_DEPTH_TEST));
-	Entity::renderInstances(count, shaderIndex);
-	GL_CALL(glEnable(GL_DEPTH_TEST));
+    depthRenderInstances(GL_LEQUAL, count, shaderIndex);
 }
 
+void Skybox::depthRender(const GLenum &glDepthFc, const unsigned int &shaderIndex, const glm::mat4 &transform)
+{
+    GL_CALL(glDepthFunc(glDepthFc));
+    Entity::render(0, transform);
+    GL_CALL(glDepthFunc(GL_LESS));
+}
 void Skybox::render(const unsigned int &shaderIndex, const glm::mat4 &transform)
 {
-	// Enable/Disable features
-	GL_CALL(glDisable(GL_DEPTH_TEST));
-    Entity::render(0, transform);
-	GL_CALL(glEnable(GL_DEPTH_TEST));
+    depthRender(GL_LEQUAL, shaderIndex, transform);
 }
 /**
  * Overrides the Entity setModelViewMatPtr, to allow the skybox ModelViewMatrix to be used

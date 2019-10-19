@@ -5,8 +5,8 @@
 
 TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory)
     : lights(lights)
-	, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/material_phong.frag") }))
-	//, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert","material_phong.frag")}))
+	//, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/material_phong.frag") }))
+	, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "material_flat.frag") }))
 {
     loadCells(tumourDataDirectory);
 	sphereModel->setMaterial(Stock::Materials::RED_PLASTIC);
@@ -125,5 +125,5 @@ void TumourScene::FinalPass::render()
 	//content->sphereModel->renderInstances(content->cells[0].count, 0);
 	content->sphereModel->renderInstances(1000, 0);
 	//Render something at the lights location
-	content->lights->render();
+	//content->lights->render();
 }

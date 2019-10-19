@@ -1,8 +1,6 @@
 #version 430
 
 uniform mat3 _normalMat;
-uniform mat4 _projectionMat;
-uniform mat4 _viewMat;
 uniform mat4 _modelViewProjectionMat;
 uniform mat4 _modelViewMat;
 uniform mat4 _modelMat;
@@ -27,10 +25,8 @@ void main()
   loc_data.y = texelFetch(_texBufY, gl_InstanceID).x;
   loc_data.z = texelFetch(_texBufZ, gl_InstanceID).x;
   
-  vec3 vert = (_modelMat*vec4(_vertex, 1.0f)).xyz;
-  gl_Position = _projectionMat * _viewMat * vec4(loc_data+vert,1.0f);
+  gl_Position = _modelViewProjectionMat * vec4(_vertex+loc_data,1.0f);
 
-  eyeUNormal = normalize(_normalMat * _normal) ;
-  eyeVertex = (_viewMat * vec4(loc_data+_vertex, 1.0f)).rgb;
+  eyeVertex = (_modelViewMat * vec4(_vertex+loc_data, 1.0f)).rgb;
   texCoords = _texCoords;
 }

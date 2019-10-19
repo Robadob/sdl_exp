@@ -541,17 +541,17 @@ private:
 	 * The path to the files which form the vertex shader
 	 * @note Used on shader reload
 	 */
-	std::vector<const std::string> *vertexShaderFiles;
+	std::vector<std::string> *vertexShaderFiles;
 	/**
 	* The path to the files which form the fragment shader
 	* @note Used on shader reload
 	*/
-	std::vector<const std::string> *fragmentShaderFiles;
+	std::vector<std::string> *fragmentShaderFiles;
 	/**
 	* The path to the files which form the geometry shader
 	* @note Used on shader reload
 	*/
-	std::vector<const std::string> *geometryShaderFiles;
+	std::vector<std::string> *geometryShaderFiles;
 	/**
 	 * The GLSL version used within the vertex shader source
 	 * @note This value is detected from the #version define in the source file

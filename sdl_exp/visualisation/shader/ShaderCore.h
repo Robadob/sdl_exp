@@ -454,7 +454,7 @@ protected:
 	 * @param shaderSourceFiles An initialiser list ({a,b,c}) of paths to shader sources
 	 * @return The shader version detected, -1 on compilation failure
 	 */
-	int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<const std::string> *shaderSourceFiles);
+	int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles);
 	/**
 	 * Loads the text from the provided filepath
 	 * @return A pointer to the loaded shader source
@@ -471,7 +471,7 @@ protected:
 	 * Copies the init list to a std::vector of std:strings on the heap
 	 * @note You should delete the ptr returned by this yourself
 	 */
-	static std::vector<const std::string> *buildFileVector(std::initializer_list <const char *>);
+	static std::vector<std::string> *buildFileVector(std::initializer_list <const char *>);
 	/**
 	 * Checks whether the specified shader program linked succesfully.
 	 * Linking errors are printed to stderr and compileSuccessflag is set to false on failure.

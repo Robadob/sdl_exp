@@ -957,9 +957,9 @@ exit_loop2:;
 	unsigned int vn_assigned = 0;
 	for (unsigned int i = 0; i < faces.count*faces.components; i++)
 	{
-		int i_tex = face_hasTexcoords ? t_tex_pos[i] : 0;
-		int i_norm = face_hasNormals ? t_norm_pos[i] : 0;
-		int i_vert = ((unsigned int *)faces.data)[i];
+		unsigned int i_tex = face_hasTexcoords ? t_tex_pos[i] : 0;
+		unsigned int i_norm = face_hasNormals ? t_norm_pos[i] : 0;
+		unsigned int i_vert = ((unsigned int *)faces.data)[i];
 		glm::vec3 t_normalised_norm;
 		//If vn pair hasn't been assigned an id yet
 		if ((*vn_pairs)[{i_vert, i_norm, i_tex}] == UINT_MAX)
@@ -1382,13 +1382,13 @@ void Entity::importModel(const char *path)
 	//Check float/uint lengths aren't too short
 	if (sizeof(float) != mask.SIZE_OF_FLOAT)
 	{
-		fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %i bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
+		fprintf(stderr, "File %s uses floats of %hhu bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
 		fclose(file);
 		return;
 	}
 	if (sizeof(unsigned int) != mask.SIZE_OF_UINT)
 	{
-		fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %i bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
+		fprintf(stderr, "File %s uses uints of %hhu bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
 		fclose(file);
 		return;
 	}

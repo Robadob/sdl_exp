@@ -15,7 +15,7 @@ ComputeShader::ComputeShader(const ComputeShader&other)
 	, lastLaunchConfig(other.lastLaunchConfig)
 	, shaderFilePaths(nullptr)
 {
-	shaderFilePaths = new std::vector<const std::string>();
+	shaderFilePaths = new std::vector<std::string>();
 	for (const auto &i : *other.shaderFilePaths)
 		shaderFilePaths->push_back(std::string(i));
 	reload();

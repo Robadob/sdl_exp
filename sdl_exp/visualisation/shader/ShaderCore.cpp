@@ -68,7 +68,7 @@ void ShaderCore::reload()
 				//Compilation failed, cleanup temp program
 				GL_CALL(glDeleteProgram(t_programId));
 				deleteShaders();
-				fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+				fprintf(stderr, "Press any key to recompile.\n");
 				getchar();
 				continue;
 			}
@@ -78,7 +78,7 @@ void ShaderCore::reload()
 			//Compilation failed, cleanup temp program
 			GL_CALL(glDeleteProgram(t_programId));
 			deleteShaders();
-			fprintf(stderr, "Press any key to recompile.\n", this->shaderTag);
+			fprintf(stderr, "Press any key to recompile.\n");
 			getchar();
 			continue;
 		}
@@ -569,7 +569,7 @@ bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint 
 			++a;
 		}
 	}
-	UniformTextureDetail utd = { textureName, type };
+	UniformTextureDetail utd = { (GLuint)textureName, type };
 	textures.emplace(textureUnit, utd);
     GLint textureUnit_int = (GLint)textureUnit;//Samplers are set as int, not uint in shader
     return addStaticUniform(textureNameInShader, &textureUnit_int);
@@ -685,7 +685,7 @@ std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, cons
 	return  std::pair<int, GLenum>(-1, 0);
 }
 //Util
-int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<const std::string> *shaderSourceFiles)
+int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles)
 {
 	if (shaderSourceFiles->size() == 0) return false;
 	// Load shader files
@@ -844,9 +844,9 @@ unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSource
 			return stoul(match[1]);
 	return 0;
 }
-std::vector<const std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
+std::vector<std::string> *ShaderCore::buildFileVector(std::initializer_list <const char *> sources)
 {
-	std::vector<const std::string> *rtn = new std::vector<const std::string>();
+	std::vector<std::string> *rtn = new std::vector<std::string>();
 
 	for (auto i : sources)
 	{

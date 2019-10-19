@@ -107,13 +107,13 @@ Shaders::Shaders(const Shaders &other)
 	for (const auto &i : other.fragShaderOutputLocations)
 		this->fragShaderOutputLocations.insert({ i.first, std::string(i.second) });
 	//file vectors
-	vertexShaderFiles = new std::vector<const std::string>();
+	vertexShaderFiles = new std::vector<std::string>();
 	for (const auto &i : *other.vertexShaderFiles)
 		vertexShaderFiles->push_back(std::string(i));
-	fragmentShaderFiles = new std::vector<const std::string>();
+	fragmentShaderFiles = new std::vector<std::string>();
 	for (const auto &i : *other.fragmentShaderFiles)
 		fragmentShaderFiles->push_back(std::string(i));
-	geometryShaderFiles = new std::vector<const std::string>();
+	geometryShaderFiles = new std::vector<std::string>();
 	for (const auto &i : *other.geometryShaderFiles)
 		geometryShaderFiles->push_back(std::string(i));
 	//Usual shader reload

@@ -72,6 +72,9 @@
     <Filter Include="Source Files\Visualisation\Camera">
       <UniqueIdentifier>{3eb1198c-05f2-4a80-b71d-543597a8fe05}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Tumour Visualisation Files">
+      <UniqueIdentifier>{6e0ad258-b8c0-4410-af5f-f5302ce640b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="visualisation\Axis.cpp">
@@ -193,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="visualisation\camera\NoClipCamera.cpp">
       <Filter>Source Files\Visualisation\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="primage\TumourScene.cpp">
+      <Filter>Tumour Visualisation Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -374,6 +380,9 @@
     </ClInclude>
     <ClInclude Include="visualisation\camera\NoClipCamera.h">
       <Filter>Header Files\Visualisation\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="primage\TumourScene.h">
+      <Filter>Tumour Visualisation Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

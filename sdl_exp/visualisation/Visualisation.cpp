@@ -10,8 +10,8 @@
 #include "Text.h"
 
 #define FOVY 60.0f
-#define NEAR_CLIP 0.005f
-#define FAR_CLIP 500.0f
+#define NEAR_CLIP 0.01f
+#define FAR_CLIP 300.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
 #define SHIFT_MULTIPLIER 5.0f
@@ -30,7 +30,7 @@
 Visualisation::Visualisation(char *windowTitle, int windowWidth = DEFAULT_WINDOW_WIDTH, int windowHeight = DEFAULT_WINDOW_HEIGHT)
     : t(nullptr)
     , hud(std::make_shared<HUD>(windowWidth, windowHeight))
-    , camera(std::make_shared<NoClipCamera>(glm::vec3(50, 50, 50)))
+    , camera(std::make_shared<NoClipCamera>(glm::vec3(100)))
     , scene(nullptr)
     , isInitialised(false)
 	, continueRender(false)

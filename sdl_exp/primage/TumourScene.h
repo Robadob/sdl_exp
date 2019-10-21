@@ -6,6 +6,7 @@
 #include "../visualisation/multipass/MultiPassScene.h"
 #include "../visualisation/texture/TextureBuffer.h"
 #include "../visualisation/Entity.h"
+#include "../visualisation/Text.h"
 
 #ifdef _MSC_VER
 #include <filesystem>
@@ -32,6 +33,7 @@ class TumourScene : public MultiPassScene
         std::vector<CellMetaData> cells;
 		std::shared_ptr<TextureBuffer<float>> cellX, cellY, cellZ;
 		std::shared_ptr<Entity> sphereModel;
+		int cellIndex = 0;
     };
 	class FinalPass : public RenderPass
 	{
@@ -47,8 +49,9 @@ public:
     bool keypress(SDL_Keycode keycode, int x, int y) override;
     void update(const unsigned int &frameTime) override;
 private:
+	void setFrameCt();
     std::shared_ptr<SceneContent> content;
-
+	std::shared_ptr<Text> frameCt;
 	std::shared_ptr<FinalPass> fPass;
 };
 

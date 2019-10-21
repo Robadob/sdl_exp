@@ -7,6 +7,7 @@ TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, co
     : lights(lights)
 	//, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/material_phong.frag") }))
 	, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "material_flat.frag") }))
+	, cellIndex(0)
 {
     loadCells(tumourDataDirectory);
 	sphereModel->setMaterial(Stock::Materials::RED_PLASTIC);
@@ -42,6 +43,15 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 		if (ifs.is_open())
 		{
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
+			float minj = FLT_MAX;
+			float maxj = -FLT_MAX;
+			for(int j = 0;j<cells[i].count;++j)
+			{
+				float f = *reinterpret_cast<float*>(t_buffer+(i*sizeof(float)));
+				minj = minj < f ? minj : f;
+				maxj = maxj > f ? maxj : f;
+			}
+			printf("Bounds: %f to %f\n", minj, maxj);
 			cellX->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellY->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
@@ -84,7 +94,12 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	sphere0->addTexture("_texBufX", content->cellX);
 	sphere0->addTexture("_texBufY", content->cellY);
 	sphere0->addTexture("_texBufZ", content->cellZ);
-	    
+
+	frameCt = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::ARIAL);
+	frameCt->setUseAA(false);
+	if (auto a = this->visualisation.getHUD().lock())
+		a->add(frameCt, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+	setFrameCt();
 }
 void TumourScene::update(const unsigned int &frameTime)
 {
@@ -97,13 +112,25 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 {
 	switch (keycode)
 	{
+	case SDLK_1:
+		content->cellIndex--;
+		break;
+	case SDLK_2:
+		content->cellIndex++;
+		break;
 	default:
 		//Permit the keycode to be processed if we haven't handled personally
 		return true;
 	}
+	content->cellIndex = content->cellIndex < 0 ? 0 : content->cellIndex;
+	content->cellIndex = content->cellIndex >= content->cells.size() ? content->cells.size()-1 : content->cellIndex;
+	setFrameCt();
 	return false;
 }
-
+void TumourScene::setFrameCt()
+{
+	this->frameCt->setString("Frame: %d\nCells: %d", content->cellIndex, content->cells[content->cellIndex].count);
+}
 void TumourScene::reload()
 {
 	//content->blur->reload();
@@ -122,8 +149,8 @@ void TumourScene::FinalPass::render()
 	//Generate mip-map
 	//content->shadowOut->updateMipMap();
 	//Render models using shadow map
-	//content->sphereModel->renderInstances(content->cells[0].count, 0);
-	content->sphereModel->renderInstances(1000, 0);
+	content->sphereModel->renderInstances(content->cells[content->cellIndex].count, 0);
+	//content->sphereModel->renderInstances(1000, 0);
 	//Render something at the lights location
 	//content->lights->render();
 }

@@ -15,6 +15,7 @@ TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, co
 }
 void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 {
+	const int EC_EVM_ELEMENTS = 6;
 	int totalCt = 0;
 	size_t fileCt_max = 0;
     for (int i = 0; true;++i)
@@ -26,7 +27,8 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 			break;
 		size_t sz = ifs.tellg();
 		ifs.close();
-		int fileCt = sz / (3 * sizeof(float));
+		sz -= (EC_EVM_ELEMENTS * sizeof(float));//Remove EC_EVM
+		int fileCt = sz / (4 * sizeof(float));
 		fileCt_max = fileCt > fileCt_max ? fileCt : fileCt_max;
 		cells.push_back({ totalCt, fileCt });
 		totalCt += fileCt;
@@ -35,6 +37,7 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 	cellX = TextureBuffer<float>::make(totalCt, 1);
 	cellY = TextureBuffer<float>::make(totalCt, 1);
 	cellZ = TextureBuffer<float>::make(totalCt, 1);
+	cellP53 = TextureBuffer<float>::make(totalCt, 1);
 	char *t_buffer = (char*)malloc(fileCt_max * sizeof(float));
 	for (int i = 0; i < cells.size(); ++i)
 	{
@@ -43,23 +46,32 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 		ifs.open(tryFile, std::ios::in | std::ios::binary);
 		if (ifs.is_open())
 		{
+			ifs.read(t_buffer, EC_EVM_ELEMENTS * sizeof(float));
+			cells[i].oxygen = reinterpret_cast<float*>(t_buffer)[0];
+			cells[i].drug = reinterpret_cast<float*>(t_buffer)[1];
+			cells[i].VEGF = reinterpret_cast<float*>(t_buffer)[2];
+			cells[i].MMP = reinterpret_cast<float*>(t_buffer)[3];
+			cells[i].TIMP = reinterpret_cast<float*>(t_buffer)[4];
+			cells[i].MPTP = reinterpret_cast<float*>(t_buffer)[5];
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellX->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellY->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellZ->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
+			ifs.read(t_buffer, cells[i].count * sizeof(float));
+			cellP53->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			assert(ifs.good());
 			ifs.close();
-			float minj = FLT_MAX;
-			float maxj = -FLT_MAX;
-			for (int j = 0; j<cells[i].count; ++j)
-			{
-				float f = *reinterpret_cast<float*>(t_buffer + (j * sizeof(float)));
-				minj = minj < f ? minj : f;
-				maxj = maxj > f ? maxj : f;
-			}
-			printf("Bounds: %f to %f\n", minj, maxj);
+			//float minj = FLT_MAX;
+			//float maxj = -FLT_MAX;
+			//for (int j = 0; j<cells[i].count; ++j)
+			//{
+			//	float f = *reinterpret_cast<float*>(t_buffer + (j * sizeof(float)));
+			//	minj = minj < f ? minj : f;
+			//	maxj = maxj > f ? maxj : f;
+			//}
+			//printf("Bounds: %f to %f\n", minj, maxj);
 		}
 	}
 	free(t_buffer);
@@ -95,12 +107,18 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	sphere0->addTexture("_texBufX", content->cellX);
 	sphere0->addTexture("_texBufY", content->cellY);
 	sphere0->addTexture("_texBufZ", content->cellZ);
+	sphere0->addTexture("_texBufP53", content->cellP53);
 	sphere0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
 
 	frameCt = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::ARIAL);
-	frameCt->setUseAA(false);
+	frameCt->setUseAA(true);
+	ec_evm = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::LUCIDIA_CONSOLE);
+	ec_evm->setUseAA(true);
 	if (auto a = this->visualisation.getHUD().lock())
+	{
 		a->add(frameCt, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+		a->add(ec_evm, HUD::AnchorV::South, HUD::AnchorH::West, glm::ivec2(0, 10), INT_MAX);
+	}
 	setFrameCt();
 }
 void TumourScene::update(const unsigned int &frameTime)
@@ -150,6 +168,14 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 void TumourScene::setFrameCt()
 {
 	this->frameCt->setString("Frame: %d\nCells: %d", content->cellIndex, content->cells[content->cellIndex].count);
+	this->ec_evm->setString("Oxygen: %3d%%\n__Drug: %3d%%\n__VEGF: %3d%%\n___MMP: %3d%%\n__TIMP: %3d%%\n__MPTP: %3d%%", 
+		(int)(content->cells[content->cellIndex].oxygen*100),
+		(int)(content->cells[content->cellIndex].drug * 100),
+		(int)(content->cells[content->cellIndex].VEGF * 100),
+		(int)(content->cells[content->cellIndex].MMP * 100),
+		(int)(content->cells[content->cellIndex].TIMP * 100),
+		(int)(content->cells[content->cellIndex].MPTP * 100)
+	);
 }
 void TumourScene::reload()
 {

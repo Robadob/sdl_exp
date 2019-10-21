@@ -21,6 +21,12 @@ class TumourScene : public MultiPassScene
     {
         int offset;
         int count;
+		float oxygen;
+		float drug;
+		float VEGF;
+		float MMP;
+		float TIMP;
+		float MPTP;
     };
     /**
     * This struct holds all of the scene content, it is to be shared with all the render pass instances
@@ -31,7 +37,7 @@ class TumourScene : public MultiPassScene
         void loadCells(const fs::path &tumourDataDirectory);
         std::shared_ptr<LightsBuffer> lights;
         std::vector<CellMetaData> cells;
-		std::shared_ptr<TextureBuffer<float>> cellX, cellY, cellZ;
+		std::shared_ptr<TextureBuffer<float>> cellX, cellY, cellZ, cellP53;
 		std::shared_ptr<Entity> sphereModel;
 		int cellIndex = 0;
 		int instancedRenderOffset = 0;
@@ -52,7 +58,7 @@ public:
 private:
 	void setFrameCt();
     std::shared_ptr<SceneContent> content;
-	std::shared_ptr<Text> frameCt;
+	std::shared_ptr<Text> frameCt, ec_evm;
 	std::shared_ptr<FinalPass> fPass;
 };
 

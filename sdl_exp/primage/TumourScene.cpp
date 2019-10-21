@@ -17,7 +17,7 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 {
 	int totalCt = 0;
 	size_t fileCt_max = 0;
-    for (int i = 0; i < 100;++i)
+    for (int i = 0; true;++i)
     {
 		std::string tryFile = (tumourDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
 		std::ifstream ifs;
@@ -119,6 +119,24 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 		break;
 	case SDLK_2:
 		content->cellIndex++;
+		break;
+	case SDLK_3:
+		content->cellIndex -= 10;
+		break;
+	case SDLK_4:
+		content->cellIndex += 10;
+		break;
+	case SDLK_5:
+		content->cellIndex -= 100;
+		break;
+	case SDLK_6:
+		content->cellIndex += 100;
+		break;
+	case SDLK_9:
+		content->cellIndex = 0;
+		break;
+	case SDLK_0:
+		content->cellIndex  = content->cells.size()-1;
 		break;
 	default:
 		//Permit the keycode to be processed if we haven't handled personally

@@ -8,6 +8,7 @@ TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, co
 	//, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/material_phong.frag") }))
 	, sphereModel(new Entity(Stock::Models::SPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "material_flat.frag") }))
 	, cellIndex(0)
+	, instancedRenderOffset(0)
 {
     loadCells(tumourDataDirectory);
 	sphereModel->setMaterial(Stock::Materials::RED_PLASTIC);
@@ -43,15 +44,6 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 		if (ifs.is_open())
 		{
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
-			float minj = FLT_MAX;
-			float maxj = -FLT_MAX;
-			for(int j = 0;j<cells[i].count;++j)
-			{
-				float f = *reinterpret_cast<float*>(t_buffer+(i*sizeof(float)));
-				minj = minj < f ? minj : f;
-				maxj = maxj > f ? maxj : f;
-			}
-			printf("Bounds: %f to %f\n", minj, maxj);
 			cellX->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellY->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
@@ -59,6 +51,15 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 			cellZ->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			assert(ifs.good());
 			ifs.close();
+			float minj = FLT_MAX;
+			float maxj = -FLT_MAX;
+			for (int j = 0; j<cells[i].count; ++j)
+			{
+				float f = *reinterpret_cast<float*>(t_buffer + (j * sizeof(float)));
+				minj = minj < f ? minj : f;
+				maxj = maxj > f ? maxj : f;
+			}
+			printf("Bounds: %f to %f\n", minj, maxj);
 		}
 	}
 	free(t_buffer);
@@ -94,6 +95,7 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	sphere0->addTexture("_texBufX", content->cellX);
 	sphere0->addTexture("_texBufY", content->cellY);
 	sphere0->addTexture("_texBufZ", content->cellZ);
+	sphere0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
 
 	frameCt = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::ARIAL);
 	frameCt->setUseAA(false);
@@ -149,6 +151,7 @@ void TumourScene::FinalPass::render()
 	//Generate mip-map
 	//content->shadowOut->updateMipMap();
 	//Render models using shadow map
+	content->instancedRenderOffset = content->cells[content->cellIndex].offset;
 	content->sphereModel->renderInstances(content->cells[content->cellIndex].count, 0);
 	//content->sphereModel->renderInstances(1000, 0);
 	//Render something at the lights location

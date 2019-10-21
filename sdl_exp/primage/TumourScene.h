@@ -34,6 +34,7 @@ class TumourScene : public MultiPassScene
 		std::shared_ptr<TextureBuffer<float>> cellX, cellY, cellZ;
 		std::shared_ptr<Entity> sphereModel;
 		int cellIndex = 0;
+		int instancedRenderOffset = 0;
     };
 	class FinalPass : public RenderPass
 	{

@@ -14,6 +14,7 @@ in vec2 _texCoords;
 uniform samplerBuffer _texBufX;
 uniform samplerBuffer _texBufY;
 uniform samplerBuffer _texBufZ;
+uniform int instanceOffset;
 
 out vec3 eyeVertex;
 out vec3 eyeUNormal;
@@ -23,9 +24,9 @@ void main()
 {
   //Grab model offset from texture array
   vec3 loc_data;
-  loc_data.x = texelFetch(_texBufX, gl_InstanceID).x;
-  loc_data.y = texelFetch(_texBufY, gl_InstanceID).x;
-  loc_data.z = texelFetch(_texBufZ, gl_InstanceID).x;
+  loc_data.x = texelFetch(_texBufX, instanceOffset+gl_InstanceID).x;
+  loc_data.y = texelFetch(_texBufY, instanceOffset+gl_InstanceID).x;
+  loc_data.z = texelFetch(_texBufZ, instanceOffset+gl_InstanceID).x;
   
   vec4 modelVert = _modelMat * vec4(_vertex, 1.0f);
   modelVert.xyz = modelVert.xyz + loc_data;

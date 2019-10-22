@@ -1,31 +1,4 @@
 #version 430
-const uint B_NONE         = 1<<0;
-const uint B_AMBIENT      = 1<<1;
-const uint B_DIFFUSE      = 1<<2;
-const uint B_SPECULAR     = 1<<3;
-const uint B_EMISSIVE     = 1<<4;
-const uint B_HEIGHT       = 1<<5;
-const uint B_NORMAL       = 1<<6;
-const uint B_SHININESS    = 1<<7;
-const uint B_OPACITY      = 1<<8;
-const uint B_DISPLACEMENT = 1<<9;
-const uint B_LIGHT        = 1<<10;
-const uint B_REFLECTION   = 1<<11;
-const uint B_UNKNOWN      = 1<<12;
-struct MaterialProperties
-{
-    vec3 ambient;           //Ambient color
-    float opacity;
-    vec3 diffuse;           //Diffuse color
-    float shininess;
-    vec3 specular;          //Specular color
-    float shininessStrength;
-    vec3 emissive;          //Emissive color (light emitted)
-    float refractionIndex;
-    vec3 transparent;       //Transparent color, multiplied with translucent light to construct final color
-    uint bitmask;
-    bool has(uint check) { return (bitmask&check)!=0;}
-};
 struct LightProperties
 {
     vec3 ambient;              // Aclarri   
@@ -42,13 +15,7 @@ struct LightProperties
     float quadraticAttenuation;// K2  
 };
 const uint MAX_LIGHTS = 50;
-const uint MAX_MATERIALS = 50;
 
-uniform uint _materialID;
-uniform _materials
-{
-  MaterialProperties material[MAX_MATERIALS];
-};
 uniform _lights
 {
   uint lightsCount;
@@ -56,22 +23,20 @@ uniform _lights
   LightProperties light[MAX_LIGHTS];
 };
 
-uniform sampler2D t_ambient;
-uniform sampler2D t_diffuse;
-uniform sampler2D t_specular;
-
 in vec3 eyeVertex;
-in vec3 eyeNormal;
 in vec2 texCoords;
-
+flat in vec3 colour;
 out vec4 fragColor;
 
 void main()
 {
+  //Calculate face normal
+  vec3 eyeNormal  = normalize(cross(dFdx(eyeVertex), dFdy(eyeVertex)));
+
   //Find material colours for each type of light
-  vec3 ambient = material[_materialID].has(B_AMBIENT) ? texture(t_ambient, texCoords).rgb : material[_materialID].ambient;
-  vec4 diffuse = material[_materialID].has(B_DIFFUSE) ? texture(t_diffuse, texCoords) : vec4(material[_materialID].diffuse, 1.0f);
-  vec3 specular = material[_materialID].has(B_SPECULAR) ? texture(t_specular, texCoords).rgb : material[_materialID].specular;
+  vec3 ambient = colour*0.2f;
+  vec4 diffuse = vec4(colour, 1.0f);
+  vec3 specular = vec3(0);
   
   //No lights, so render full bright
   if(lightsCount>0)
@@ -96,14 +61,7 @@ void main()
       }
       else
       {
-        // if(i==0)
-        // {
-          // surfaceToLight = normalize(eyeVertex);
-        // }
-        // else
-        {
-          surfaceToLight = normalize(light[i].position.xyz - eyeVertex);
-        }
+        surfaceToLight = normalize(light[i].position.xyz - eyeVertex);
         if(light[i].spotCosCutoff>=0.0f)
         {//Spotlight
           float spotCos = dot(surfaceToLight,-light[i].spotDirection);
@@ -128,7 +86,7 @@ void main()
         lightDiffuse += light[i].diffuse.rgb * lambertian * attenuation;
       }
       
-      //Process Specular
+/*       //Process Specular
       if (material[_materialID].shininess == 0 || material[_materialID].shininessStrength == 0)
         continue;//Skip if no shiny
       {
@@ -136,7 +94,7 @@ void main()
         float specAngle = max(dot(reflectDir, normalize(-eyeVertex)), 0.0);
         float spec = clamp(pow(specAngle, material[_materialID].shininess/4.0), 0.0f, 1.0f); 
         lightSpecular += light[i].specular * spec * attenuation;
-      }
+      } */
     } 
     
     //Export lights
@@ -147,7 +105,8 @@ void main()
 
   vec3 color = clamp(ambient + diffuse.rgb + specular,0,1);
 
-  fragColor = vec4(vec3(1), min(diffuse.a, material[_materialID].opacity));//What to do with opac?
+  //fragColor = vec4(color, min(diffuse.a, material[_materialID].opacity));//What to do with opac?
+  fragColor = vec4(color, 1.0f);//What to do with opac?
   
   //Discard full alpha fragments (removes requirement of back to front render/glblend)
   if(fragColor.a<=0.0f)

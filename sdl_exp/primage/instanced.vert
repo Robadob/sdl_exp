@@ -20,7 +20,37 @@ uniform int instanceOffset;
 out vec3 eyeVertex;
 out vec3 eyeUNormal;
 out vec2 texCoords;
-out vec3 colour;
+flat out vec3 colour;
+
+//hsv(0-360,0-1,0-1)
+vec3 hsv2rgb(vec3 hsv)
+{
+  if(hsv.g==0)//Grey
+    return vec3(hsv.b);
+
+  float h = hsv.r/60;
+  int i = int(floor(h));
+  float f = h-i;
+  float p = hsv.b * (1-hsv.g);
+  float q = hsv.b * (1-hsv.g * f);
+  float t = hsv.b * (1-hsv.g * (1-f));
+  switch(i)
+  {
+    case 0:
+      return vec3(hsv.b,t,p);
+    case 1:
+      return vec3(q,hsv.b,p);
+    case 2:
+      return vec3(p,hsv.b,p);
+    case 3:
+      return vec3(p,q,hsv.b);
+    case 4:
+      return vec3(t,p,hsv.b);
+    default: //case 5
+      return vec3(hsv.b,p,q);
+  }
+
+}
 
 void main()
 {
@@ -31,6 +61,7 @@ void main()
   loc_data.z = texelFetch(_texBufZ, instanceOffset+gl_InstanceID).x;
   float p53 = texelFetch(_texBufP53, instanceOffset+gl_InstanceID).x;
   //colour
+  colour = hsv2rgb(vec3(p53*100,1.0,1.0));
   vec4 modelVert = _modelMat * vec4(_vertex, 1.0f);
   modelVert.xyz = modelVert.xyz + loc_data;
   gl_Position = _projectionMat * _viewMat * modelVert;

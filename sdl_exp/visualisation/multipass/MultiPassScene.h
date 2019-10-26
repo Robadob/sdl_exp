@@ -32,7 +32,11 @@ public:
 	 * @param index The position which it should be rendered at (low->high)
 	 * @param rp A shared pointer to the RenderPass
 	 */
-    std::shared_ptr<RenderPass> addPass(int index, std::shared_ptr<RenderPass> rp);
+    std::shared_ptr<RenderPass> addPass(int index, std::shared_ptr<RenderPass> rp, bool enabled=true);
+
+	void setPassActive(std::shared_ptr<RenderPass> rp, bool enabled);
+
+	void setPassActive(int index, bool enabled);
     /**
      * Called when the user requests a reload
      * @note You should call functions such as shaders->reload() here
@@ -86,7 +90,7 @@ private:
 	/**
 	* Holds registered render passes so they can be triggered during render
 	*/
-	std::map<int, std::shared_ptr<RenderPass>> rpMap;
+	std::map<int, std::pair<std::shared_ptr<RenderPass>, bool>> rpMap;
 	/**
 	* Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
 	*/

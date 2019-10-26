@@ -42,10 +42,10 @@ class TumourScene : public MultiPassScene
 		int cellIndex = 0;
 		int instancedRenderOffset = 0;
     };
-	class FinalPass : public RenderPass
+	class SpherePass : public RenderPass
 	{
 	public:
-		FinalPass(std::shared_ptr<SceneContent> content);
+		SpherePass(std::shared_ptr<SceneContent> content);
 	protected:
 		void render() override;
 		std::shared_ptr<SceneContent> content;
@@ -59,7 +59,9 @@ private:
 	void setFrameCt();
     std::shared_ptr<SceneContent> content;
 	std::shared_ptr<Text> frameCt, ec_evm;
-	std::shared_ptr<FinalPass> fPass;
+	std::shared_ptr<SpherePass> spherePass;
+	void TumourScene::toggleImplicitSurface();
+	bool implictSurfaceActive;
 };
 
 #endif //__TumourScene_h__

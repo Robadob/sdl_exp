@@ -79,12 +79,15 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDataDirectory)
     : MultiPassScene(visualisation)
     , content(std::make_shared<SceneContent>(Lights(), tumourDataDirectory))
-	, fPass(std::make_shared<FinalPass>(content))
+	, spherePass(std::make_shared<SpherePass>(content))
+	, implictSurfaceActive(false)
 {
 	//Register models
 	registerEntity(content->sphereModel);
 	//Register render passes in correct order
-	addPass(3, fPass);
+
+	//Register boring vis pass
+	addPass(2000, spherePass);
 	//Enable defaults
 	this->visualisation.setWindowTitle("PRIMAGE Neuroblastoma Visualiser");
 
@@ -155,6 +158,10 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 	case SDLK_0:
 		content->cellIndex  = content->cells.size()-1;
 		break;
+	case SDLK_p:
+		implictSurfaceActive = !implictSurfaceActive;
+		toggleImplicitSurface();
+		break;
 	default:
 		//Permit the keycode to be processed if we haven't handled personally
 		return true;
@@ -180,14 +187,14 @@ void TumourScene::reload()
 {
 	//content->blur->reload();
 }
-TumourScene::FinalPass::FinalPass(std::shared_ptr<SceneContent> content)
+TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
 	, content(content)
 
 {
 }
 //Uses the shadow map to render the normal scene
-void TumourScene::FinalPass::render()
+void TumourScene::SpherePass::render()
 {
 	//Slightly blur shadow map to reduce harshness of edges
 	//content->blur->blurR32F(content->shadowIn, content->shadowOut);
@@ -199,4 +206,9 @@ void TumourScene::FinalPass::render()
 	//content->sphereModel->renderInstances(1000, 0);
 	//Render something at the lights location
 	//content->lights->render();
+}
+void TumourScene::toggleImplicitSurface()
+{
+	setPassActive(spherePass, !implictSurfaceActive);
+
 }

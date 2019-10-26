@@ -34,6 +34,7 @@ namespace Stock
 		const ShaderSet SPRITE2D{ "default.vert", "sprite2d.frag", nullptr };
 		const ShaderSet SPRITE2D_HEAT{ "default.vert", "sprite2dHeat.frag", nullptr };
         const ShaderSet BILLBOARD{ "billboard.vert", "particle.frag", nullptr };
+    	const ShaderSet BILLBOARD_DEPTH{ "billboard.vert", "linear_depth.frag", nullptr };
 		const ShaderSet LINEAR_DEPTH{ "default.vert", "linear_depth.frag", nullptr };
 		const ShaderSet FLAT_SHADOW{ "shadow.vert", "material_flat_shadow.frag", nullptr };
 		const ShaderSet PHONG_SHADOW{ "shadow.vert", "material_phong_shadow.frag", nullptr };

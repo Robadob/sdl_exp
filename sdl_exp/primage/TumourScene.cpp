@@ -1,16 +1,20 @@
 #include "TumourScene.h"
 #include <string>
 #include <fstream>
+#include "../visualisation/multipass/FrameBuffer.h"
 
 
-TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory)
+TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory, std::shared_ptr<const NoClipCamera> camera)
     : lights(lights)
 	, sphereModel(new Entity(Stock::Models::ICOSPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/tumourcell_flat.frag") }))
+	, cellModel(std::make_shared<CellBillboard>(camera))
 	, cellIndex(0)
 	, instancedRenderOffset(0)
+	, blur(new GaussianBlur(5, 1.75f))
+	, depthIn()
+	, depthOut(Texture2D::make(glm::uvec2(1280, 720), { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
 {
     loadCells(tumourDataDirectory);
-	sphereModel->setMaterial(Stock::Materials::RED_PLASTIC);
 }
 void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 {
@@ -78,14 +82,23 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 
 TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDataDirectory)
     : MultiPassScene(visualisation)
-    , content(std::make_shared<SceneContent>(Lights(), tumourDataDirectory))
+    , content(std::make_shared<SceneContent>(Lights(), tumourDataDirectory, std::dynamic_pointer_cast<const NoClipCamera>(visualisation.getCamera())))
 	, spherePass(std::make_shared<SpherePass>(content))
+	, dPass(std::make_shared<DepthPass>(content))
+	, fPass(std::make_shared<FinalPass>(content))
 	, implictSurfaceActive(false)
 {
 	//Register models
 	registerEntity(content->sphereModel);
+	registerEntity(content->cellModel);
 	//Register render passes in correct order
-
+	addPass(0, dPass, false);
+	addPass(3, fPass, false);
+	//Put a preview of the depth texture on the HUD
+	depthMapPreview = std::make_shared<Sprite2D>(content->depthOut, std::make_shared<Shaders>(Stock::Shaders::SPRITE2D_HEAT), glm::uvec2(256, 144));
+	if (auto a = this->visualisation.getHUD().lock())
+		a->add(depthMapPreview, HUD::AnchorV::South, HUD::AnchorH::East);
+	depthMapPreview->setVisible(false);
 	//Register boring vis pass
 	addPass(2000, spherePass);
 	//Enable defaults
@@ -111,6 +124,14 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	sphere0->addTexture("_texBufZ", content->cellZ);
 	sphere0->addTexture("_texBufP53", content->cellP53);
 	sphere0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
+
+	auto cell0 = content->cellModel->getShaders();
+	cell0->addTexture("_texBufX", content->cellX);
+	cell0->addTexture("_texBufY", content->cellY);
+	cell0->addTexture("_texBufZ", content->cellZ);
+	cell0->addTexture("_texBufP53", content->cellP53);
+	cell0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
+
 
 	frameCt = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::ARIAL);
 	frameCt->setUseAA(true);
@@ -187,6 +208,43 @@ void TumourScene::reload()
 {
 	//content->blur->reload();
 }
+TumourScene::DepthPass::DepthPass(std::shared_ptr<SceneContent> content)
+	: RenderPass(std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTexture(GL_R32F, GL_RED, GL_FLOAT), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 0, 1.0f, true, glm::vec3(1.0f)))
+	, content(content)
+
+{
+	//Pass the shadow texture to the second shader of each model
+	std::shared_ptr<FrameBuffer> t = std::dynamic_pointer_cast<FrameBuffer>(getFrameBuffer());
+	if (t)
+	{
+		content->depthIn = std::dynamic_pointer_cast<Texture2D>(t->getColorTexture());
+		//content->depthOut = content->depthIn;//Uses the pre blur shadow map (aka hard shadows)
+	}
+	//content->sphereModel->getShaders(1)->addTexture("_shadowMap", content->depthOut);
+}
+TumourScene::FinalPass::FinalPass(std::shared_ptr<SceneContent> content)
+	: RenderPass(std::make_shared<BackBuffer>())
+	, content(content)
+
+{
+}
+void TumourScene::DepthPass::render()
+{
+	//content->sphereModel->renderInstances(content->cells[0].count, 0);
+	content->instancedRenderOffset = content->cells[content->cellIndex].offset;
+	content->cellModel->renderInstances(content->cells[content->cellIndex].count);
+}
+void TumourScene::FinalPass::render()
+{
+	//Slightly blur shadow map to reduce harshness of edges
+	content->blur->blurR32F(content->depthIn, content->depthOut);
+	//Generate mip-map
+	content->depthOut->updateMipMap();
+	//Render models using shadow map
+    content->instancedRenderOffset = content->cells[content->cellIndex].offset;
+	content->cellModel->renderInstances(content->cells[content->cellIndex].count);
+
+}
 TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content)
 	: RenderPass(std::make_shared<BackBuffer>())
 	, content(content)
@@ -210,5 +268,7 @@ void TumourScene::SpherePass::render()
 void TumourScene::toggleImplicitSurface()
 {
 	setPassActive(spherePass, !implictSurfaceActive);
-
+	setPassActive(fPass, implictSurfaceActive);
+	setPassActive(dPass, implictSurfaceActive);
+	depthMapPreview->setVisible(implictSurfaceActive);
 }

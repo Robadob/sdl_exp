@@ -100,6 +100,18 @@ glm::vec3 NoClipCamera::getPureUp() const{
 glm::vec3 NoClipCamera::getRight() const{
     return right;
 }
+const glm::vec3 *NoClipCamera::getLookPtr() const{
+	return &look;
+}
+const glm::vec3 *NoClipCamera::getUpPtr() const{
+	return &up;
+}
+const glm::vec3 *NoClipCamera::getPureUpPtr() const{
+	return &pureUp;
+}
+const glm::vec3 *NoClipCamera::getRightPtr() const{
+	return &right;
+}
 void NoClipCamera::updateViews(){
 	viewMat = glm::lookAt(eye, eye + look, up);
 	skyboxViewMat = glm::lookAt(glm::vec3(0), look, up);

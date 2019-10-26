@@ -7,6 +7,9 @@
 #include "../visualisation/texture/TextureBuffer.h"
 #include "../visualisation/Entity.h"
 #include "../visualisation/Text.h"
+#include "../visualisation/shader/GaussianBlur.h"
+#include "../visualisation/Sprite2D.h"
+#include "CellBillboard.h"
 
 #ifdef _MSC_VER
 #include <filesystem>
@@ -33,19 +36,49 @@ class TumourScene : public MultiPassScene
     */
     struct SceneContent
     {
-        SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory);
+        SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory, std::shared_ptr<const NoClipCamera>);
         void loadCells(const fs::path &tumourDataDirectory);
         std::shared_ptr<LightsBuffer> lights;
         std::vector<CellMetaData> cells;
 		std::shared_ptr<TextureBuffer<float>> cellX, cellY, cellZ, cellP53;
 		std::shared_ptr<Entity> sphereModel;
+		std::shared_ptr<CellBillboard> cellModel;
 		int cellIndex = 0;
 		int instancedRenderOffset = 0;
+		//Blur provider
+		std::shared_ptr<GaussianBlur> blur;
+		//GL names of the rendered to and blurred to shadow textures
+		std::shared_ptr<Texture2D> depthIn, depthOut;
     };
+	/**
+	 * Basic solo pass for instanced rendering
+	 */
 	class SpherePass : public RenderPass
 	{
 	public:
 		SpherePass(std::shared_ptr<SceneContent> content);
+	protected:
+		void render() override;
+		std::shared_ptr<SceneContent> content;
+	};
+	/**
+	 * Depth pass for implicit surface
+	 */
+	class DepthPass : public RenderPass
+	{
+	public:
+		DepthPass(std::shared_ptr<SceneContent> content);
+	protected:
+		void render() override;
+		std::shared_ptr<SceneContent> content;
+	};
+	/**
+	 * Final pass for implicit surface
+	 */
+	class FinalPass : public RenderPass
+	{
+	public:
+		FinalPass(std::shared_ptr<SceneContent> content);
 	protected:
 		void render() override;
 		std::shared_ptr<SceneContent> content;
@@ -60,6 +93,10 @@ private:
     std::shared_ptr<SceneContent> content;
 	std::shared_ptr<Text> frameCt, ec_evm;
 	std::shared_ptr<SpherePass> spherePass;
+
+	std::shared_ptr<Sprite2D> depthMapPreview;
+	std::shared_ptr<DepthPass> dPass;
+	std::shared_ptr<FinalPass> fPass;
 	void TumourScene::toggleImplicitSurface();
 	bool implictSurfaceActive;
 };

@@ -93,6 +93,27 @@ public:
 	 * @return The normalized direction the camera treats as rightwards
 	 */
 	glm::vec3 getRight() const;
+	/**
+	* Returns a read-only ptr to the cameras normalized direction vector
+	* @return A read-only ptr to the normalized direction of the camera
+	*/
+	const glm::vec3 *getLookPtr() const;
+	/**
+	* Returns a read-only ptr to the cameras normalized up vector
+	* @return A read-only ptr to the normalized direction the camera treats as upwards
+	*/
+	const glm::vec3 *getUpPtr() const;
+	/**
+	* Returns a read-only ptr to pureUp
+	* This value is used by the stabilisation to prevent the camera rolling unintentionally
+	* @return A read-only ptr to the normalized direction the camera treats as the true up
+	*/
+	const glm::vec3 *getPureUpPtr() const;
+	/**
+	* Returns a read-only ptr to the cameras normalized right vector
+	* @return A read-only ptr to the normalized direction the camera treats as rightwards
+	*/
+	const glm::vec3 *getRightPtr() const;
 private:
 	/**
 	 * Updates the view and skyboxView matrices

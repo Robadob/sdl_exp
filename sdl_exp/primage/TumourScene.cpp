@@ -195,7 +195,7 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 void TumourScene::setFrameCt()
 {
 	this->frameCt->setString("Frame: %d\nCells: %d", content->cellIndex, content->cells[content->cellIndex].count);
-	this->ec_evm->setString("Oxygen: %3d%%\n__Drug: %3d%%\n__VEGF: %3d%%\n___MMP: %3d%%\n__TIMP: %3d%%\n__MPTP: %3d%%", 
+	this->ec_evm->setString("Oxygen: %3d%%\n  Drug: %3d%%\n  VEGF: %3d%%\n   MMP: %3d%%\n  TIMP: %3d%%\n  MPTP: %3d%%", 
 		(int)(content->cells[content->cellIndex].oxygen*100),
 		(int)(content->cells[content->cellIndex].drug * 100),
 		(int)(content->cells[content->cellIndex].VEGF * 100),

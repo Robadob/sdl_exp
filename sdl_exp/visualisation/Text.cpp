@@ -153,7 +153,7 @@ void Text::recomputeTex() {
     const unsigned int num_glyphs = i;
     //Now we wrap the glyphs
     //Set origin to the bb min of 0th glyph
-    FT_BBox  glyph_bbox;
+    FT_BBox  glyph_bbox, glyph_bbox_prev;
     FT_Glyph_Get_CBox(glyphs[0].image, ft_glyph_bbox_pixels, &glyph_bbox);
     glm::ivec2 origin = glm::ivec2(glyph_bbox.xMin, glyph_bbox.yMin);
     for (i = 0; i < num_glyphs; i++)
@@ -161,6 +161,8 @@ void Text::recomputeTex() {
         if (!(glyphs[i].c == '\n' || glyphs[i].c == '\r'))
         {
             //Get chars bbox max x
+			if(glyph_bbox.xMin!=0)
+				glyph_bbox_prev = glyph_bbox;
             FT_Glyph_Get_CBox(glyphs[i].image, ft_glyph_bbox_pixels, &glyph_bbox);
             //Calculate the further most x coordinate of this char
             int xMax = (padding * 2) + glyph_bbox.xMax - origin.x;
@@ -199,8 +201,20 @@ void Text::recomputeTex() {
         newLineOffset.y = 0;
         /*else
             newLineOffset.y = font->height;*/
+		glyph_bbox_prev = glyph_bbox;
         FT_Glyph_Get_CBox(glyphs[i+1].image, ft_glyph_bbox_pixels, &glyph_bbox);
-        newLineOffset.x = -(glyph_bbox.xMin - origin.x) * 64;
+		if(glyph_bbox.xMin)
+		{
+			newLineOffset.x = -(glyph_bbox.xMin - origin.x) * 64;
+		}
+		else
+		{
+			//Advance is minimum char width
+			//This special case wraps spaces properly
+			const int advance = this->font->glyph->advance.x >> 6;
+			newLineOffset.x = -(glyph_bbox_prev.xMin + 2*advance - origin.x) * 64;
+		}
+
         for (unsigned int j = (i + 1); j < num_glyphs;j++)
         {
             if (newline)

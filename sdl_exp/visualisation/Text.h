@@ -178,6 +178,7 @@ public:
 	 * @note This function will always refresh the texture
 	 */
     void setString(const char*fmt, ...);
+    std::shared_ptr<const TextureString> getTex() const { return tex; };
 private:
     bool printMono;
     unsigned int padding;

@@ -10,6 +10,8 @@
 #include "../visualisation/shader/GaussianBlur.h"
 #include "../visualisation/Sprite2D.h"
 #include "CellBillboard.h"
+#include "../visualisation/Draw.h"
+#include "TextBillboard.h"
 
 #ifdef _MSC_VER
 #include <filesystem>
@@ -49,6 +51,9 @@ class TumourScene : public MultiPassScene
 		std::shared_ptr<GaussianBlur> blur;
 		//GL names of the rendered to and blurred to shadow textures
 		std::shared_ptr<Texture2D> depthIn, depthOut;
+        Draw grid;
+        glm::vec3 camera_pos;
+        std::map<int, std::shared_ptr<TextBillboard>> labels;
     };
 	/**
 	 * Basic solo pass for instanced rendering
@@ -56,9 +61,10 @@ class TumourScene : public MultiPassScene
 	class SpherePass : public RenderPass
 	{
 	public:
-		SpherePass(std::shared_ptr<SceneContent> content);
+		SpherePass(std::shared_ptr<SceneContent> content, std::shared_ptr<const NoClipCamera> camera);
 	protected:
 		void render() override;
+        void renderGrid();
 		std::shared_ptr<SceneContent> content;
 	};
 	/**

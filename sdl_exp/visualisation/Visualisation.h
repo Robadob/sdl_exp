@@ -95,6 +95,7 @@ public:
 	 * @return The camera
 	 */
     std::shared_ptr<const Camera> getCamera() const;
+    std::shared_ptr<NoClipCamera> Camera();
 	/**
 	 * Sets the Scene object to be rendered within the viewport
 	 * @return The previously bound Scene

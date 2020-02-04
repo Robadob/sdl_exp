@@ -203,6 +203,9 @@
     <ClCompile Include="primage\CellBillboard.cpp">
       <Filter>Tumour Visualisation Files</Filter>
     </ClCompile>
+    <ClCompile Include="primage\TextBillboard.cpp">
+      <Filter>Tumour Visualisation Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="visualisation\util\cuda.cuh">
@@ -388,6 +391,9 @@
       <Filter>Tumour Visualisation Files</Filter>
     </ClInclude>
     <ClInclude Include="primage\CellBillboard.h">
+      <Filter>Tumour Visualisation Files</Filter>
+    </ClInclude>
+    <ClInclude Include="primage\TextBillboard.h">
       <Filter>Tumour Visualisation Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -10,8 +10,8 @@
 #include "Text.h"
 
 #define FOVY 60.0f
-#define NEAR_CLIP 0.01f
-#define FAR_CLIP 300.0f
+#define NEAR_CLIP 0.1f
+#define FAR_CLIP 1000.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
 #define SHIFT_MULTIPLIER 5.0f
@@ -69,7 +69,7 @@ bool Visualisation::init(){
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
     this->window = SDL_CreateWindow
         (
@@ -457,6 +457,10 @@ void Visualisation::updateFPS(){
     }
 }
 std::shared_ptr<const Camera> Visualisation::getCamera() const
+{
+    return this->camera;
+}
+std::shared_ptr<NoClipCamera> Visualisation::Camera()
 {
     return this->camera;
 }

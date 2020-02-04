@@ -89,6 +89,7 @@
     <ClCompile Include="EntityScene.cu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="primage\CellBillboard.cpp" />
+    <ClCompile Include="primage\TextBillboard.cpp" />
     <ClCompile Include="primage\TumourScene.cpp" />
     <ClCompile Include="TwoPassScene.cpp" />
     <ClCompile Include="visualisation\Axis.cpp" />
@@ -145,6 +146,7 @@
   <ItemGroup>
     <ClInclude Include="EntityScene.h" />
     <ClInclude Include="primage\CellBillboard.h" />
+    <ClInclude Include="primage\TextBillboard.h" />
     <ClInclude Include="primage\TumourScene.h" />
     <ClInclude Include="TwoPassScene.h" />
     <ClInclude Include="visualisation\Axis.h" />

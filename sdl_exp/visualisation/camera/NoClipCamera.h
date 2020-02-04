@@ -114,6 +114,10 @@ public:
 	* @return A read-only ptr to the normalized direction the camera treats as rightwards
 	*/
 	const glm::vec3 *getRightPtr() const;
+
+
+    void setEye(const glm::vec3 &_eye);
+    void lookAt(const glm::vec3 &_lookAt);
 private:
 	/**
 	 * Updates the view and skyboxView matrices

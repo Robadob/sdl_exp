@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include "../visualisation/multipass/FrameBuffer.h"
+#include "../visualisation/Visualisation.h"
 
 
 TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory, std::shared_ptr<const NoClipCamera> camera)
@@ -83,7 +84,7 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDataDirectory)
     : MultiPassScene(visualisation)
     , content(std::make_shared<SceneContent>(Lights(), tumourDataDirectory, std::dynamic_pointer_cast<const NoClipCamera>(visualisation.getCamera())))
-	, spherePass(std::make_shared<SpherePass>(content))
+	, spherePass(std::make_shared<SpherePass>(content, std::dynamic_pointer_cast<const NoClipCamera>(visualisation.getCamera())))
 	, dPass(std::make_shared<DepthPass>(content))
 	, fPass(std::make_shared<FinalPass>(content))
 	, implictSurfaceActive(false)
@@ -91,6 +92,13 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	//Register models
 	registerEntity(content->sphereModel);
 	registerEntity(content->cellModel);
+    content->grid.setViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
+    content->grid.setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
+    content->grid.setLightsBuffer(Lights()->getBufferBindPoint());
+    for(auto &a:content->labels)
+    {
+        registerEntity(a.second);
+    }
 	//Register render passes in correct order
 	addPass(0, dPass, false);
 	addPass(3, fPass, false);
@@ -133,9 +141,9 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	cell0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
 
 
-	frameCt = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::ARIAL);
+	frameCt = std::make_shared<Text>("", 20, glm::vec3(0.0f), Stock::Font::ARIAL);
 	frameCt->setUseAA(true);
-	ec_evm = std::make_shared<Text>("", 20, glm::vec3(1.0f), Stock::Font::LUCIDIA_CONSOLE);
+	ec_evm = std::make_shared<Text>("", 20, glm::vec3(0.0f), Stock::Font::LUCIDIA_CONSOLE);
 	ec_evm->setUseAA(true);
 	if (auto a = this->visualisation.getHUD().lock())
 	{
@@ -148,6 +156,7 @@ void TumourScene::update(const unsigned int &frameTime)
 {
 	auto p = Lights()->getPointLight(0);
 	p.Position(visualisation.getCamera()->getEye());
+    content->camera_pos = visualisation.getCamera()->getEye();
 	//auto d = Lights()->getDirectionalLight(0);
 	//d.Direction(std::dynamic_pointer_cast<NoClipCamera const>(visualisation.getCamera())->getLook());
 }
@@ -183,6 +192,14 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 		implictSurfaceActive = !implictSurfaceActive;
 		toggleImplicitSurface();
 		break;
+    case SDLK_c:
+        {
+            Visualisation *v = dynamic_cast<Visualisation*>(&visualisation);
+            v->Camera()->setEye(glm::vec3(140, 100, 140));
+            v->Camera()->lookAt(glm::vec3(0, -20, 0));
+            v->Camera()->move(-200.0f);
+        }
+        break;
 	default:
 		//Permit the keycode to be processed if we haven't handled personally
 		return true;
@@ -245,25 +262,121 @@ void TumourScene::FinalPass::render()
 	content->cellModel->renderInstances(content->cells[content->cellIndex].count);
 
 }
-TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content)
-	: RenderPass(std::make_shared<BackBuffer>())
+TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content, std::shared_ptr<const NoClipCamera> camera)
+	: RenderPass(std::make_shared<BackBuffer>(true, glm::vec3(1)))
 	, content(content)
 
 {
+    GL_CHECK(glEnable(GL_LINE_SMOOTH));
+    float dim = 20; // Cell width
+    glm::vec3 envMin = glm::vec3(-60);
+    glm::vec3 envMax = glm::vec3(60);
+    // Construct grid (dimensions hardcoded)
+    {
+        content->grid.color(glm::vec3(0));
+        content->grid.width(1.5f);
+        content->grid.begin(Draw::Lines, "x+");
+        for (float i = envMin.y; i <= envMax.y; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMax.x, i, envMin.z));
+            content->grid.vertex(glm::vec3(envMax.x, i, envMax.z));
+        }
+        for (float i = envMin.z; i <= envMax.z; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMax.x, envMin.y, i));
+            content->grid.vertex(glm::vec3(envMax.x, envMax.y, i));
+        }
+        content->grid.save();
+        content->grid.begin(Draw::Lines, "x-");
+        for (float i = envMin.y; i <= envMax.y; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMin.x, i, envMin.z));
+            content->grid.vertex(glm::vec3(envMin.x, i, envMax.z));
+        }
+        for (float i = envMin.z; i <= envMax.z; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMin.x, envMin.y, i));
+            content->grid.vertex(glm::vec3(envMin.x, envMax.y, i));
+        }
+        content->grid.save();
+        content->grid.begin(Draw::Lines, "y+");
+        for (float i = envMin.x; i <= envMax.x; i += dim)
+        {
+            content->grid.vertex(glm::vec3(i, envMax.y, envMin.z));
+            content->grid.vertex(glm::vec3(i, envMax.y, envMax.z));
+        }
+        for (float i = envMin.z; i <= envMax.z; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMin.x, envMax.y, i));
+            content->grid.vertex(glm::vec3(envMax.x, envMax.y, i));
+        }
+        content->grid.save();
+        content->grid.begin(Draw::Lines, "y-");
+        for (float i = envMin.x; i <= envMax.x; i += dim)
+        {
+            content->grid.vertex(glm::vec3(i, envMin.y, envMin.z));
+            content->grid.vertex(glm::vec3(i, envMin.y, envMax.z));
+        }
+        for (float i = envMin.z; i <= envMax.z; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMin.x, envMin.y, i));
+            content->grid.vertex(glm::vec3(envMax.x, envMin.y, i));
+        }
+        content->grid.save();
+        content->grid.begin(Draw::Lines, "z+");
+        for (float i = envMin.x; i <= envMax.x; i += dim)
+        {
+            content->grid.vertex(glm::vec3(i, envMin.y, envMax.z));
+            content->grid.vertex(glm::vec3(i, envMax.y, envMax.z));
+        }
+        for (float i = envMin.y; i <= envMax.y; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMin.x, i, envMax.z));
+            content->grid.vertex(glm::vec3(envMax.x, i, envMax.z));
+        }
+        content->grid.save();
+        content->grid.begin(Draw::Lines, "z-");
+        for (float i = envMin.y; i <= envMax.z; i += dim)
+        {
+            content->grid.vertex(glm::vec3(i, envMin.y, envMin.z));
+            content->grid.vertex(glm::vec3(i, envMax.y, envMin.z));
+        }
+        for (float i = envMin.z; i <= envMax.z; i += dim)
+        {
+            content->grid.vertex(glm::vec3(envMin.x, i, envMin.z));
+            content->grid.vertex(glm::vec3(envMax.x, i, envMin.z));
+        }
+        content->grid.save();
+    }
+
+    // Prep labels
+    {
+        for (float i = envMin.x;i<=envMax.x;i+=dim)
+        {
+            auto a = std::make_shared<TextBillboard>(camera, std::to_string((int)i).c_str());
+            //a->getShaders()->
+            content->labels.emplace((int)i, a);
+        }
+    }
 }
 //Uses the shadow map to render the normal scene
 void TumourScene::SpherePass::render()
 {
+    GL_CALL(glEnable(GL_BLEND));
+    //GL_CALL(glDisable(GL_CULL_FACE));
 	//Slightly blur shadow map to reduce harshness of edges
 	//content->blur->blurR32F(content->shadowIn, content->shadowOut);
 	//Generate mip-map
 	//content->shadowOut->updateMipMap();
 	//Render models using shadow map
+    renderGrid();
 	content->instancedRenderOffset = content->cells[content->cellIndex].offset;
 	content->sphereModel->renderInstances(content->cells[content->cellIndex].count, 0);
 	//content->sphereModel->renderInstances(1000, 0);
 	//Render something at the lights location
 	//content->lights->render();
+    //glEnable(GL_CULL_FACE);
+    //GL_CALL(glDisable(GL_BLEND));
 }
 void TumourScene::toggleImplicitSurface()
 {
@@ -271,4 +384,31 @@ void TumourScene::toggleImplicitSurface()
 	setPassActive(fPass, implictSurfaceActive);
 	setPassActive(dPass, implictSurfaceActive);
 	depthMapPreview->setVisible(implictSurfaceActive);
+}
+
+void TumourScene::SpherePass::renderGrid()
+{
+    if(content->camera_pos.x>0)
+        content->grid.render("x-");
+    if (content->camera_pos.x<0)
+        content->grid.render("x+");
+    if (content->camera_pos.y>0)
+        content->grid.render("y-");
+    if (content->camera_pos.y<0)
+        content->grid.render("y+");
+    if (content->camera_pos.z>0)
+        content->grid.render("z-");
+    if (content->camera_pos.z<0)
+        content->grid.render("z+");
+    //Labels
+    //glDisable(GL_DEPTH_TEST);
+    //float dim = 20; // Cell width
+    //glm::vec3 envMin = glm::vec3(-60);
+    //glm::vec3 envMax = glm::vec3(60);
+    //for (float i = envMin.x; i <= envMax.x; i += dim)
+    //{
+    //    auto a = content->labels.at((int)i);
+    //    a->render(glm::vec3(envMin.x, envMin.y, i));
+    //}
+    //glEnable(GL_DEPTH_TEST);
 }

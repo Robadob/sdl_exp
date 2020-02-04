@@ -116,3 +116,17 @@ void NoClipCamera::updateViews(){
 	viewMat = glm::lookAt(eye, eye + look, up);
 	skyboxViewMat = glm::lookAt(glm::vec3(0), look, up);
 }
+
+void NoClipCamera::setEye(const glm::vec3 &_eye)
+{
+    eye = _eye;
+    updateViews();
+}
+void NoClipCamera::lookAt(const glm::vec3 &target)
+{
+    glm::vec3 dir = target - eye;
+    look = normalize(target - eye);
+    right = normalize(cross(target - eye, glm::vec3(0, 1, 0)));
+    up = normalize(cross(cross(target - eye, glm::vec3(0, 1, 0)), target - eye));
+    updateViews();
+}

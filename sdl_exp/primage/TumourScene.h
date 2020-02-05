@@ -26,12 +26,12 @@ class TumourScene : public MultiPassScene
     {
         int offset;
         int count;
-		float oxygen;
-		float drug;
-		float VEGF;
-		float MMP;
-		float TIMP;
-		float MPTP;
+		float oxygen_core;
+		float oxygen_rim;
+        float mobility_detatch;
+        float mobility_degrade;
+        float mobility_EMT;
+        float mobility_vascular;
     };
     /**
     * This struct holds all of the scene content, it is to be shared with all the render pass instances

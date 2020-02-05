@@ -51,12 +51,12 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 		if (ifs.is_open())
 		{
 			ifs.read(t_buffer, EC_EVM_ELEMENTS * sizeof(float));
-			cells[i].oxygen = reinterpret_cast<float*>(t_buffer)[0];
-			cells[i].drug = reinterpret_cast<float*>(t_buffer)[1];
-			cells[i].VEGF = reinterpret_cast<float*>(t_buffer)[2];
-			cells[i].MMP = reinterpret_cast<float*>(t_buffer)[3];
-			cells[i].TIMP = reinterpret_cast<float*>(t_buffer)[4];
-			cells[i].MPTP = reinterpret_cast<float*>(t_buffer)[5];
+			cells[i].oxygen_core = reinterpret_cast<float*>(t_buffer)[0];
+			cells[i].oxygen_rim = reinterpret_cast<float*>(t_buffer)[1];
+			cells[i].mobility_detatch = reinterpret_cast<float*>(t_buffer)[2];
+			cells[i].mobility_degrade = reinterpret_cast<float*>(t_buffer)[3];
+			cells[i].mobility_EMT = reinterpret_cast<float*>(t_buffer)[4];
+			cells[i].mobility_vascular = reinterpret_cast<float*>(t_buffer)[5];
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellX->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
@@ -211,14 +211,14 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 }
 void TumourScene::setFrameCt()
 {
-	this->frameCt->setString("Frame: %d\nCells: %d", content->cellIndex, content->cells[content->cellIndex].count);
-	this->ec_evm->setString("Oxygen: %3d%%\n  Drug: %3d%%\n  VEGF: %3d%%\n   MMP: %3d%%\n  TIMP: %3d%%\n  MPTP: %3d%%", 
-		(int)(content->cells[content->cellIndex].oxygen*100),
-		(int)(content->cells[content->cellIndex].drug * 100),
-		(int)(content->cells[content->cellIndex].VEGF * 100),
-		(int)(content->cells[content->cellIndex].MMP * 100),
-		(int)(content->cells[content->cellIndex].TIMP * 100),
-		(int)(content->cells[content->cellIndex].MPTP * 100)
+	this->frameCt->setString("Time (hours): %d\nCell count: %d", content->cellIndex, content->cells[content->cellIndex].count);
+	this->ec_evm->setString("Core o2: %3d%%\n  Rim o2: %3d%%\n  Mobility Detatch: %3d%%\n   Mobility Degrade: %3d%%\n  Mobility EMT: %3d%%\n  Mobility Vascular: %3d%%", 
+		(int)(content->cells[content->cellIndex].oxygen_core *100),
+		(int)(content->cells[content->cellIndex].oxygen_rim * 100),
+		(int)(content->cells[content->cellIndex].mobility_detatch * 100),
+		(int)(content->cells[content->cellIndex].mobility_degrade * 100),
+		(int)(content->cells[content->cellIndex].mobility_EMT * 100),
+		(int)(content->cells[content->cellIndex].mobility_vascular * 100)
 	);
 }
 void TumourScene::reload()

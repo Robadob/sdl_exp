@@ -8,7 +8,7 @@ int main(int count, char **args)
         sceneId = atoi(args[1]);
     Visualisation v("Tumour Visualisation", 1280, 720);
 
-    v.setScene(std::make_unique<TumourScene>(v, fs::path("../vis_test")));
+    v.setScene(std::make_unique<TumourScene>(v, fs::path("../vph2020b")));
 
     v.run();
 

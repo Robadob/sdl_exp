@@ -195,9 +195,9 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
     case SDLK_c:
         {
             Visualisation *v = dynamic_cast<Visualisation*>(&visualisation);
-            v->Camera()->setEye(glm::vec3(140, 100, 140));
+            v->Camera()->setEye(glm::vec3(140, 70, 140));
             v->Camera()->lookAt(glm::vec3(0, -20, 0));
-            v->Camera()->move(-200.0f);
+            v->Camera()->move(-300.0f);
         }
         break;
 	default:
@@ -268,9 +268,9 @@ TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content, std::
 
 {
     GL_CHECK(glEnable(GL_LINE_SMOOTH));
-    float dim = 20; // Cell width
-    glm::vec3 envMin = glm::vec3(-60);
-    glm::vec3 envMax = glm::vec3(60);
+    float dim = 15; // Cell width
+    glm::vec3 envMin = glm::vec3(-45);
+    glm::vec3 envMax = glm::vec3(45);
     // Construct grid (dimensions hardcoded)
     {
         content->grid.color(glm::vec3(0));

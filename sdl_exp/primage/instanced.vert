@@ -59,9 +59,9 @@ void main()
   loc_data.x = texelFetch(_texBufX, instanceOffset+gl_InstanceID).x;
   loc_data.y = texelFetch(_texBufY, instanceOffset+gl_InstanceID).x;
   loc_data.z = texelFetch(_texBufZ, instanceOffset+gl_InstanceID).x;
-  float p53 = texelFetch(_texBufP53, instanceOffset+gl_InstanceID).x;
+  float p53 = float(floatBitsToInt(texelFetch(_texBufP53, instanceOffset+gl_InstanceID).x));
   //colour
-  colour = hsv2rgb(vec3(0,0.75,1.0));
+  colour = hsv2rgb(vec3(134*p53, 0.75, 1.0));
   vec4 modelVert = _modelMat * vec4(_vertex, 1.0f);
   modelVert.xyz = modelVert.xyz + loc_data;
   gl_Position = _projectionMat * _viewMat * modelVert;

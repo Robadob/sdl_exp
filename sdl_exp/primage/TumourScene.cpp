@@ -159,6 +159,21 @@ void TumourScene::update(const unsigned int &frameTime)
     content->camera_pos = visualisation.getCamera()->getEye();
 	//auto d = Lights()->getDirectionalLight(0);
 	//d.Direction(std::dynamic_pointer_cast<NoClipCamera const>(visualisation.getCamera())->getLook());
+	if (autostep) {
+        const int SPEED_ms = 450;
+        static unsigned int ft = 0;
+        if (content->cellIndex < content->cells.size() - 1) {
+
+            ft += frameTime;
+            if (ft > SPEED_ms) {
+                content->cellIndex++;
+                ft -= SPEED_ms;
+                setFrameCt();
+            }
+        } else {
+            autostep = false;
+        }
+	}
 }
 bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 {
@@ -192,6 +207,9 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 		implictSurfaceActive = !implictSurfaceActive;
 		toggleImplicitSurface();
 		break;
+    case SDLK_o:
+        autostep = !autostep;
+        break;
     case SDLK_c:
         {
             Visualisation *v = dynamic_cast<Visualisation*>(&visualisation);

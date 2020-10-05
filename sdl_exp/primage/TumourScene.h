@@ -89,6 +89,7 @@ public:
     bool keypress(SDL_Keycode keycode, int x, int y) override;
     void update(const unsigned int &frameTime) override;
 private:
+    bool autostep = false;
 	void setFrameCt();
     std::shared_ptr<SceneContent> content;
 	std::shared_ptr<Text> frameCt, ec_evm;

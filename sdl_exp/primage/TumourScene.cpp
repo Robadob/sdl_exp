@@ -19,7 +19,7 @@ TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, co
 }
 void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 {
-	const int EC_EVM_ELEMENTS = 6;
+	const int EC_EVM_ELEMENTS = 0;
 	int totalCt = 0;
 	size_t fileCt_max = 0;
     for (int i = 0; true;++i)
@@ -51,12 +51,12 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 		if (ifs.is_open())
 		{
 			ifs.read(t_buffer, EC_EVM_ELEMENTS * sizeof(float));
-			cells[i].oxygen_core = reinterpret_cast<float*>(t_buffer)[0];
-			cells[i].oxygen_rim = reinterpret_cast<float*>(t_buffer)[1];
-			cells[i].mobility_detatch = reinterpret_cast<float*>(t_buffer)[2];
-			cells[i].mobility_degrade = reinterpret_cast<float*>(t_buffer)[3];
-			cells[i].mobility_EMT = reinterpret_cast<float*>(t_buffer)[4];
-			cells[i].mobility_vascular = reinterpret_cast<float*>(t_buffer)[5];
+			//cells[i].oxygen_core = reinterpret_cast<float*>(t_buffer)[0];
+			//cells[i].oxygen_rim = reinterpret_cast<float*>(t_buffer)[1];
+			//cells[i].mobility_detatch = reinterpret_cast<float*>(t_buffer)[2];
+			//cells[i].mobility_degrade = reinterpret_cast<float*>(t_buffer)[3];
+			//cells[i].mobility_EMT = reinterpret_cast<float*>(t_buffer)[4];
+			//cells[i].mobility_vascular = reinterpret_cast<float*>(t_buffer)[5];
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
 			cellX->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
 			ifs.read(t_buffer, cells[i].count * sizeof(float));
@@ -148,7 +148,7 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	if (auto a = this->visualisation.getHUD().lock())
 	{
 		a->add(frameCt, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
-		a->add(ec_evm, HUD::AnchorV::South, HUD::AnchorH::West, glm::ivec2(0, 10), INT_MAX);
+		 //a->add(ec_evm, HUD::AnchorV::South, HUD::AnchorH::West, glm::ivec2(0, 10), INT_MAX);
 	}
 	setFrameCt();
 }
@@ -212,14 +212,14 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 void TumourScene::setFrameCt()
 {
 	this->frameCt->setString("Time (hours): %d\nCell count: %d", content->cellIndex, content->cells[content->cellIndex].count);
-	this->ec_evm->setString("Core o2: %3d%%\n  Rim o2: %3d%%\n  Mobility Detatch: %3d%%\n   Mobility Degrade: %3d%%\n  Mobility EMT: %3d%%\n  Mobility Vascular: %3d%%", 
-		(int)(content->cells[content->cellIndex].oxygen_core *100),
-		(int)(content->cells[content->cellIndex].oxygen_rim * 100),
-		(int)(content->cells[content->cellIndex].mobility_detatch * 100),
-		(int)(content->cells[content->cellIndex].mobility_degrade * 100),
-		(int)(content->cells[content->cellIndex].mobility_EMT * 100),
-		(int)(content->cells[content->cellIndex].mobility_vascular * 100)
-	);
+	//this->ec_evm->setString("Core o2: %3d%%\n  Rim o2: %3d%%\n  Mobility Detatch: %3d%%\n   Mobility Degrade: %3d%%\n  Mobility EMT: %3d%%\n  Mobility Vascular: %3d%%", 
+	//	(int)(content->cells[content->cellIndex].oxygen_core *100),
+	//	(int)(content->cells[content->cellIndex].oxygen_rim * 100),
+	//	(int)(content->cells[content->cellIndex].mobility_detatch * 100),
+	//	(int)(content->cells[content->cellIndex].mobility_degrade * 100),
+	//	(int)(content->cells[content->cellIndex].mobility_EMT * 100),
+	//	(int)(content->cells[content->cellIndex].mobility_vascular * 100)
+	//);
 }
 void TumourScene::reload()
 {
@@ -267,7 +267,7 @@ TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content, std::
 	, content(content)
 
 {
-    GL_CHECK(glEnable(GL_LINE_SMOOTH));
+    GL_CALL(glEnable(GL_LINE_SMOOTH));
     float dim = 15; // Cell width
     glm::vec3 envMin = glm::vec3(-45);
     glm::vec3 envMax = glm::vec3(45);

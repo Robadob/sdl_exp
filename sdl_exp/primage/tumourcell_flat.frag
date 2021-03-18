@@ -83,7 +83,8 @@ void main()
       //Process Diffuse
       {
         float lambertian = max(dot(surfaceToLight,eyeNormal),0.0f);//phong
-        lightDiffuse += light[i].diffuse.rgb * lambertian * attenuation;
+        //lightDiffuse += light[i].diffuse.rgb * lambertian * attenuation;
+        lightDiffuse += vec3(0.8) * lambertian * attenuation;
       }
       
 /*       //Process Specular

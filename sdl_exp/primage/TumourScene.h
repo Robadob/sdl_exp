@@ -35,12 +35,13 @@ class TumourScene : public MultiPassScene
         SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory, std::shared_ptr<const NoClipCamera>);
         void loadCells(const fs::path &tumourDataDirectory);
         std::shared_ptr<LightsBuffer> lights;
-        std::vector<CellMetaData> cells;
-		std::shared_ptr<TextureBuffer<float>> cellX, cellY, cellZ, cellP53;
-		std::shared_ptr<Entity> sphereModel;
+        std::vector<CellMetaData> nb_cells, sc_cells;
+		std::shared_ptr<TextureBuffer<float>> nb_cellX, nb_cellY, nb_cellZ, nb_cellP53;
+        std::shared_ptr<TextureBuffer<float>> sc_cellX, sc_cellY, sc_cellZ, sc_cellP53;
+		std::shared_ptr<Entity> nbModel, scModel;
 		std::shared_ptr<CellBillboard> cellModel;
 		int cellIndex = 0;
-		int instancedRenderOffset = 0;
+		int nb_instancedRenderOffset = 0, sc_instancedRenderOffset = 0;
 		//Blur provider
 		std::shared_ptr<GaussianBlur> blur;
 		//GL names of the rendered to and blurred to shadow textures

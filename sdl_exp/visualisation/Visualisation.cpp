@@ -11,7 +11,7 @@
 
 #define FOVY 60.0f
 #define NEAR_CLIP 0.1f
-#define FAR_CLIP 1000.0f
+#define FAR_CLIP 10000.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
 #define SHIFT_MULTIPLIER 5.0f
@@ -212,6 +212,19 @@ void Visualisation::render()
     if (state[SDL_SCANCODE_LCTRL]) {
         this->camera->ascend(-DELTA_ASCEND*turboMultiplier);
     }
+    const int mouse_magnitude = 2;
+    if (state[SDL_SCANCODE_I]) {
+        this->handleMouseMove(0, -mouse_magnitude);
+    }
+    if (state[SDL_SCANCODE_K]) {
+        this->handleMouseMove(0, mouse_magnitude);
+    }
+    if (state[SDL_SCANCODE_J]) {
+        this->handleMouseMove(-mouse_magnitude, 0);
+    }
+    if (state[SDL_SCANCODE_L]) {
+        this->handleMouseMove(mouse_magnitude, 0);
+    }
 
     // handle each event on the queue
     while (SDL_PollEvent(&e) != 0){
@@ -234,7 +247,7 @@ void Visualisation::render()
             //case SDL_MOUSEWHEEL:
             //break;
         case SDL_MOUSEMOTION:
-            this->handleMouseMove(e.motion.xrel, e.motion.yrel);
+           // this->handleMouseMove(e.motion.xrel, e.motion.yrel);//Relative mouse mode doesn't work over remote desktop
             break;
         case SDL_MOUSEBUTTONDOWN:
             this->toggleMouseMode();

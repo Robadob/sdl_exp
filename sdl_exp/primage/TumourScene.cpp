@@ -7,10 +7,12 @@
 
 TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, const fs::path &tumourDataDirectory, std::shared_ptr<const NoClipCamera> camera)
     : lights(lights)
-	, sphereModel(new Entity(Stock::Models::ICOSPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/tumourcell_flat.frag") }))
+	, nbModel(new Entity(Stock::Models::ICOSPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced.vert", "../sdl_exp/primage/tumourcell_flat.frag") }))
+    , scModel(new Entity(Stock::Models::ICOSPHERE, 10.0f, { std::make_shared<Shaders>("../sdl_exp/primage/instanced_white.vert", "../sdl_exp/primage/tumourcell_flat.frag") }))
 	, cellModel(std::make_shared<CellBillboard>(camera))
 	, cellIndex(0)
-	, instancedRenderOffset(0)
+    , nb_instancedRenderOffset(0)
+    , sc_instancedRenderOffset(0)
 	, blur(new GaussianBlur(5, 1.75f))
 	, depthIn()
 	, depthOut(Texture2D::make(glm::uvec2(1280, 720), { GL_RED, GL_R32F, sizeof(float), GL_FLOAT }, nullptr, Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR | Texture::FILTER_MAG_LINEAR | Texture::WRAP_CLAMP_TO_EDGE))
@@ -19,12 +21,16 @@ TumourScene::SceneContent::SceneContent(std::shared_ptr<LightsBuffer> lights, co
 }
 void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 {
+    const fs::path &nbDataDirectory = tumourDataDirectory / fs::path("nb");
+    const fs::path &scDataDirectory = tumourDataDirectory / fs::path("sc");
 	const int EC_EVM_ELEMENTS = 0;
-	int totalCt = 0;
+    int nb_totalCt = 0;
+    int sc_totalCt = 0;
 	size_t fileCt_max = 0;
-    for (int i = 0; true;++i)
+    for (int i = 0; i < 139;++i)
     {
-		std::string tryFile = (tumourDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
+        // Count nb
+		std::string tryFile = (nbDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
 		std::ifstream ifs;
 		ifs.open(tryFile, std::ios::in | std::ios::binary | std::ios::ate);
 		if (!ifs.is_open())
@@ -34,49 +40,72 @@ void TumourScene::SceneContent::loadCells(const fs::path &tumourDataDirectory)
 		sz -= (EC_EVM_ELEMENTS * sizeof(float));//Remove EC_EVM
 		int fileCt = sz / (4 * sizeof(float));
 		fileCt_max = fileCt > fileCt_max ? fileCt : fileCt_max;
-		cells.push_back({ totalCt, fileCt });
-		totalCt += fileCt;
+		nb_cells.push_back({ nb_totalCt, fileCt });
+        nb_totalCt += fileCt;
+        //printf("step: %d, %d cells, %d total\n", i, fileCt, nb_totalCt);
+        // Count sc
+        tryFile = (scDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
+        ifs.open(tryFile, std::ios::in | std::ios::binary | std::ios::ate);
+        if (!ifs.is_open())
+            break;
+        sz = ifs.tellg();
+        ifs.close();
+        sz -= (EC_EVM_ELEMENTS * sizeof(float));//Remove EC_EVM
+        fileCt = sz / (4 * sizeof(float));
+        fileCt_max = fileCt > fileCt_max ? fileCt : fileCt_max;
+        sc_cells.push_back({ sc_totalCt, fileCt });
+        sc_totalCt += fileCt;
     }
 	//Allocate Texture Buffers
-	cellX = TextureBuffer<float>::make(totalCt, 1);
-	cellY = TextureBuffer<float>::make(totalCt, 1);
-	cellZ = TextureBuffer<float>::make(totalCt, 1);
-	cellP53 = TextureBuffer<float>::make(totalCt, 1);
+	nb_cellX = TextureBuffer<float>::make(nb_totalCt, 1);
+    nb_cellY = TextureBuffer<float>::make(nb_totalCt, 1);
+    nb_cellZ = TextureBuffer<float>::make(nb_totalCt, 1);
+    nb_cellP53 = TextureBuffer<float>::make(nb_totalCt, 1);
+    sc_cellX = TextureBuffer<float>::make(sc_totalCt, 1);
+    sc_cellY = TextureBuffer<float>::make(sc_totalCt, 1);
+    sc_cellZ = TextureBuffer<float>::make(sc_totalCt, 1);
+    sc_cellP53 = TextureBuffer<float>::make(sc_totalCt, 1);
 	char *t_buffer = (char*)malloc(fileCt_max * sizeof(float));
-	for (int i = 0; i < cells.size(); ++i)
+	for (int i = 0; i < nb_cells.size(); ++i)
 	{
-		std::string tryFile = (tumourDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
+        // Load NB file for timestep
+		std::string tryFile = (nbDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
 		std::ifstream ifs;
 		ifs.open(tryFile, std::ios::in | std::ios::binary);
 		if (ifs.is_open())
 		{
 			ifs.read(t_buffer, EC_EVM_ELEMENTS * sizeof(float));
-			//cells[i].oxygen_core = reinterpret_cast<float*>(t_buffer)[0];
-			//cells[i].oxygen_rim = reinterpret_cast<float*>(t_buffer)[1];
-			//cells[i].mobility_detatch = reinterpret_cast<float*>(t_buffer)[2];
-			//cells[i].mobility_degrade = reinterpret_cast<float*>(t_buffer)[3];
-			//cells[i].mobility_EMT = reinterpret_cast<float*>(t_buffer)[4];
-			//cells[i].mobility_vascular = reinterpret_cast<float*>(t_buffer)[5];
-			ifs.read(t_buffer, cells[i].count * sizeof(float));
-			cellX->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
-			ifs.read(t_buffer, cells[i].count * sizeof(float));
-			cellY->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
-			ifs.read(t_buffer, cells[i].count * sizeof(float));
-			cellZ->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
-			ifs.read(t_buffer, cells[i].count * sizeof(float));
-			cellP53->setData((float*)t_buffer, cells[i].count * sizeof(float), cells[i].offset * sizeof(float));
+			ifs.read(t_buffer, nb_cells[i].count * sizeof(float));
+			nb_cellX->setData((float*)t_buffer, nb_cells[i].count * sizeof(float), nb_cells[i].offset * sizeof(float));
+			ifs.read(t_buffer, nb_cells[i].count * sizeof(float));
+            nb_cellY->setData((float*)t_buffer, nb_cells[i].count * sizeof(float), nb_cells[i].offset * sizeof(float));
+			ifs.read(t_buffer, nb_cells[i].count * sizeof(float));
+            nb_cellZ->setData((float*)t_buffer, nb_cells[i].count * sizeof(float), nb_cells[i].offset * sizeof(float));
+			ifs.read(t_buffer, nb_cells[i].count * sizeof(float));
+            //for (int i = 0; i < fileCt_max; ++i)
+            //    reinterpret_cast<float*>(t_buffer)[i] = i;// reinterpret_cast<int*>(t_buffer)[i];
+            nb_cellP53->setData((float*)t_buffer, nb_cells[i].count * sizeof(float), nb_cells[i].offset * sizeof(float));
+            printf("%d, %d, %d\n", reinterpret_cast<int*>(t_buffer)[0], reinterpret_cast<int*>(t_buffer)[1000], reinterpret_cast<int*>(t_buffer)[2000]);
 			assert(ifs.good());
 			ifs.close();
-			//float minj = FLT_MAX;
-			//float maxj = -FLT_MAX;
-			//for (int j = 0; j<cells[i].count; ++j)
-			//{
-			//	float f = *reinterpret_cast<float*>(t_buffer + (j * sizeof(float)));
-			//	minj = minj < f ? minj : f;
-			//	maxj = maxj > f ? maxj : f;
-			//}
-			//printf("Bounds: %f to %f\n", minj, maxj);
 		}
+        // Load SC file for timestep
+        tryFile = (scDataDirectory / fs::path(std::to_string(i) + std::string(".bin"))).string();
+        ifs.open(tryFile, std::ios::in | std::ios::binary);
+        if (ifs.is_open())
+        {
+            ifs.read(t_buffer, EC_EVM_ELEMENTS * sizeof(float));
+            ifs.read(t_buffer, sc_cells[i].count * sizeof(float));
+            sc_cellX->setData((float*)t_buffer, sc_cells[i].count * sizeof(float), sc_cells[i].offset * sizeof(float));
+            ifs.read(t_buffer, sc_cells[i].count * sizeof(float));
+            sc_cellY->setData((float*)t_buffer, sc_cells[i].count * sizeof(float), sc_cells[i].offset * sizeof(float));
+            ifs.read(t_buffer, sc_cells[i].count * sizeof(float));
+            sc_cellZ->setData((float*)t_buffer, sc_cells[i].count * sizeof(float), sc_cells[i].offset * sizeof(float));
+            ifs.read(t_buffer, sc_cells[i].count * sizeof(float));
+            sc_cellP53->setData((float*)t_buffer, sc_cells[i].count * sizeof(float), sc_cells[i].offset * sizeof(float));
+            assert(ifs.good());
+            ifs.close();
+        }
 	}
 	free(t_buffer);
 }
@@ -90,7 +119,8 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	, implictSurfaceActive(false)
 {
 	//Register models
-	registerEntity(content->sphereModel);
+    registerEntity(content->nbModel);
+    registerEntity(content->scModel);
 	registerEntity(content->cellModel);
     content->grid.setViewMatPtr(this->visualisation.getCamera()->getViewMatPtr());
     content->grid.setProjectionMatPtr(this->visualisation.getProjectionMatPtr());
@@ -126,19 +156,25 @@ TumourScene::TumourScene(Visualisation &visualisation, const fs::path &tumourDat
 	_p.Specular(glm::vec3(0.02f));
 	_p.ConstantAttenuation(0.5f);
 
-	auto sphere0 = content->sphereModel->getShaders(0);
-	sphere0->addTexture("_texBufX", content->cellX);
-	sphere0->addTexture("_texBufY", content->cellY);
-	sphere0->addTexture("_texBufZ", content->cellZ);
-	sphere0->addTexture("_texBufP53", content->cellP53);
-	sphere0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
+	auto sphere0 = content->nbModel->getShaders(0);
+	sphere0->addTexture("_texBufX", content->nb_cellX);
+	sphere0->addTexture("_texBufY", content->nb_cellY);
+	sphere0->addTexture("_texBufZ", content->nb_cellZ);
+	sphere0->addTexture("_texBufP53", content->nb_cellP53);
+	sphere0->addDynamicUniform("instanceOffset", &content->nb_instancedRenderOffset);
+    sphere0 = content->scModel->getShaders(0);
+    sphere0->addTexture("_texBufX", content->sc_cellX);
+    sphere0->addTexture("_texBufY", content->sc_cellY);
+    sphere0->addTexture("_texBufZ", content->sc_cellZ);
+    sphere0->addTexture("_texBufP53", content->sc_cellP53);
+    sphere0->addDynamicUniform("instanceOffset", &content->sc_instancedRenderOffset);
 
 	auto cell0 = content->cellModel->getShaders();
-	cell0->addTexture("_texBufX", content->cellX);
-	cell0->addTexture("_texBufY", content->cellY);
-	cell0->addTexture("_texBufZ", content->cellZ);
-	cell0->addTexture("_texBufP53", content->cellP53);
-	cell0->addDynamicUniform("instanceOffset", &content->instancedRenderOffset);
+	cell0->addTexture("_texBufX", content->nb_cellX);
+	cell0->addTexture("_texBufY", content->nb_cellY);
+	cell0->addTexture("_texBufZ", content->nb_cellZ);
+	cell0->addTexture("_texBufP53", content->nb_cellP53);
+	cell0->addDynamicUniform("instanceOffset", &content->nb_instancedRenderOffset);
 
 
 	frameCt = std::make_shared<Text>("", 20, glm::vec3(0.0f), Stock::Font::ARIAL);
@@ -160,9 +196,9 @@ void TumourScene::update(const unsigned int &frameTime)
 	//auto d = Lights()->getDirectionalLight(0);
 	//d.Direction(std::dynamic_pointer_cast<NoClipCamera const>(visualisation.getCamera())->getLook());
 	if (autostep) {
-        const int SPEED_ms = 450;
+        const int SPEED_ms = 200;
         static unsigned int ft = 0;
-        if (content->cellIndex < content->cells.size() - 1) {
+        if (content->cellIndex < content->nb_cells.size() - 1) {
 
             ft += frameTime;
             if (ft > SPEED_ms) {
@@ -201,7 +237,7 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 		content->cellIndex = 0;
 		break;
 	case SDLK_0:
-		content->cellIndex  = content->cells.size()-1;
+		content->cellIndex  = content->nb_cells.size()-1;
 		break;
 	case SDLK_p:
 		implictSurfaceActive = !implictSurfaceActive;
@@ -223,13 +259,13 @@ bool TumourScene::keypress(SDL_Keycode keycode, int x, int y)
 		return true;
 	}
 	content->cellIndex = content->cellIndex < 0 ? 0 : content->cellIndex;
-	content->cellIndex = content->cellIndex >= content->cells.size() ? content->cells.size()-1 : content->cellIndex;
+	content->cellIndex = content->cellIndex >= content->nb_cells.size() ? content->nb_cells.size()-1 : content->cellIndex;
 	setFrameCt();
 	return false;
 }
 void TumourScene::setFrameCt()
 {
-	this->frameCt->setString("Time (hours): %d\nCell count: %d", content->cellIndex, content->cells[content->cellIndex].count);
+	this->frameCt->setString("Time (hours): %d\nNB count: %d\nSC count: %d", content->cellIndex, content->nb_cells[content->cellIndex].count, content->sc_cells[content->cellIndex].count);
 	//this->ec_evm->setString("Core o2: %3d%%\n  Rim o2: %3d%%\n  Mobility Detatch: %3d%%\n   Mobility Degrade: %3d%%\n  Mobility EMT: %3d%%\n  Mobility Vascular: %3d%%", 
 	//	(int)(content->cells[content->cellIndex].oxygen_core *100),
 	//	(int)(content->cells[content->cellIndex].oxygen_rim * 100),
@@ -266,8 +302,8 @@ TumourScene::FinalPass::FinalPass(std::shared_ptr<SceneContent> content)
 void TumourScene::DepthPass::render()
 {
 	//content->sphereModel->renderInstances(content->cells[0].count, 0);
-	content->instancedRenderOffset = content->cells[content->cellIndex].offset;
-	content->cellModel->renderInstances(content->cells[content->cellIndex].count);
+	content->nb_instancedRenderOffset = content->nb_cells[content->cellIndex].offset;
+	content->cellModel->renderInstances(content->nb_cells[content->cellIndex].count);
 }
 void TumourScene::FinalPass::render()
 {
@@ -276,8 +312,8 @@ void TumourScene::FinalPass::render()
 	//Generate mip-map
 	content->depthOut->updateMipMap();
 	//Render models using shadow map
-    content->instancedRenderOffset = content->cells[content->cellIndex].offset;
-	content->cellModel->renderInstances(content->cells[content->cellIndex].count);
+    content->nb_instancedRenderOffset = content->nb_cells[content->cellIndex].offset;
+	content->cellModel->renderInstances(content->nb_cells[content->cellIndex].count);
 
 }
 TumourScene::SpherePass::SpherePass(std::shared_ptr<SceneContent> content, std::shared_ptr<const NoClipCamera> camera)
@@ -388,8 +424,10 @@ void TumourScene::SpherePass::render()
 	//content->shadowOut->updateMipMap();
 	//Render models using shadow map
     renderGrid();
-	content->instancedRenderOffset = content->cells[content->cellIndex].offset;
-	content->sphereModel->renderInstances(content->cells[content->cellIndex].count, 0);
+	content->nb_instancedRenderOffset = content->nb_cells[content->cellIndex].offset;
+	content->nbModel->renderInstances(content->nb_cells[content->cellIndex].count, 0);
+    content->sc_instancedRenderOffset = content->sc_cells[content->cellIndex].offset;
+    content->scModel->renderInstances(content->sc_cells[content->cellIndex].count, 0);
 	//content->sphereModel->renderInstances(1000, 0);
 	//Render something at the lights location
 	//content->lights->render();
